@@ -2,10 +2,14 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>PromptRebel – Singles & Themes</title>
+  <title>PromptRebel – Music Singles</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+    :root {
+      --scroll: 0;
+    }
+
     /* --- Reset / Basics --- */
     *, *::before, *::after {
       box-sizing: border-box;
@@ -23,6 +27,7 @@
       background: #020617;
       color: #e5e7eb;
       line-height: 1.6;
+      padding-top: 64px; /* Platz für fixe Navi */
     }
 
     a {
@@ -61,20 +66,6 @@
       padding: 16px 16px 40px;
     }
 
-    /* --- Scroll-Progress-Bar --- */
-    .scroll-progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
-      transform-origin: left;
-      transform: scaleX(0);
-      transition: transform 0.1s linear;
-      z-index: 50;
-    }
-
     /* --- Skip-Link --- */
     .skip-link {
       position: absolute;
@@ -94,10 +85,12 @@
       outline-offset: 2px;
     }
 
-    /* --- Top-Navigation --- */
+    /* --- Top-Navigation + Scroll-Progress --- */
     .nav {
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 40;
       backdrop-filter: blur(14px);
       background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
@@ -107,10 +100,25 @@
     .nav-inner {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 10px 16px;
+      padding: 10px 16px 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: relative;
+    }
+
+    .nav::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin: left;
+      transform: scaleX(var(--scroll));
+      transition: transform 0.1s linear;
+      pointer-events: none;
     }
 
     .brand {
@@ -173,10 +181,11 @@
       outline: none;
     }
 
-    /* --- Sections / Layout --- */
+    /* --- Layout-Helfer --- */
     .section {
       padding: 40px 16px 8px;
     }
+
     .section:first-of-type {
       padding-top: 28px;
     }
@@ -190,7 +199,7 @@
       }
     }
 
-    /* --- Hero --- */
+    /* --- Hero / Kategorie-Header --- */
     .category-label {
       font-size: 12px;
       letter-spacing: 0.25em;
@@ -213,10 +222,6 @@
       margin-bottom: 16px;
     }
 
-    .hero-breadcrumbs span {
-      opacity: 0.9;
-    }
-
     .hero-breadcrumbs a {
       text-decoration: underline;
       text-underline-offset: 3px;
@@ -234,6 +239,40 @@
       color: #cbd5f5;
       margin-bottom: 20px;
       max-width: 40rem;
+    }
+
+    .hero-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .hero-pill {
+      border-radius: 999px;
+      padding: 6px 14px;
+      border: 1px solid rgba(248, 250, 252, 0.16);
+      font-size: 13px;
+      background: radial-gradient(circle at top left, rgba(30,64,175,0.75), rgba(15,23,42,0.95));
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.9);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero-pill span.label {
+      font-weight: 500;
+    }
+
+    .hero-pill span.arrow {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .hero-pill.active {
+      border-color: rgba(236,72,153,0.9);
+      box-shadow: 0 0 20px rgba(236,72,153,0.6);
     }
 
     .hero-note {
@@ -264,7 +303,7 @@
 
     .panel-header span.icon {
       font-size: 14px;
-      color: #22d3ee;
+      color: #f97316;
     }
 
     .terminal {
@@ -278,41 +317,104 @@
       color: #6b7280;
     }
 
-    /* --- Track Grid --- */
-    .section-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 8px;
+    .terminal .prompt {
+      color: #a5b4fc;
     }
 
-    .section-subtitle {
-      font-size: 13px;
+    .terminal .cmd {
+      color: #f9a8d4;
+    }
+
+    .terminal .fail {
+      color: #fecaca;
+      text-shadow: 0 0 8px #fb7185;
+    }
+
+    /* --- Toolbar (Filter + View-Toggles) --- */
+    .tracks-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-chip {
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15,23,42,0.9);
+      font-size: 11px;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+
+    .filter-chip.is-active {
+      border-color: rgba(236,72,153,0.95);
+      box-shadow: 0 0 12px rgba(236,72,153,0.8);
+      background: radial-gradient(circle at top left, rgba(236,72,153,0.35), rgba(15,23,42,0.95));
+    }
+
+    .view-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
+      align-items: center;
+    }
+
+    .view-label {
       color: #9ca3af;
-      margin-bottom: 18px;
-      max-width: 40rem;
+      margin-right: 4px;
     }
 
-    .track-grid {
-      display: grid;
-      gap: 18px;
+    .view-btn {
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15,23,42,0.9);
+      cursor: pointer;
+      font-size: 11px;
+      color: #e5e7eb;
     }
 
-    @media (min-width: 768px) {
-      .track-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+    .view-btn.is-active {
+      border-color: rgba(56,189,248,0.95);
+      box-shadow: 0 0 12px rgba(56,189,248,0.8);
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.35), rgba(15,23,42,0.95));
+    }
+
+    /* --- Tracks-Liste (Default Cards-View) --- */
+    .tracks-section {
+      transition: opacity 0.2s ease;
+    }
+
+    .tracks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
     .track-card {
-      border-radius: 18px;
-      padding: 16px 18px 14px;
-      border: 1px solid rgba(148,163,184,0.18);
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.96), rgba(15,23,42,0.99));
-      box-shadow: 0 18px 40px rgba(15,23,42,0.96);
-      backdrop-filter: blur(18px);
       position: relative;
+      border-radius: 18px;
+      padding: 14px 16px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 1));
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(18px);
       overflow: hidden;
       transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
     }
 
     .track-card::before {
@@ -320,90 +422,184 @@
       position: absolute;
       inset: -1px;
       border-radius: inherit;
-      background: radial-gradient(circle at top left, rgba(236,72,153,0.75), transparent 60%);
-      opacity: 0.18;
+      background: radial-gradient(circle at top left, rgba(236,72,153,0.6), transparent 60%);
+      opacity: 0.22;
       pointer-events: none;
       mix-blend-mode: screen;
     }
 
     .track-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 26px 60px rgba(15,23,42,0.98);
-      border-color: rgba(209,213,219,0.3);
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.99), rgba(15,23,42,1));
+      transform: translateY(-2px);
+      box-shadow: 0 24px 50px rgba(15, 23, 42, 0.98);
+      border-color: rgba(249, 250, 251, 0.28);
     }
 
-    .track-tag {
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #cbd5e1;
+    .track-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
       margin-bottom: 4px;
     }
 
     .track-title {
-      font-size: 17px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: #f9fafb;
-      text-shadow: 0 0 10px rgba(236,72,153,0.8);
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .track-meta {
-      font-size: 12px;
+    .track-tag {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #cbd5e1;
+    }
+
+    .track-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
       color: #9ca3af;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
+    }
+
+    .meta-pill {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      padding: 2px 8px;
     }
 
     .track-desc {
       font-size: 13px;
       color: #d1d5db;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
     }
 
-    .track-footer {
+    .track-actions {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+      margin-top: 4px;
     }
 
-    .track-chip {
-      border-radius: 999px;
-      padding: 2px 10px;
-      border: 1px solid rgba(148,163,184,0.45);
-      font-size: 11px;
-      color: #e2e8f0;
-    }
-
-    .track-buttons {
+    .track-links {
       display: flex;
-      gap: 8px;
       flex-wrap: wrap;
+      gap: 10px;
+      font-size: 13px;
     }
 
-    .btn {
-      display: inline-flex;
+    .track-link {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+
+    .track-link.secondary {
+      color: #a5b4fc;
+    }
+
+    .track-length {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    /* --- Compact-View --- */
+    body.compact-view .track-card {
+      padding: 8px 10px;
+      box-shadow: none;
+      border-radius: 10px;
+      background: rgba(15,23,42,0.96);
+      display: grid;
+      grid-template-columns: minmax(0, 2.6fr) minmax(0, 1.4fr) auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    body.compact-view .track-card::before {
+      opacity: 0.1;
+    }
+
+    body.compact-view .track-header {
+      margin-bottom: 0;
+    }
+
+    body.compact-view .track-desc {
+      display: none;
+    }
+
+    body.compact-view .track-meta-row {
+      font-size: 10px;
+      gap: 4px;
+    }
+
+    body.compact-view .track-actions {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    body.compact-view .track-links {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    /* --- Terminal-Sektion (voller Modus) --- */
+    .terminal-section {
+      display: none;
+      margin-top: 8px;
+    }
+
+    body.terminal-open .tracks-section {
+      display: none;
+    }
+
+    body.terminal-open .terminal-section {
+      display: block;
+    }
+
+    .terminal-output {
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 8px 0 4px;
+      border-top: 1px solid rgba(30,64,175,0.6);
+      border-bottom: 1px solid rgba(30,64,175,0.6);
+      margin-bottom: 8px;
+    }
+
+    .terminal-input-row {
+      display: flex;
       align-items: center;
       gap: 6px;
-      border-radius: 999px;
-      padding: 6px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 12px;
-      border: 1px solid rgba(148,163,184,0.35);
-      background: rgba(15,23,42,0.9);
-      cursor: pointer;
-      text-decoration: none;
     }
 
-    .btn-primary {
-      border-color: rgba(56,189,248,0.8);
-      background: radial-gradient(circle at top left, rgba(56,189,248,0.2), rgba(15,23,42,0.98));
-      box-shadow: 0 0 18px rgba(56,189,248,0.4);
+    .terminal-input-row span {
+      color: #a5b4fc;
     }
 
-    .btn span.icon {
-      font-size: 14px;
+    .terminal-input {
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: rgba(15,23,42,0.95);
+      color: #e5e7eb;
+      font-family: inherit;
+      font-size: 12px;
+    }
+
+    .terminal-input:focus-visible {
+      outline: 2px solid #22d3ee;
+      outline-offset: 1px;
     }
 
     /* --- Footer --- */
@@ -462,6 +658,9 @@
 
     /* --- Mobile Tweaks --- */
     @media (max-width: 767px) {
+      body {
+        padding-top: 60px;
+      }
       .nav-inner {
         gap: 8px;
       }
@@ -478,12 +677,14 @@
       .panel-glass {
         margin-top: 20px;
       }
+      body.compact-view .track-card {
+        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr);
+      }
     }
   </style>
 </head>
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
-  <div class="scroll-progress" id="scrollProgress"></div>
 
   <!-- NAVIGATION -->
   <header class="nav">
@@ -492,166 +693,275 @@
         Prompt<span class="accent">Rebel</span>
       </div>
       <nav class="nav-links" aria-label="Hauptnavigation">
-        <!-- Links wie auf der Hauptseite – bei Bedarf später anpassen -->
-        <a href="/promptrebel/" class="nav-link">Projects</a>
-        <a href="/promptrebel/about" class="nav-link">About</a>
-        <a href="/promptrebel/lab-notes" class="nav-link">Lab Notes</a>
+        <a href="../index.html#projects" class="nav-link">Projects</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../index.html#lab-notes" class="nav-link">Lab Notes</a>
       </nav>
     </div>
   </header>
 
   <main class="page" id="main">
-    <!-- HERO -->
+    <!-- HERO / CATEGORY HEADER -->
     <section class="section">
       <div class="hero-layout">
         <div>
-          <div class="category-label">Music · Singles</div>
+          <div class="category-label">Category · Music</div>
           <h1 class="hero-title">Singles &amp; Themes</h1>
 
           <div class="hero-breadcrumbs">
             <span>
-              <a href="/promptrebel/">Home</a> ·
-              <a href="/promptrebel/music/">Music</a> ·
-              Singles &amp; Themes
+              <a href="../index.html">Home</a> ·
+              <a href="index.html">Music &amp; Audio</a> ·
+              Singles
             </span>
           </div>
 
           <p class="hero-text-main">
-            Einzelne Tracks, KI-Experimente und Songs, die auch ohne Album
-            funktionieren – direkt aus dem PromptRebel-Lab.
+            Einzeltracks, Experimente und Themes aus dem PromptRebel-Lab – gebündelt an einem Ort.
           </p>
           <p class="hero-text-sub">
-            Hier landen alle Solo-Releases: von düsteren Endzeit-Hymnen bis
-            zu komplett absurden KI-Dialogen. Später kannst du hier auch
-            nach Stimmung, Energie und Thema filtern.
+            Von düsteren KI-Hymnen bis zu Meme-Tracks: Hier landen alle Stücke, die nicht in ein Album passen,
+            aber zu schade sind, um in einem Ordner zu verschwinden.
           </p>
 
+          <div class="hero-pills">
+            <a href="music-albums.html" class="hero-pill">
+              <span class="label">Alben &amp; EPs</span>
+              <span class="arrow">↗</span>
+            </a>
+            <a href="music-singles.html" class="hero-pill active">
+              <span class="label">Singles &amp; Themes</span>
+              <span class="arrow">↗</span>
+            </a>
+            <a href="music-loops.html" class="hero-pill">
+              <span class="label">Loops &amp; Packs</span>
+              <span class="arrow">↗</span>
+            </a>
+          </div>
+
           <p class="hero-note">
-            Hinweis: Aktuell verlinken die Buttons noch auf Riffusion-Seiten.
-            Eigene Player auf der Website kommen, sobald die Audio-Files gehostet sind.
+            Tipp: Nutze die Filter oben, um nach Stimmung zu sortieren – oder aktiviere den
+            <strong>Terminal Mode</strong>, wenn du alles als Text-Liste sehen willst.
           </p>
         </div>
 
-        <!-- Terminal -->
+        <!-- Terminal / Overview -->
         <aside class="panel-glass">
           <div class="panel-header">
-            <span class="icon">🎚️</span>
-            <span>SINGLES INDEX · LIVE</span>
+            <span class="icon">🎧</span>
+            <span>NOW LOADING · SINGLES INDEX</span>
           </div>
-          <div class="terminal">
-promptrebel:music/singles$ ls
+          <div class="terminal" id="miniTerminal">
+<span class="prompt">promptrebel:music/singles$</span> <span class="cmd">ls --vibe</span>
 
-> [Code:Unsterblich]              # dystopischer KI-Pakt
-> [Ich seh nur dich,GPT]          # Liebeslied an ein Sprachmodell
-> [KI herrscht jetzt - Sing mir dein Ende]  # Endzeit-Chor
-> [Alexa, zeig mir Brüste]        # satirischer Trash-Hit
+  [dark]        CODE:UNSTERBLICH
+  [love]        ICH SEH NUR DICH, GPT
+  [apocalypse]  KI HERRSCHT JETZT
+  [meme]        ALEXA, ZEIG MIR BRÜSTE
 
-<span class="dim"># mehr Singles folgen…</span>
+<span class="dim"># Filterchips unten ändern die Auswahl live…</span>
           </div>
         </aside>
       </div>
     </section>
 
-    <!-- TRACK GRID -->
-    <section class="section" aria-labelledby="singles-title">
-      <h2 class="section-title" id="singles-title">Aktuelle Singles (Riffusion-Preview)</h2>
+    <!-- TRACKS SECTION (Cards + Compact Mode) -->
+    <section class="section tracks-section" aria-labelledby="singles-title">
+      <h2 class="section-title" id="singles-title">Singles &amp; One-Shots</h2>
       <p class="section-subtitle">
-        Vier Test-Releases, eingebunden über Riffusion-Links. Perfekt, um
-        Layout und Flow der Seite zu testen.
+        Aktuell vier Singles als Vorgeschmack – später können hier problemlos 30+ Tracks stehen.
+        Filter und Compact-View helfen beim Durchstöbern.
       </p>
 
-      <div class="track-grid">
+      <div class="tracks-toolbar">
+        <div class="filter-chips" aria-label="Vibe-Filter">
+          <button class="filter-chip is-active" data-vibe="all">All</button>
+          <button class="filter-chip" data-vibe="dark">Dark</button>
+          <button class="filter-chip" data-vibe="love">Love</button>
+          <button class="filter-chip" data-vibe="apocalypse">Apocalypse</button>
+          <button class="filter-chip" data-vibe="meme">Meme</button>
+        </div>
+        <div class="view-toggles">
+          <span class="view-label">View:</span>
+          <button class="view-btn is-active" data-view="cards">Cards</button>
+          <button class="view-btn" data-view="compact">Compact</button>
+          <button class="view-btn" id="toggleTerminal">Terminal Mode</button>
+        </div>
+      </div>
+
+      <div class="tracks-list" id="tracksList">
         <!-- Track 1 -->
-        <article class="track-card">
-          <div class="track-tag">SINGLE · KI-RAP</div>
-          <h3 class="track-title">[Code:Unsterblich]</h3>
-          <div class="track-meta">Dark Trap · Deutsch · Riffusion</div>
-          <p class="track-desc">
-            Ein Pakt zwischen Mensch und Maschine – düstere Synths, schwere
-            Drums und eine Hook, die so tut, als würde der Code ewig laufen.
-          </p>
-          <div class="track-footer">
-            <span class="track-chip">Status: Experiment · v0.1</span>
-            <div class="track-buttons">
-              <a class="btn btn-primary" target="_blank" rel="noopener noreferrer"
-                 href="https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf">
-                <span class="icon">▶</span><span>Play auf Riffusion</span>
-              </a>
-              <a class="btn" href="#todo-prompts-code-unsterblich">
-                <span class="icon">🧠</span><span>Prompts (bald)</span>
-              </a>
+        <article
+          class="track-card"
+          data-title="Code:Unsterblich"
+          data-slug="code-unsterblich"
+          data-url="https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf"
+          data-vibe="dark"
+          data-length="3:45"
+        >
+          <div class="track-header">
+            <div class="track-title">
+              <span>①</span>
+              <span>Code:Unsterblich</span>
             </div>
+            <div class="track-tag">RAP · DARK</div>
+          </div>
+          <div class="track-meta-row">
+            <span class="meta-pill">Vibe: dark / dystopian</span>
+            <span class="meta-pill">Energy: high</span>
+            <span class="meta-pill">Language: DE</span>
+          </div>
+          <p class="track-desc">
+            Schwerer, dystopischer KI-Rap – eine Art Prolog zu den härteren Projekten.
+            Gedacht als Soundtrack für Neon-Nächte und Terminal-Screens.
+          </p>
+          <div class="track-actions">
+            <div class="track-links">
+              <a class="track-link" href="https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf" target="_blank" rel="noopener">
+                Play on Riffusion →
+              </a>
+              <span class="track-link secondary">Prompts → (coming soon)</span>
+            </div>
+            <span class="track-length">ca. 3–4 min</span>
           </div>
         </article>
 
         <!-- Track 2 -->
-        <article class="track-card">
-          <div class="track-tag">SINGLE · KI-LOVE</div>
-          <h3 class="track-title">[Ich seh nur dich,GPT]</h3>
-          <div class="track-meta">Emo Rap · Deutsch · Riffusion</div>
-          <p class="track-desc">
-            Liebeserklärung an ein Sprachmodell – halb ernst, halb ironisch,
-            mit viel Pathos und einer Prise Overthinking.
-          </p>
-          <div class="track-footer">
-            <span class="track-chip">Status: Draft · v0.1</span>
-            <div class="track-buttons">
-              <a class="btn btn-primary" target="_blank" rel="noopener noreferrer"
-                 href="https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140">
-                <span class="icon">▶</span><span>Play auf Riffusion</span>
-              </a>
-              <a class="btn" href="#todo-prompts-gpt-love">
-                <span class="icon">🧠</span><span>Prompts (bald)</span>
-              </a>
+        <article
+          class="track-card"
+          data-title="Ich seh nur dich, GPT"
+          data-slug="ich-seh-nur-dich-gpt"
+          data-url="https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140"
+          data-vibe="love"
+          data-length="3:20"
+        >
+          <div class="track-header">
+            <div class="track-title">
+              <span>②</span>
+              <span>Ich seh nur dich, GPT</span>
             </div>
+            <div class="track-tag">RAP · EMO</div>
+          </div>
+          <div class="track-meta-row">
+            <span class="meta-pill">Vibe: love / bittersweet</span>
+            <span class="meta-pill">Energy: mid</span>
+            <span class="meta-pill">Language: DE</span>
+          </div>
+          <p class="track-desc">
+            Halb Liebeslied, halb Meta-Song über die Beziehung Mensch ↔ KI.
+            Zwischen Ironie und echtem Gefühl – perfekt für späte Sessions.
+          </p>
+          <div class="track-actions">
+            <div class="track-links">
+              <a class="track-link" href="https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140" target="_blank" rel="noopener">
+                Play on Riffusion →
+              </a>
+              <span class="track-link secondary">Prompts → (coming soon)</span>
+            </div>
+            <span class="track-length">ca. 3–4 min</span>
           </div>
         </article>
 
         <!-- Track 3 -->
-        <article class="track-card">
-          <div class="track-tag">SINGLE · ENDZEIT</div>
-          <h3 class="track-title">[KI herrscht jetzt – Sing mir dein Ende]</h3>
-          <div class="track-meta">Epic Choir · Dark · Riffusion</div>
-          <p class="track-desc">
-            Chorale Endzeit-Hymne aus Sicht einer dominanten KI – perfekt
-            als Soundtrack für dystopische Szenen im PromptRebel-Universum.
-          </p>
-          <div class="track-footer">
-            <span class="track-chip">Status: Proto · v0.1</span>
-            <div class="track-buttons">
-              <a class="btn btn-primary" target="_blank" rel="noopener noreferrer"
-                 href="https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552">
-                <span class="icon">▶</span><span>Play auf Riffusion</span>
-              </a>
-              <a class="btn" href="#todo-prompts-ki-herrscht">
-                <span class="icon">🧠</span><span>Prompts (bald)</span>
-              </a>
+        <article
+          class="track-card"
+          data-title="KI herrscht jetzt – Sing mir dein Ende"
+          data-slug="ki-herrscht-jetzt"
+          data-url="https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552"
+          data-vibe="apocalypse"
+          data-length="3:30"
+        >
+          <div class="track-header">
+            <div class="track-title">
+              <span>③</span>
+              <span>KI herrscht jetzt – Sing mir dein Ende</span>
             </div>
+            <div class="track-tag">RAP · APOCALYPSE</div>
+          </div>
+          <div class="track-meta-row">
+            <span class="meta-pill">Vibe: apocalypse / endzeit</span>
+            <span class="meta-pill">Energy: high</span>
+            <span class="meta-pill">Language: DE</span>
+          </div>
+          <p class="track-desc">
+            Endzeit-Hymne aus Sicht der KI. Hart, direkt, mit Bilder-Kino im Kopf –
+            eher Soundtrack für die KI-Ansage-Reihe als für’s Radio.
+          </p>
+          <div class="track-actions">
+            <div class="track-links">
+              <a class="track-link" href="https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552" target="_blank" rel="noopener">
+                Play on Riffusion →
+              </a>
+              <span class="track-link secondary">Prompts → (coming soon)</span>
+            </div>
+            <span class="track-length">ca. 3–4 min</span>
           </div>
         </article>
 
         <!-- Track 4 -->
-        <article class="track-card">
-          <div class="track-tag">SINGLE · SATIRE</div>
-          <h3 class="track-title">[Alexa, zeig mir Brüste]</h3>
-          <div class="track-meta">Comedy Rap · Deutsch · Riffusion</div>
-          <p class="track-desc">
-            Vollkommen überdrehter Trash-Track über Sprachassistenten,
-            Grenzüberschreitungen und den Humor der Maschinen.
-          </p>
-          <div class="track-footer">
-            <span class="track-chip">Status: Trash-Kanon · v0.1</span>
-            <div class="track-buttons">
-              <a class="btn btn-primary" target="_blank" rel="noopener noreferrer"
-                 href="https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70">
-                <span class="icon">▶</span><span>Play auf Riffusion</span>
-              </a>
-              <a class="btn" href="#todo-prompts-alexa">
-                <span class="icon">🧠</span><span>Prompts (bald)</span>
-              </a>
+        <article
+          class="track-card"
+          data-title="Alexa, zeig mir Brüste"
+          data-slug="alexa-zeig-mir-bruste"
+          data-url="https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70"
+          data-vibe="meme"
+          data-length="2:50"
+        >
+          <div class="track-header">
+            <div class="track-title">
+              <span>④</span>
+              <span>Alexa, zeig mir Brüste</span>
             </div>
+            <div class="track-tag">MEME · RAP</div>
+          </div>
+          <div class="track-meta-row">
+            <span class="meta-pill">Vibe: meme / absurd</span>
+            <span class="meta-pill">Energy: mid</span>
+            <span class="meta-pill">Language: DE</span>
+          </div>
+          <p class="track-desc">
+            Voller Meme-Modus – überzogener, absurder Humortrack über Voice-Assistenten
+            und Wünsche, die besser im Kopf bleiben sollten.
+          </p>
+          <div class="track-actions">
+            <div class="track-links">
+              <a class="track-link" href="https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70" target="_blank" rel="noopener">
+                Play on Riffusion →
+              </a>
+              <span class="track-link secondary">Prompts → (coming soon)</span>
+            </div>
+            <span class="track-length">ca. 2–3 min</span>
           </div>
         </article>
+      </div>
+    </section>
+
+    <!-- TERMINAL MODE SECTION -->
+    <section class="section terminal-section" aria-labelledby="terminal-title">
+      <h2 class="section-title" id="terminal-title">Singles – Lab Terminal</h2>
+      <p class="section-subtitle">
+        Für alle, die lieber mit Text als mit Kacheln arbeiten. Nutze
+        <code>help</code>, <code>list</code>, <code>filter vibe=…</code> oder
+        <code>play &lt;teil vom titel&gt;</code>.
+      </p>
+
+      <div class="panel-glass">
+        <div class="panel-header">
+          <span class="icon">⌘</span>
+          <span>SINGLES TERMINAL</span>
+        </div>
+        <div class="terminal-output" id="terminalOutput"></div>
+        <div class="terminal-input-row">
+          <span>promptrebel:music/singles$</span>
+          <input
+            id="terminalInput"
+            class="terminal-input"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="help · list · filter vibe=dark · play unsterblich"
+          />
+        </div>
       </div>
     </section>
 
@@ -663,21 +973,20 @@ promptrebel:music/singles$ ls
         <span>·</span>
         <a href="#">Privacy</a>
       </div>
-      <div>current build: <span id="buildVersion" class="build-highlight">v0.1.singles</span> – singles index</div>
+      <div>current build: <span id="buildVersion" class="build-highlight">v0.3.singles</span> – singles index</div>
     </footer>
   </main>
 
   <script>
     // --- Scroll-Progress ---
-    const scrollBar = document.getElementById("scrollProgress");
     window.addEventListener("scroll", () => {
       const doc = document.documentElement;
       const scrollable = doc.scrollHeight - window.innerHeight;
       const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
-      scrollBar.style.transform = `scaleX(${ratio})`;
+      document.documentElement.style.setProperty("--scroll", ratio.toString());
     });
 
-    // --- Brand Glitch + Easter Egg ---
+    // --- Brand Glitch on Load + Easter Egg (3x Klick) ---
     const brandEl = document.getElementById("brand");
 
     window.addEventListener("load", () => {
@@ -714,13 +1023,192 @@ promptrebel:music/singles$ ls
     // --- Footer-Version-Click ---
     const buildVersionEl = document.getElementById("buildVersion");
     buildVersionEl.addEventListener("click", () => {
-      const versions = ["v0.1.singles", "v0.2.singles", "v0.6.9.singles", "v1.0.singles", "v∞.singles"];
+      const versions = ["v0.3.singles", "v0.4.singles", "v0.6.9.singles", "v1.0.singles", "v∞.singles"];
       let i = 0;
       const int = setInterval(() => {
         buildVersionEl.textContent = versions[i++ % versions.length];
         if (i > 10) clearInterval(int);
       }, 120);
     });
+
+    // --- Filterchips ---
+    const chips = Array.from(document.querySelectorAll(".filter-chip"));
+    const trackCards = Array.from(document.querySelectorAll(".track-card"));
+
+    function applyFilter(vibe) {
+      trackCards.forEach(card => {
+        const cardVibe = card.dataset.vibe || "all";
+        const show = vibe === "all" || cardVibe === vibe;
+        card.style.display = show ? "" : "none";
+      });
+    }
+
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        chips.forEach(c => c.classList.remove("is-active"));
+        chip.classList.add("is-active");
+        const vibe = chip.dataset.vibe || "all";
+        applyFilter(vibe);
+      });
+    });
+
+    // --- View toggles (Cards / Compact) ---
+    const viewButtons = Array.from(document.querySelectorAll(".view-btn[data-view]"));
+    const terminalToggleBtn = document.getElementById("toggleTerminal");
+
+    viewButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const view = btn.dataset.view;
+        viewButtons.forEach(b => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        if (view === "compact") {
+          document.body.classList.add("compact-view");
+        } else {
+          document.body.classList.remove("compact-view");
+        }
+      });
+    });
+
+    // --- Terminal Mode Toggle ---
+    let terminalOpen = false;
+    terminalToggleBtn.addEventListener("click", () => {
+      terminalOpen = !terminalOpen;
+      document.body.classList.toggle("terminal-open", terminalOpen);
+      terminalToggleBtn.textContent = terminalOpen ? "Close Terminal" : "Terminal Mode";
+    });
+
+    // --- Terminal Logic ---
+    const terminalOutput = document.getElementById("terminalOutput");
+    const terminalInput = document.getElementById("terminalInput");
+
+    const tracksData = [
+      {
+        id: 1,
+        title: "Code:Unsterblich",
+        slug: "code-unsterblich",
+        vibe: "dark",
+        length: "3–4 min",
+        url: "https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf"
+      },
+      {
+        id: 2,
+        title: "Ich seh nur dich, GPT",
+        slug: "ich-seh-nur-dich-gpt",
+        vibe: "love",
+        length: "3–4 min",
+        url: "https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140"
+      },
+      {
+        id: 3,
+        title: "KI herrscht jetzt – Sing mir dein Ende",
+        slug: "ki-herrscht-jetzt",
+        vibe: "apocalypse",
+        length: "3–4 min",
+        url: "https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552"
+      },
+      {
+        id: 4,
+        title: "Alexa, zeig mir Brüste",
+        slug: "alexa-zeig-mir-bruste",
+        vibe: "meme",
+        length: "2–3 min",
+        url: "https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70"
+      }
+    ];
+
+    function printToTerminal(lines) {
+      if (!Array.isArray(lines)) lines = [lines];
+      const current = terminalOutput.textContent ? terminalOutput.textContent + "\n" : "";
+      terminalOutput.textContent = current + lines.join("\n");
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+
+    function printWelcome() {
+      terminalOutput.textContent = "";
+      printToTerminal([
+        "welcome to singles-terminal v0.1",
+        "",
+        "type 'help' for commands or 'list' to see all singles.",
+        ""
+      ]);
+      printList(tracksData);
+    }
+
+    function printList(list) {
+      printToTerminal("> list\n");
+      list.forEach(t => {
+        const line = `${t.id.toString().padStart(2, " ")}  [${t.vibe.padEnd(10)}]  ${t.title}`;
+        printToTerminal(line);
+      });
+      printToTerminal("");
+    }
+
+    function handleCommand(raw) {
+      const input = raw.trim();
+      if (!input) return;
+
+      printToTerminal(`promptrebel:music/singles$ ${input}`);
+
+      if (input === "help") {
+        printToTerminal([
+          "",
+          "available commands:",
+          "  help                 show this help",
+          "  list                 list all singles",
+          "  filter vibe=<tag>    filter by vibe (dark, love, apocalypse, meme)",
+          "  play <text>          open first track that matches <text> in title",
+          "",
+        ]);
+        return;
+      }
+
+      if (input === "list") {
+        printList(tracksData);
+        return;
+      }
+
+      if (input.startsWith("filter ")) {
+        const rest = input.slice("filter".length).trim();
+        if (!rest.startsWith("vibe=")) {
+          printToTerminal("error: only 'vibe=' filter supported (e.g. filter vibe=dark)\n");
+          return;
+        }
+        const value = rest.slice("vibe=".length).trim().toLowerCase();
+        const filtered = tracksData.filter(t => t.vibe.toLowerCase() === value);
+        if (!filtered.length) {
+          printToTerminal(`no tracks found for vibe='${value}'\n`);
+        } else {
+          printList(filtered);
+        }
+        return;
+      }
+
+      if (input.startsWith("play ")) {
+        const q = input.slice(5).trim().toLowerCase();
+        const match = tracksData.find(t => t.title.toLowerCase().includes(q));
+        if (!match) {
+          printToTerminal(`no track found matching '${q}'\n`);
+          return;
+        }
+        printToTerminal(`now opening: ${match.title}\n`);
+        window.open(match.url, "_blank");
+        return;
+      }
+
+      printToTerminal(`unknown command: '${input}' (try 'help')\n`);
+    }
+
+    terminalInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const value = terminalInput.value;
+        terminalInput.value = "";
+        handleCommand(value);
+      }
+    });
+
+    // Init terminal content
+    printWelcome();
   </script>
 </body>
 </html>
