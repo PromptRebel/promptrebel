@@ -63,17 +63,17 @@
 
     /* --- Scroll-Progress-Bar --- */
     .scroll-progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
-      transform-origin: left;
-      transform: scaleX(0);
-      transition: transform 0.1s linear;
-      z-index: 60;
-    }
+  position: fixed;
+  top: 56px;              /* unter dem Header; ggf. 52–64px feinjustieren */
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.1s linear;
+  z-index: 30;            /* unter der Nav (40), über dem Inhalt */
+}
 
     /* --- Skip-Link --- */
     .skip-link {
@@ -98,7 +98,7 @@
     .nav {
       position: sticky;
       top: 0;
-      z-index: 50;
+      z-index: 40;
       backdrop-filter: blur(14px);
       background: linear-gradient(to bottom, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.7));
       border-bottom: 1px solid rgba(148, 163, 184, 0.16);
