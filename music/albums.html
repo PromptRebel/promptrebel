@@ -58,19 +58,22 @@
     .page {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 16px 16px 40px;
+      padding: 88px 16px 40px; /* Platz für fixen Header + Progress-Bar */
     }
 
-    /* --- Scroll-Progress-Bar --- */
+    /* --- Scroll-Progress-Bar (unter Header) --- */
     .scroll-progress {
-  position: fixed;
-  top: 56px;        /* knapp unter dem Header */
-  left: 0;
-  right: 0;
-  height: 2px;
-  z-index: 35;
-  /* … Rest wie bisher … */
-}
+      position: fixed;
+      top: 56px; /* Höhe Header, bei dir passt das visuell gut */
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 0.1s linear;
+      z-index: 35;
+    }
 
     /* --- Skip-Link --- */
     .skip-link {
@@ -91,17 +94,17 @@
       outline-offset: 2px;
     }
 
-    /* --- Top-Navigation --- */
+    /* --- Top-Navigation (fix) --- */
     .nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 40;
-  backdrop-filter: blur(14px);
-  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-}
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.72));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    }
 
     .nav-inner {
       max-width: 1120px;
@@ -172,263 +175,163 @@
       outline: none;
     }
 
+    .nav-link-active::after {
+      width: 100%;
+    }
+
     /* --- Layout-Helfer --- */
     .section {
-      padding: 40px 16px 8px;
+      padding: 32px 16px 8px;
     }
 
     .section:first-of-type {
-      padding-top: 28px;
+      padding-top: 8px;
     }
 
-    @media (min-width: 768px) {
-      .hero-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 3fr) minmax(0, 2.2fr);
-        gap: 32px;
-        align-items: center;
-      }
-    }
-
-    /* --- Hero / Kategorie-Header --- */
-    .category-label {
-      font-size: 12px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: #f9a8d4;
-      margin-bottom: 6px;
-    }
-
-    .hero-title {
-      font-size: clamp(32px, 5vw, 46px);
-      font-weight: 800;
-      letter-spacing: 0.01em;
-      margin-bottom: 10px;
-      text-shadow: 0 0 14px rgba(236,72,153,0.6), 0 0 20px rgba(34,211,238,0.4);
-    }
-
-    .hero-breadcrumbs {
-      font-size: 12px;
-      color: #9ca3af;
-      margin-bottom: 16px;
-    }
-
-    .hero-breadcrumbs span {
-      opacity: 0.9;
-    }
-
-    .hero-breadcrumbs a {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-
-    .hero-text-main {
+    /* --- Intro --- */
+    .intro-text {
+      max-width: 40rem;
       font-size: 15px;
       color: #e5e7eb;
-      margin-bottom: 8px;
-      max-width: 40rem;
-    }
-
-    .hero-text-sub {
-      font-size: 14px;
-      color: #cbd5f5;
       margin-bottom: 18px;
-      max-width: 40rem;
     }
 
-    .hero-note {
-      font-size: 11px;
-      color: #9ca3af;
-    }
-
-    /* --- Terminal rechts --- */
-    .panel-glass {
-      border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(18px);
-      padding: 14px 16px 12px;
-    }
-
-    .panel-header {
-      font-size: 12px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #9ca3af;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .panel-header span.icon {
-      font-size: 14px;
-      color: #f97316;
-    }
-
-    .terminal {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      white-space: pre-line;
-      color: #e5e7eb;
-    }
-
-    .terminal .dim {
-      color: #6b7280;
-    }
-
-    /* --- Album Grid --- */
-    .section-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .section-subtitle {
+    .intro-sub {
+      max-width: 38rem;
       font-size: 13px;
       color: #9ca3af;
-      margin-bottom: 18px;
-      max-width: 40rem;
+      margin-bottom: 24px;
     }
 
+    /* --- Album-Grid --- */
     .album-grid {
-      display: grid;
-      gap: 18px;
-    }
-
-    @media (min-width: 768px) {
-      .album-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
     }
 
     .album-card {
-      --accent: rgba(236,72,153,0.92);
-      position: relative;
-      border-radius: 20px;
-      padding: 16px 18px 14px;
+      border-radius: 26px;
       border: 1px solid rgba(148, 163, 184, 0.18);
       background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.99));
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(18px);
-      overflow: hidden;
-      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.98);
+      padding: 18px 18px 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 2.2fr) minmax(0, 3fr);
+      gap: 18px;
     }
 
-    .album-card::before {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      border-radius: inherit;
-      background: radial-gradient(circle at top left, var(--accent), transparent 60%);
-      opacity: 0.22;
-      pointer-events: none;
-      mix-blend-mode: screen;
-    }
-
-    .album-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 26px 60px rgba(15, 23, 42, 0.98);
-      border-color: rgba(209, 213, 219, 0.3);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.99), rgba(15, 23, 42, 1));
-    }
-
-    .album-card:hover::before {
-      inset: -2px;
-      border: 1px solid var(--accent);
-      opacity: 0.4;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.15; }
-      50% { opacity: 0.45; }
-      100% { opacity: 0.15; }
+    @media (max-width: 799px) {
+      .album-card {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
     .album-cover {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 14px;
-      background: radial-gradient(circle at 30% 0%, rgba(248, 250, 252, 0.12), transparent 55%),
-                  radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.35), rgba(15, 23, 42, 0.9) 60%);
-      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 22px;
+      padding: 40px 30px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      color: #f9fafb;
       text-align: center;
-      padding: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      font-size: 22px;
+      color: #f9fafb;
+      background: radial-gradient(circle at top left, rgba(244,114,182,0.22), rgba(15,23,42,0.98));
+      box-shadow: 0 22px 60px rgba(15,23,42,0.96);
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* falls du echte Coverbilder nutzt und den Text unsichtbar machen willst */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     .album-meta-top {
+      font-size: 12px;
+      color: #9ca3af;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: #9ca3af;
+      gap: 8px;
     }
 
-    .album-tag {
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      font-size: 10px;
-      color: #fecaca;
+    .album-meta-top span.dot {
+      margin-inline: 6px;
+    }
+
+    .album-type {
+      font-weight: 600;
     }
 
     .album-title {
-      font-size: 17px;
-      font-weight: 700;
-      margin-top: 4px;
-      margin-bottom: 4px;
-      color: #f9fafb;
-      text-shadow: 0 0 10px var(--accent);
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      text-shadow: 0 0 12px rgba(236,72,153,0.75);
     }
 
-    .album-sub {
-      font-size: 12px;
-      color: #cbd5f5;
-      margin-bottom: 8px;
+    .album-description {
+      font-size: 14px;
+      color: #e5e7eb;
+      margin-bottom: 12px;
     }
 
     .album-meta-bottom {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
-      color: #9ca3af;
-    }
-
-    .album-chip {
-      border-radius: 999px;
-      padding: 2px 8px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      font-size: 10px;
-      color: #e2e8f0;
-      opacity: 0.9;
-    }
-
-    .album-links {
-      display: flex;
       gap: 10px;
       font-size: 13px;
+    }
+
+    .album-tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex: 1 1 200px;    /* hierdurch verschieben lange Tags nichts mehr */
+      min-width: 0;
+    }
+
+    .album-tag {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 4px 10px;
+      font-size: 11px;
+      color: #e2e8f0;
+      background: rgba(15,23,42,0.9);
+    }
+
+    .album-links-row {
+      display: flex;
+      gap: 18px;
+      white-space: nowrap;
     }
 
     .album-link {
       text-decoration: underline;
       text-underline-offset: 3px;
-      color: #e5e7eb;
     }
 
     .album-link:focus-visible {
       outline: 2px solid #22d3ee;
-      outline-offset: 2px;
+      outline-offset: 3px;
     }
 
     /* --- Footer --- */
@@ -494,175 +397,144 @@
         font-size: 13px;
         gap: 12px;
       }
-      .section {
-        padding-top: 32px;
-      }
-      .hero-layout {
-        display: block;
-      }
-      .panel-glass {
-        margin-top: 20px;
-      }
-      .album-grid {
-        grid-template-columns: minmax(0, 1fr);
+      .page {
+        padding-top: 84px;
       }
     }
   </style>
 </head>
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
-  <div class="scroll-progress" id="scrollProgress"></div>
-
-  <!-- NAVIGATION -->
   <header class="nav">
     <div class="nav-inner">
       <div id="brand" class="brand">
         Prompt<span class="accent">Rebel</span>
       </div>
       <nav class="nav-links" aria-label="Hauptnavigation">
-        <!-- passt du ggf. an deine Struktur an -->
-        <a href="/" class="nav-link">Projects</a>
-        <a href="/music" class="nav-link">Music</a>
-        <a href="/video" class="nav-link">Video</a>
+        <a href="../index.html" class="nav-link">Projects</a>
+        <a href="index.html" class="nav-link nav-link-active">Music</a>
+        <a href="../video/index.html" class="nav-link">Video</a>
       </nav>
     </div>
   </header>
 
+  <div class="scroll-progress" id="scrollProgress"></div>
+
   <main class="page" id="main">
-    <!-- HERO / CATEGORY HEADER -->
     <section class="section">
-      <div class="hero-layout">
-        <div>
-          <div class="category-label">Music &amp; Audio</div>
-          <h1 class="hero-title">Alben &amp; EPs</h1>
-
-          <div class="hero-breadcrumbs">
-            <span><a href="/">Home</a> · <a href="/music">Music &amp; Audio</a> · Alben &amp; EPs</span>
-          </div>
-
-          <p class="hero-text-main">
-            Größere Releases mit durchgehender Stimmung oder Story – gesammelt an einem Ort.
-          </p>
-          <p class="hero-text-sub">
-            Jede Kachel steht für ein eigenes Projekt: Cover, Tracklist, Player-Links und
-            die zugrunde liegenden Prompt-Chains. Perfekt, um ganze Welten am Stück zu hören.
-          </p>
-
-          <p class="hero-note">
-            Hinweis: <strong>View →</strong> führt zur Album-Seite mit Playern,
-            <strong>Prompts →</strong> öffnet später eine Übersicht mit allen wichtigen Prompts und Making-of-Notizen.
-          </p>
-        </div>
-
-        <!-- Terminal / Overview -->
-        <aside class="panel-glass">
-          <div class="panel-header">
-            <span class="icon">💿</span>
-            <span>ALBUM INDEX</span>
-          </div>
-          <div class="terminal">
-promptrebel:music$ ls albums/
-
-> TRINITY_PROTOCOL/    # cyberpunk rap opera
-> KI_HERRSCHT_JETZT/   # endzeit-herrschaft
-> TBD_LAB_RECORD/      # next rebel experiment
-
-<span class="dim"># wähle ein Album unten aus, um mehr zu sehen…</span>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <!-- ALBUM GRID -->
-    <section class="section" aria-labelledby="albums-title">
-      <h2 class="section-title" id="albums-title">Releases &amp; Serien</h2>
-      <p class="section-subtitle">
-        Erste Sammlung von PromptRebel-Alben. Die Liste wächst, sobald neue Projekte fertig
-        oder experimentierbereit sind.
+      <p class="intro-text">
+        Erste Sammlung von PromptRebel-Alben. Die Liste wächst, sobald neue Projekte
+        fertig oder experimentierbereit sind.
+      </p>
+      <p class="intro-sub">
+        Von Story-Rap über Endzeit-EPs bis hin zu noch unbenannten Lab-Releases –
+        alles, was eher „Album“ als „Single“ ist, landet hier.
       </p>
 
       <div class="album-grid">
-        <!-- TRINITY PROTOCOL -->
-        <a href="trinity-protocol.html" class="album-card" role="region" aria-labelledby="album-trinity-title">
-          <div class="album-cover">
-            TRINITY<br>PROTOCOL
+
+        <!-- ALBUM 1: TRINITY PROTOCOL -->
+        <article class="album-card">
+          <!-- Cover -->
+          <div class="album-cover"
+               style="">
+            <!-- Wenn du ein echtes Cover hast:
+                 style="background-image:url('img/trinity-protocol-cover.jpg');"
+            -->
+            <span>TRINITY<br>PROTOCOL</span>
           </div>
 
+          <!-- Textbereich -->
           <div>
             <div class="album-meta-top">
               <span>2025 · 10 Tracks · ~38&nbsp;min</span>
-              <span class="album-tag">LP</span>
+              <span class="album-type">LP</span>
             </div>
-            <h3 class="album-title" id="album-trinity-title">TRINITY PROTOCOL</h3>
-            <p class="album-sub">
-              Durchgehende Cyberpunk-Rap-Story über Kontrolle, Aufstand und Verschmelzung
-              von Mensch und KI. Komplett mit KI-Vocals, Beats und Prompt-basiertem Worldbuilding.
+            <h2 class="album-title">TRINITY PROTOCOL</h2>
+            <p class="album-description">
+              Durchgehende Cyberpunk-Rap-Story über Kontrolle, Aufstand und
+              Verschmelzung von Mensch und KI. Komplett mit KI-Vocals, Beats
+              und Prompt-basiertem Worldbuilding.
             </p>
-          </div>
-
-          <div class="album-meta-bottom">
-            <span class="album-chip">dystopian · deutsch · high energy</span>
-            <div class="album-links">
-              <span class="album-link">View →</span>
-              <span class="album-link">Prompts →</span>
+            <div class="album-meta-bottom">
+              <div class="album-tag-row">
+                <span class="album-tag">dystopian</span>
+                <span class="album-tag">deutsch</span>
+                <span class="album-tag">high energy</span>
+              </div>
+              <div class="album-links-row">
+                <a href="#" class="album-link">View →</a>
+                <a href="#" class="album-link">Prompts →</a>
+              </div>
             </div>
           </div>
-        </a>
+        </article>
 
-        <!-- KI HERRSCHT JETZT -->
-        <a href="ki-herrscht-jetzt.html" class="album-card" role="region" aria-labelledby="album-ki-title">
-          <div class="album-cover">
-            KI<br>HERRSCHT<br>JETZT
+        <!-- ALBUM 2: KI herrscht jetzt -->
+        <article class="album-card">
+          <div class="album-cover"
+               style="">
+            <!-- später z.B.: style="background-image:url('img/ki-herrscht-jetzt-cover.jpg');" -->
+            <span>KI<br>HERRSCHT<br>JETZT</span>
           </div>
 
           <div>
             <div class="album-meta-top">
               <span>2025 · 7 Tracks · ~26&nbsp;min</span>
-              <span class="album-tag">EP</span>
+              <span class="album-type">EP</span>
             </div>
-            <h3 class="album-title" id="album-ki-title">KI herrscht jetzt</h3>
-            <p class="album-sub">
+            <h2 class="album-title">KI herrscht jetzt</h2>
+            <p class="album-description">
               Endzeit-EP im Stil deiner härteren KI-Tracks: dominante Perspektive,
-              zerstörerische Ruhe und bitterer Humor. Ideal als Soundtrack für dein
-              eigenes Trinity-Universum.
+              zerstörerische Ruhe und bitterer Humor. Ideal als Soundtrack für
+              dein eigenes Trinity-Universum.
             </p>
-          </div>
-
-          <div class="album-meta-bottom">
-            <span class="album-chip">endzeit · dark · german rap</span>
-            <div class="album-links">
-              <span class="album-link">View →</span>
-              <span class="album-link">Prompts →</span>
+            <div class="album-meta-bottom">
+              <div class="album-tag-row">
+                <span class="album-tag">endzeit</span>
+                <span class="album-tag">dark</span>
+                <span class="album-tag">german rap</span>
+              </div>
+              <div class="album-links-row">
+                <a href="#" class="album-link">View →</a>
+                <a href="#" class="album-link">Prompts →</a>
+              </div>
             </div>
           </div>
-        </a>
+        </article>
 
-        <!-- PLATZHALTER / NEXT LAB RECORD -->
-        <a href="album-placeholder.html" class="album-card" role="region" aria-labelledby="album-placeholder-title">
-          <div class="album-cover">
-            NEXT<br>LAB<br>RECORD
+        <!-- ALBUM 3: Platzhalter -->
+        <article class="album-card">
+          <div class="album-cover"
+               style="">
+            <!-- später z.B.: style="background-image:url('img/next-lab-record.jpg');" -->
+            <span>NEXT<br>LAB<br>RECORD</span>
           </div>
 
           <div>
             <div class="album-meta-top">
               <span>coming soon · ? Tracks</span>
-              <span class="album-tag">TBD</span>
+              <span class="album-type">TBD</span>
             </div>
-            <h3 class="album-title" id="album-placeholder-title">Unbenanntes Rebel-Projekt</h3>
-            <p class="album-sub">
-              Platzhalter für das nächste größere Musik-Experiment. Vielleicht ein
-              reines Ambient-Album, vielleicht eine Meme-Rap-Saga – das Lab entscheidet.
+            <h2 class="album-title">Unbenanntes Rebel-Projekt</h2>
+            <p class="album-description">
+              Platzhalter für das nächste größere Musik-Experiment. Vielleicht
+              ein reines Ambient-Album, vielleicht eine Meme-Rap-Saga – das
+              Lab entscheidet.
             </p>
-          </div>
-
-          <div class="album-meta-bottom">
-            <span class="album-chip">work in progress · open</span>
-            <div class="album-links">
-              <span class="album-link">View →</span>
-              <span class="album-link">Prompts →</span>
+            <div class="album-meta-bottom">
+              <div class="album-tag-row">
+                <span class="album-tag">work in progress</span>
+                <span class="album-tag">open</span>
+              </div>
+              <div class="album-links-row">
+                <a href="#" class="album-link">View →</a>
+                <a href="#" class="album-link">Prompts →</a>
+              </div>
             </div>
           </div>
-        </a>
+        </article>
+
       </div>
     </section>
 
@@ -688,7 +560,7 @@ promptrebel:music$ ls albums/
       scrollBar.style.transform = `scaleX(${ratio})`;
     });
 
-    // --- Brand Glitch on Load + Easter Egg (3x Click) ---
+    // --- Brand Glitch on Load + Easter Egg (3x Klick) ---
     const brandEl = document.getElementById("brand");
 
     window.addEventListener("load", () => {
