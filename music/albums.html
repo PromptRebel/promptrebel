@@ -188,12 +188,57 @@
       padding-top: 8px;
     }
 
+    /* --- Seitenkopf / Tabs wie bei Singles --- */
+    .page-kicker {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      line-height: 1.1;
+      font-weight: 800;
+      margin-bottom: 18px;
+      text-shadow: 0 0 20px rgba(15,23,42,1);
+    }
+
+    .music-switch {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .music-switch-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 14px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.95), rgba(15,23,42,0.98));
+      box-shadow: 0 14px 30px rgba(15,23,42,0.9);
+      color: #e5e7eb;
+    }
+
+    .music-switch-link.active {
+      border-color: transparent;
+      background: radial-gradient(circle at top left, rgba(236,72,153,0.7), rgba(37,99,235,0.7));
+      box-shadow:
+        0 0 25px rgba(236,72,153,0.7),
+        0 0 30px rgba(56,189,248,0.9);
+    }
+
     /* --- Intro --- */
     .intro-text {
       max-width: 40rem;
       font-size: 15px;
       color: #e5e7eb;
-      margin-bottom: 18px;
+      margin-bottom: 8px;
     }
 
     .intro-sub {
@@ -227,9 +272,17 @@
       }
     }
 
+    /* --- Cover: jetzt größer & komplettes Bild sichtbar --- */
     .album-cover {
       border-radius: 22px;
-      padding: 40px 30px;
+      position: relative;
+      overflow: hidden;
+      min-height: 190px;
+      background-color: #020617;
+      background-size: contain;    /* komplettes Bild sichtbar */
+      background-repeat: no-repeat;
+      background-position: center;
+      box-shadow: 0 22px 60px rgba(15,23,42,0.96);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -237,17 +290,11 @@
       text-transform: uppercase;
       letter-spacing: 0.1em;
       font-weight: 700;
-      font-size: 22px;
+      font-size: 18px;
       color: #f9fafb;
-      background: radial-gradient(circle at top left, rgba(244,114,182,0.22), rgba(15,23,42,0.98));
-      box-shadow: 0 22px 60px rgba(15,23,42,0.96);
-      background-size: cover;
-      background-position: center;
-      position: relative;
-      overflow: hidden;
     }
 
-    /* Screenreader-only Text (z.B. bei echten Covern) */
+    /* falls du Text nur für Screenreader brauchst */
     .sr-only {
       position: absolute;
       width: 1px;
@@ -400,6 +447,9 @@
       .page {
         padding-top: 84px;
       }
+      .page-title {
+        font-size: 26px;
+      }
     }
   </style>
 </head>
@@ -422,6 +472,16 @@
 
   <main class="page" id="main">
     <section class="section">
+      <!-- Seite-Kopf + Tabs -->
+      <p class="page-kicker">Category · Music</p>
+      <h1 class="page-title">Alben & EPs</h1>
+
+      <nav class="music-switch" aria-label="Musikbereiche">
+        <a href="albums.html" class="music-switch-link active">Alben & EPs</a>
+        <a href="singles.html" class="music-switch-link">Singles & Themes</a>
+        <a href="loops.html" class="music-switch-link">Loops & Packs</a>
+      </nav>
+
       <p class="intro-text">
         Erste Sammlung von PromptRebel-Alben. Die Liste wächst, sobald neue Projekte
         fertig oder experimentierbereit sind.
@@ -438,7 +498,7 @@
           <!-- Cover -->
           <div class="album-cover"
                style="background-image:url('../assets/covers/IMG_9810.jpeg');">
-            <span class="sr-only">TRINITY PROTOCOL</span>
+            <span class="sr-only">TRINITY PROTOCOL Cover</span>
           </div>
 
           <!-- Textbereich -->
@@ -471,7 +531,7 @@
         <article class="album-card">
           <div class="album-cover"
                style="background-image:url('../assets/covers/C33F4DB1-85A5-4EA3-ADCF-9AE4B15A8737.png');">
-            <span class="sr-only">KI herrscht jetzt</span>
+            <span class="sr-only">KI herrscht jetzt Cover</span>
           </div>
 
           <div>
