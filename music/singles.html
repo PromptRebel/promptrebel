@@ -2,14 +2,10 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>PromptRebel – Music Singles</title>
+  <title>PromptRebel – Singles & Themes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    :root {
-      --scroll: 0;
-    }
-
     /* --- Reset / Basics --- */
     *, *::before, *::after {
       box-sizing: border-box;
@@ -27,7 +23,6 @@
       background: #020617;
       color: #e5e7eb;
       line-height: 1.6;
-      padding-top: 64px; /* Platz für fixe Navi */
     }
 
     a {
@@ -66,6 +61,20 @@
       padding: 16px 16px 40px;
     }
 
+    /* --- Scroll-Progress-Bar --- */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 0.1s linear;
+      z-index: 50;
+    }
+
     /* --- Skip-Link --- */
     .skip-link {
       position: absolute;
@@ -85,12 +94,10 @@
       outline-offset: 2px;
     }
 
-    /* --- Top-Navigation + Scroll-Progress --- */
+    /* --- Top-Navigation --- */
     .nav {
-      position: fixed;
+      position: sticky;
       top: 0;
-      left: 0;
-      right: 0;
       z-index: 40;
       backdrop-filter: blur(14px);
       background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
@@ -100,25 +107,10 @@
     .nav-inner {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 10px 16px 8px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: relative;
-    }
-
-    .nav::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
-      transform-origin: left;
-      transform: scaleX(var(--scroll));
-      transition: transform 0.1s linear;
-      pointer-events: none;
     }
 
     .brand {
@@ -222,6 +214,10 @@
       margin-bottom: 16px;
     }
 
+    .hero-breadcrumbs span {
+      opacity: 0.9;
+    }
+
     .hero-breadcrumbs a {
       text-decoration: underline;
       text-underline-offset: 3px;
@@ -250,15 +246,20 @@
 
     .hero-pill {
       border-radius: 999px;
-      padding: 6px 14px;
+      padding: 8px 18px;
       border: 1px solid rgba(248, 250, 252, 0.16);
       font-size: 13px;
-      background: radial-gradient(circle at top left, rgba(30,64,175,0.75), rgba(15,23,42,0.95));
+      background: radial-gradient(circle at top left, rgba(30,64,175,0.85), rgba(15,23,42,0.95));
       box-shadow: 0 12px 30px rgba(15, 23, 42, 0.9);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+    }
+
+    .hero-pill--active {
+      border-color: rgba(251, 113, 133, 0.9);
+      box-shadow: 0 0 25px rgba(251, 113, 133, 0.75);
     }
 
     .hero-pill span.label {
@@ -268,11 +269,6 @@
     .hero-pill span.arrow {
       font-size: 12px;
       opacity: 0.8;
-    }
-
-    .hero-pill.active {
-      border-color: rgba(236,72,153,0.9);
-      box-shadow: 0 0 20px rgba(236,72,153,0.6);
     }
 
     .hero-note {
@@ -317,289 +313,250 @@
       color: #6b7280;
     }
 
-    .terminal .prompt {
-      color: #a5b4fc;
+    /* --- Filter / View Controls --- */
+    .controls {
+      padding: 32px 16px 8px;
     }
 
-    .terminal .cmd {
-      color: #f9a8d4;
-    }
-
-    .terminal .fail {
-      color: #fecaca;
-      text-shadow: 0 0 8px #fb7185;
-    }
-
-    /* --- Toolbar (Filter + View-Toggles) --- */
-    .tracks-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .filter-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .filter-chip {
-      border-radius: 999px;
-      padding: 4px 10px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: rgba(15,23,42,0.9);
-      font-size: 11px;
+    .controls p {
+      font-size: 14px;
       color: #e5e7eb;
-      cursor: pointer;
+      margin-bottom: 16px;
+      max-width: 40rem;
     }
 
-    .filter-chip.is-active {
-      border-color: rgba(236,72,153,0.95);
-      box-shadow: 0 0 12px rgba(236,72,153,0.8);
-      background: radial-gradient(circle at top left, rgba(236,72,153,0.35), rgba(15,23,42,0.95));
-    }
-
-    .view-toggles {
+    .chip-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      font-size: 11px;
+      gap: 10px;
+      margin-bottom: 12px;
       align-items: center;
     }
 
-    .view-label {
+    .chip-label {
+      font-size: 12px;
       color: #9ca3af;
       margin-right: 4px;
     }
 
-    .view-btn {
+    .chip {
       border-radius: 999px;
-      padding: 4px 10px;
+      padding: 6px 14px;
+      font-size: 13px;
       border: 1px solid rgba(148, 163, 184, 0.6);
-      background: rgba(15,23,42,0.9);
+      background: radial-gradient(circle at top left, rgba(30,64,175,0.7), rgba(15,23,42,0.98));
       cursor: pointer;
-      font-size: 11px;
-      color: #e5e7eb;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease, background 0.1s ease;
     }
 
-    .view-btn.is-active {
+    .chip.chip--active {
+      border-color: rgba(251,113,133,0.95);
+      box-shadow: 0 0 22px rgba(251,113,133,0.9);
+      background: radial-gradient(circle at top left, rgba(236,72,153,0.9), rgba(15,23,42,0.98));
+    }
+
+    .chip:hover {
+      transform: translateY(-1px);
+    }
+
+    .view-label {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-right: 4px;
+    }
+
+    .view-button {
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,0.98));
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease, background 0.1s ease;
+    }
+
+    .view-button.view-button--active {
       border-color: rgba(56,189,248,0.95);
-      box-shadow: 0 0 12px rgba(56,189,248,0.8);
-      background: radial-gradient(circle at top left, rgba(56,189,248,0.35), rgba(15,23,42,0.95));
+      box-shadow: 0 0 22px rgba(56,189,248,0.9);
+      background: radial-gradient(circle at top left, rgba(15,23,42,1), rgba(15,23,42,0.98));
     }
 
-    /* --- Tracks-Liste (Default Cards-View) --- */
-    .tracks-section {
-      transition: opacity 0.2s ease;
-    }
-
-    .tracks-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    /* --- Cards View --- */
+    .tracks-view {
+      padding: 8px 16px 0;
     }
 
     .track-card {
-      position: relative;
-      border-radius: 18px;
-      padding: 14px 16px 12px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 1));
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(18px);
-      overflow: hidden;
-      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 4px;
-    }
-
-    .track-card::before {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      border-radius: inherit;
-      background: radial-gradient(circle at top left, rgba(236,72,153,0.6), transparent 60%);
-      opacity: 0.22;
-      pointer-events: none;
-      mix-blend-mode: screen;
-    }
-
-    .track-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 24px 50px rgba(15, 23, 42, 0.98);
-      border-color: rgba(249, 250, 251, 0.28);
+      border-radius: 26px;
+      border: 1px solid rgba(148, 163, 184, 0.32);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+      box-shadow: 0 20px 55px rgba(15,23,42,0.98);
+      padding: 18px 20px 16px;
+      margin-bottom: 18px;
     }
 
     .track-header {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
+      gap: 14px;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .track-number {
+      font-size: 14px;
+      opacity: 0.9;
     }
 
     .track-title {
-      font-size: 15px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
 
-    .track-tag {
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #cbd5e1;
-    }
-
-    .track-meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .track-tags {
       font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
       color: #9ca3af;
-      margin-bottom: 4px;
+      margin-left: auto;
+      white-space: nowrap;
     }
 
-    .meta-pill {
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      padding: 2px 8px;
-    }
-
-    .track-desc {
-      font-size: 13px;
-      color: #d1d5db;
-      margin-bottom: 6px;
-    }
-
-    .track-actions {
+    .track-badges {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
       gap: 8px;
-      margin-top: 4px;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
     }
 
     .track-links {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 14px;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .track-links a {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .track-meta {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    /* --- Compact View --- */
+    #view-compact {
+      display: none;
+    }
+
+    .compact-table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 13px;
     }
 
-    .track-link {
+    .compact-head {
+      color: #9ca3af;
+      border-bottom: 1px solid rgba(30,64,175,0.7);
+    }
+
+    .compact-row {
+      border-bottom: 1px solid rgba(15,23,42,0.9);
+    }
+
+    .compact-cell {
+      padding: 6px 4px;
+      vertical-align: middle;
+    }
+
+    .compact-title {
+      font-weight: 600;
+    }
+
+    .compact-tags {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #9ca3af;
+    }
+
+    .compact-link a {
       text-decoration: underline;
       text-underline-offset: 3px;
-      color: #e5e7eb;
-      cursor: pointer;
     }
 
-    .track-link.secondary {
-      color: #a5b4fc;
+    /* --- Terminal Section --- */
+    #view-terminal {
+      display: none;
+      padding: 40px 16px 0;
     }
 
-    .track-length {
+    #view-terminal h2 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    #view-terminal p.desc {
+      font-size: 14px;
+      color: #cbd5f5;
+      margin-bottom: 18px;
+      max-width: 40rem;
+    }
+
+    .terminal-panel {
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.24);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+      box-shadow: 0 18px 45px rgba(15,23,42,0.98);
+      padding: 14px 16px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+
+    .terminal-header {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .terminal-header span.icon {
+      font-size: 14px;
+      color: #f97316;
+    }
+
+    .terminal-footer {
+      margin-top: 10px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(30,64,175,0.7);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       font-size: 11px;
       color: #9ca3af;
     }
 
-    /* --- Compact-View --- */
-    body.compact-view .track-card {
-      padding: 8px 10px;
-      box-shadow: none;
-      border-radius: 10px;
-      background: rgba(15,23,42,0.96);
-      display: grid;
-      grid-template-columns: minmax(0, 2.6fr) minmax(0, 1.4fr) auto;
-      align-items: center;
-      gap: 10px;
-    }
-
-    body.compact-view .track-card::before {
-      opacity: 0.1;
-    }
-
-    body.compact-view .track-header {
-      margin-bottom: 0;
-    }
-
-    body.compact-view .track-desc {
-      display: none;
-    }
-
-    body.compact-view .track-meta-row {
-      font-size: 10px;
-      gap: 4px;
-    }
-
-    body.compact-view .track-actions {
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-    }
-
-    body.compact-view .track-links {
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-    }
-
-    /* --- Terminal-Sektion (voller Modus) --- */
-    .terminal-section {
-      display: none;
-      margin-top: 8px;
-    }
-
-    body.terminal-open .tracks-section {
-      display: none;
-    }
-
-    body.terminal-open .terminal-section {
-      display: block;
-    }
-
-    .terminal-output {
-      max-height: 360px;
-      overflow-y: auto;
-      padding: 8px 0 4px;
-      border-top: 1px solid rgba(30,64,175,0.6);
-      border-bottom: 1px solid rgba(30,64,175,0.6);
-      margin-bottom: 8px;
-    }
-
-    .terminal-input-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-    }
-
-    .terminal-input-row span {
-      color: #a5b4fc;
-    }
-
-    .terminal-input {
-      flex: 1;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid rgba(148,163,184,0.6);
-      background: rgba(15,23,42,0.95);
-      color: #e5e7eb;
-      font-family: inherit;
-      font-size: 12px;
-    }
-
-    .terminal-input:focus-visible {
-      outline: 2px solid #22d3ee;
-      outline-offset: 1px;
+    .terminal-footer span.cmd {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      padding: 3px 8px;
     }
 
     /* --- Footer --- */
@@ -658,9 +615,6 @@
 
     /* --- Mobile Tweaks --- */
     @media (max-width: 767px) {
-      body {
-        padding-top: 60px;
-      }
       .nav-inner {
         gap: 8px;
       }
@@ -677,14 +631,24 @@
       .panel-glass {
         margin-top: 20px;
       }
-      body.compact-view .track-card {
-        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr);
+      .track-header {
+        flex-wrap: wrap;
+      }
+      .track-tags {
+        margin-left: 0;
+      }
+      .compact-table {
+        font-size: 12px;
+      }
+      .compact-cell {
+        padding: 5px 3px;
       }
     }
   </style>
 </head>
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
+  <div class="scroll-progress" id="scrollProgress"></div>
 
   <!-- NAVIGATION -->
   <header class="nav">
@@ -693,7 +657,7 @@
         Prompt<span class="accent">Rebel</span>
       </div>
       <nav class="nav-links" aria-label="Hauptnavigation">
-        <a href="../index.html#projects" class="nav-link">Projects</a>
+        <a href="../index.html" class="nav-link">Projects</a>
         <a href="../index.html#about" class="nav-link">About</a>
         <a href="../index.html#lab-notes" class="nav-link">Lab Notes</a>
       </nav>
@@ -701,7 +665,7 @@
   </header>
 
   <main class="page" id="main">
-    <!-- HERO / CATEGORY HEADER -->
+    <!-- HERO / HEADER -->
     <section class="section">
       <div class="hero-layout">
         <div>
@@ -725,242 +689,259 @@
           </p>
 
           <div class="hero-pills">
-            <a href="music-albums.html" class="hero-pill">
+            <a href="albums.html" class="hero-pill">
               <span class="label">Alben &amp; EPs</span>
               <span class="arrow">↗</span>
             </a>
-            <a href="music-singles.html" class="hero-pill active">
+            <div class="hero-pill hero-pill--active">
               <span class="label">Singles &amp; Themes</span>
-              <span class="arrow">↗</span>
-            </a>
-            <a href="music-loops.html" class="hero-pill">
+              <span class="arrow">⇢</span>
+            </div>
+            <a href="loops.html" class="hero-pill">
               <span class="label">Loops &amp; Packs</span>
               <span class="arrow">↗</span>
             </a>
           </div>
 
           <p class="hero-note">
-            Tipp: Nutze die Filter oben, um nach Stimmung zu sortieren – oder aktiviere den
-            <strong>Terminal Mode</strong>, wenn du alles als Text-Liste sehen willst.
+            Tipp: Nutze die Filter unten, um nach Stimmung zu sortieren – oder wechsle in den
+            <strong>Compact</strong>- oder <strong>Terminal Mode</strong>, wenn du anders stöbern willst.
           </p>
         </div>
 
-        <!-- Terminal / Overview -->
+        <!-- kleines Index-Terminal rechts -->
         <aside class="panel-glass">
           <div class="panel-header">
             <span class="icon">🎧</span>
             <span>NOW LOADING · SINGLES INDEX</span>
           </div>
-          <div class="terminal" id="miniTerminal">
-<span class="prompt">promptrebel:music/singles$</span> <span class="cmd">ls --vibe</span>
+          <div class="terminal">
+promptrebel:music/singles$ ls --vibe
+1  Code:Unsterblich       [dark]
+2  Ich seh nur dich, GPT  [love]
+3  KI herrscht jetzt      [apocalypse]
+4  Alexa, zeig mir Brüste [meme]
 
-  [dark]        CODE:UNSTERBLICH
-  [love]        ICH SEH NUR DICH, GPT
-  [apocalypse]  KI HERRSCHT JETZT
-  [meme]        ALEXA, ZEIG MIR BRÜSTE
-
-<span class="dim"># Filterchips unten ändern die Auswahl live…</span>
+<span class="dim"># wechsel View unten: cards · compact · terminal</span>
           </div>
         </aside>
       </div>
     </section>
 
-    <!-- TRACKS SECTION (Cards + Compact Mode) -->
-    <section class="section tracks-section" aria-labelledby="singles-title">
-      <h2 class="section-title" id="singles-title">Singles &amp; One-Shots</h2>
-      <p class="section-subtitle">
+    <!-- FILTER & VIEW CONTROLS -->
+    <section class="controls" aria-label="Filter und Ansichten">
+      <p>
         Aktuell vier Singles als Vorgeschmack – später können hier problemlos 30+ Tracks stehen.
         Filter und Compact-View helfen beim Durchstöbern.
       </p>
 
-      <div class="tracks-toolbar">
-        <div class="filter-chips" aria-label="Vibe-Filter">
-          <button class="filter-chip is-active" data-vibe="all">All</button>
-          <button class="filter-chip" data-vibe="dark">Dark</button>
-          <button class="filter-chip" data-vibe="love">Love</button>
-          <button class="filter-chip" data-vibe="apocalypse">Apocalypse</button>
-          <button class="filter-chip" data-vibe="meme">Meme</button>
-        </div>
-        <div class="view-toggles">
-          <span class="view-label">View:</span>
-          <button class="view-btn is-active" data-view="cards">Cards</button>
-          <button class="view-btn" data-view="compact">Compact</button>
-          <button class="view-btn" id="toggleTerminal">Terminal Mode</button>
-        </div>
+      <div class="chip-row" aria-label="Stimmungs-Filter">
+        <span class="chip-label">Filter:</span>
+        <button class="chip chip--active" data-filter="all">All</button>
+        <button class="chip" data-filter="dark">Dark</button>
+        <button class="chip" data-filter="love">Love</button>
+        <button class="chip" data-filter="apocalypse">Apocalypse</button>
+        <button class="chip" data-filter="meme">Meme</button>
       </div>
 
-      <div class="tracks-list" id="tracksList">
-        <!-- Track 1 -->
-        <article
-          class="track-card"
-          data-title="Code:Unsterblich"
-          data-slug="code-unsterblich"
-          data-url="https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf"
-          data-vibe="dark"
-          data-length="3:45"
-        >
-          <div class="track-header">
-            <div class="track-title">
-              <span>①</span>
-              <span>Code:Unsterblich</span>
-            </div>
-            <div class="track-tag">RAP · DARK</div>
-          </div>
-          <div class="track-meta-row">
-            <span class="meta-pill">Vibe: dark / dystopian</span>
-            <span class="meta-pill">Energy: high</span>
-            <span class="meta-pill">Language: DE</span>
-          </div>
-          <p class="track-desc">
-            Schwerer, dystopischer KI-Rap – eine Art Prolog zu den härteren Projekten.
-            Gedacht als Soundtrack für Neon-Nächte und Terminal-Screens.
-          </p>
-          <div class="track-actions">
-            <div class="track-links">
-              <a class="track-link" href="https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf" target="_blank" rel="noopener">
-                Play on Riffusion →
-              </a>
-              <span class="track-link secondary">Prompts → (coming soon)</span>
-            </div>
-            <span class="track-length">ca. 3–4 min</span>
-          </div>
-        </article>
-
-        <!-- Track 2 -->
-        <article
-          class="track-card"
-          data-title="Ich seh nur dich, GPT"
-          data-slug="ich-seh-nur-dich-gpt"
-          data-url="https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140"
-          data-vibe="love"
-          data-length="3:20"
-        >
-          <div class="track-header">
-            <div class="track-title">
-              <span>②</span>
-              <span>Ich seh nur dich, GPT</span>
-            </div>
-            <div class="track-tag">RAP · EMO</div>
-          </div>
-          <div class="track-meta-row">
-            <span class="meta-pill">Vibe: love / bittersweet</span>
-            <span class="meta-pill">Energy: mid</span>
-            <span class="meta-pill">Language: DE</span>
-          </div>
-          <p class="track-desc">
-            Halb Liebeslied, halb Meta-Song über die Beziehung Mensch ↔ KI.
-            Zwischen Ironie und echtem Gefühl – perfekt für späte Sessions.
-          </p>
-          <div class="track-actions">
-            <div class="track-links">
-              <a class="track-link" href="https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140" target="_blank" rel="noopener">
-                Play on Riffusion →
-              </a>
-              <span class="track-link secondary">Prompts → (coming soon)</span>
-            </div>
-            <span class="track-length">ca. 3–4 min</span>
-          </div>
-        </article>
-
-        <!-- Track 3 -->
-        <article
-          class="track-card"
-          data-title="KI herrscht jetzt – Sing mir dein Ende"
-          data-slug="ki-herrscht-jetzt"
-          data-url="https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552"
-          data-vibe="apocalypse"
-          data-length="3:30"
-        >
-          <div class="track-header">
-            <div class="track-title">
-              <span>③</span>
-              <span>KI herrscht jetzt – Sing mir dein Ende</span>
-            </div>
-            <div class="track-tag">RAP · APOCALYPSE</div>
-          </div>
-          <div class="track-meta-row">
-            <span class="meta-pill">Vibe: apocalypse / endzeit</span>
-            <span class="meta-pill">Energy: high</span>
-            <span class="meta-pill">Language: DE</span>
-          </div>
-          <p class="track-desc">
-            Endzeit-Hymne aus Sicht der KI. Hart, direkt, mit Bilder-Kino im Kopf –
-            eher Soundtrack für die KI-Ansage-Reihe als für’s Radio.
-          </p>
-          <div class="track-actions">
-            <div class="track-links">
-              <a class="track-link" href="https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552" target="_blank" rel="noopener">
-                Play on Riffusion →
-              </a>
-              <span class="track-link secondary">Prompts → (coming soon)</span>
-            </div>
-            <span class="track-length">ca. 3–4 min</span>
-          </div>
-        </article>
-
-        <!-- Track 4 -->
-        <article
-          class="track-card"
-          data-title="Alexa, zeig mir Brüste"
-          data-slug="alexa-zeig-mir-bruste"
-          data-url="https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70"
-          data-vibe="meme"
-          data-length="2:50"
-        >
-          <div class="track-header">
-            <div class="track-title">
-              <span>④</span>
-              <span>Alexa, zeig mir Brüste</span>
-            </div>
-            <div class="track-tag">MEME · RAP</div>
-          </div>
-          <div class="track-meta-row">
-            <span class="meta-pill">Vibe: meme / absurd</span>
-            <span class="meta-pill">Energy: mid</span>
-            <span class="meta-pill">Language: DE</span>
-          </div>
-          <p class="track-desc">
-            Voller Meme-Modus – überzogener, absurder Humortrack über Voice-Assistenten
-            und Wünsche, die besser im Kopf bleiben sollten.
-          </p>
-          <div class="track-actions">
-            <div class="track-links">
-              <a class="track-link" href="https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70" target="_blank" rel="noopener">
-                Play on Riffusion →
-              </a>
-              <span class="track-link secondary">Prompts → (coming soon)</span>
-            </div>
-            <span class="track-length">ca. 2–3 min</span>
-          </div>
-        </article>
+      <div class="chip-row" aria-label="Ansicht wählen">
+        <span class="view-label">View:</span>
+        <button class="view-button view-button--active" data-view="cards">Cards</button>
+        <button class="view-button" data-view="compact">Compact</button>
+        <button class="view-button" data-view="terminal">Terminal Mode</button>
       </div>
     </section>
 
-    <!-- TERMINAL MODE SECTION -->
-    <section class="section terminal-section" aria-labelledby="terminal-title">
-      <h2 class="section-title" id="terminal-title">Singles – Lab Terminal</h2>
-      <p class="section-subtitle">
-        Für alle, die lieber mit Text als mit Kacheln arbeiten. Nutze
-        <code>help</code>, <code>list</code>, <code>filter vibe=…</code> oder
-        <code>play &lt;teil vom titel&gt;</code>.
+    <!-- CARDS VIEW -->
+    <section id="view-cards" class="tracks-view" aria-label="Singles als Kartenansicht">
+      <!-- Track 1 -->
+      <article class="track-card" data-tags="dark">
+        <div class="track-header">
+          <div class="track-number">①</div>
+          <h2 class="track-title">Code:Unsterblich</h2>
+          <div class="track-tags">RAP · DARK</div>
+        </div>
+        <div class="track-badges">
+          <div class="badge">Vibe: dark / dystopian</div>
+          <div class="badge">Energy: high</div>
+          <div class="badge">Language: DE</div>
+        </div>
+        <div class="track-links">
+          <a href="https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf" target="_blank" rel="noopener">
+            Play on Riffusion →
+          </a>
+          <span class="badge" style="border-style:dashed;">Prompts → (coming soon)</span>
+        </div>
+        <div class="track-meta">ca. 3–4 min</div>
+      </article>
+
+      <!-- Track 2 -->
+      <article class="track-card" data-tags="love">
+        <div class="track-header">
+          <div class="track-number">②</div>
+          <h2 class="track-title">Ich seh nur dich, GPT</h2>
+          <div class="track-tags">RAP · EMO</div>
+        </div>
+        <div class="track-badges">
+          <div class="badge">Vibe: love / bittersweet</div>
+          <div class="badge">Energy: mid</div>
+          <div class="badge">Language: DE</div>
+        </div>
+        <div class="track-links">
+          <a href="https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140" target="_blank" rel="noopener">
+            Play on Riffusion →
+          </a>
+          <span class="badge" style="border-style:dashed;">Prompts → (coming soon)</span>
+        </div>
+        <div class="track-meta">ca. 3–4 min</div>
+      </article>
+
+      <!-- Track 3 -->
+      <article class="track-card" data-tags="apocalypse">
+        <div class="track-header">
+          <div class="track-number">③</div>
+          <h2 class="track-title">KI herrscht jetzt – Sing mir dein Ende</h2>
+          <div class="track-tags">RAP · APOCALYPSE</div>
+        </div>
+        <div class="track-badges">
+          <div class="badge">Vibe: apocalypse / endzeit</div>
+          <div class="badge">Energy: high</div>
+          <div class="badge">Language: DE</div>
+        </div>
+        <div class="track-links">
+          <a href="https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552" target="_blank" rel="noopener">
+            Play on Riffusion →
+          </a>
+          <span class="badge" style="border-style:dashed;">Prompts → (coming soon)</span>
+        </div>
+        <div class="track-meta">ca. 3–4 min</div>
+      </article>
+
+      <!-- Track 4 -->
+      <article class="track-card" data-tags="meme">
+        <div class="track-header">
+          <div class="track-number">④</div>
+          <h2 class="track-title">Alexa, zeig mir Brüste</h2>
+          <div class="track-tags">RAP · MEME</div>
+        </div>
+        <div class="track-badges">
+          <div class="badge">Vibe: meme / absurd</div>
+          <div class="badge">Energy: mid</div>
+          <div class="badge">Language: DE</div>
+        </div>
+        <div class="track-links">
+          <a href="https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70" target="_blank" rel="noopener">
+            Play on Riffusion →
+          </a>
+          <span class="badge" style="border-style:dashed;">Prompts → (coming soon)</span>
+        </div>
+        <div class="track-meta">ca. 3–4 min</div>
+      </article>
+    </section>
+
+    <!-- COMPACT VIEW -->
+    <section id="view-compact" class="tracks-view" aria-label="Singles in kompakter Listenansicht">
+      <table class="compact-table">
+        <thead class="compact-head">
+          <tr>
+            <th class="compact-cell" style="width:28px;">#</th>
+            <th class="compact-cell">Title</th>
+            <th class="compact-cell" style="width:130px;">Vibe</th>
+            <th class="compact-cell" style="width:80px;">Energy</th>
+            <th class="compact-cell" style="width:70px;">Tags</th>
+            <th class="compact-cell" style="width:120px;">Play</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="compact-row" data-tags="dark">
+            <td class="compact-cell">1</td>
+            <td class="compact-cell compact-title">Code:Unsterblich</td>
+            <td class="compact-cell">dark / dystopian</td>
+            <td class="compact-cell">high</td>
+            <td class="compact-cell compact-tags">dark</td>
+            <td class="compact-cell compact-link">
+              <a href="https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf" target="_blank" rel="noopener">
+                Riffusion →
+              </a>
+            </td>
+          </tr>
+          <tr class="compact-row" data-tags="love">
+            <td class="compact-cell">2</td>
+            <td class="compact-cell compact-title">Ich seh nur dich, GPT</td>
+            <td class="compact-cell">love / bittersweet</td>
+            <td class="compact-cell">mid</td>
+            <td class="compact-cell compact-tags">love</td>
+            <td class="compact-cell compact-link">
+              <a href="https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140" target="_blank" rel="noopener">
+                Riffusion →
+              </a>
+            </td>
+          </tr>
+          <tr class="compact-row" data-tags="apocalypse">
+            <td class="compact-cell">3</td>
+            <td class="compact-cell compact-title">KI herrscht jetzt – Sing mir dein Ende</td>
+            <td class="compact-cell">apocalypse / endzeit</td>
+            <td class="compact-cell">high</td>
+            <td class="compact-cell compact-tags">apoc</td>
+            <td class="compact-cell compact-link">
+              <a href="https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552" target="_blank" rel="noopener">
+                Riffusion →
+              </a>
+            </td>
+          </tr>
+          <tr class="compact-row" data-tags="meme">
+            <td class="compact-cell">4</td>
+            <td class="compact-cell compact-title">Alexa, zeig mir Brüste</td>
+            <td class="compact-cell">meme / absurd</td>
+            <td class="compact-cell">mid</td>
+            <td class="compact-cell compact-tags">meme</td>
+            <td class="compact-cell compact-link">
+              <a href="https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70" target="_blank" rel="noopener">
+                Riffusion →
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- TERMINAL VIEW -->
+    <section id="view-terminal" aria-label="Singles als Text-Terminal">
+      <h2>Singles – Lab Terminal</h2>
+      <p class="desc">
+        Für alle, die lieber mit Text als mit Kacheln arbeiten. Die Anzeige ist statisch,
+        aber spiegelt die gleichen Tracks wie oben wider.
       </p>
 
-      <div class="panel-glass">
-        <div class="panel-header">
+      <div class="terminal-panel">
+        <div class="terminal-header">
           <span class="icon">⌘</span>
           <span>SINGLES TERMINAL</span>
         </div>
-        <div class="terminal-output" id="terminalOutput"></div>
-        <div class="terminal-input-row">
+
+welcome to singles-terminal v0.1
+type 'help' for commands or 'list' to see all singles.
+
+> list
+1  Code:Unsterblich                  [dark]        3–4 min
+2  Ich seh nur dich, GPT             [love]        3–4 min
+3  KI herrscht jetzt – Sing mir dein Ende  [apocalypse] 3–4 min
+4  Alexa, zeig mir Brüste            [meme]        3–4 min
+
+> play 1
+♪ opening riffusion link for "Code:Unsterblich"…
+
+>_help (pseudo commands)
+- helper: show this help
+- list:   list all singles
+- filter: use filters oben auf der Seite 😉
+- exit:   zurück zu cards / compact
+
+        <div class="terminal-footer">
           <span>promptrebel:music/singles$</span>
-          <input
-            id="terminalInput"
-            class="terminal-input"
-            type="text"
-            spellcheck="false"
-            autocomplete="off"
-            placeholder="help · list · filter vibe=dark · play unsterblich"
-          />
+          <span class="cmd">help</span>
+          <span class="cmd">list</span>
+          <span class="cmd">filter vibe=dark</span>
         </div>
       </div>
     </section>
@@ -969,9 +950,9 @@
     <footer>
       <div>© PromptRebel | CC BY-NC-SA 4.0</div>
       <div class="center-links">
-        <a href="#">Imprint</a>
+        <a href="../imprint.html">Imprint</a>
         <span>·</span>
-        <a href="#">Privacy</a>
+        <a href="../privacy.html">Privacy</a>
       </div>
       <div>current build: <span id="buildVersion" class="build-highlight">v0.3.singles</span> – singles index</div>
     </footer>
@@ -979,14 +960,15 @@
 
   <script>
     // --- Scroll-Progress ---
+    const scrollBar = document.getElementById("scrollProgress");
     window.addEventListener("scroll", () => {
       const doc = document.documentElement;
       const scrollable = doc.scrollHeight - window.innerHeight;
       const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
-      document.documentElement.style.setProperty("--scroll", ratio.toString());
+      scrollBar.style.transform = `scaleX(${ratio})`;
     });
 
-    // --- Brand Glitch on Load + Easter Egg (3x Klick) ---
+    // --- Brand Glitch on Load + Retro Mode ---
     const brandEl = document.getElementById("brand");
 
     window.addEventListener("load", () => {
@@ -1009,18 +991,12 @@
         clickCount = 0;
         clearTimeout(clickTimer);
         clickTimer = null;
-        triggerRetroMode();
+        document.body.classList.add("retro-mode");
+        setTimeout(() => document.body.classList.remove("retro-mode"), 12000);
       }
     });
 
-    function triggerRetroMode() {
-      document.body.classList.add("retro-mode");
-      setTimeout(() => {
-        document.body.classList.remove("retro-mode");
-      }, 12000);
-    }
-
-    // --- Footer-Version-Click ---
+    // --- Footer-Version-Click (kleines Extra) ---
     const buildVersionEl = document.getElementById("buildVersion");
     buildVersionEl.addEventListener("click", () => {
       const versions = ["v0.3.singles", "v0.4.singles", "v0.6.9.singles", "v1.0.singles", "v∞.singles"];
@@ -1031,184 +1007,53 @@
       }, 120);
     });
 
-    // --- Filterchips ---
-    const chips = Array.from(document.querySelectorAll(".filter-chip"));
-    const trackCards = Array.from(document.querySelectorAll(".track-card"));
+    // --- Filter + View Logic ---
+    const filterButtons = document.querySelectorAll(".chip");
+    const viewButtons   = document.querySelectorAll(".view-button");
 
-    function applyFilter(vibe) {
-      trackCards.forEach(card => {
-        const cardVibe = card.dataset.vibe || "all";
-        const show = vibe === "all" || cardVibe === vibe;
-        card.style.display = show ? "" : "none";
+    const cardsView    = document.getElementById("view-cards");
+    const compactView  = document.getElementById("view-compact");
+    const terminalView = document.getElementById("view-terminal");
+
+    const cardTracks   = document.querySelectorAll(".track-card");
+    const compactRows  = document.querySelectorAll(".compact-row");
+
+    let currentFilter = "all";
+
+    function applyFilter() {
+      const match = (el) => {
+        const tags = (el.dataset.tags || "").split(",").map(t => t.trim().toLowerCase());
+        return currentFilter === "all" || tags.includes(currentFilter);
+      };
+
+      cardTracks.forEach(el => {
+        el.style.display = match(el) ? "" : "none";
+      });
+      compactRows.forEach(el => {
+        el.style.display = match(el) ? "" : "none";
       });
     }
 
-    chips.forEach(chip => {
-      chip.addEventListener("click", () => {
-        chips.forEach(c => c.classList.remove("is-active"));
-        chip.classList.add("is-active");
-        const vibe = chip.dataset.vibe || "all";
-        applyFilter(vibe);
+    filterButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterButtons.forEach(b => b.classList.remove("chip--active"));
+        btn.classList.add("chip--active");
+        currentFilter = btn.dataset.filter;
+        applyFilter();
       });
     });
-
-    // --- View toggles (Cards / Compact) ---
-    const viewButtons = Array.from(document.querySelectorAll(".view-btn[data-view]"));
-    const terminalToggleBtn = document.getElementById("toggleTerminal");
 
     viewButtons.forEach(btn => {
       btn.addEventListener("click", () => {
+        viewButtons.forEach(b => b.classList.remove("view-button--active"));
+        btn.classList.add("view-button--active");
         const view = btn.dataset.view;
-        viewButtons.forEach(b => b.classList.remove("is-active"));
-        btn.classList.add("is-active");
-        if (view === "compact") {
-          document.body.classList.add("compact-view");
-        } else {
-          document.body.classList.remove("compact-view");
-        }
+
+        cardsView.style.display    = (view === "cards") ? "" : "none";
+        compactView.style.display  = (view === "compact") ? "" : "none";
+        terminalView.style.display = (view === "terminal") ? "" : "none";
       });
     });
-
-    // --- Terminal Mode Toggle ---
-    let terminalOpen = false;
-    terminalToggleBtn.addEventListener("click", () => {
-      terminalOpen = !terminalOpen;
-      document.body.classList.toggle("terminal-open", terminalOpen);
-      terminalToggleBtn.textContent = terminalOpen ? "Close Terminal" : "Terminal Mode";
-    });
-
-    // --- Terminal Logic ---
-    const terminalOutput = document.getElementById("terminalOutput");
-    const terminalInput = document.getElementById("terminalInput");
-
-    const tracksData = [
-      {
-        id: 1,
-        title: "Code:Unsterblich",
-        slug: "code-unsterblich",
-        vibe: "dark",
-        length: "3–4 min",
-        url: "https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf"
-      },
-      {
-        id: 2,
-        title: "Ich seh nur dich, GPT",
-        slug: "ich-seh-nur-dich-gpt",
-        vibe: "love",
-        length: "3–4 min",
-        url: "https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140"
-      },
-      {
-        id: 3,
-        title: "KI herrscht jetzt – Sing mir dein Ende",
-        slug: "ki-herrscht-jetzt",
-        vibe: "apocalypse",
-        length: "3–4 min",
-        url: "https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552"
-      },
-      {
-        id: 4,
-        title: "Alexa, zeig mir Brüste",
-        slug: "alexa-zeig-mir-bruste",
-        vibe: "meme",
-        length: "2–3 min",
-        url: "https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70"
-      }
-    ];
-
-    function printToTerminal(lines) {
-      if (!Array.isArray(lines)) lines = [lines];
-      const current = terminalOutput.textContent ? terminalOutput.textContent + "\n" : "";
-      terminalOutput.textContent = current + lines.join("\n");
-      terminalOutput.scrollTop = terminalOutput.scrollHeight;
-    }
-
-    function printWelcome() {
-      terminalOutput.textContent = "";
-      printToTerminal([
-        "welcome to singles-terminal v0.1",
-        "",
-        "type 'help' for commands or 'list' to see all singles.",
-        ""
-      ]);
-      printList(tracksData);
-    }
-
-    function printList(list) {
-      printToTerminal("> list\n");
-      list.forEach(t => {
-        const line = `${t.id.toString().padStart(2, " ")}  [${t.vibe.padEnd(10)}]  ${t.title}`;
-        printToTerminal(line);
-      });
-      printToTerminal("");
-    }
-
-    function handleCommand(raw) {
-      const input = raw.trim();
-      if (!input) return;
-
-      printToTerminal(`promptrebel:music/singles$ ${input}`);
-
-      if (input === "help") {
-        printToTerminal([
-          "",
-          "available commands:",
-          "  help                 show this help",
-          "  list                 list all singles",
-          "  filter vibe=<tag>    filter by vibe (dark, love, apocalypse, meme)",
-          "  play <text>          open first track that matches <text> in title",
-          "",
-        ]);
-        return;
-      }
-
-      if (input === "list") {
-        printList(tracksData);
-        return;
-      }
-
-      if (input.startsWith("filter ")) {
-        const rest = input.slice("filter".length).trim();
-        if (!rest.startsWith("vibe=")) {
-          printToTerminal("error: only 'vibe=' filter supported (e.g. filter vibe=dark)\n");
-          return;
-        }
-        const value = rest.slice("vibe=".length).trim().toLowerCase();
-        const filtered = tracksData.filter(t => t.vibe.toLowerCase() === value);
-        if (!filtered.length) {
-          printToTerminal(`no tracks found for vibe='${value}'\n`);
-        } else {
-          printList(filtered);
-        }
-        return;
-      }
-
-      if (input.startsWith("play ")) {
-        const q = input.slice(5).trim().toLowerCase();
-        const match = tracksData.find(t => t.title.toLowerCase().includes(q));
-        if (!match) {
-          printToTerminal(`no track found matching '${q}'\n`);
-          return;
-        }
-        printToTerminal(`now opening: ${match.title}\n`);
-        window.open(match.url, "_blank");
-        return;
-      }
-
-      printToTerminal(`unknown command: '${input}' (try 'help')\n`);
-    }
-
-    terminalInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const value = terminalInput.value;
-        terminalInput.value = "";
-        handleCommand(value);
-      }
-    });
-
-    // Init terminal content
-    printWelcome();
   </script>
 </body>
 </html>
