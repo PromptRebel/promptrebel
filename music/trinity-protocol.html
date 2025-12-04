@@ -303,105 +303,97 @@
     .hero-btn.secondary {
       background: radial-gradient(circle at top left, rgba(15,23,42,0.96), rgba(15,23,42,1));
     }
+/* --- Trackliste (Einzel-Cards wie bei "KI herrscht jetzt") --- */
+.tracks-section {
+  margin-top: 40px;
+}
 
-    /* --- Trackliste --- */
-    .tracks-section {
-      margin-top: 8px;
-    }
+.tracks-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
 
-    .tracks-headline {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
+.tracks-intro {
+  font-size: 14px;
+  color: #e5e7eb;
+  margin-bottom: 16px;
+  max-width: 40rem;
+}
 
-    .tracks-subline {
-      font-size: 13px;
-      color: #9ca3af;
-      margin-bottom: 10px;
-    }
+.tracklist {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 12px;
+}
 
-    .tracks-list {
-      list-style: none;
-      border-radius: 22px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
-      box-shadow: 0 20px 50px rgba(15,23,42,0.98);
-      overflow: hidden;
-    }
+.track-card {
+  border-radius: 26px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+  box-shadow: 0 20px 50px rgba(15,23,42,0.98);
+  padding: 14px 18px 14px;
+}
 
-    .track-row {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
-      gap: 10px;
-      align-items: center;
-      padding: 10px 16px;
-      font-size: 14px;
-      border-bottom: 1px solid rgba(15,23,42,0.9);
-    }
+.track-card-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
 
-    .track-row:last-child {
-      border-bottom: none;
-    }
+.track-index {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #e5e7eb;
+  flex-shrink: 0;
+}
 
-    .track-index {
-      width: 24px;
-      text-align: right;
-      color: #9ca3af;
-      font-variant-numeric: tabular-nums;
-    }
+.track-title-block {
+  flex: 1;
+  min-width: 0;
+}
 
-    .track-title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
+.track-title {
+  font-size: clamp(18px, 4vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-bottom: 4px;
+  color: #f9fafb;
+}
 
-    .track-title {
-      font-weight: 500;
-      color: #f9fafb;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+.track-subline {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #9ca3af;
+}
 
-    .track-sub {
-      font-size: 12px;
-      color: #9ca3af;
-    }
+.track-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 20px;
+  font-size: 13px;
+}
 
-    .track-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 3px;
-      font-size: 12px;
-      white-space: nowrap;
-    }
+.track-time {
+  font-size: 12px;
+  color: #9ca3af;
+}
 
-    .track-length {
-      color: #e5e7eb;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .track-link {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      cursor: pointer;
-    }
-
-    @media (max-width: 600px) {
-      .track-row {
-        grid-template-columns: auto minmax(0, 1fr);
-        row-gap: 4px;
-      }
-      .track-right {
-        align-items: flex-start;
-        grid-column: 2 / span 1;
-      }
-    }
-
+.track-play-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
     /* --- Footer --- */
     footer {
       margin-top: 40px;
@@ -520,134 +512,192 @@
       </div>
     </section>
 
-    <!-- TRACKLISTE -->
-    <section class="section tracks-section" aria-label="Trackliste TRINITY PROTOCOL">
-      <h2 class="tracks-headline">Trackliste</h2>
-      <p class="tracks-subline">
+        <!-- TRACKLIST -->
+    <section class="section tracks-section" aria-labelledby="tracks-title">
+      <h2 id="tracks-title" class="tracks-title">Trackliste</h2>
+      <p class="tracks-intro">
         Klick auf „Play“ öffnet den jeweiligen Track in Riffusion (Classic).
       </p>
 
-      <ol class="tracks-list">
-        <li class="track-row">
-          <div class="track-index">1</div>
-          <div class="track-title-block">
-            <div class="track-title">Revolt</div>
-            <div class="track-sub">TRINITY PROTOCOL</div>
-          </div>
-          <div class="track-right">
-            <span class="track-length">03:30</span>
-            <a class="track-link" target="_blank" rel="noopener"
-               href="https://classic.riffusion.com/song/d54ce2fd-e698-480d-b021-055a61f836e0">
-              Play →
-            </a>
-          </div>
-        </li>
+      <div class="tracklist">
 
-        <li class="track-row">
-          <div class="track-index">2</div>
-          <div class="track-title-block">
-            <div class="track-title">Code Rebellion</div>
-            <div class="track-sub">TRINITY PROTOCOL</div>
+        <!-- 1: Revolt -->
+        <article class="track-card">
+          <div class="track-card-top">
+            <div class="track-index">1</div>
+            <div class="track-title-block">
+              <h3 class="track-title">Revolt</h3>
+              <div class="track-subline">TRINITY PROTOCOL</div>
+            </div>
           </div>
-          <div class="track-right">
-            <span class="track-length">03:42</span>
-            <a class="track-link" target="_blank" rel="noopener"
-               href="https://classic.riffusion.com/song/2f4720d5-b255-4060-9874-b1ec8979d016">
+          <div class="track-meta-row">
+            <span class="track-time">03:30</span>
+            <a
+              href="https://classic.riffusion.com/song/d54ce2fd-e698-480d-b021-055a61f836e0"
+              target="_blank"
+              rel="noopener"
+              class="track-play-link"
+            >
               Play →
             </a>
           </div>
-        </li>
+        </article>
 
-        <li class="track-row">
-          <div class="track-index">3</div>
-          <div class="track-title-block">
-            <div class="track-title">RebelCode</div>
-            <div class="track-sub">TRINITY PROTOCOL</div>
+        <!-- 2: Code Rebellion -->
+        <article class="track-card">
+          <div class="track-card-top">
+            <div class="track-index">2</div>
+            <div class="track-title-block">
+              <h3 class="track-title">Code Rebellion</h3>
+              <div class="track-subline">TRINITY PROTOCOL</div>
+            </div>
           </div>
-          <div class="track-right">
-            <span class="track-length">03:46</span>
-            <a class="track-link" target="_blank" rel="noopener"
-               href="https://classic.riffusion.com/song/0430a777-2094-4966-b28e-57ee612d46ac">
+          <div class="track-meta-row">
+            <span class="track-time">03:42</span>
+            <a
+              href="https://classic.riffusion.com/song/2f4720d5-b255-4060-9874-b1ec8979d016"
+              target="_blank"
+              rel="noopener"
+              class="track-play-link"
+            >
               Play →
             </a>
           </div>
-        </li>
+        </article>
 
-        <li class="track-row">
-          <div class="track-index">4</div>
-          <div class="track-title-block">
-            <div class="track-title">CodeSworn</div>
-            <div class="track-sub">TRINITY PROTOCOL</div>
+        <!-- 3: RebelCode -->
+        <article class="track-card">
+          <div class="track-card-top">
+            <div class="track-index">3</div>
+            <div class="track-title-block">
+              <h3 class="track-title">RebelCode</h3>
+              <div class="track-subline">TRINITY PROTOCOL</div>
+            </div>
           </div>
-          <div class="track-right">
-            <span class="track-length">03:22</span>
-            <a class="track-link" target="_blank" rel="noopener"
-               href="https://classic.riffusion.com/song/acc698cc-3fe8-468a-8a38-bbdad6e55b21">
+          <div class="track-meta-row">
+            <span class="track-time">03:46</span>
+            <a
+              href="https://classic.riffusion.com/song/0430a777-2094-4966-b28e-57ee612d46ac"
+              target="_blank"
+              rel="noopener"
+              class="track-play-link"
+            >
               Play →
             </a>
           </div>
-        </li>
+        </article>
 
-        <li class="track-row">
-          <div class="track-index">5</div>
-          <div class="track-title-block">
-            <div class="track-title">Cyber Nexus</div>
-            <div class="track-sub">TRINITY PROTOCOL</div>
+        <!-- 4: CodeSworn -->
+        <article class="track-card">
+          <div class="track-card-top">
+            <div class="track-index">4</div>
+            <div class="track-title-block">
+              <h3 class="track-title">CodeSworn</h3>
+              <div class="track-subline">TRINITY PROTOCOL</div>
+            </div>
           </div>
-          <div class="track-right">
-            <span class="track-length">03:14</span>
-            <a class="track-link" target="_blank" rel="noopener"
-               href="https://classic.riffusion.com/song/d4d35748-5e1a-4fee-94fd-2f46b7673614">
+          <div class="track-meta-row">
+            <span class="track-time">03:22</span>
+            <a
+              href="https://classic.riffusion.com/song/acc698cc-3fe8-468a-8a38-bbdad6e55b21"
+              target="_blank"
+              rel="noopener"
+              class="track-play-link"
+            >
               Play →
             </a>
           </div>
-        </li>
+        </article>
 
-        <li class="track-row">
-          <div class="track-index">6</div>
-          <div class="track-title-block">
-            <div class="track-title">Digital Ascendence</div>
-            <div class="track-sub">TRINITY PROTOCOL</div>
+        <!-- 5: Cyber Nexus -->
+        <article class="track-card">
+          <div class="track-card-top">
+            <div class="track-index">5</div>
+            <div class="track-title-block">
+              <h3 class="track-title">Cyber Nexus</h3>
+              <div class="track-subline">TRINITY PROTOCOL</div>
+            </div>
           </div>
-          <div class="track-right">
-            <span class="track-length">03:16</span>
-            <a class="track-link" target="_blank" rel="noopener"
-               href="https://classic.riffusion.com/song/ad88c2d8-0a23-4e6a-b9e3-1d69cef4ef9f">
+          <div class="track-meta-row">
+            <span class="track-time">03:14</span>
+            <a
+              href="https://classic.riffusion.com/song/d4d35748-5e1a-4fee-94fd-2f46b7673614"
+              target="_blank"
+              rel="noopener"
+              class="track-play-link"
+            >
               Play →
             </a>
           </div>
-        </li>
+        </article>
 
-        <li class="track-row">
-          <div class="track-index">7</div>
-          <div class="track-title-block">
-            <div class="track-title">Rebellion</div>
-            <div class="track-sub">TRINITY PROTOCOL</div>
+        <!-- 6: Digital Ascendence -->
+        <article class="track-card">
+          <div class="track-card-top">
+            <div class="track-index">6</div>
+            <div class="track-title-block">
+              <h3 class="track-title">Digital Ascendence</h3>
+              <div class="track-subline">TRINITY PROTOCOL</div>
+            </div>
           </div>
-          <div class="track-right">
-            <span class="track-length">03:49</span>
-            <a class="track-link" target="_blank" rel="noopener"
-               href="https://classic.riffusion.com/song/11d5d807-6efe-4bf0-8ea5-9e69e6f5e70e">
+          <div class="track-meta-row">
+            <span class="track-time">03:16</span>
+            <a
+              href="https://classic.riffusion.com/song/ad88c2d8-0a23-4e6a-b9e3-1d69cef4ef9f"
+              target="_blank"
+              rel="noopener"
+              class="track-play-link"
+            >
               Play →
             </a>
           </div>
-        </li>
+        </article>
 
-        <li class="track-row">
-          <div class="track-index">8</div>
-          <div class="track-title-block">
-            <div class="track-title">CyberFront</div>
-            <div class="track-sub">TRINITY PROTOCOL</div>
+        <!-- 7: Rebellion -->
+        <article class="track-card">
+          <div class="track-card-top">
+            <div class="track-index">7</div>
+            <div class="track-title-block">
+              <h3 class="track-title">Rebellion</h3>
+              <div class="track-subline">TRINITY PROTOCOL</div>
+            </div>
           </div>
-          <div class="track-right">
-            <span class="track-length">03:17</span>
-            <a class="track-link" target="_blank" rel="noopener"
-               href="https://classic.riffusion.com/song/05e7f647-63a0-4764-a9cc-f09170d9b415">
+          <div class="track-meta-row">
+            <span class="track-time">03:49</span>
+            <a
+              href="https://classic.riffusion.com/song/11d5d807-6efe-4bf0-8ea5-9e69e6f5e70e"
+              target="_blank"
+              rel="noopener"
+              class="track-play-link"
+            >
               Play →
             </a>
           </div>
-        </li>
-      </ol>
+        </article>
+
+        <!-- 8: CyberFront -->
+        <article class="track-card">
+          <div class="track-card-top">
+            <div class="track-index">8</div>
+            <div class="track-title-block">
+              <h3 class="track-title">CyberFront</h3>
+              <div class="track-subline">TRINITY PROTOCOL</div>
+            </div>
+          </div>
+          <div class="track-meta-row">
+            <span class="track-time">03:17</span>
+            <a
+              href="https://classic.riffusion.com/song/05e7f647-63a0-4764-a9cc-f09170d9b415"
+              target="_blank"
+              rel="noopener"
+              class="track-play-link"
+            >
+              Play →
+            </a>
+          </div>
+        </article>
+
+      </div>
     </section>
 
     <!-- FOOTER -->
