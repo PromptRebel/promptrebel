@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>PromptRebel – Singles & Themes</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     /* --- Reset / Basics --- */
@@ -58,22 +58,22 @@
     .page {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 16px 16px 40px;
+      padding: 88px 16px 40px; /* Platz für fixen Header + Progress-Bar */
     }
 
-    /* --- Scroll-Progress-Bar --- */
+    /* --- Scroll-Progress-Bar (unter Header) --- */
     .scroll-progress {
-  position: fixed;
-  top: 56px;              /* unter dem Header; ggf. 52–64px feinjustieren */
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
-  transform-origin: left;
-  transform: scaleX(0);
-  transition: transform 0.1s linear;
-  z-index: 30;            /* unter der Nav (40), über dem Inhalt */
-}
+      position: fixed;
+      top: 56px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 0.1s linear;
+      z-index: 35;
+    }
 
     /* --- Skip-Link --- */
     .skip-link {
@@ -86,7 +86,7 @@
       color: #f9fafb;
       border-radius: 999px;
       font-size: 13px;
-      z-index: 70;
+      z-index: 60;
     }
     .skip-link:focus-visible {
       top: 10px;
@@ -94,17 +94,17 @@
       outline-offset: 2px;
     }
 
-    /* --- Top-Navigation --- */
+    /* --- Top-Navigation (fix) --- */
     .nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 40;
-  backdrop-filter: blur(14px);
-  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-}
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.72));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    }
 
     .nav-inner {
       max-width: 1120px;
@@ -175,175 +175,136 @@
       outline: none;
     }
 
-    /* --- Sections / Layout --- */
+    .nav-link-active::after {
+      width: 100%;
+    }
+
+    /* --- Layout-Helfer --- */
     .section {
-      padding: 40px 16px 8px;
+      padding: 32px 16px 8px;
     }
 
     .section:first-of-type {
-      padding-top: 28px;
+      padding-top: 8px;
     }
 
-    @media (min-width: 768px) {
-      .hero-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 3fr) minmax(0, 2.2fr);
-        gap: 32px;
-        align-items: center;
-      }
-    }
-
-    /* --- Hero --- */
+    /* --- Kategorie-Header & Tabs (wie Alben-Seite) --- */
     .category-label {
-      font-size: 12px;
-      letter-spacing: 0.25em;
+      font-size: 11px;
+      letter-spacing: 0.24em;
       text-transform: uppercase;
-      color: #f9a8d4;
-      margin-bottom: 6px;
-    }
-
-    .hero-title {
-      font-size: clamp(32px, 5vw, 46px);
-      font-weight: 800;
-      letter-spacing: 0.01em;
+      color: #9ca3af;
       margin-bottom: 10px;
-      text-shadow: 0 0 14px rgba(236,72,153,0.6), 0 0 20px rgba(34,211,238,0.4);
     }
 
-    .hero-breadcrumbs {
+    .page-title {
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      margin-bottom: 24px;
+      text-shadow: 0 0 20px rgba(15,23,42,1);
+    }
+
+    .music-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .music-tab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 24px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: radial-gradient(circle at 10% 0%, rgba(15,23,42,0.9), rgba(15,23,42,0.95));
+      color: #e5e7eb;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.9);
+    }
+
+    .music-tab-active {
+      border-color: transparent;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(236,72,153,0.85), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.75), transparent 55%);
+      box-shadow:
+        0 0 25px rgba(236,72,153,0.65),
+        0 0 40px rgba(56,189,248,0.7);
+    }
+
+    /* --- Breadcrumbs --- */
+    .breadcrumbs {
       font-size: 13px;
       color: #9ca3af;
-      margin-bottom: 18px;
+      margin-top: 8px;
+      margin-bottom: 26px;
     }
-
-    .hero-breadcrumbs a {
+    .breadcrumbs a {
       text-decoration: underline;
       text-underline-offset: 3px;
     }
 
-    .hero-text-main {
+    /* --- Intro --- */
+    .intro-text {
+      max-width: 40rem;
       font-size: 15px;
       color: #e5e7eb;
       margin-bottom: 8px;
-      max-width: 40rem;
     }
 
-    .hero-text-sub {
-      font-size: 14px;
-      color: #cbd5f5;
-      margin-bottom: 20px;
-      max-width: 40rem;
-    }
-
-    .hero-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .hero-tab {
-      border-radius: 999px;
-      padding: 10px 20px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      font-size: 14px;
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
-      box-shadow: 0 10px 26px rgba(15,23,42,0.9);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .hero-tab span.arrow {
+    .intro-sub {
+      max-width: 38rem;
       font-size: 13px;
-      opacity: 0.9;
+      color: #9ca3af;
+      margin-bottom: 24px;
     }
 
-    .hero-tab.current {
-      border-color: rgba(248,250,252,0.8);
-      box-shadow:
-        0 0 30px rgba(96,165,250,0.6),
-        0 18px 50px rgba(15,23,42,1);
-      background: radial-gradient(circle at top left, rgba(59,130,246,0.4), rgba(15,23,42,1));
+    /* --- Terminal-Preview oben --- */
+    .terminal-preview {
+      border-radius: 26px;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+      box-shadow: 0 22px 60px rgba(15,23,42,0.96);
+      padding: 18px 18px 16px;
+      margin-bottom: 26px;
     }
 
-    /* --- Panel / Terminal (oben) --- */
-    .panel-glass {
-      border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(18px);
-      padding: 14px 16px 14px;
-    }
-
-    .panel-header {
-      font-size: 12px;
-      letter-spacing: 0.16em;
+    .terminal-preview-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       color: #9ca3af;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      margin-bottom: 12px;
     }
 
-    .panel-header span.icon {
-      font-size: 16px;
-      color: #f97316;
+    .terminal-preview-header span.icon {
+      font-size: 18px;
     }
 
-    .terminal {
+    .terminal-preview pre {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      white-space: pre-line;
-      color: #e5e7eb;
+      font-size: 13px;
+      white-space: pre-wrap;
     }
 
-    .terminal .dim {
-      color: #6b7280;
-    }
-
-    /* --- Filters / Controls --- */
-    .controls-block {
-      margin-top: 28px;
-      margin-bottom: 10px;
-    }
-
-    .controls-intro {
-      font-size: 14px;
-      color: #e5e7eb;
-      max-width: 42rem;
-      margin-bottom: 12px;
-    }
-
+    /* --- Suchfeld / Filter / View --- */
     .control-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px 14px;
       margin-bottom: 12px;
-      font-size: 14px;
-    }
-
-    .control-label {
-      color: #9ca3af;
-      min-width: 52px;
-    }
-
-    .search-input-wrap {
-      flex: 1;
-      min-width: 220px;
-      max-width: 420px;
-      position: relative;
     }
 
     .search-input {
       width: 100%;
       border-radius: 999px;
-      padding: 8px 14px 8px 30px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.96), rgba(15,23,42,1));
+      border: 1px solid rgba(148,163,184,0.5);
+      padding: 10px 14px;
+      background: rgba(15,23,42,0.9);
       color: #e5e7eb;
       font-size: 14px;
     }
@@ -352,265 +313,211 @@
       color: #6b7280;
     }
 
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 12px;
-      color: #6b7280;
-    }
-
     .chip-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .chip-label {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 4px;
     }
 
     .chip {
       border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
       padding: 6px 14px;
-      border: 1px solid rgba(148,163,184,0.7);
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.96), rgba(15,23,42,1));
       font-size: 13px;
-      cursor: pointer;
-      transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
-    }
-
-    .chip:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 28px rgba(15,23,42,0.9);
-    }
-
-    .chip.active {
-      border-color: rgba(248,250,252, 0.9);
-      box-shadow:
-        0 0 20px rgba(59,130,246,0.8),
-        0 12px 40px rgba(15,23,42,1);
-      background: radial-gradient(circle at top left, rgba(37,99,235,0.65), rgba(15,23,42,1));
-    }
-
-    /* --- Tracklist (Cards View) --- */
-    .tracks-section {
-      margin-top: 10px;
-    }
-
-    .track-list {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      margin-top: 12px;
-    }
-
-    .track-card {
-      border-radius: 22px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
-      box-shadow: 0 20px 50px rgba(15,23,42,0.98);
-      padding: 14px 18px 14px;
-    }
-
-    .track-card-top {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      margin-bottom: 8px;
-    }
-
-    .track-index {
-      width: 24px;
-      height: 24px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: #e5e7eb;
-      flex-shrink: 0;
-    }
-
-    .track-title-block {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .track-title {
-      font-size: clamp(18px, 4vw, 22px);
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      margin-bottom: 4px;
-      color: #f9fafb;
-    }
-
-    .track-subline {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: #9ca3af;
-    }
-
-    .track-meta-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 6px;
-    }
-
-    .meta-chip {
-      border-radius: 999px;
-      padding: 3px 9px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      font-size: 11px;
-      color: #d1d5db;
-      background: rgba(15,23,42,0.9);
-      white-space: nowrap;
-    }
-
-    .track-links-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      gap: 8px 20px;
-      margin-top: 10px;
-      font-size: 13px;
-    }
-
-    .track-link {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-
-    .track-length {
-      font-size: 12px;
-      color: #9ca3af;
-    }
-
-    /* --- Compact View --- */
-    .track-list.compact .track-card {
-      padding: 10px 14px;
-      border-radius: 18px;
-    }
-
-    .track-list.compact .track-card-inner {
-      display: grid;
-      grid-template-columns: 24px 1fr auto;
-      gap: 8px 10px;
-      align-items: center;
-      font-size: 13px;
-    }
-
-    .track-list.compact .track-index {
-      margin: 0;
-    }
-
-    .track-list.compact .track-title {
-      font-size: 15px;
-      margin-bottom: 0;
-    }
-
-    .track-list.compact .track-subline {
-      font-size: 11px;
-      text-transform: none;
-      letter-spacing: 0.02em;
-      color: #9ca3af;
-    }
-
-    .track-list.compact .track-title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .track-list.compact .track-meta-chips {
-      gap: 4px;
-      margin-top: 0;
-    }
-
-    .track-list.compact .track-links-row {
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-      margin-top: 0;
-      font-size: 12px;
-    }
-
-    .track-list.compact .track-length {
-      font-size: 11px;
-    }
-
-    @media (max-width: 640px) {
-      .track-list.compact .track-card-inner {
-        grid-template-columns: 22px 1fr;
-      }
-      .track-list.compact .track-links-row {
-        align-items: flex-start;
-        grid-column: 2 / span 1;
-      }
-    }
-
-    /* --- Terminal Section unten --- */
-    .terminal-section {
-      margin-top: 40px;
-      padding-top: 32px;
-    }
-
-    .terminal-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .terminal-desc {
-      font-size: 14px;
-      color: #e5e7eb;
-      margin-bottom: 14px;
-      max-width: 40rem;
-    }
-
-    .terminal-panel {
-      margin-top: 6px;
-    }
-
-    .terminal-output {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
-      font-size: 12px;
-      white-space: pre-line;
-      color: #e5e7eb;
-      margin-top: 4px;
-    }
-
-    .terminal-command-row {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      font-size: 11px;
-    }
-
-    .t-chip {
-      border-radius: 999px;
-      padding: 3px 8px;
-      border: 1px solid rgba(148,163,184,0.6);
       background: rgba(15,23,42,0.96);
       cursor: pointer;
     }
 
-    .terminal-link {
-      text-decoration: underline;
-      text-underline-offset: 2px;
+    .chip-active {
+      border-color: transparent;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(236,72,153,0.85), transparent 65%),
+        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.7), transparent 55%);
+      box-shadow: 0 12px 30px rgba(15,23,42,1);
+    }
+
+    .view-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .view-row-label {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-right: 4px;
+    }
+
+    .view-button {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      padding: 6px 14px;
+      font-size: 13px;
+      background: rgba(15,23,42,0.98);
       cursor: pointer;
     }
 
-    .terminal-hint {
-      font-size: 11px;
+    .view-button-active {
+      border-color: transparent;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(56,189,248,0.8), transparent 65%),
+        radial-gradient(circle at 100% 100%, rgba(30,64,175,0.9), transparent 55%);
+      box-shadow: 0 12px 30px rgba(15,23,42,1);
+    }
+
+    /* --- Cards-View --- */
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .single-card {
+      border-radius: 26px;
+      border: 1px solid rgba(148,163,184,0.2);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+      box-shadow: 0 22px 60px rgba(15,23,42,0.96);
+      padding: 18px 18px 14px;
+    }
+
+    .single-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .single-title {
+      font-size: 18px;
+      font-weight: 800;
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .single-index {
+      font-size: 14px;
       color: #9ca3af;
+    }
+
+    .single-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      padding: 4px 10px;
+      font-size: 11px;
+      color: #e2e8f0;
+      background: rgba(15,23,42,0.9);
+    }
+
+    .single-links {
+      margin-top: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .single-links a {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .single-meta {
       margin-top: 6px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    /* --- Compact-View --- */
+    .compact-list {
+      border-radius: 26px;
+      border: 1px solid rgba(148,163,184,0.2);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+      box-shadow: 0 22px 60px rgba(15,23,42,0.96);
+      overflow: hidden;
+    }
+
+    .compact-row {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1.8fr) minmax(0, 1.4fr) auto;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid rgba(30,41,59,0.9);
+      font-size: 13px;
+      align-items: center;
+    }
+
+    .compact-row:first-child {
+      border-top: none;
+    }
+
+    .compact-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .compact-play-link {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      .compact-row {
+        grid-template-columns: 20px minmax(0, 2.2fr) auto;
+        grid-template-rows: auto auto;
+      }
+      .compact-row-mood {
+        grid-column: 2 / 4;
+        color: #9ca3af;
+      }
+    }
+
+    /* --- Terminal-View unten --- */
+    .terminal-block {
+      border-radius: 26px;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+      box-shadow: 0 22px 60px rgba(15,23,42,0.96);
+      padding: 18px 18px 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .terminal-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .terminal-sub {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 10px;
     }
 
     /* --- Footer --- */
     footer {
-      margin-top: 40px;
+      margin-top: 32px;
       padding-top: 16px;
       border-top: 1px solid rgba(15, 23, 42, 0.9);
       font-size: 11px;
@@ -638,6 +545,30 @@
       cursor: pointer;
     }
 
+    /* --- Retro / Easter Egg Mode --- */
+    body.retro-mode::before {
+      background:
+        radial-gradient(circle at 0% 0%, rgba(236,72,153,0.9), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.9), transparent 60%);
+    }
+
+    body.retro-mode::after {
+      opacity: 0.3;
+    }
+
+    body.retro-mode .page {
+      filter: contrast(1.05) saturate(1.2);
+    }
+
+    body.retro-mode .brand {
+      animation: retro-scan 1.1s infinite alternate;
+    }
+
+    @keyframes retro-scan {
+      from { text-shadow: 0 0 6px rgba(248,250,252,0.9); }
+      to   { text-shadow: 0 0 16px rgba(251,113,133,0.95); }
+    }
+
     /* --- Mobile Tweaks --- */
     @media (max-width: 767px) {
       .nav-inner {
@@ -647,181 +578,159 @@
         font-size: 13px;
         gap: 12px;
       }
-      .section {
-        padding-top: 32px;
-      }
-      .hero-layout {
-        display: block;
-      }
-      .panel-glass {
-        margin-top: 20px;
+      .page {
+        padding-top: 84px;
       }
     }
   </style>
 </head>
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
-  <div class="scroll-progress" id="scrollProgress"></div>
 
-  <!-- NAVIGATION -->
   <header class="nav">
     <div class="nav-inner">
-      <div id="brand" class="brand">Prompt<span class="accent">Rebel</span></div>
+      <div id="brand" class="brand">
+        Prompt<span class="accent">Rebel</span>
+      </div>
       <nav class="nav-links" aria-label="Hauptnavigation">
-        <a href="../index.html#projects" class="nav-link">Projects</a>
-        <a href="../index.html#about" class="nav-link">About</a>
-        <a href="../index.html#lab-notes" class="nav-link">Lab Notes</a>
+        <a href="../index.html" class="nav-link">Projects</a>
+        <a href="index.html" class="nav-link nav-link-active">Music</a>
+        <a href="../video/index.html" class="nav-link">Video</a>
       </nav>
     </div>
   </header>
 
+  <div class="scroll-progress" id="scrollProgress"></div>
+
   <main class="page" id="main">
-    <!-- HERO / HEADER -->
+
+    <!-- CATEGORY HEADER & TABS -->
     <section class="section">
-      <div class="hero-layout">
-        <div>
-          <div class="category-label">Category · Music</div>
-          <h1 class="hero-title">Singles &amp; Themes</h1>
+      <div class="category-label">CATEGORY · MUSIC</div>
+      <h1 class="page-title">Singles & Themes</h1>
 
-          <div class="hero-breadcrumbs">
-            <a href="../index.html">Home</a> ·
-            <a href="./index.html">Music &amp; Audio</a> ·
-            <span>Singles</span>
-          </div>
-
-          <p class="hero-text-main">
-            Einzeltracks, Experimente und Themes aus dem PromptRebel-Lab – gebündelt an einem Ort.
-          </p>
-          <p class="hero-text-sub">
-            Von düsteren KI-Hymnen bis zu Meme-Tracks: Hier landen alle Stücke,
-            die nicht in ein Album passen, aber zu schade sind, um in einem Ordner zu verschwinden.
-          </p>
-
-          <div class="hero-tabs" aria-label="Musikbereiche">
-            <a href="./albums.html" class="hero-tab">
-              <span>Alben &amp; EPs</span><span class="arrow">↗</span>
-            </a>
-            <button type="button" class="hero-tab current" aria-current="page">
-              <span>Singles &amp; Themes</span><span class="arrow">●</span>
-            </button>
-            <a href="./loops.html" class="hero-tab">
-              <span>Loops &amp; Packs</span><span class="arrow">↗</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Oberes Terminal-Panel -->
-        <aside class="panel-glass">
-          <div class="panel-header">
-            <span class="icon">🎧</span>
-            <span>NOW LOADING · SINGLES INDEX</span>
-          </div>
-          <div class="terminal" id="topTerminal">
-promptrebel:music/singles$ ls --vibe
-1  Code:Unsterblich      [dark]
-2  Ich seh nur dich, GPT [love]
-3  KI herrscht jetzt – Sing mir dein Ende [apocalypse]
-4  Alexa, zeig mir Brüste [meme]
-
-<span class="dim"># wechsel View unten: cards · compact · terminal</span>
-          </div>
-        </aside>
+      <div class="music-tabs" aria-label="Musik-Kategorien">
+        <a href="albums.html" class="music-tab">Alben & EPs</a>
+        <span class="music-tab music-tab-active">Singles & Themes</span>
+        <a href="loops.html" class="music-tab">Loops & Packs</a>
       </div>
-    </section>
 
-    <!-- TRACK LIST + FILTERS -->
-    <section class="section tracks-section" aria-labelledby="tracks-title">
-      <p class="controls-intro">
-        Aktuell vier Singles als Vorgeschmack – später können hier problemlos 30+ Tracks stehen.
-        Filter, Suche und Compact-View helfen beim Durchstöbern.
+      <div class="breadcrumbs">
+        <a href="../index.html">Home</a> ·
+        <a href="index.html">Music &amp; Audio</a> ·
+        Singles
+      </div>
+
+      <p class="intro-text">
+        Einzeltracks, Experimente und Themes aus dem PromptRebel-Lab – gebündelt an einem Ort.
+      </p>
+      <p class="intro-sub">
+        Von düsteren KI-Hymnen bis zu Meme-Tracks: Hier landen alle Stücke, die nicht in ein Album passen,
+        aber zu schade sind, um in einem Ordner zu verschwinden.
       </p>
 
-      <!-- Suche -->
+      <!-- Terminal-Preview oben -->
+      <div class="terminal-preview">
+        <div class="terminal-preview-header">
+          <span class="icon">🎧</span>
+          <span>NOW LOADING · SINGLES INDEX</span>
+        </div>
+        <pre id="previewTerminal"></pre>
+      </div>
+
+      <!-- Controls -->
       <div class="control-row">
-        <span class="control-label">Suche:</span>
-        <div class="search-input-wrap">
-          <span class="search-icon">🔍</span>
-          <input
-            type="search"
-            id="searchInput"
-            class="search-input"
-            placeholder="Titel durchsuchen …"
-            aria-label="Titel durchsuchen"
-          />
-        </div>
+        <label class="chip-label" for="searchInput">Suche:</label>
+        <input id="searchInput" class="search-input" type="text" placeholder="Titel durchsuchen …">
       </div>
 
-      <!-- Filter -->
       <div class="control-row">
-        <span class="control-label">Filter:</span>
-        <div class="chip-row" id="filterChips">
-          <button class="chip active" data-filter="all">All</button>
-          <button class="chip" data-filter="dark">Dark</button>
-          <button class="chip" data-filter="love">Love</button>
-          <button class="chip" data-filter="apocalypse">Apocalypse</button>
-          <button class="chip" data-filter="meme">Meme</button>
-        </div>
+        <div class="chip-label">Filter:</div>
+        <div class="chip-row" id="filterChips"></div>
       </div>
 
-      <!-- View Switch -->
-      <div class="control-row">
-        <span class="control-label">View:</span>
-        <div class="chip-row" id="viewChips">
-          <button class="chip active" data-view="cards">Cards</button>
-          <button class="chip" data-view="compact">Compact</button>
-          <button class="chip" data-view="terminal">Terminal Mode</button>
-        </div>
+      <div class="view-row">
+        <div class="view-row-label">View:</div>
+        <button class="view-button view-button-active" data-view="cards">Cards</button>
+        <button class="view-button" data-view="compact">Compact</button>
+        <button class="view-button" data-view="terminal">Terminal Mode</button>
       </div>
 
-      <!-- Trackliste -->
-      <h2 id="tracks-title" class="visually-hidden">Singles-Liste</h2>
-      <div id="trackList" class="track-list"></div>
-    </section>
-
-    <!-- TERMINAL MODE SEKTION -->
-    <section class="section terminal-section" id="terminalSection" aria-labelledby="terminal-title">
-      <h2 class="terminal-title" id="terminal-title">Singles – Lab Terminal</h2>
-      <p class="terminal-desc">
-        Für alle, die lieber mit Text als mit Kacheln arbeiten. Nutze die Buttons unten
-        wie Kommandos: <code>help</code>, <code>list</code>, <code>filter vibe=…</code>.
-        Ein Klick auf einen Titel öffnet den Track auf Riffusion.
-      </p>
-
-      <div class="panel-glass terminal-panel">
-        <div class="panel-header">
-          <span class="icon">⌘</span>
-          <span>SINGLES TERMINAL</span>
-        </div>
-        <div class="terminal-output" id="terminalOutput">
-> welcome to singles-terminal v0.1
-> type 'help' or use the buttons below…
-        </div>
-        <div class="terminal-command-row">
-          <button class="t-chip" data-cmd="help">help</button>
-          <button class="t-chip" data-cmd="list-all">list</button>
-          <button class="t-chip" data-cmd="list-dark">filter vibe=dark</button>
-          <button class="t-chip" data-cmd="list-love">filter vibe=love</button>
-          <button class="t-chip" data-cmd="view-cards">view cards</button>
-        </div>
-        <p class="terminal-hint">
-          Tipp: Terminal zeigt immer die aktuelle Filter-/Suchauswahl.
-        </p>
-      </div>
+      <!-- Views -->
+      <div id="viewCards" class="cards-list"></div>
+      <div id="viewCompact" class="compact-list" style="display:none;"></div>
+      <div id="viewTerminal" class="terminal-block" style="display:none;"></div>
     </section>
 
     <!-- FOOTER -->
     <footer>
       <div>© PromptRebel | CC BY-NC-SA 4.0</div>
       <div class="center-links">
-        <a href="../imprint.html">Imprint</a>
+        <a href="#">Imprint</a>
         <span>·</span>
-        <a href="../privacy.html">Privacy</a>
+        <a href="#">Privacy</a>
       </div>
       <div>current build: <span id="buildVersion" class="build-highlight">v0.3.singles</span> – singles index</div>
     </footer>
   </main>
 
   <script>
+    // --- Datenbasis für Singles ---
+    const singles = [
+      {
+        id: 1,
+        title: "Code:Unsterblich",
+        riffusion: "https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf",
+        vibe: "dark / dystopian",
+        mood: "dark",
+        energy: "high",
+        language: "DE",
+        duration: "ca. 3–4 min"
+      },
+      {
+        id: 2,
+        title: "Ich seh nur dich, GPT",
+        riffusion: "https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140",
+        vibe: "love / bittersweet",
+        mood: "love",
+        energy: "mid",
+        language: "DE",
+        duration: "ca. 3–4 min"
+      },
+      {
+        id: 3,
+        title: "KI herrscht jetzt – Sing mir dein Ende",
+        riffusion: "https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552",
+        vibe: "apocalypse / endzeit",
+        mood: "apocalypse",
+        energy: "high",
+        language: "DE",
+        duration: "ca. 3–4 min"
+      },
+      {
+        id: 4,
+        title: "Alexa, zeig mir Brüste",
+        riffusion: "https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70",
+        vibe: "meme / absurd",
+        mood: "meme",
+        energy: "mid",
+        language: "DE",
+        duration: "ca. 2–3 min"
+      }
+    ];
+
+    const moods = ["All", "Dark", "Love", "Apocalypse", "Meme"];
+
+    let currentMood = "All";
+    let currentView = "cards";
+    let searchQuery = "";
+
+    const previewTerminalEl = document.getElementById("previewTerminal");
+    const viewCardsEl = document.getElementById("viewCards");
+    const viewCompactEl = document.getElementById("viewCompact");
+    const viewTerminalEl = document.getElementById("viewTerminal");
+    const filterChipsEl = document.getElementById("filterChips");
+
     // --- Scroll-Progress ---
     const scrollBar = document.getElementById("scrollProgress");
     window.addEventListener("scroll", () => {
@@ -831,282 +740,39 @@ promptrebel:music/singles$ ls --vibe
       scrollBar.style.transform = `scaleX(${ratio})`;
     });
 
-    // --- Brand Glitch auf Load ---
+    // --- Brand Glitch + Easter Egg ---
     const brandEl = document.getElementById("brand");
     window.addEventListener("load", () => {
       brandEl.classList.add("glitch");
       setTimeout(() => brandEl.classList.remove("glitch"), 800);
     });
 
-    // --- Datenbasis für Tracks ---
-    const tracks = [
-      {
-        id: "code-unsterblich",
-        index: 1,
-        title: "Code:Unsterblich",
-        type: "RAP · SINGLE",
-        vibeTag: "dark",
-        vibe: "dark / dystopian",
-        energy: "high",
-        language: "DE",
-        length: "ca. 3–4 min",
-        url: "https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf"
-      },
-      {
-        id: "ich-seh-nur-dich-gpt",
-        index: 2,
-        title: "Ich seh nur dich, GPT",
-        type: "RAP · EMO",
-        vibeTag: "love",
-        vibe: "love / bittersweet",
-        energy: "mid",
-        language: "DE",
-        length: "ca. 3–4 min",
-        url: "https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140"
-      },
-      {
-        id: "ki-herrscht-ende",
-        index: 3,
-        title: "KI herrscht jetzt – Sing mir dein Ende",
-        type: "RAP · APOCALYPSE",
-        vibeTag: "apocalypse",
-        vibe: "apocalypse / endzeit",
-        energy: "high",
-        language: "DE",
-        length: "ca. 3–4 min",
-        url: "https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552"
-      },
-      {
-        id: "alexa-zeig-mir-brueste",
-        index: 4,
-        title: "Alexa, zeig mir Brüste",
-        type: "MEME · RAP",
-        vibeTag: "meme",
-        vibe: "meme / absurd",
-        energy: "mid",
-        language: "DE",
-        length: "ca. 3–4 min",
-        url: "https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70"
+    let clickCount = 0;
+    let clickTimer = null;
+    brandEl.addEventListener("click", () => {
+      clickCount++;
+      if (!clickTimer) {
+        clickTimer = setTimeout(() => {
+          clickCount = 0;
+          clickTimer = null;
+        }, 600);
       }
-    ];
+      if (clickCount >= 3) {
+        clickCount = 0;
+        clearTimeout(clickTimer);
+        clickTimer = null;
+        triggerRetroMode();
+      }
+    });
 
-    // --- State ---
-    let currentFilter = "all";
-    let currentView = "cards";
-    let searchTerm = "";
-
-    const trackListEl = document.getElementById("trackList");
-    const filterChips = document.querySelectorAll("#filterChips .chip");
-    const viewChips = document.querySelectorAll("#viewChips .chip");
-    const searchInput = document.getElementById("searchInput");
-    const terminalOutput = document.getElementById("terminalOutput");
-
-    function getVisibleTracks() {
-      return tracks.filter(t => {
-        const matchFilter =
-          currentFilter === "all" || t.vibeTag === currentFilter;
-        const matchSearch =
-          !searchTerm ||
-          t.title.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchFilter && matchSearch;
-      });
+    function triggerRetroMode() {
+      document.body.classList.add("retro-mode");
+      setTimeout(() => {
+        document.body.classList.remove("retro-mode");
+      }, 12000);
     }
 
-    // --- Rendering Cards / Compact ---
-    function renderTracks() {
-      const visible = getVisibleTracks();
-      // Reset classes
-      trackListEl.classList.remove("compact");
-      trackListEl.innerHTML = "";
-
-      if (currentView === "compact") {
-        trackListEl.classList.add("compact");
-      }
-
-      visible.forEach(track => {
-        const card = document.createElement("article");
-        card.className = "track-card";
-
-        if (currentView === "compact") {
-          card.innerHTML = `
-            <div class="track-card-inner">
-              <div class="track-index">${track.index}.</div>
-              <div class="track-title-block">
-                <div class="track-title">${track.title}</div>
-                <div class="track-subline">${track.vibe} · ${track.length}</div>
-                <div class="track-meta-chips">
-                  <span class="meta-chip">${track.vibeTag}</span>
-                  <span class="meta-chip">Energy: ${track.energy}</span>
-                </div>
-              </div>
-              <div class="track-links-row">
-                <a href="${track.url}" target="_blank" rel="noopener" class="track-link">Play →</a>
-                <span class="track-length">${track.language}</span>
-              </div>
-            </div>
-          `;
-        } else {
-          card.innerHTML = `
-            <div class="track-card-top">
-              <div class="track-index">${track.index}</div>
-              <div class="track-title-block">
-                <h3 class="track-title">${track.title}</h3>
-                <div class="track-subline">${track.type}</div>
-                <div class="track-meta-chips">
-                  <span class="meta-chip">Vibe: ${track.vibe}</span>
-                  <span class="meta-chip">Energy: ${track.energy}</span>
-                  <span class="meta-chip">Language: ${track.language}</span>
-                </div>
-              </div>
-            </div>
-            <div class="track-links-row">
-              <a href="${track.url}" target="_blank" rel="noopener" class="track-link">
-                Play on Riffusion →
-              </a>
-              <span class="track-link">Prompts → (coming soon)</span>
-              <span class="track-length">${track.length}</span>
-            </div>
-          `;
-        }
-
-        trackListEl.appendChild(card);
-      });
-
-      renderTerminal(); // Terminal immer mitziehen
-    }
-
-    // --- Filter-Chips ---
-    filterChips.forEach(chip => {
-      chip.addEventListener("click", () => {
-        filterChips.forEach(c => c.classList.remove("active"));
-        chip.classList.add("active");
-        currentFilter = chip.dataset.filter;
-        renderTracks();
-      });
-    });
-
-    // --- View-Chips ---
-    viewChips.forEach(chip => {
-      chip.addEventListener("click", () => {
-        viewChips.forEach(c => c.classList.remove("active"));
-        chip.classList.add("active");
-        currentView = chip.dataset.view;
-
-        if (currentView === "terminal") {
-          // Scroll zum Terminal-Bereich
-          document
-            .getElementById("terminalSection")
-            .scrollIntoView({ behavior: "smooth", block: "start" });
-        } else {
-          renderTracks();
-        }
-      });
-    });
-
-    // --- Suche ---
-    searchInput.addEventListener("input", () => {
-      searchTerm = searchInput.value.trim();
-      renderTracks();
-    });
-
-    // --- Terminal Rendering ---
-    function renderTerminal(mode = "list-all") {
-      const visible = getVisibleTracks();
-      let out = "";
-
-      if (mode === "help") {
-        out +=
-`> help
-commands:
-  list              – alle sichtbaren singles anzeigen
-  filter vibe=dark  – nur dark singles
-  filter vibe=love  – nur love singles
-  view cards        – nach oben zur Kartenansicht
-klick auf einen titel = track auf Riffusion öffnen
-
-promptrebel:music/singles$ _`;
-        terminalOutput.textContent = out;
-        return;
-      }
-
-      out += "> list\n";
-      visible.forEach(t => {
-        out += `${t.index}. `;
-        out += `${t.title} [${t.vibeTag}] · ${t.length}\n`;
-      });
-
-      if (!visible.length) {
-        out += "(no results – filter/search too strict)\n";
-      }
-
-      out +=
-"\n(click a title below to play)\n\n";
-
-      // Wir bauen jetzt klickbare Zeilen
-      terminalOutput.innerHTML = "";
-      const pre = document.createElement("div");
-      pre.textContent = out;
-      terminalOutput.appendChild(pre);
-
-      visible.forEach(t => {
-        const line = document.createElement("div");
-        line.innerHTML =
-          `<span class="terminal-link" data-url="${t.url}">
-${t.index}. ${t.title} [${t.vibeTag}] · ${t.length}
-</span>`;
-        terminalOutput.appendChild(line);
-      });
-
-      const prompt = document.createElement("div");
-      prompt.textContent = "\npromptrebel:music/singles$ _";
-      terminalOutput.appendChild(prompt);
-    }
-
-    // Klick auf Terminal-Titel
-    terminalOutput.addEventListener("click", (e) => {
-      const link = e.target.closest(".terminal-link");
-      if (link && link.dataset.url) {
-        window.open(link.dataset.url, "_blank", "noopener");
-      }
-    });
-
-    // Terminal Buttons
-    document
-      .querySelectorAll(".terminal-command-row .t-chip")
-      .forEach(btn => {
-        btn.addEventListener("click", () => {
-          const cmd = btn.dataset.cmd;
-          if (cmd === "help") {
-            renderTerminal("help");
-          } else if (cmd === "list-dark") {
-            currentFilter = "dark";
-            filterChips.forEach(c =>
-              c.classList.toggle("active", c.dataset.filter === "dark")
-            );
-            renderTracks();
-          } else if (cmd === "list-love") {
-            currentFilter = "love";
-            filterChips.forEach(c =>
-              c.classList.toggle("active", c.dataset.filter === "love")
-            );
-            renderTracks();
-          } else if (cmd === "view-cards") {
-            currentView = "cards";
-            viewChips.forEach(c =>
-              c.classList.toggle("active", c.dataset.view === "cards")
-            );
-            renderTracks();
-            document
-              .getElementById("tracks-title")
-              .scrollIntoView({ behavior: "smooth", block: "start" });
-          } else {
-            // list-all
-            renderTracks();
-          }
-        });
-      });
-
-    // --- Footer-Version-Easter-Egg ---
+    // --- Footer-Version-Click ---
     const buildVersionEl = document.getElementById("buildVersion");
     buildVersionEl.addEventListener("click", () => {
       const versions = ["v0.3.singles", "v0.4.singles", "v0.6.9.singles", "v1.0.singles", "v∞.singles"];
@@ -1117,8 +783,144 @@ ${t.index}. ${t.title} [${t.vibeTag}] · ${t.length}
       }, 120);
     });
 
-    // Initial render
-    renderTracks();
+    // --- Filter-Chips aufbauen ---
+    function renderChips() {
+      filterChipsEl.innerHTML = "";
+      moods.forEach(mood => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = mood;
+        btn.className = "chip" + (mood === currentMood ? " chip-active" : "");
+        btn.addEventListener("click", () => {
+          currentMood = mood;
+          renderAll();
+        });
+        filterChipsEl.appendChild(btn);
+      });
+    }
+
+    // --- Filtering ---
+    function getFilteredSingles() {
+      return singles.filter(track => {
+        if (currentMood !== "All" && track.mood.toLowerCase() !== currentMood.toLowerCase()) {
+          return false;
+        }
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          return track.title.toLowerCase().includes(q);
+        }
+        return true;
+      });
+    }
+
+    // --- Cards View ---
+    function renderCards() {
+      const data = getFilteredSingles();
+      viewCardsEl.innerHTML = "";
+      data.forEach(track => {
+        const card = document.createElement("article");
+        card.className = "single-card";
+        card.innerHTML = `
+          <div class="single-header">
+            <div class="single-title">
+              <span class="single-index">${track.id}.</span>
+              <span>${track.title}</span>
+            </div>
+            <div class="single-badges">
+              <span class="badge">Vibe: ${track.vibe}</span>
+              <span class="badge">Energy: ${track.energy}</span>
+              <span class="badge">Language: ${track.language}</span>
+            </div>
+          </div>
+          <div class="single-links">
+            <a href="${track.riffusion}" target="_blank" rel="noopener">Play on Riffusion →</a>
+            <span>Prompts → (coming soon)</span>
+          </div>
+          <div class="single-meta">${track.duration}</div>
+        `;
+        viewCardsEl.appendChild(card);
+      });
+    }
+
+    // --- Compact View ---
+    function renderCompact() {
+      const data = getFilteredSingles();
+      viewCompactEl.innerHTML = "";
+      if (!data.length) return;
+      data.forEach(track => {
+        const row = document.createElement("div");
+        row.className = "compact-row";
+        row.innerHTML = `
+          <div>${track.id}.</div>
+          <div>${track.title}</div>
+          <div class="compact-row-mood">${track.vibe} · ${track.duration}</div>
+          <div class="compact-tags">
+            <span class="badge">${track.mood}</span>
+            <span class="badge">Energy: ${track.energy}</span>
+          </div>
+          <a class="compact-play-link" href="${track.riffusion}" target="_blank" rel="noopener">Play →</a>
+        `;
+        viewCompactEl.appendChild(row);
+      });
+    }
+
+    // --- Terminal View unten ---
+    function renderTerminal() {
+      const data = getFilteredSingles();
+      let out = "welcome to singles-terminal v0.3  type 'help' for pseudo-commands\\n\\n";
+      out += "> list\\n";
+      data.forEach(track => {
+        out += `${track.id}. ${track.title} [${track.mood}] · ${track.duration}\\n`;
+      });
+      out += `\\n# view: cards · compact · terminal   (oben umschalten)`;
+      viewTerminalEl.textContent = out;
+    }
+
+    // --- Terminal-Preview oben ---
+    function renderPreview() {
+      const data = getFilteredSingles();
+      let out = "promptrebel:music/singles$ ls --vibe\\n";
+      data.forEach(track => {
+        out += `${track.id} ${track.title} [${track.mood}]\\n`;
+      });
+      out += "\\n# wechsel View unten: cards · compact · terminal";
+      previewTerminalEl.textContent = out;
+    }
+
+    // --- View-Umschaltung ---
+    const viewButtons = document.querySelectorAll(".view-button");
+    viewButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentView = btn.dataset.view;
+        viewButtons.forEach(b => b.classList.toggle("view-button-active", b === btn));
+        updateViewVisibility();
+      });
+    });
+
+    function updateViewVisibility() {
+      viewCardsEl.style.display = currentView === "cards" ? "flex" : "none";
+      viewCompactEl.style.display = currentView === "compact" ? "block" : "none";
+      viewTerminalEl.style.display = currentView === "terminal" ? "block" : "none";
+    }
+
+    // --- Suche ---
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      searchQuery = e.target.value || "";
+      renderAll();
+    });
+
+    // --- Render-All ---
+    function renderAll() {
+      renderChips();
+      renderCards();
+      renderCompact();
+      renderTerminal();
+      renderPreview();
+      updateViewVisibility();
+    }
+
+    // Initial
+    renderAll();
   </script>
 </body>
 </html>
