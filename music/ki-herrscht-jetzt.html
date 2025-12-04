@@ -315,98 +315,107 @@
     .btn-secondary span.icon {
       font-size: 16px;
     }
+    /* --- Trackliste (Play-Button rechts, identisch zu Trinity Protocol) --- */
+.tracks-section {
+  padding-top: 24px;
+}
 
-    /* --- Trackliste --- */
-    .tracks-section {
-      padding-top: 24px;
-    }
+.tracks-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
 
-    .tracks-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
+.tracks-subtitle {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
 
-    .tracks-subtitle {
-      font-size: 14px;
-      color: #9ca3af;
-      margin-bottom: 16px;
-    }
+.track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 
-    .track-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+/* Einzelne Track-Karte */
+.track-card {
+  border-radius: 26px;
+  border: 1px solid rgba(148,163,184,0.25);
+  background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+  box-shadow: 0 20px 50px rgba(15,23,42,0.98);
+  padding: 14px 18px 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px 18px;
+  align-items: center;
+}
 
-    .track-card {
-      border-radius: 24px;
-      border: 1px solid rgba(148,163,184,0.25);
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
-      box-shadow: 0 20px 50px rgba(15,23,42,0.98);
-      padding: 12px 18px 12px;
-      display: grid;
-      grid-template-columns: auto minmax(0, 3fr) auto;
-      gap: 10px 16px;
-      align-items: center;
-    }
+/* Track Index Kreis */
+.track-index {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #e5e7eb;
+}
 
-    .track-index {
-      font-size: 14px;
-      color: #9ca3af;
-      font-variant-numeric: tabular-nums;
-    }
+/* Titelblock */
+.track-main {
+  min-width: 0;
+}
 
-    .track-main {
-      min-width: 0;
-    }
+.track-title {
+  font-size: clamp(18px, 4vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-bottom: 4px;
+  color: #f9fafb;
+}
 
-    .track-title {
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-      margin-bottom: 2px;
-      color: #f9fafb;
-    }
+.track-subline {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #9ca3af;
+}
 
-    .track-subline {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: #9ca3af;
-    }
+/* Rechte Seite: Länge + Play-Link */
+.track-meta {
+  text-align: right;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
 
-    .track-meta {
-      text-align: right;
-      font-size: 12px;
-      color: #e5e7eb;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-    }
+.track-length {
+  font-size: 12px;
+  color: #9ca3af;
+}
 
-    .track-length {
-      font-size: 12px;
-      color: #9ca3af;
-    }
+/* Play Link */
+.track-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 14px;
+  color: #e5e7eb;
+}
 
-    .track-link {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      font-size: 13px;
-    }
-
-    @media (max-width: 640px) {
-      .track-card {
-        grid-template-columns: auto minmax(0, 1fr);
-        align-items: flex-start;
-      }
-      .track-meta {
-        grid-column: 2 / span 1;
-        align-items: flex-start;
-      }
-    }
+@media (max-width: 640px) {
+  .track-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .track-meta {
+    grid-column: 2 / span 1;
+    align-items: flex-start;
+  }
+}
 
     /* --- Footer --- */
     footer {
