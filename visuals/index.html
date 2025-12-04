@@ -208,7 +208,22 @@
     .section:first-of-type {
       padding-top: 28px;
     }
+.category-previews {
+  display: flex;
+  gap: 18px;
+  margin-top: 24px;
+}
 
+.preview-img {
+  flex: 1;
+  aspect-ratio: 4/5;
+  border-radius: 24px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 2px solid rgba(148,163,184,0.25);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+}
     @media (min-width: 768px) {
       .hero-layout {
         display: grid;
@@ -669,11 +684,11 @@
                 Charakter-Designs und KI-Avatare im typischen PromptRebel-Neonlook.
               </p>
 
-              <div class="visual-previews" aria-hidden="true">
-                <div class="preview-tile preview-portraits-1"></div>
-                <div class="preview-tile preview-portraits-2"></div>
-                <div class="preview-tile preview-portraits-3"></div>
-              </div>
+              <div class="category-previews">
+  <div class="preview-img" style="background-image:url('assets/visuals/portraits/5581E972-68D1-457B-BA61-5FAB955A8F78.png');"></div>
+  <div class="preview-img" style="background-image:url('assets/visuals/portraits/IMG_9113.png');"></div>
+  <div class="preview-img" style="background-image:url('assets/visuals/portraits/IMG_0322.png');"></div>
+</div>
 
               <div class="visual-footer">
                 <a href="./portraits-characters.html" class="visual-link">
