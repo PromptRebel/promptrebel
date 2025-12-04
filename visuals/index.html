@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>PromptRebel – Visual Art & Covers</title>
+  <title>PromptRebel – Visual Art & Cover</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -58,13 +58,13 @@
     .page {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 88px 16px 40px; /* Platz für fixen Header + Progress-Bar */
+      padding: 16px 16px 40px;
     }
 
-    /* --- Scroll-Progress-Bar (unter Header) --- */
+    /* --- Scroll-Progress-Bar --- */
     .scroll-progress {
       position: fixed;
-      top: 56px; /* Höhe Header */
+      top: 56px;
       left: 0;
       right: 0;
       height: 2px;
@@ -72,7 +72,7 @@
       transform-origin: left;
       transform: scaleX(0);
       transition: transform 0.1s linear;
-      z-index: 35;
+      z-index: 30;
     }
 
     /* --- Skip-Link --- */
@@ -86,7 +86,7 @@
       color: #f9fafb;
       border-radius: 999px;
       font-size: 13px;
-      z-index: 60;
+      z-index: 70;
     }
     .skip-link:focus-visible {
       top: 10px;
@@ -94,7 +94,7 @@
       outline-offset: 2px;
     }
 
-    /* --- Top-Navigation (fix) --- */
+    /* --- Top-Navigation --- */
     .nav {
       position: fixed;
       top: 0;
@@ -102,8 +102,8 @@
       right: 0;
       z-index: 40;
       backdrop-filter: blur(14px);
-      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.72));
-      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
     }
 
     .nav-inner {
@@ -171,21 +171,21 @@
       width: 100%;
     }
 
+    .nav-link.active::after {
+      width: 100%;
+    }
+
     .nav-link:focus-visible {
       outline: none;
     }
 
-    .nav-link-active::after {
-      width: 100%;
-    }
-
-    /* --- Layout-Helfer --- */
+    /* --- Sections / Layout --- */
     .section {
-      padding: 32px 16px 8px;
+      padding: 40px 16px 8px;
     }
 
     .section:first-of-type {
-      padding-top: 8px;
+      padding-top: 28px;
     }
 
     @media (min-width: 768px) {
@@ -239,234 +239,197 @@
       max-width: 40rem;
     }
 
-    .hero-note {
-      font-size: 12px;
-      color: #9ca3af;
-    }
-
-    /* --- Hero Panel rechts --- */
-    .panel-glass {
-      border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(18px);
-      padding: 14px 16px 14px;
-    }
-
-    .panel-header {
-      font-size: 12px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #9ca3af;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .panel-header span.icon {
-      font-size: 16px;
-      color: #a855f7;
-    }
-
-    .terminal {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      white-space: pre-line;
-      color: #e5e7eb;
-    }
-
-    .terminal .dim {
-      color: #6b7280;
-    }
-
-    /* --- Kategorien-Grid --- */
-    .section-title {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .section-subtitle {
-      font-size: 13px;
-      color: #9ca3af;
-      margin-bottom: 18px;
-      max-width: 40rem;
-    }
-
-    .category-grid {
-      display: grid;
-      gap: 20px;
-    }
-
-    @media (min-width: 900px) {
-      .category-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    .category-card {
-      --accent: rgba(236,72,153,0.95);
-      position: relative;
-      border-radius: 24px;
-      padding: 18px 18px 16px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 1));
-      box-shadow: 0 22px 60px rgba(15,23,42,0.98);
-      backdrop-filter: blur(18px);
-      overflow: hidden;
-      transition:
-        transform 0.16s ease,
-        box-shadow 0.16s ease,
-        border-color 0.16s ease,
-        background 0.16s ease;
-      cursor: pointer;
-    }
-
-    .category-card::before {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      border-radius: inherit;
-      background: radial-gradient(circle at top left, var(--accent), transparent 65%);
-      opacity: 0.25;
-      pointer-events: none;
-      mix-blend-mode: screen;
-    }
-
-    .category-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 30px 70px rgba(15,23,42,1);
-      border-color: rgba(248,250,252,0.45);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.99), rgba(15, 23, 42, 1));
-    }
-
-    .category-card:hover::before {
-      opacity: 0.45;
-    }
-
-    .category-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      gap: 10px;
-    }
-
-    .category-label-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .category-icon {
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      background: radial-gradient(circle at top left, rgba(30,64,175,0.7), rgba(15,23,42,0.98));
-      box-shadow: 0 12px 30px rgba(15,23,42,0.95);
-    }
-
-    .category-name {
-      font-size: 17px;
-      font-weight: 700;
-      color: #f9fafb;
-      text-shadow: 0 0 10px rgba(236,72,153,0.7);
-    }
-
-    .category-tag {
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #cbd5e1;
-      white-space: nowrap;
-    }
-
-    .category-text {
-      font-size: 13px;
-      color: #d1d5db;
-      margin-bottom: 12px;
-      max-width: 44rem;
-    }
-
-    /* --- Preview Leiste mit 3 Bildern (Platzhalter) --- */
-    .preview-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .preview-thumb {
-      position: relative;
-      border-radius: 16px;
-      min-height: 160px;
-      /* Desktop: fast volle Breite, wirkt groß */
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      box-shadow: 0 18px 40px rgba(15,23,42,0.98);
-      overflow: hidden;
-    }
-
-    /* Platzhalter-Gradients – später ersetzt du das per inline style background-image:url(...) */
-    .preview-thumb.placeholder-1 {
-      background-image: radial-gradient(circle at top, rgba(226,232,240,0.09), rgba(15,23,42,1));
-    }
-    .preview-thumb.placeholder-2 {
-      background-image: radial-gradient(circle at center, rgba(56,189,248,0.16), rgba(15,23,42,1));
-    }
-    .preview-thumb.placeholder-3 {
-      background-image: radial-gradient(circle at bottom, rgba(236,72,153,0.18), rgba(15,23,42,1));
-    }
-
-    /* --- Untere Meta-Reihe --- */
-    .category-meta {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      font-size: 12px;
-      color: #9ca3af;
-    }
-
-    .category-chip-row {
+    .hero-pill-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      margin-top: 8px;
     }
 
-    .category-chip {
+    .hero-pill {
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.6);
-      padding: 3px 10px;
-      font-size: 11px;
-      color: #e2e8f0;
-      background: rgba(15,23,42,0.9);
+      padding: 6px 14px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.96), rgba(15,23,42,1));
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #e5e7eb;
     }
 
-    .category-links-row {
+    .hero-panel {
+      border-radius: 22px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+      box-shadow: 0 20px 50px rgba(15,23,42,0.98);
+      padding: 16px 18px 18px;
+      font-size: 13px;
+      color: #cbd5f5;
+    }
+
+    .hero-panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    /* --- Visual Category Cards --- */
+    .visuals-section {
+      padding-top: 16px;
+    }
+
+    .visuals-heading {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .visuals-subheading {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 18px;
+      max-width: 46rem;
+    }
+
+    .visual-grid {
       display: flex;
-      gap: 14px;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .visual-card {
+      border-radius: 26px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+      box-shadow:
+        0 0 40px rgba(37,99,235,0.35),
+        0 26px 70px rgba(15,23,42,0.98);
+      padding: 18px 18px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .visual-card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .visual-card-left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .visual-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: radial-gradient(circle at 30% 0%, rgba(56,189,248,0.95), rgba(37,99,235,1));
+      box-shadow: 0 0 18px rgba(56,189,248,0.8);
+      flex-shrink: 0;
+    }
+
+    .visual-title {
+      font-size: clamp(20px, 4vw, 26px);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: #f9fafb;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .visual-meta {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #9ca3af;
       white-space: nowrap;
     }
 
-    .category-link {
-      text-decoration: underline;
-      text-underline-offset: 3px;
+    .visual-tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 10px;
+    }
+
+    .visual-tag {
+      border-radius: 999px;
+      padding: 5px 12px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.96), rgba(15,23,42,1));
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .visual-description {
+      font-size: 14px;
+      color: #e5e7eb;
+      max-width: 46rem;
+      margin-bottom: 14px;
+    }
+
+    .visual-previews {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .visual-preview-tile {
+      border-radius: 18px;
+      min-height: 120px;
+      background: radial-gradient(circle at top left, rgba(30,64,175,0.85), rgba(15,23,42,1));
+      box-shadow: inset 0 0 30px rgba(15,23,42,0.9);
+      opacity: 0.8;
+    }
+
+    /* später: echte Bilder via background-image */
+
+    .visual-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
       font-size: 13px;
     }
 
-    .category-link:focus-visible {
-      outline: 2px solid #22d3ee;
-      outline-offset: 2px;
+    .visual-open-link {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .visual-count {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    @media (max-width: 768px) {
+      .visual-card-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .visual-meta {
+        margin-top: 4px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .visual-previews {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
     }
 
     /* --- Footer --- */
@@ -499,30 +462,6 @@
       cursor: pointer;
     }
 
-    /* --- Retro / Easter Egg Mode --- */
-    body.retro-mode::before {
-      background:
-        radial-gradient(circle at 0% 0%, rgba(236,72,153,0.9), transparent 55%),
-        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.9), transparent 60%);
-    }
-
-    body.retro-mode::after {
-      opacity: 0.3;
-    }
-
-    body.retro-mode .page {
-      filter: contrast(1.05) saturate(1.2);
-    }
-
-    body.retro-mode .brand {
-      animation: retro-scan 1.1s infinite alternate;
-    }
-
-    @keyframes retro-scan {
-      from { text-shadow: 0 0 6px rgba(248,250,252,0.9); }
-      to   { text-shadow: 0 0 16px rgba(251,113,133,0.95); }
-    }
-
     /* --- Mobile Tweaks --- */
     @media (max-width: 767px) {
       .nav-inner {
@@ -532,285 +471,315 @@
         font-size: 13px;
         gap: 12px;
       }
-      .page {
-        padding-top: 84px;
+      .section {
+        padding-top: 32px;
       }
-      .preview-thumb {
-        min-height: 140px;
+      .hero-layout {
+        display: block;
+      }
+      .hero-panel {
+        margin-top: 20px;
       }
     }
   </style>
 </head>
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
+  <div class="scroll-progress" id="scrollProgress"></div>
 
-  <!-- HEADER / NAV -->
+  <!-- NAVIGATION -->
   <header class="nav">
     <div class="nav-inner">
-      <div id="brand" class="brand">
+      <a href="../index.html" id="brand" class="brand">
         Prompt<span class="accent">Rebel</span>
-      </div>
+      </a>
       <nav class="nav-links" aria-label="Hauptnavigation">
         <a href="../index.html#projects" class="nav-link">Projects</a>
         <a href="../music/index.html" class="nav-link">Music</a>
-        <a href="../video/index.html" class="nav-link">Video</a>
-        <a href="./index.html" class="nav-link nav-link-active">Visuals</a>
+        <a href="../index.html#video" class="nav-link">Video</a>
+        <a href="./index.html" class="nav-link active">Visuals</a>
       </nav>
     </div>
   </header>
 
-  <div class="scroll-progress" id="scrollProgress"></div>
-
   <main class="page" id="main">
-    <!-- HERO -->
+    <!-- HERO / HEADER -->
     <section class="section">
       <div class="hero-layout">
         <div>
           <div class="category-label">Category · Visuals</div>
-          <h1 class="hero-title">Visual Art &amp; Covers</h1>
+          <h1 class="hero-title">Visual Art & Cover</h1>
 
           <div class="hero-breadcrumbs">
-            <a href="../index.html">Home</a> · <span>Visual Art &amp; Covers</span>
+            <a href="../index.html">Home</a> ·
+            <span>Visuals</span>
           </div>
 
           <p class="hero-text-main">
-            Großformatige KI-Visuals, Cover-Art und experimentelle Bildserien aus dem PromptRebel-Lab –
-            kuratiert nach Kategorie, mit Prompts zum Nachbauen.
+            Große, immersive KI-Bilder im PromptRebel-Look: Portraits, Welten,
+            Mechas, Cover-Art und experimentelle Visuals – jeweils mit
+            vollständigem Prompt zum Nachbauen.
           </p>
           <p class="hero-text-sub">
-            Jede Kategorie-Seite zeigt dir eine kleine, aber wachsende Sammlung: große Bilder,
-            Lightbox zum Reinzoomen und saubere Prompt-Boxen mit Copy-Button.
+            Die Kategorien wachsen nach und nach. Jede Serie hat eigene
+            Bild-Prompts, die du 1:1 übernehmen oder für deine Ideen
+            weiterdrehen kannst.
           </p>
 
-          <p class="hero-note">
-            Start: 6 Kern-Kategorien. Später können weitere Bereiche wie Dark Fantasy oder Creatures
-            dazukommen – ohne das Layout zu zerstören.
-          </p>
+          <div class="hero-pill-row">
+            <div class="hero-pill">Portraits</div>
+            <div class="hero-pill">Sci-Fi & Cyberpunk</div>
+            <div class="hero-pill">Cover-Art</div>
+            <div class="hero-pill">Experimental</div>
+          </div>
         </div>
 
-        <!-- Panel rechts -->
-        <aside class="panel-glass">
-          <div class="panel-header">
-            <span class="icon">🖼️</span>
-            <span>NOW LOADING · VISUAL INDEX</span>
-          </div>
-          <div class="terminal" id="terminalIntro">
-promptrebel:visuals$ ls categories/
-
-> portraits_characters/      # Gesichter, Figuren & Personas
-> scifi_worlds/              # Städte, Neonwelten, Future Landscapes
-> mecha_tech/                # Roboter, Mechs & Interfaces
-> book_story_covers/         # Cover-Designs für Geschichten & Hörbücher
-> music_covers/              # Album-Art & Key Visuals
-> abstract_experimental/     # Surreale, glitchy Bildideen
-
-<span class="dim"># wähle eine Kategorie unten, Lightbox & Prompts kommen in den Detail-Seiten…</span>
-          </div>
+        <aside class="hero-panel">
+          <div class="hero-panel-title">Wie Visuals hier funktionieren:</div>
+          <p>
+            Jede Kategorie ist eine eigene kleine Galerie mit:
+          </p>
+          <ul style="margin-left:18px; margin-top:6px; margin-bottom:6px; font-size:13px; list-style:disc;">
+            <li>großen, hochauflösenden Bildern</li>
+            <li>aufklappbarem Prompt in einer Copy-Box</li>
+            <li>Lightbox-View für Fullscreen-Genuss</li>
+          </ul>
+          <p>
+            Starte mit einer Kategorie, klicke ein Bild, teste den Prompt –
+            und baue dein eigenes PromptRebel-Multiversum.
+          </p>
         </aside>
       </div>
     </section>
 
-    <!-- KATEGORIEN -->
-    <section class="section" aria-labelledby="visual-sections-title">
-      <h2 class="section-title" id="visual-sections-title">Visuelle Kategorien</h2>
-      <p class="section-subtitle">
-        Sechs Einstiege in dein Bild-Lab. Jede Kategorie bekommt eine eigene Seite
-        mit großen Visuals, Lightbox und kopierbaren Prompts.
+    <!-- VISUAL CATEGORIES -->
+    <section class="section visuals-section" aria-labelledby="visuals-heading">
+      <h2 class="visuals-heading" id="visuals-heading">Kategorien</h2>
+      <p class="visuals-subheading">
+        Sechs Start-Bereiche für deinen Visual-Bereich. Jede Kategorie öffnet
+        eine eigene Galerie mit Bildern, Prompts und später einer Lightbox-Ansicht.
       </p>
 
-      <div class="category-grid">
+      <div class="visual-grid">
         <!-- Portraits & Characters -->
-        <a href="./portraits.html" class="category-card" style="--accent: rgba(129,140,248,0.95);" aria-label="Portraits & Characters">
-          <div class="category-header-row">
-            <div class="category-label-left">
-              <div class="category-icon">💠</div>
-              <div class="category-name">Portraits &amp; Characters</div>
+        <article class="visual-card">
+          <div class="visual-card-top">
+            <div class="visual-card-left">
+              <div class="visual-icon">💠</div>
+              <div>
+                <div class="visual-title">Portraits &amp; Characters</div>
+                <div class="visual-tag-row">
+                  <span class="visual-tag">Close-ups</span>
+                  <span class="visual-tag">Cinematic Lighting</span>
+                  <span class="visual-tag">Character Studies</span>
+                </div>
+              </div>
             </div>
-            <div class="category-tag">FACES · PERSONAS</div>
+            <div class="visual-meta">LAB · FACES · STYLE</div>
           </div>
 
-          <p class="category-text">
-            Ausdrucksstarke Gesichter, KI-Avatare und komplette Charakter-Designs.
-            Fokus: Emotion, Licht, Details – ideal für Story-Projekte, Profile
-            oder als Basis für Visual-Stories.
+          <p class="visual-description">
+            Fokus auf Gesichter, Haltung und Persönlichkeit: expressive
+            Portraits, Charakter-Designs und KI-Avatare im typischen
+            PromptRebel-Neonlook.
           </p>
 
-          <div class="preview-row">
-            <div class="preview-thumb placeholder-1"></div>
-            <div class="preview-thumb placeholder-2"></div>
-            <div class="preview-thumb placeholder-3"></div>
+          <div class="visual-previews">
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
           </div>
 
-          <div class="category-meta">
-            <div class="category-chip-row">
-              <span class="category-chip">3+ Previews · wächst</span>
-              <span class="category-chip">Portrait / Character Art</span>
-            </div>
-            <div class="category-links-row">
-              <span class="category-link">Open Category →</span>
-            </div>
+          <div class="visual-card-footer">
+            <a href="./portraits.html" class="visual-open-link">
+              Open Category →
+            </a>
+            <span class="visual-count">coming soon · ~8–10 Images</span>
           </div>
-        </a>
+        </article>
 
         <!-- Sci-Fi / Cyberpunk Worlds -->
-        <a href="./worlds.html" class="category-card" style="--accent: rgba(56,189,248,0.95);" aria-label="Sci-Fi / Cyberpunk Worlds">
-          <div class="category-header-row">
-            <div class="category-label-left">
-              <div class="category-icon">🌌</div>
-              <div class="category-name">Sci-Fi / Cyberpunk Worlds</div>
+        <article class="visual-card">
+          <div class="visual-card-top">
+            <div class="visual-card-left">
+              <div class="visual-icon">🌌</div>
+              <div>
+                <div class="visual-title">Sci-Fi / Cyberpunk Worlds</div>
+                <div class="visual-tag-row">
+                  <span class="visual-tag">Neon Cities</span>
+                  <span class="visual-tag">Dystopian</span>
+                  <span class="visual-tag">Futuristic Worlds</span>
+                </div>
+              </div>
             </div>
-            <div class="category-tag">NEON · CITYSCAPES</div>
+            <div class="visual-meta">LAB · WORLD · ENVIRONMENTS</div>
           </div>
 
-          <p class="category-text">
-            Dichte, leuchtende Welten – von Regen-Neon-Straßen bis zu stillen
-            Future-Landschaften. Perfekt für Settings, Wallpaper oder Worldbuilding-Inspo.
+          <p class="visual-description">
+            Stadtlandschaften, Hacker-Spots, Datensphären und verregnete
+            Neon-Straßen – perfekt für Story-Welten, Hintergründe und
+            visuelles Worldbuilding.
           </p>
 
-          <div class="preview-row">
-            <div class="preview-thumb placeholder-2"></div>
-            <div class="preview-thumb placeholder-3"></div>
-            <div class="preview-thumb placeholder-1"></div>
+          <div class="visual-previews">
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
           </div>
 
-          <div class="category-meta">
-            <div class="category-chip-row">
-              <span class="category-chip">Cityscapes · Skylines</span>
-              <span class="category-chip">Cyberpunk / Future</span>
-            </div>
-            <div class="category-links-row">
-              <span class="category-link">Open Category →</span>
-            </div>
+          <div class="visual-card-footer">
+            <a href="./scifi-worlds.html" class="visual-open-link">
+              Open Category →
+            </a>
+            <span class="visual-count">in Planung · Cyber-City Sets</span>
           </div>
-        </a>
+        </article>
 
         <!-- Robotic / Mecha / Tech -->
-        <a href="./mecha-tech.html" class="category-card" style="--accent: rgba(96,165,250,0.95);" aria-label="Robotic / Mecha / Tech">
-          <div class="category-header-row">
-            <div class="category-label-left">
-              <div class="category-icon">🦾</div>
-              <div class="category-name">Robotic / Mecha / Tech</div>
+        <article class="visual-card">
+          <div class="visual-card-top">
+            <div class="visual-card-left">
+              <div class="visual-icon">🦾</div>
+              <div>
+                <div class="visual-title">Robotic / Mecha / Tech</div>
+                <div class="visual-tag-row">
+                  <span class="visual-tag">Androids</span>
+                  <span class="visual-tag">Mechs</span>
+                  <span class="visual-tag">Hard Surface</span>
+                </div>
+              </div>
             </div>
-            <div class="category-tag">HARDWARE · INTERFACES</div>
+            <div class="visual-meta">LAB · MACHINE · TECH</div>
           </div>
 
-          <p class="category-text">
-            Mechs, Drohnen, Interfaces und Maschinen-Details. Alles, was nach
-            Zukunftstechnologie, UI-Design oder mechanischer Ästhetik schreit.
+          <p class="visual-description">
+            Maschinen-Ästhetik, kybernetische Körper, Mechs und
+            High-Tech-Details – alles, was metallisch glänzt und nach
+            Zukunft riecht.
           </p>
 
-          <div class="preview-row">
-            <div class="preview-thumb placeholder-3"></div>
-            <div class="preview-thumb placeholder-1"></div>
-            <div class="preview-thumb placeholder-2"></div>
+          <div class="visual-previews">
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
           </div>
 
-          <div class="category-meta">
-            <div class="category-chip-row">
-              <span class="category-chip">Mecha Design</span>
-              <span class="category-chip">HUD / UI / Tech</span>
-            </div>
-            <div class="category-links-row">
-              <span class="category-link">Open Category →</span>
-            </div>
+          <div class="visual-card-footer">
+            <a href="./mecha-tech.html" class="visual-open-link">
+              Open Category →
+            </a>
+            <span class="visual-count">später · Robot Sets</span>
           </div>
-        </a>
+        </article>
 
         <!-- Book & Story Covers -->
-        <a href="./book-covers.html" class="category-card" style="--accent: rgba(251,191,36,0.95);" aria-label="Book & Story Covers">
-          <div class="category-header-row">
-            <div class="category-label-left">
-              <div class="category-icon">📘</div>
-              <div class="category-name">Book &amp; Story Covers</div>
+        <article class="visual-card">
+          <div class="visual-card-top">
+            <div class="visual-card-left">
+              <div class="visual-icon">📘</div>
+              <div>
+                <div class="visual-title">Book &amp; Story Covers</div>
+                <div class="visual-tag-row">
+                  <span class="visual-tag">Cover Layout</span>
+                  <span class="visual-tag">Titel-Frames</span>
+                  <span class="visual-tag">Story Visuals</span>
+                </div>
+              </div>
             </div>
-            <div class="category-tag">NARRATIVE · COVERS</div>
+            <div class="visual-meta">LAB · STORY · COVER</div>
           </div>
 
-          <p class="category-text">
-            Cover-Designs für Geschichten, Hörbücher und Mini-Serien. Bildideen,
-            die eine komplette Story in einem Frame andeuten.
+          <p class="visual-description">
+            Visuals für Kurzgeschichten, Hörbücher und Bücher – mit
+            Kompositionen, die auch mit Typografie noch funktionieren.
           </p>
 
-          <div class="preview-row">
-            <div class="preview-thumb placeholder-1"></div>
-            <div class="preview-thumb placeholder-3"></div>
-            <div class="preview-thumb placeholder-2"></div>
+          <div class="visual-previews">
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
           </div>
 
-          <div class="category-meta">
-            <div class="category-chip-row">
-              <span class="category-chip">Story-Driven Visuals</span>
-              <span class="category-chip">Book / Audio Cover</span>
-            </div>
-            <div class="category-links-row">
-              <span class="category-link">Open Category →</span>
-            </div>
+          <div class="visual-card-footer">
+            <a href="./book-covers.html" class="visual-open-link">
+              Open Category →
+            </a>
+            <span class="visual-count">in Planung · Story-Cover</span>
           </div>
-        </a>
+        </article>
 
         <!-- Music Covers & Key Visuals -->
-        <a href="./music-covers.html" class="category-card" style="--accent: rgba(248,113,113,0.95);" aria-label="Music Covers & Key Visuals">
-          <div class="category-header-row">
-            <div class="category-label-left">
-              <div class="category-icon">🎶</div>
-              <div class="category-name">Music Covers &amp; Key Visuals</div>
+        <article class="visual-card">
+          <div class="visual-card-top">
+            <div class="visual-card-left">
+              <div class="visual-icon">🎶</div>
+              <div>
+                <div class="visual-title">Music Covers &amp; Key Visuals</div>
+                <div class="visual-tag-row">
+                  <span class="visual-tag">Trinity / KI herrscht jetzt</span>
+                  <span class="visual-tag">Album Art</span>
+                  <span class="visual-tag">Music Visuals</span>
+                </div>
+              </div>
             </div>
-            <div class="category-tag">ALBUM · SINGLE ART</div>
+            <div class="visual-meta">ALBUM · SINGLE ART</div>
           </div>
 
-          <p class="category-text">
-            Visuals rund um deine Musik: Album-Cover, Single-Art, Key Visuals für
-            Playlists oder Videos – alles im PromptRebel-Look.
+          <p class="visual-description">
+            Visuals rund um deine Musik: Album-Cover, Single-Art und Key
+            Visuals für Playlists oder Videos – alles im PromptRebel-Look.
           </p>
 
-          <div class="preview-row">
-            <div class="preview-thumb placeholder-2"></div>
-            <div class="preview-thumb placeholder-1"></div>
-            <div class="preview-thumb placeholder-3"></div>
+          <div class="visual-previews">
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
           </div>
 
-          <div class="category-meta">
-            <div class="category-chip-row">
-              <span class="category-chip">Trinity / KI herrscht jetzt</span>
-              <span class="category-chip">Music Visuals</span>
-            </div>
-            <div class="category-links-row">
-              <span class="category-link">Open Category →</span>
-            </div>
+          <div class="visual-card-footer">
+            <a href="./music-covers.html" class="visual-open-link">
+              Open Category →
+            </a>
+            <span class="visual-count">Trinity · KI herrscht jetzt</span>
           </div>
-        </a>
+        </article>
 
         <!-- Abstract / Surreal / Experimental -->
-        <a href="./abstract.html" class="category-card" style="--accent: rgba(244,114,182,0.95);" aria-label="Abstract / Surreal / Experimental">
-          <div class="category-header-row">
-            <div class="category-label-left">
-              <div class="category-icon">🌀</div>
-              <div class="category-name">Abstract / Surreal / Experimental</div>
+        <article class="visual-card">
+          <div class="visual-card-top">
+            <div class="visual-card-left">
+              <div class="visual-icon">🌀</div>
+              <div>
+                <div class="visual-title">Abstract / Surreal / Experimental</div>
+                <div class="visual-tag-row">
+                  <span class="visual-tag">Glitchy</span>
+                  <span class="visual-tag">Surreal</span>
+                  <span class="visual-tag">Prompt Experiments</span>
+                </div>
+              </div>
             </div>
-            <div class="category-tag">LAB · WEIRD · ART</div>
+            <div class="visual-meta">LAB · WEIRD · ART</div>
           </div>
 
-          <p class="category-text">
-            Alles, was sich nicht einordnen lässt: glitchy, surreal, experimentell.
-            Der Spielplatz für ungewöhnliche Bild-Prompts und wilde Ideen.
+          <p class="visual-description">
+            Alles, was sich nicht sauber einordnen lässt: glitchy,
+            surreal, experimentell. Der Spielplatz für wilde Bild-Prompts
+            und unerwartete Kombinationen.
           </p>
 
-          <div class="preview-row">
-            <div class="preview-thumb placeholder-3"></div>
-            <div class="preview-thumb placeholder-2"></div>
-            <div class="preview-thumb placeholder-1"></div>
+          <div class="visual-previews">
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
+            <div class="visual-preview-tile"></div>
           </div>
 
-          <div class="category-meta">
-            <div class="category-chip-row">
-              <span class="category-chip">Experimental</span>
-              <span class="category-chip">Surreal / Abstract</span>
-            </div>
-            <div class="category-links-row">
-              <span class="category-link">Open Category →</span>
-            </div>
+          <div class="visual-card-footer">
+            <a href="./abstract.html" class="visual-open-link">
+              Open Category →
+            </a>
+            <span class="visual-count">Lab-Zone · Mixed Visuals</span>
           </div>
-        </a>
+        </article>
       </div>
     </section>
 
@@ -822,7 +791,7 @@ promptrebel:visuals$ ls categories/
         <span>·</span>
         <a href="../privacy.html">Privacy</a>
       </div>
-      <div>current build: <span id="buildVersion" class="build-highlight">v0.1.visuals</span> – visuals index</div>
+      <div>current build: <span id="buildVersion" class="build-highlight">v0.1.visuals</span> – visuals hub</div>
     </footer>
   </main>
 
@@ -836,44 +805,17 @@ promptrebel:visuals$ ls categories/
       scrollBar.style.transform = `scaleX(${ratio})`;
     });
 
-    // --- Brand Glitch + Retro Easter Egg ---
+    // --- Brand Glitch auf Load ---
     const brandEl = document.getElementById("brand");
-
     window.addEventListener("load", () => {
       brandEl.classList.add("glitch");
       setTimeout(() => brandEl.classList.remove("glitch"), 800);
     });
 
-    let clickCount = 0;
-    let clickTimer = null;
-
-    brandEl.addEventListener("click", () => {
-      clickCount++;
-      if (!clickTimer) {
-        clickTimer = setTimeout(() => {
-          clickCount = 0;
-          clickTimer = null;
-        }, 600);
-      }
-      if (clickCount >= 3) {
-        clickCount = 0;
-        clearTimeout(clickTimer);
-        clickTimer = null;
-        triggerRetroMode();
-      }
-    });
-
-    function triggerRetroMode() {
-      document.body.classList.add("retro-mode");
-      setTimeout(() => {
-        document.body.classList.remove("retro-mode");
-      }, 12000);
-    }
-
     // --- Footer-Version-Easter-Egg ---
     const buildVersionEl = document.getElementById("buildVersion");
     buildVersionEl.addEventListener("click", () => {
-      const versions = ["v0.1.visuals", "v0.2.visuals", "v0.6.9.visuals", "v1.0.visuals", "v∞.visuals"];
+      const versions = ["v0.1.visuals", "v0.2.visuals", "v0.3.visuals", "v1.0.visuals", "v∞.visuals"];
       let i = 0;
       const int = setInterval(() => {
         buildVersionEl.textContent = versions[i++ % versions.length];
