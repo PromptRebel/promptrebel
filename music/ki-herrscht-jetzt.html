@@ -384,14 +384,15 @@
   color: #9ca3af;
 }
 
-/* Rechte Seite: Länge + Play-Link */
+/* Rechte Seite: Länge + Play-Link nebeneinander rechts */
 .track-meta {
   text-align: right;
   font-size: 13px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-end;
+  flex-wrap: wrap;          /* bricht sauber um, falls wenig Platz */
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px 12px;
 }
 
 .track-length {
@@ -407,13 +408,15 @@
   color: #e5e7eb;
 }
 
+/* Mobile: Grid so lassen, aber .track-meta NICHT mehr umbiegen */
 @media (max-width: 640px) {
   .track-card {
     grid-template-columns: auto minmax(0, 1fr);
   }
   .track-meta {
     grid-column: 2 / span 1;
-    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
   }
 }
 
