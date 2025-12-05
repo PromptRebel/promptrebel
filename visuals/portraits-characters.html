@@ -30,6 +30,36 @@
       color: inherit;
       text-decoration: none;
     }
+    /* --- Prompt Codeblock mit Copy-Button oben rechts --- */
+.prompt-body {
+  position: relative;
+}
+
+.prompt-copy-inside {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 12px;
+  background: rgba(15,23,42,0.8);
+  border: 1px solid rgba(148,163,184,0.4);
+  color: #e5e7eb;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: 0.2s ease;
+  z-index: 10;
+}
+
+.prompt-copy-inside:hover {
+  border-color: rgba(248,250,252,0.9);
+  box-shadow: 0 0 14px rgba(56,189,248,0.6);
+}
+
+/* Codeblock selbst bekommt mehr Padding oben */
+.prompt-code {
+  padding-top: 48px !important;
+}
 
     /* --- Hintergrund / Noise / Glows --- */
     body::before {
@@ -566,29 +596,26 @@
         </div>
 
         <!-- Prompt-Bereich -->
-        <section class="prompt-card" id="promptCard">
-          <div class="prompt-header-row">
-            <button
-              class="prompt-toggle"
-              type="button"
-              id="promptToggle"
-              aria-expanded="false"
-              aria-controls="promptBody"
-            >
-              <span class="prompt-toggle-icon">🧾</span>
-              <span>Prompt &amp; Details</span>
-              <span class="prompt-toggle-arrow">▾</span>
-            </button>
+<section class="prompt-card" id="promptCard">
+  
+  <button
+    class="prompt-toggle"
+    type="button"
+    id="promptToggle"
+    aria-expanded="false"
+    aria-controls="promptBody"
+  >
+    <span class="prompt-toggle-icon">🧾</span>
+    <span>Prompt &amp; Details</span>
+    <span class="prompt-toggle-arrow">▾</span>
+  </button>
 
-            <button class="copy-btn" type="button" id="copyPromptBtn">
-              Copy
-            </button>
-          </div>
+  <div class="prompt-body" id="promptBody">
+    <!-- Copy Button oben rechts im Textfeld -->
+    <button class="copy-btn-inline" type="button" id="copyPromptBtn">Copy</button>
 
-          <div class="prompt-body" id="promptBody">
-            <pre class="prompt-code" id="promptText"><Ultra-detailed cinematic action scene.
-
-Ultra-detailed cinematic action scene.
+    <pre class="prompt-code" id="promptText">
+<Ultra-detailed cinematic action scene.
 
 The dog from the reference photo is captured mid-air while skateboarding.
 Reproduce its natural fur colors, markings, and body features exactly as in the reference photo.
@@ -599,16 +626,16 @@ Do not add a collar or harness. The fur should appear glossy and highly detailed
 – All other paws are placed firmly on the skateboard.
 – The skateboard is tilted mid-trick, dynamic and realistic.
 
-Background: Urban street environment with motion blur, gritty atmosphere, strong sense of speed and movement.
-Lighting: Epic, high-contrast cinematic lighting with warm highlights and deep shadows.
-Visual style: Over-the-top skateboarding energy, analog film grain, raw texture.
+Background: Urban street environment with motion blur.
+Lighting: Epic cinematic lighting.
+Visual style: analog film grain, gritty, energetic.
 
 Constraints:
-– The dog must appear natural and anatomically correct, only stylized by the fisheye perspective.
-– No artificial accessories, only the skateboard.
-– Strong focus on action, movement, and intensity.</pre>
-          </div>
-        </section>
+– Natural anatomy
+– No accessories besides skateboard
+– Strong focus on movement & intensity.</pre>
+  </div>
+</section>
       </article>
 
       <!-- FOOTER -->
