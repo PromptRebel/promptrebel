@@ -2,10 +2,213 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Music & Audio – PromptRebel</title>
+  <title>Portraits & Characters – PromptRebel Visuals</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 4vw, 46px);
+      font-weight: 800;
+      margin-bottom: 8px;
+      text-shadow: 0 0 14px rgba(236,72,153,0.6), 0 0 20px rgba(34,211,238,0.4);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      letter-spacing: 0.18em;
+      margin-bottom: 22px;
+      color: #9ca3af;
+    }
+
+    /* --- Image Card --- */
+    .image-card {
+      margin-top: 32px;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 2px solid rgba(148,163,184,0.3);
+      position: relative;
+      background: #0f172a;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      cursor: zoom-in;
+      transition: 0.25s ease;
+    }
+
+    .image-card:hover {
+      border-color: #f472b6;
+      box-shadow: 0 0 40px rgba(236,72,153,0.45), 0 25px 80px rgba(0,0,0,0.9);
+    }
+
+    .image-card img {
+      width: 100%;
+      display: block;
+      aspect-ratio: 4/5;
+      object-fit: cover;
+      filter: blur(20px);
+      opacity: 0;
+      transition: 0.8s ease;
+    }
+
+    .image-card img.loaded {
+      filter: blur(0px);
+      opacity: 1;
+    }
+
+    /* --- Prompt Box --- */
+    details {
+      margin-top: 16px;
+      background: rgba(15,23,42,0.65);
+      border-radius: 18px;
+      padding: 14px 18px;
+      border: 1px solid rgba(148,163,184,0.25);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.55);
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    pre {
+      margin-top: 14px;
+      white-space: pre-wrap;
+      font-size: 13px;
+      background: #0f172a;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,0.2);
+      line-height: 1.5;
+    }
+
+    .copy-btn {
+      background: #1e293b;
+      border: 1px solid rgba(148,163,184,0.5);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: #334155;
+      border-color: #22d3ee;
+    }
+
+    /* --- Lightbox --- */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 88vh;
+      border-radius: 20px;
+      border: 2px solid #22d3ee;
+      box-shadow: 0 0 80px rgba(34,211,238,0.6);
+    }
+
+    .lightbox.show {
+      display: flex;
+    }
+  </style>
 </head>
 <body>
-  <h1>portraits</h1>
-  <p>Hier kommt später die schöne Übersicht mit Alben, Singles, Loops & Packs.</p>
+
+<main class="page">
+
+  <h1>Portraits & Characters</h1>
+  <div class="subtitle">Series · Faces · Style</div>
+
+  <!-- IMAGE CARD -->
+  <div class="image-card" id="img1">
+    <img src="assets/visuals/portraits/IMG_0322.png" alt="Portrait Artwork">
+  </div>
+
+  <!-- PROMPT BOX -->
+  <details>
+    <summary>
+      Prompt & Details
+      <button class="copy-btn" onclick="copyPrompt(event)">Copy</button>
+    </summary>
+
+<pre id="promptText">
+Ultra-detailed cinematic action scene.
+
+The dog from the reference photo is captured mid-air while skateboarding.
+Reproduce its natural fur colors, markings, and body features exactly as in the reference photo.
+Do not add a collar or harness. The fur should appear glossy and highly detailed.
+
+– Camera angle: Low-angle fisheye perspective, extreme dramatic distortion.
+– One exaggerated paw reaches forward into the extreme foreground, as if giving a high-five.
+– All other paws are placed firmly on the skateboard.
+– The skateboard is tilted mid-trick, dynamic and realistic.
+
+Background: Urban street environment with motion blur, gritty atmosphere, strong sense of speed and movement.
+Lighting: Epic, high-contrast cinematic lighting with warm highlights and deep shadows.
+Visual style: Over-the-top skateboarding energy, analog film grain, raw texture.
+
+Constraints:
+– The dog must appear natural and anatomically correct, only stylized by the fisheye perspective.
+– No artificial accessories, only the skateboard.
+– Strong focus on action, movement, and intensity.
+</pre>
+  </details>
+
+</main>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <img id="lightboxImg">
+</div>
+
+<script>
+  // Lazy loading blur removal
+  const img = document.querySelector(".image-card img");
+  img.onload = () => img.classList.add("loaded");
+
+  // Lightbox
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightboxImg");
+
+  document.getElementById("img1").onclick = () => {
+    lightboxImg.src = img.src;
+    lightbox.classList.add("show");
+  };
+
+  lightbox.onclick = () => {
+    lightbox.classList.remove("show");
+  };
+
+  // Prompt copy
+  function copyPrompt(event) {
+    event.stopPropagation();
+    const text = document.getElementById("promptText").innerText;
+    navigator.clipboard.writeText(text);
+  }
+</script>
+
 </body>
 </html>
