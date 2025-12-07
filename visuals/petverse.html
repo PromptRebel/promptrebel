@@ -30,36 +30,36 @@
       color: inherit;
       text-decoration: none;
     }
+
     /* --- Prompt Codeblock mit Copy-Button oben rechts --- */
-.prompt-body {
-  position: relative;
-}
+    .prompt-body {
+      position: relative;
+    }
 
-.prompt-copy-inside {
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  padding: 6px 12px;
-  font-size: 13px;
-  border-radius: 12px;
-  background: rgba(15,23,42,0.8);
-  border: 1px solid rgba(148,163,184,0.4);
-  color: #e5e7eb;
-  backdrop-filter: blur(6px);
-  cursor: pointer;
-  transition: 0.2s ease;
-  z-index: 10;
-}
+    .prompt-copy-inside {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 12px;
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(148,163,184,0.4);
+      color: #e5e7eb;
+      backdrop-filter: blur(6px);
+      cursor: pointer;
+      transition: 0.2s ease;
+      z-index: 10;
+    }
 
-.prompt-copy-inside:hover {
-  border-color: rgba(248,250,252,0.9);
-  box-shadow: 0 0 14px rgba(56,189,248,0.6);
-}
+    .prompt-copy-inside:hover {
+      border-color: rgba(248,250,252,0.9);
+      box-shadow: 0 0 14px rgba(56,189,248,0.6);
+    }
 
-/* Codeblock selbst bekommt mehr Padding oben */
-.prompt-code {
-  padding-top: 48px !important;
-}
+    .prompt-code {
+      padding-top: 48px !important;
+    }
 
     /* --- Hintergrund / Noise / Glows --- */
     body::before {
@@ -274,6 +274,7 @@
         0 30px 80px rgba(15,23,42,0.98);
       padding: 20px 18px 22px;
       margin-top: 10px;
+      margin-bottom: 26px; /* Abstand zwischen den Karten */
     }
 
     .art-image-frame {
@@ -396,8 +397,8 @@
       transform: translateY(0);
     }
 
-    /* Prompt Body */
-    .prompt-body {
+    /* Prompt Body (Accordion) */
+    .prompt-card .prompt-body {
       margin-top: 14px;
       max-height: 0;
       overflow: hidden;
@@ -415,7 +416,7 @@
       transform: translateY(0);
     }
 
-    .prompt-code {
+    .prompt-card .prompt-code {
       border-radius: 24px;
       border: 1px solid rgba(30,64,175,0.9);
       background: radial-gradient(circle at 0% 0%,
@@ -429,15 +430,15 @@
       box-shadow:
         0 0 35px rgba(37,99,235,0.75),
         0 20px 60px rgba(15,23,42,1);
-      max-height: 320px;         /* Scrollbar bei langen Prompts */
+      max-height: 320px;
       overflow-y: auto;
       white-space: pre-wrap;
     }
 
-    .prompt-code::-webkit-scrollbar {
+    .prompt-card .prompt-code::-webkit-scrollbar {
       width: 6px;
     }
-    .prompt-code::-webkit-scrollbar-thumb {
+    .prompt-card .prompt-code::-webkit-scrollbar-thumb {
       background: rgba(148,163,184,0.7);
       border-radius: 999px;
     }
@@ -583,9 +584,12 @@
         <div class="detail-meta">Series · Faces · Style</div>
       </header>
 
+      <!-- ART CARD 1 – Skateboard Dog -->
       <article class="art-card" aria-label="Portraits &amp; Characters – Skateboard Dog">
-        <!-- Bildbereich -->
-        <div class="art-image-frame" id="artImageTrigger">
+        <div
+          class="art-image-frame gallery-item"
+          data-full="../assets/visuals/portraits/IMG_0322.png"
+        >
           <div class="art-image-inner">
             <img
               src="../assets/visuals/portraits/IMG_0322.png"
@@ -595,26 +599,20 @@
           </div>
         </div>
 
-        <!-- Prompt-Bereich -->
-<section class="prompt-card" id="promptCard">
-  
-  <button
-    class="prompt-toggle"
-    type="button"
-    id="promptToggle"
-    aria-expanded="false"
-    aria-controls="promptBody"
-  >
-    <span class="prompt-toggle-icon">🧾</span>
-    <span>Prompt &amp; Details</span>
-    <span class="prompt-toggle-arrow">▾</span>
-  </button>
+        <section class="prompt-card">
+          <button
+            class="prompt-toggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span class="prompt-toggle-icon">🧾</span>
+            <span>Prompt &amp; Details – Skateboard Dog</span>
+            <span class="prompt-toggle-arrow">▾</span>
+          </button>
 
-  <div class="prompt-body" id="promptBody">
-    <!-- Copy Button oben rechts im Textfeld -->
-    <button class="prompt-copy-inside" type="button" id="copyPromptBtn">Copy</button>
-
-    <pre class="prompt-code" id="promptText">
+          <div class="prompt-body">
+            <button class="prompt-copy-inside" type="button">Copy</button>
+            <pre class="prompt-code">
 Ultra-detailed cinematic action scene.
 
 The dog from the reference photo is captured mid-air while skateboarding.
@@ -634,8 +632,95 @@ Constraints:
 – Natural anatomy
 – No accessories besides skateboard
 – Strong focus on movement & intensity.</pre>
-  </div>
-</section>
+          </div>
+        </section>
+      </article>
+
+      <!-- ART CARD 2 – Beispiel-Portrait -->
+      <article class="art-card" aria-label="Portraits &amp; Characters – Neon Portrait">
+        <div
+          class="art-image-frame gallery-item"
+          data-full="../assets/visuals/portraits/portrait_01.png"
+        >
+          <div class="art-image-inner">
+            <img
+              src="../assets/visuals/portraits/portrait_01.png"
+              alt="Neonfarbenes Cyberpunk-Portrait"
+              class="art-main"
+            />
+          </div>
+        </div>
+
+        <section class="prompt-card">
+          <button
+            class="prompt-toggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span class="prompt-toggle-icon">🧾</span>
+            <span>Prompt &amp; Details – Neon Portrait</span>
+            <span class="prompt-toggle-arrow">▾</span>
+          </button>
+
+          <div class="prompt-body">
+            <button class="prompt-copy-inside" type="button">Copy</button>
+            <pre class="prompt-code">
+Ultra-detailed cyberpunk portrait of a person bathed in violet and cyan neon light.
+
+Camera: 85mm portrait lens, shallow depth of field, f/1.4.
+Lighting: split lighting with strong neon reflections in the eyes.
+Background: abstract futuristic city, bokeh neon signs, soft haze.
+
+Style: photographic realism with subtle film grain and microcontrast.
+Skin texture realistic, pores and tiny imperfections visible – no plastic look.
+Eyes sharp and reflective, catching the neon colors like glass.</pre>
+          </div>
+        </section>
+      </article>
+
+      <!-- ART CARD 3 – Beispiel-Character -->
+      <article class="art-card" aria-label="Portraits &amp; Characters – Synth Character">
+        <div
+          class="art-image-frame gallery-item"
+          data-full="../assets/visuals/portraits/character_01.png"
+        >
+          <div class="art-image-inner">
+            <img
+              src="../assets/visuals/portraits/character_01.png"
+              alt="Futuristischer Synth-Character in PromptRebel-Ästhetik"
+              class="art-main"
+            />
+          </div>
+        </div>
+
+        <section class="prompt-card">
+          <button
+            class="prompt-toggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span class="prompt-toggle-icon">🧾</span>
+            <span>Prompt &amp; Details – Synth Character</span>
+            <span class="prompt-toggle-arrow">▾</span>
+          </button>
+
+          <div class="prompt-body">
+            <button class="prompt-copy-inside" type="button">Copy</button>
+            <pre class="prompt-code">
+Full-body character concept of a futuristic synth being.
+
+Pose: relaxed, slightly sideways, confident stance.
+Clothing: minimal tech-wear, matte black with subtle neon trims (violet & cyan).
+Background: clean studio backdrop with soft gradient from deep navy to black.
+
+Material details:
+– Skin: semi-organic, subtle circuitry patterns under the surface, faintly glowing.
+– Eyes: holographic HUD reflections, calm and focused.
+– Accessories: no weapons, only minimal tech jewelry or implants.
+
+Look & Feel: calm, intelligent, slightly mysterious – not aggressive.</pre>
+          </div>
+        </section>
       </article>
 
       <!-- FOOTER -->
@@ -651,7 +736,7 @@ Constraints:
     </section>
   </main>
 
-  <!-- LIGHTBOX -->
+  <!-- LIGHTBOX (eine für alle Bilder) -->
   <div class="lightbox" id="lightbox" aria-hidden="true">
     <div class="lightbox-inner">
       <button class="lightbox-close" type="button" id="lightboxClose">
@@ -659,9 +744,10 @@ Constraints:
       </button>
       <div class="lightbox-frame">
         <img
-          src="../assets/visuals/portraits/IMG_0322.png"
-          alt="Cinematic Skateboard-Hund im Großformat"
+          src=""
+          alt=""
           class="lightbox-img"
+          id="lightboxImg"
         />
       </div>
     </div>
@@ -701,43 +787,44 @@ Constraints:
       }, 120);
     });
 
-    // Prompt Accordion + Copy
-    const promptCard = document.getElementById("promptCard");
-    const promptToggle = document.getElementById("promptToggle");
-    const promptBody = document.getElementById("promptBody");
-    const copyBtn = document.getElementById("copyPromptBtn");
-    const promptTextEl = document.getElementById("promptText");
+    // Prompt Accordion + Copy (für mehrere Karten)
+    document.querySelectorAll(".prompt-card").forEach((card) => {
+      const toggle = card.querySelector(".prompt-toggle");
+      const body = card.querySelector(".prompt-body");
+      const copyBtn = card.querySelector(".prompt-copy-inside");
+      const textEl = card.querySelector(".prompt-code");
 
-    promptToggle.addEventListener("click", () => {
-      const isOpen = promptCard.classList.toggle("open");
-      promptToggle.setAttribute("aria-expanded", String(isOpen));
-    });
+      toggle.addEventListener("click", () => {
+        const isOpen = card.classList.toggle("open");
+        toggle.setAttribute("aria-expanded", String(isOpen));
+      });
 
-    copyBtn.addEventListener("click", async () => {
-      const text = promptTextEl.innerText;
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(text);
-        } else {
-          const temp = document.createElement("textarea");
-          temp.value = text;
-          document.body.appendChild(temp);
-          temp.select();
-          document.execCommand("copy");
-          document.body.removeChild(temp);
+      copyBtn.addEventListener("click", async () => {
+        const text = textEl.innerText;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const temp = document.createElement("textarea");
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand("copy");
+            document.body.removeChild(temp);
+          }
+          const original = copyBtn.textContent;
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => (copyBtn.textContent = original), 1200);
+        } catch (err) {
+          console.error(err);
         }
-        const original = copyBtn.textContent;
-        copyBtn.textContent = "Copied!";
-        setTimeout(() => (copyBtn.textContent = original), 1200);
-      } catch (err) {
-        console.error(err);
-      }
+      });
     });
 
-    // Lightbox
-    const artImageTrigger = document.getElementById("artImageTrigger");
+    // Lightbox für alle Bilder
     const lightbox = document.getElementById("lightbox");
     const lightboxClose = document.getElementById("lightboxClose");
+    const lightboxImg = document.getElementById("lightboxImg");
 
     function openLightbox() {
       lightbox.classList.add("visible");
@@ -751,7 +838,17 @@ Constraints:
       document.body.style.overflow = "";
     }
 
-    artImageTrigger.addEventListener("click", openLightbox);
+    // Klick auf jede .gallery-item öffnet Lightbox mit passendem Bild
+    document.querySelectorAll(".gallery-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const fullSrc = item.dataset.full || item.querySelector("img").src;
+        const alt = item.querySelector("img").alt || "";
+        lightboxImg.src = fullSrc;
+        lightboxImg.alt = alt;
+        openLightbox();
+      });
+    });
+
     lightboxClose.addEventListener("click", closeLightbox);
 
     // Close on backdrop click
