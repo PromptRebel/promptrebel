@@ -1,4 +1,3 @@
-
   // PromptRebel Local-AI Widget (WebLLM / WebGPU)
   // Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
 
@@ -284,4 +283,3 @@ Aufgabe:
   inputEl.addEventListener("keydown", (e) => {
     if (e.key === "Enter") sendMessage();
   });
-
