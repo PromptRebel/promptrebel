@@ -27,7 +27,7 @@
     .pr-ai-panel{
       position:fixed; right:16px; bottom:68px; z-index:9999;
       width:min(380px, calc(100vw - 32px));
-      height:min(520px, calc(100vh - 120px));
+      height:min(640px, calc(100vh - 96px));
       display:none; flex-direction:column;
       border-radius:20px; overflow:hidden;
       border:1px solid rgba(148,163,184,.28);
@@ -55,10 +55,12 @@
 
     .pr-ai-body{ display:flex; flex-direction:column; gap:10px; padding:12px; height:100%; }
     .pr-ai-msgs{
-      flex:1; overflow:auto; padding-right:4px;
-      display:flex; flex-direction:column; gap:10px;
-      font: 13px/1.45 system-ui; color:#e5e7eb;
-    }
+  flex:1;
+  overflow:auto;
+  padding-right:4px;
+  padding-bottom: 12px;
+}
+    
     .pr-ai-bubble{
       max-width:92%; padding:10px 12px; border-radius:14px;
       border:1px solid rgba(148,163,184,.18);
@@ -68,7 +70,15 @@
     .pr-ai-bubble.user{ align-self:flex-end; border-color: rgba(34,211,238,.22); }
     .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
 
-    .pr-ai-row{ display:flex; gap:8px; }
+    .pr-ai-row{
+  display:flex;
+  gap:8px;
+  position: sticky;
+  bottom: 0;
+  padding-top: 10px;
+  background: rgba(2,6,23,.92);
+}
+
     .pr-ai-input{
       flex:1; border-radius:999px;
       border:1px solid rgba(148,163,184,.22);
