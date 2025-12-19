@@ -1,6 +1,31 @@
   // PromptRebel Local-AI Widget (WebLLM / WebGPU)
   // Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
+const KNOWLEDGE = {
+  about:    "./assets/knowledge/about.md",
+  faq:      "./assets/knowledge/faq.md",
+  licensing:"./assets/knowledge/licensing.md",
+  music:    "./assets/knowledge/music.md",
+  visuals:  "./assets/knowledge/visuals.md",
+  video:    "./assets/knowledge/video.md",
+  tools:    "./assets/knowledge/tools.md",
+  stories:  "./assets/knowledge/stories.md",
+};
 
+const knowledgeCache = new Map(); // key -> text
+
+async function loadKnowledge(keys) {
+  const out = [];
+  for (const k of keys) {
+    if (!KNOWLEDGE[k]) continue;
+    if (!knowledgeCache.has(k)) {
+      const res = await fetch(KNOWLEDGE[k], { cache: "force-cache" });
+      const txt = await res.text();
+      knowledgeCache.set(k, txt);
+    }
+    out.push({ key: k, text: knowledgeCache.get(k) });
+  }
+  return out;
+}
   import { MLCEngine, prebuiltAppConfig } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
 
   // ========= Config =========
