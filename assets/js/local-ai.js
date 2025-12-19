@@ -5,13 +5,12 @@ import { MLCEngine, prebuiltAppConfig } from "https://esm.run/@mlc-ai/web-llm@0.
 
 // ---- Guard: prevent double init (double script tag / navigation) ----
 if (window.__PROMPTREBEL_LOCAL_AI__) {
-  // already initialized
+  // already initialized -> do nothing
 } else {
   window.__PROMPTREBEL_LOCAL_AI__ = true;
 
   // ========= Config =========
   const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-  const DEBUG = false; // auf true stellen, wenn du Fehlermeldungen im Chat sehen willst
 
   // ========= System prompt =========
   const SYSTEM_PROMPT = `
@@ -28,46 +27,93 @@ Aufgabe:
 - Gib praktische Hinweise (z.B. Prompt-Anpassung), aber erfinde keine Fakten.
 `.trim();
 
-  // ========= Knowledge index (robust paths) =========
-  // supports /assets/local-ai.js OR /assets/js/local-ai.js
-  function kUrl(relFromHere, relFromParent) {
-    return [
-      new URL(relFromHere, import.meta.url).href,
-      new URL(relFromParent, import.meta.url).href,
-    ];
+  // ========= Helpers =========
+  function hasWebGPU() {
+    return !!navigator.gpu;
   }
 
-  const KNOWLEDGE = {
-    about:     kUrl("./knowledge/about.md", "../knowledge/about.md"),
-    faq:       kUrl("./knowledge/faq.md", "../knowledge/faq.md"),
-    licensing: kUrl("./knowledge/licensing.md", "../knowledge/licensing.md"),
-    music:     kUrl("./knowledge/music.md", "../knowledge/music.md"),
-    visuals:   kUrl("./knowledge/visuals.md", "../knowledge/visuals.md"),
-    video:     kUrl("./knowledge/video.md", "../knowledge/video.md"),
-    tools:     kUrl("./knowledge/tools.md", "../knowledge/tools.md"),
-    stories:   kUrl("./knowledge/stories.md", "../knowledge/stories.md"),
-  };
+  function safeParseRouterJSON(raw) {
+    if (!raw) return null;
+    const t = raw.trim();
 
-  const knowledgeCache = new Map(); // key -> text
+    // 1) direct JSON
+    try { return JSON.parse(t); } catch {}
+
+    // 2) fenced ```json ... ```
+    const fenced = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenced?.[1]) {
+      try { return JSON.parse(fenced[1].trim()); } catch {}
+    }
+
+    // 3) first {...} blob
+    const m = t.match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    try { return JSON.parse(m[0]); } catch {}
+
+    return null;
+  }
+
+  async function fetchTextOrThrow(url) {
+    const res = await fetch(url, { cache: "force-cache" });
+    if (!res.ok) {
+      throw new Error(`Fetch failed ${res.status} for ${url}`);
+    }
+    return await res.text();
+  }
 
   async function fetchFirstOk(urls) {
     let lastErr = null;
     for (const u of urls) {
       try {
-        const res = await fetch(u, { cache: "force-cache" });
-        if (res.ok) return await res.text();
-        lastErr = new Error(`HTTP ${res.status} for ${u}`);
+        return await fetchTextOrThrow(u);
       } catch (e) {
         lastErr = e;
       }
     }
-    throw lastErr || new Error("Knowledge fetch failed.");
+    throw lastErr || new Error("Fetch failed (no candidates).");
   }
+
+  // ========= Knowledge index =========
+  // Ziel: Egal ob local-ai.js in /assets/ oder /assets/js/ liegt und egal auf welcher Seite du bist:
+  // wir finden /assets/knowledge/*.md sicher.
+  function candidatesFor(file) {
+    // A) relativ zum Script-Ordner (wenn Script in /assets/)
+    const a = new URL(`./knowledge/${file}`, import.meta.url).href;
+    // B) relativ zum Parent (wenn Script in /assets/js/)
+    const b = new URL(`../knowledge/${file}`, import.meta.url).href;
+
+    // C) repo-root Variante (GitHub Pages /<repo>/...)
+    // versucht: <origin>/<repo>/assets/knowledge/file
+    const parts = location.pathname.split("/").filter(Boolean);
+    const repo = parts.length ? parts[0] : ""; // erstes Segment ist oft repo-name
+    const c = repo
+      ? `${location.origin}/${repo}/assets/knowledge/${file}`
+      : `${location.origin}/assets/knowledge/${file}`;
+
+    // D) absolute root (falls du custom domain ohne /repo/ nutzt)
+    const d = `${location.origin}/assets/knowledge/${file}`;
+
+    return Array.from(new Set([a, b, c, d]));
+  }
+
+  const KNOWLEDGE = {
+    about:     candidatesFor("about.md"),
+    faq:       candidatesFor("faq.md"),
+    licensing: candidatesFor("licensing.md"),
+    music:     candidatesFor("music.md"),
+    visuals:   candidatesFor("visuals.md"),
+    video:     candidatesFor("video.md"),
+    tools:     candidatesFor("tools.md"),
+    stories:   candidatesFor("stories.md"),
+  };
+
+  const knowledgeCache = new Map(); // key -> text
 
   async function loadKnowledge(keys) {
     const out = [];
     for (const k of keys) {
       if (!KNOWLEDGE[k]) continue;
+
       if (!knowledgeCache.has(k)) {
         const txt = await fetchFirstOk(KNOWLEDGE[k]);
         knowledgeCache.set(k, txt);
@@ -77,25 +123,61 @@ Aufgabe:
     return out;
   }
 
-  // ========= Router (RULE-BASED, stable) =========
-  function pickSources(question) {
-    const q = (question || "").toLowerCase();
+  // ========= Router =========
+  const ROUTER_SYSTEM = `
+Du bist ein Router. Du wählst passende Wissensquellen für eine Frage.
+Gib ausschließlich gültiges JSON zurück:
+{"sources":["music","faq"]}
 
-    // 1) sehr klare Themen
+Erlaubte sources:
+about, faq, licensing, music, visuals, video, tools, stories
+
+Regeln:
+- Wähle 1-3 sources.
+- Wenn unklar: ["faq"].
+- Keine Erklärtexte, nur JSON.
+`.trim();
+
+  function ruleFallback(question) {
+    const q = (question || "").toLowerCase();
     if (q.includes("lizenz") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
     if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
-    if (q.includes("bild") || q.includes("visual") || q.includes("cover") || q.includes("art")) return ["visuals", "faq"];
+    if (q.includes("bild") || q.includes("visual") || q.includes("cover")) return ["visuals", "faq"];
     if (q.includes("video") || q.includes("sora")) return ["video", "faq"];
     if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) return ["tools", "faq"];
     if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) return ["stories", "faq"];
     if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist promptrebel")) return ["about", "faq"];
-
-    // 2) default
     return ["faq"];
   }
 
-  function hasWebGPU() {
-    return !!navigator.gpu;
+  let engine = null;
+  let ready = false;
+  let starting = false;
+  const messages = []; // user/assistant only
+
+  async function pickSources(question) {
+    if (!engine || !ready) return ruleFallback(question);
+
+    try {
+      const r = await engine.chat.completions.create({
+        messages: [
+          { role: "system", content: ROUTER_SYSTEM },
+          { role: "user", content: question }
+        ],
+        temperature: 0,
+        stream: false,
+      });
+
+      const raw = r?.choices?.[0]?.message?.content?.trim() || "";
+      const json = safeParseRouterJSON(raw);
+      const sources = Array.isArray(json?.sources) ? json.sources : ruleFallback(question);
+
+      const allowed = new Set(Object.keys(KNOWLEDGE));
+      const cleaned = sources.filter(s => allowed.has(s)).slice(0, 3);
+      return cleaned.length ? cleaned : ruleFallback(question);
+    } catch {
+      return ruleFallback(question);
+    }
   }
 
   // ========= CSS =========
@@ -286,12 +368,6 @@ Aufgabe:
       msgsEl.scrollTop = msgsEl.scrollHeight;
     }
 
-    // ========= Engine / state =========
-    let engine = null;
-    let ready = false;
-    let starting = false;
-    const messages = []; // only user/assistant turns
-
     function initProgressCallback(p) {
       const msg = typeof p === "string" ? p : JSON.stringify(p);
       progressEl.textContent = `Loading: ${msg}`;
@@ -324,7 +400,6 @@ Aufgabe:
         msgsEl.innerHTML = "";
         messages.length = 0;
 
-        // nur EINMAL begrüßen
         addBubble("Hi! Frag mich etwas zu PromptRebel (Wissen wird dynamisch geladen).", "ai");
       } catch (e) {
         console.error(e);
@@ -357,18 +432,16 @@ Aufgabe:
       sendEl.setAttribute("disabled", "disabled");
 
       try {
-        // 1) Quellen bestimmen (stabil, ohne LLM-Router)
-        const sources = pickSources(text);
+        // 1) Quellen bestimmen (Router)
+        const sources = await pickSources(text);
 
         // 2) Wissen laden
         const docs = await loadKnowledge(sources);
 
         // 3) Kontext bauen
-        const knowledgeContext = docs
-          .map(d => `### ${d.key.toUpperCase()}\n${d.text}`)
-          .join("\n\n");
+        const knowledgeContext = docs.map(d => `### ${d.key.toUpperCase()}\n${d.text}`).join("\n\n");
 
-        // 4) System + Wissen + Chat
+        // 4) System + Wissen + Verlauf
         const scopedMessages = [
           { role: "system", content: SYSTEM_PROMPT },
           {
@@ -389,7 +462,7 @@ Aufgabe:
 
         let reply = "";
         for await (const chunk of chunks) {
-          const delta = chunk.choices?.[0]?.delta?.content || "";
+          const delta = chunk?.choices?.[0]?.delta?.content || "";
           if (delta) {
             reply += delta;
             aiBubble.textContent = reply;
@@ -400,7 +473,8 @@ Aufgabe:
         messages.push({ role: "assistant", content: reply || aiBubble.textContent || "" });
       } catch (e) {
         console.error(e);
-        aiBubble.textContent = DEBUG ? `Fehler: ${String(e?.message || e)}` : "Fehler beim Antworten. (Konsole prüfen)";
+        // sehr konkrete Fehlermeldung in der UI
+        aiBubble.textContent = `Fehler beim Antworten: ${e?.message || e}`;
       } finally {
         sendEl.removeAttribute("disabled");
       }
@@ -409,7 +483,6 @@ Aufgabe:
     // wiring
     btn.addEventListener("click", () => panel.classList.toggle("open"));
     closeBtn.addEventListener("click", () => panel.classList.remove("open"));
-
     startBtn.addEventListener("click", startModel);
 
     clearBtn.addEventListener("click", () => {
