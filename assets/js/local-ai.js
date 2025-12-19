@@ -6,12 +6,12 @@ import { MLCEngine, prebuiltAppConfig } from "https://esm.run/@mlc-ai/web-llm@0.
 // ---- Guard: prevent double init (double script tag / navigation) ----
 if (window.__PROMPTREBEL_LOCAL_AI__) {
   // already initialized
-  // IMPORTANT: do nothing
 } else {
   window.__PROMPTREBEL_LOCAL_AI__ = true;
 
   // ========= Config =========
   const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+  const DEBUG = false; // auf true stellen, wenn du Fehlermeldungen im Chat sehen willst
 
   // ========= System prompt =========
   const SYSTEM_PROMPT = `
@@ -29,8 +29,7 @@ Aufgabe:
 `.trim();
 
   // ========= Knowledge index (robust paths) =========
-  // We don't assume where local-ai.js lives (assets/ or assets/js/).
-  // So we provide two candidates per file and try both.
+  // supports /assets/local-ai.js OR /assets/js/local-ai.js
   function kUrl(relFromHere, relFromParent) {
     return [
       new URL(relFromHere, import.meta.url).href,
@@ -52,22 +51,23 @@ Aufgabe:
   const knowledgeCache = new Map(); // key -> text
 
   async function fetchFirstOk(urls) {
+    let lastErr = null;
     for (const u of urls) {
       try {
         const res = await fetch(u, { cache: "force-cache" });
         if (res.ok) return await res.text();
-      } catch {
-        // ignore and try next
+        lastErr = new Error(`HTTP ${res.status} for ${u}`);
+      } catch (e) {
+        lastErr = e;
       }
     }
-    throw new Error("Knowledge fetch failed (all candidates).");
+    throw lastErr || new Error("Knowledge fetch failed.");
   }
 
   async function loadKnowledge(keys) {
     const out = [];
     for (const k of keys) {
       if (!KNOWLEDGE[k]) continue;
-
       if (!knowledgeCache.has(k)) {
         const txt = await fetchFirstOk(KNOWLEDGE[k]);
         knowledgeCache.set(k, txt);
@@ -77,77 +77,21 @@ Aufgabe:
     return out;
   }
 
-  // ========= Router =========
-  const ROUTER_SYSTEM = `
-Du bist ein Router. Du wählst passende Wissensquellen für eine Frage.
-Gib ausschließlich gültiges JSON zurück:
-{"sources":["music","faq"]}
-
-Erlaubte sources:
-about, faq, licensing, music, visuals, video, tools, stories
-
-Regeln:
-- Wähle 1-3 sources.
-- Wenn unklar: ["faq"].
-- Keine Erklärtexte, nur JSON.
-`.trim();
-
-  function ruleFallback(question) {
+  // ========= Router (RULE-BASED, stable) =========
+  function pickSources(question) {
     const q = (question || "").toLowerCase();
+
+    // 1) sehr klare Themen
     if (q.includes("lizenz") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
     if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
-    if (q.includes("bild") || q.includes("visual") || q.includes("cover")) return ["visuals", "faq"];
+    if (q.includes("bild") || q.includes("visual") || q.includes("cover") || q.includes("art")) return ["visuals", "faq"];
     if (q.includes("video") || q.includes("sora")) return ["video", "faq"];
     if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) return ["tools", "faq"];
     if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) return ["stories", "faq"];
     if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist promptrebel")) return ["about", "faq"];
+
+    // 2) default
     return ["faq"];
-  }
-
-  function safeParseRouterJSON(raw) {
-    if (!raw) return null;
-    const t = raw.trim();
-
-    // direct JSON
-    try { return JSON.parse(t); } catch {}
-
-    // try extract first {...}
-    const m = t.match(/\{[\s\S]*\}/);
-    if (!m) return null;
-    try { return JSON.parse(m[0]); } catch {}
-    return null;
-  }
-
-  // ========= Engine / state =========
-  let engine = null;
-  let ready = false;
-  let starting = false;
-  const messages = []; // only user/assistant turns (we add system per request)
-
-  async function pickSources(question) {
-    // If engine not ready, don't use LLM router
-    if (!engine || !ready) return ruleFallback(question);
-
-    try {
-      const r = await engine.chat.completions.create({
-        messages: [
-          { role: "system", content: ROUTER_SYSTEM },
-          { role: "user", content: question }
-        ],
-        temperature: 0,
-        stream: false,
-      });
-
-      const raw = r?.choices?.[0]?.message?.content?.trim() || "";
-      const json = safeParseRouterJSON(raw);
-      const sources = Array.isArray(json?.sources) ? json.sources : ruleFallback(question);
-
-      const allowed = new Set(Object.keys(KNOWLEDGE));
-      const cleaned = sources.filter(s => allowed.has(s)).slice(0, 3);
-      return cleaned.length ? cleaned : ruleFallback(question);
-    } catch {
-      return ruleFallback(question);
-    }
   }
 
   function hasWebGPU() {
@@ -287,9 +231,8 @@ Regeln:
   `;
   document.head.appendChild(style);
 
-  // ========= UI init (wait for DOM) =========
+  // ========= UI init =========
   function initUI() {
-    // Prevent accidental duplicates if DOM gets re-used
     if (document.querySelector(".pr-ai-btn") || document.querySelector(".pr-ai-panel")) return;
 
     const btn = document.createElement("button");
@@ -315,7 +258,6 @@ Regeln:
         </div>
 
         <div class="pr-ai-progress" id="prAiProgress"></div>
-
         <div class="pr-ai-msgs" id="prAiMsgs"></div>
 
         <div class="pr-ai-row">
@@ -344,6 +286,12 @@ Regeln:
       msgsEl.scrollTop = msgsEl.scrollHeight;
     }
 
+    // ========= Engine / state =========
+    let engine = null;
+    let ready = false;
+    let starting = false;
+    const messages = []; // only user/assistant turns
+
     function initProgressCallback(p) {
       const msg = typeof p === "string" ? p : JSON.stringify(p);
       progressEl.textContent = `Loading: ${msg}`;
@@ -354,7 +302,7 @@ Regeln:
 
       if (!hasWebGPU()) {
         progressEl.textContent =
-          "WebGPU nicht verfügbar. Auf iPhone/iOS kann WebGPU je nach Version/Feature-Flag fehlen. Nutze Desktop (Chrome/Edge) oder Safari mit WebGPU aktiviert.";
+          "WebGPU nicht verfügbar. Auf iPhone/iOS kann WebGPU je nach Version/Feature-Flag fehlen.";
         return;
       }
       if (ready) return;
@@ -376,10 +324,11 @@ Regeln:
         msgsEl.innerHTML = "";
         messages.length = 0;
 
+        // nur EINMAL begrüßen
         addBubble("Hi! Frag mich etwas zu PromptRebel (Wissen wird dynamisch geladen).", "ai");
       } catch (e) {
         console.error(e);
-        progressEl.textContent = "Fehler beim Laden des Modells. (Browser/WebGPU/Download prüfen)";
+        progressEl.textContent = "Fehler beim Laden des Modells. (Konsole prüfen)";
       } finally {
         starting = false;
         startBtn.removeAttribute("disabled");
@@ -408,8 +357,8 @@ Regeln:
       sendEl.setAttribute("disabled", "disabled");
 
       try {
-        // 1) Quellen bestimmen
-        const sources = await pickSources(text);
+        // 1) Quellen bestimmen (stabil, ohne LLM-Router)
+        const sources = pickSources(text);
 
         // 2) Wissen laden
         const docs = await loadKnowledge(sources);
@@ -451,7 +400,7 @@ Regeln:
         messages.push({ role: "assistant", content: reply || aiBubble.textContent || "" });
       } catch (e) {
         console.error(e);
-        aiBubble.textContent = "Fehler beim Antworten. (Konsole prüfen)";
+        aiBubble.textContent = DEBUG ? `Fehler: ${String(e?.message || e)}` : "Fehler beim Antworten. (Konsole prüfen)";
       } finally {
         sendEl.removeAttribute("disabled");
       }
