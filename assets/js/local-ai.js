@@ -1,14 +1,20 @@
-  // PromptRebel Local-AI Widget (WebLLM / WebGPU)
-  // Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
+// PromptRebel Local-AI Widget (WebLLM / WebGPU)
+// Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
+
+import { MLCEngine } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
+
+/* =======================
+   1) Knowledge Index + Cache
+   ======================= */
 const KNOWLEDGE = {
-  about:    "./assets/knowledge/about.md",
-  faq:      "./assets/knowledge/faq.md",
-  licensing:"./assets/knowledge/licensing.md",
-  music:    "./assets/knowledge/music.md",
-  visuals:  "./assets/knowledge/visuals.md",
-  video:    "./assets/knowledge/video.md",
-  tools:    "./assets/knowledge/tools.md",
-  stories:  "./assets/knowledge/stories.md",
+  about: "./assets/knowledge/about.md",
+  faq: "./assets/knowledge/faq.md",
+  licensing: "./assets/knowledge/licensing.md",
+  music: "./assets/knowledge/music.md",
+  visuals: "./assets/knowledge/visuals.md",
+  video: "./assets/knowledge/video.md",
+  tools: "./assets/knowledge/tools.md",
+  stories: "./assets/knowledge/stories.md",
 };
 
 const knowledgeCache = new Map(); // key -> text
@@ -17,8 +23,10 @@ async function loadKnowledge(keys) {
   const out = [];
   for (const k of keys) {
     if (!KNOWLEDGE[k]) continue;
+
     if (!knowledgeCache.has(k)) {
       const res = await fetch(KNOWLEDGE[k], { cache: "force-cache" });
+      if (!res.ok) throw new Error(`Knowledge fetch failed: ${k} (${res.status})`);
       const txt = await res.text();
       knowledgeCache.set(k, txt);
     }
@@ -26,17 +34,68 @@ async function loadKnowledge(keys) {
   }
   return out;
 }
-  import { MLCEngine, prebuiltAppConfig } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
 
-  // ========= Config =========
-  const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC"; // klein & schnell(er)
-  // Model-Liste (falls du später wechseln willst): prebuiltAppConfig.model_list
-  // Verfügbare Modelle: https://mlc.ai/models (und GitHub issue list)
-  // ==========================
+/* =======================
+   2) Router: pickSources()
+   ======================= */
+const ROUTER_SYSTEM = `
+Du bist ein Router. Du wählst passende Wissensquellen für eine Frage.
+Gib ausschließlich gültiges JSON zurück:
+{"sources":["music","faq"]}
 
-  // --- Minimal CSS injected once ---
-  const style = document.createElement("style");
-  style.textContent = `
+Erlaubte sources:
+about, faq, licensing, music, visuals, video, tools, stories
+
+Regeln:
+- Wähle 1-3 sources.
+- Wenn unklar: ["faq"].
+- Keine Erklärtexte, nur JSON.
+`.trim();
+
+async function pickSources(question, engine) {
+  const ruleFallback = () => {
+    const q = question.toLowerCase();
+    if (q.includes("lizenz") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
+    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
+    if (q.includes("bild") || q.includes("visual") || q.includes("cover")) return ["visuals", "faq"];
+    if (q.includes("video") || q.includes("sora")) return ["video", "faq"];
+    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) return ["tools", "faq"];
+    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) return ["stories", "faq"];
+    if (q.includes("wer bist du") || q.includes("promptrebel")) return ["about", "faq"];
+    return ["faq"];
+  };
+
+  try {
+    const r = await engine.chat.completions.create({
+      messages: [
+        { role: "system", content: ROUTER_SYSTEM },
+        { role: "user", content: question },
+      ],
+      temperature: 0,
+      stream: false,
+    });
+
+    const raw = r?.choices?.[0]?.message?.content?.trim() || "";
+    const json = JSON.parse(raw);
+    const sources = Array.isArray(json.sources) ? json.sources : ruleFallback();
+
+    const cleaned = sources.filter((s) => KNOWLEDGE[s]).slice(0, 3);
+    return cleaned.length ? cleaned : ruleFallback();
+  } catch {
+    return ruleFallback();
+  }
+}
+
+/* =======================
+   3) Model config
+   ======================= */
+const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC"; // klein & schnell(er)
+
+/* =======================
+   4) CSS + UI
+   ======================= */
+const style = document.createElement("style");
+style.textContent = `
   .pr-ai-btn{
     position:fixed; right:16px; bottom:16px; z-index:9999;
     border:1px solid rgba(148,163,184,.35);
@@ -47,11 +106,6 @@ async function loadKnowledge(keys) {
     box-shadow:0 10px 30px rgba(2,6,23,.7);
     cursor:pointer;
   }
-  .pr-ai-btn:hover{
-    border-color: rgba(34,211,238,.8);
-    box-shadow:0 0 18px rgba(34,211,238,.35), 0 10px 30px rgba(2,6,23,.7);
-  }
-
   .pr-ai-panel{
     position:fixed; right:16px; bottom:68px; z-index:9999;
     width:min(420px, calc(100vw - 32px));
@@ -64,7 +118,6 @@ async function loadKnowledge(keys) {
     backdrop-filter: blur(14px);
   }
   .pr-ai-panel.open{ display:flex; }
-
   .pr-ai-top{
     display:flex; align-items:center; justify-content:space-between;
     padding:10px 12px; gap:10px;
@@ -72,65 +125,40 @@ async function loadKnowledge(keys) {
     border-bottom:1px solid rgba(148,163,184,.15);
     font:700 13px/1 system-ui; color:#e5e7eb;
   }
-  .pr-ai-top small{ font-weight:600; color:#94a3b8; }
-
   .pr-ai-x{
     border:1px solid rgba(148,163,184,.25);
     background:rgba(15,23,42,.7);
     color:#e5e7eb; border-radius:999px;
     padding:6px 10px; cursor:pointer; font:700 12px/1 system-ui;
   }
-
   .pr-ai-body{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    padding:12px;
-    height:100%;
-    min-height:0; /* wichtig für flex+scroll */
+    display:flex; flex-direction:column; gap:10px; padding:12px;
+    height:100%; min-height:0;
   }
-
   .pr-ai-msgs{
-    flex:1;
-    min-height:0;                 /* wichtig für flex+scroll */
-    overflow-y:auto;
-    padding:12px;
-    padding-bottom:96px;          /* Platz für Input-Zeile + Luft */
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    font:13px/1.45 system-ui;
-    color:#e5e7eb;
+    flex:1; min-height:0; overflow-y:auto;
+    padding:12px; padding-bottom:96px;
+    display:flex; flex-direction:column; gap:10px;
+    font:13px/1.45 system-ui; color:#e5e7eb;
   }
   .pr-ai-msgs::-webkit-scrollbar{ width:6px; }
-  .pr-ai-msgs::-webkit-scrollbar-thumb{
-    background: rgba(148,163,184,.25);
-    border-radius: 6px;
-  }
-
+  .pr-ai-msgs::-webkit-scrollbar-thumb{ background:rgba(148,163,184,.25); border-radius:6px; }
   .pr-ai-bubble{
-    max-width:92%;
-    padding:10px 12px;
-    border-radius:14px;
+    max-width:92%; padding:10px 12px; border-radius:14px;
     border:1px solid rgba(148,163,184,.18);
     background:rgba(15,23,42,.7);
     white-space:pre-wrap;
   }
   .pr-ai-bubble.user{ align-self:flex-end; border-color: rgba(34,211,238,.22); }
   .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
-
   .pr-ai-row{
-    position:sticky;
-    bottom:0;
-    display:flex;
-    gap:8px;
-    padding:12px;
-    margin-top:12px;
-    background: rgba(2,6,23,.88);
+    position:sticky; bottom:0;
+    display:flex; gap:8px;
+    padding:12px; margin-top:12px;
+    background:rgba(2,6,23,.88);
     backdrop-filter: blur(8px);
-    border-top: 1px solid rgba(148,163,184,.15);
+    border-top:1px solid rgba(148,163,184,.15);
   }
-
   .pr-ai-input{
     flex:1; border-radius:999px;
     border:1px solid rgba(148,163,184,.22);
@@ -145,7 +173,6 @@ async function loadKnowledge(keys) {
     color:#e5e7eb; font:800 13px/1 system-ui;
     cursor:pointer;
   }
-
   .pr-ai-note{
     font:12px/1.35 system-ui; color:#94a3b8;
     border:1px solid rgba(148,163,184,.14);
@@ -162,187 +189,186 @@ async function loadKnowledge(keys) {
     cursor:pointer;
   }
 `;
-  document.head.appendChild(style);
+document.head.appendChild(style);
 
-  // --- UI elements ---
-  const btn = document.createElement("button");
-  btn.className = "pr-ai-btn";
-  btn.type = "button";
-  btn.textContent = "Local AI";
+const btn = document.createElement("button");
+btn.className = "pr-ai-btn";
+btn.type = "button";
+btn.textContent = "Local AI";
 
-  const panel = document.createElement("div");
-  panel.className = "pr-ai-panel";
-  panel.innerHTML = `
-    <div class="pr-ai-top">
-      <div>
-        PromptRebel Local AI <small>· läuft lokal (WebGPU)</small>
-      </div>
-      <button class="pr-ai-x" type="button">×</button>
+const panel = document.createElement("div");
+panel.className = "pr-ai-panel";
+panel.innerHTML = `
+  <div class="pr-ai-top">
+    <div>PromptRebel Local AI <small>· läuft lokal (WebGPU)</small></div>
+    <button class="pr-ai-x" type="button">×</button>
+  </div>
+  <div class="pr-ai-body">
+    <div class="pr-ai-note">
+      <b>Experiment:</b> Läuft <b>lokal im Browser</b> via <b>WebGPU</b>.
+      Beim ersten Start wird ein Modell geladen (mehrere 100MB+ möglich).
     </div>
-    <div class="pr-ai-body">
-      <div class="pr-ai-note">
-        <b>Experiment:</b> Dieses Chat-Modell läuft <b>lokal im Browser</b> und nutzt (wenn verfügbar) <b>WebGPU</b>.
-        Beim ersten Start wird ein Modell heruntergeladen (kann je nach Modell mehrere 100MB+ sein).
-      </div>
 
-      <div class="pr-ai-actions">
-        <button class="pr-ai-action" type="button" data-action="start">Start (Model laden)</button>
-        <button class="pr-ai-action" type="button" data-action="clear">Chat löschen</button>
-      </div>
-
-      <div class="pr-ai-progress" id="prAiProgress"></div>
-
-      <div class="pr-ai-msgs" id="prAiMsgs"></div>
-
-      <div class="pr-ai-row">
-        <input class="pr-ai-input" id="prAiInput" placeholder="Frage zu PromptRebel…" />
-        <button class="pr-ai-send" type="button" id="prAiSend">Send</button>
-      </div>
+    <div class="pr-ai-actions">
+      <button class="pr-ai-action" type="button" data-action="start">Start (Model laden)</button>
+      <button class="pr-ai-action" type="button" data-action="clear">Chat löschen</button>
     </div>
-  `;
 
-  document.body.appendChild(btn);
-  document.body.appendChild(panel);
+    <div class="pr-ai-progress" id="prAiProgress"></div>
+    <div class="pr-ai-msgs" id="prAiMsgs"></div>
 
-  const closeBtn = panel.querySelector(".pr-ai-x");
-  const progressEl = panel.querySelector("#prAiProgress");
-  const msgsEl = panel.querySelector("#prAiMsgs");
-  const inputEl = panel.querySelector("#prAiInput");
-  const sendEl = panel.querySelector("#prAiSend");
+    <div class="pr-ai-row">
+      <input class="pr-ai-input" id="prAiInput" placeholder="Frage zu PromptRebel…" />
+      <button class="pr-ai-send" type="button" id="prAiSend">Send</button>
+    </div>
+  </div>
+`;
+document.body.appendChild(btn);
+document.body.appendChild(panel);
 
-  function addBubble(text, who) {
-    const d = document.createElement("div");
-    d.className = `pr-ai-bubble ${who}`;
-    d.textContent = text;
-    msgsEl.appendChild(d);
-    msgsEl.scrollTop = msgsEl.scrollHeight;
-  }
+const closeBtn = panel.querySelector(".pr-ai-x");
+const progressEl = panel.querySelector("#prAiProgress");
+const msgsEl = panel.querySelector("#prAiMsgs");
+const inputEl = panel.querySelector("#prAiInput");
+const sendEl = panel.querySelector("#prAiSend");
 
-  // --- WebGPU capability check (best-effort) ---
-  function hasWebGPU() {
-    return !!navigator.gpu;
-  }
+function addBubble(text, who) {
+  const d = document.createElement("div");
+  d.className = `pr-ai-bubble ${who}`;
+  d.textContent = text;
+  msgsEl.appendChild(d);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
 
-  // --- Engine / state ---
-  let engine = null;
-  let ready = false;
-  const messages = [];
+function hasWebGPU() {
+  return !!navigator.gpu;
+}
 
-  // Your "PromptRebel knowledge" as SYSTEM prompt (keep it compact)
-  // Tipp: lieber kurze, klare Wissensblöcke + Links/Seitenhinweise statt riesige Texte.
-  const SYSTEM_PROMPT = `
+/* =======================
+   5) Engine + Chat
+   ======================= */
+let engine = null;
+let ready = false;
+const messages = []; // nur user/assistant Verlauf
+
+const SYSTEM_PROMPT = `
 Du bist "PromptRebel Local AI", ein lokaler Assistent für die Website PromptRebel.
-Du beantwortest Fragen kurz, konkret und faktenbasiert. Wenn du etwas nicht weißt, sag es offen.
-Kontext:
-- PromptRebel ist ein persönliches KI-Labor (Musik, Visuals, Video, Tools, Stories).
-- Inhalte sind experimentell, oft als Prototyp/Work-in-progress.
-- Lizenz: CC BY-NC-SA 4.0 (nicht-kommerziell, Namensnennung, Weitergabe unter gleichen Bedingungen).
-Aufgabe:
-- Erkläre Navigation, Inhalte, Prompts/Workflows auf der Seite.
-- Gib praktische Hinweise (z.B. Prompt-Anpassung), aber keine sensiblen Daten erfinden.
+Antworte kurz, konkret und faktenbasiert. Wenn etwas nicht im Wissen steht: sag offen, dass du es nicht weißt.
+Nutze keine externen Quellen. Erfinde keine Details.
 `.trim();
 
-  function initProgressCallback(p) {
-    // p enthält text/percentage je nach Version; defensiv anzeigen:
-    const msg = typeof p === "string" ? p : JSON.stringify(p);
-    progressEl.textContent = `Loading: ${msg}`;
+function initProgressCallback(p) {
+  const msg = typeof p === "string" ? p : JSON.stringify(p);
+  progressEl.textContent = `Loading: ${msg}`;
+}
+
+async function startModel() {
+  if (!hasWebGPU()) {
+    progressEl.textContent =
+      "WebGPU nicht verfügbar. Nutze Desktop (Chrome/Edge) oder Safari mit WebGPU aktiviert.";
+    return;
+  }
+  if (ready) return;
+
+  progressEl.textContent = "Initialisiere…";
+  engine = new MLCEngine({ initProgressCallback });
+
+  try {
+    await engine.reload(DEFAULT_MODEL);
+    ready = true;
+    progressEl.textContent = "Bereit.";
+    messages.length = 0;
+    addBubble("Hi! Frag mich etwas zu PromptRebel (Wissen wird dynamisch geladen).", "ai");
+  } catch (e) {
+    console.error(e);
+    progressEl.textContent = "Fehler beim Laden des Modells. (Browser/WebGPU/Download prüfen)";
+  }
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  if (!ready) {
+    addBubble('Model ist noch nicht geladen. Klicke zuerst auf „Start (Model laden)“.', "ai");
+    return;
   }
 
-  async function startModel() {
-    if (!hasWebGPU()) {
-      progressEl.textContent =
-        "WebGPU nicht verfügbar. Auf iPhone/iOS kann WebGPU je nach Version/Feature-Flag fehlen. Nutze Desktop (Chrome/Edge) oder Safari mit WebGPU aktiviert.";
-      return;
-    }
-    if (ready) return;
+  inputEl.value = "";
+  addBubble(text, "user");
+  messages.push({ role: "user", content: text });
 
-    progressEl.textContent = "Initialisiere…";
-    engine = new MLCEngine({ initProgressCallback });
+  const aiBubble = document.createElement("div");
+  aiBubble.className = "pr-ai-bubble ai";
+  aiBubble.textContent = "";
+  msgsEl.appendChild(aiBubble);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
 
-    // Optional: prüfen, ob das Modell in der prebuilt list existiert
-    const exists = prebuiltAppConfig.model_list?.some((m) => m.model_id === DEFAULT_MODEL || m.model === DEFAULT_MODEL);
-    // (Nicht kritisch – reload wirft Fehler, wenn unauffindbar)
-    try {
-      await engine.reload(DEFAULT_MODEL);
-      ready = true;
-      progressEl.textContent = "Bereit.";
-      messages.length = 0;
-      messages.push({ role: "system", content: SYSTEM_PROMPT });
-      addBubble("Hi! Ich laufe lokal im Browser. Frag mich etwas zu PromptRebel.", "ai");
-    } catch (e) {
-      console.error(e);
-      progressEl.textContent = "Fehler beim Laden des Modells. (Browser/WebGPU/Download prüfen)";
-    }
-  }
+  try {
+    // 1) Quellen bestimmen (Router)
+    const sources = await pickSources(text, engine);
 
-  async function sendMessage() {
-    const text = inputEl.value.trim();
-    if (!text) return;
+    // 2) Wissen laden
+    const docs = await loadKnowledge(sources);
 
-    if (!ready) {
-      addBubble("Model ist noch nicht geladen. Klicke zuerst auf „Start (Model laden)“.", "ai");
-      return;
-    }
+    // 3) Kontext bauen
+    const knowledgeContext = docs
+      .map((d) => `### ${d.key.toUpperCase()}\n${d.text}`)
+      .join("\n\n");
 
-    inputEl.value = "";
-    addBubble(text, "user");
-    messages.push({ role: "user", content: text });
+    // 4) System + Wissen + Verlauf
+    const scopedMessages = [
+      { role: "system", content: SYSTEM_PROMPT },
+      {
+        role: "system",
+        content:
+          "Nutze ausschließlich das folgende Wissen. Wenn es dort nicht steht, sag offen, dass du es nicht weißt.\n\n" +
+          knowledgeContext,
+      },
+      ...messages,
+    ];
 
-    // Streaming-Ausgabe (wir bauen den AI-Text live zusammen)
-    const aiBubble = document.createElement("div");
-    aiBubble.className = "pr-ai-bubble ai";
-    aiBubble.textContent = "";
-    msgsEl.appendChild(aiBubble);
-    msgsEl.scrollTop = msgsEl.scrollHeight;
-
-    try {
-      const chunks = await engine.chat.completions.create({
-        messages,
-        temperature: 0.2,
-        stream: true,
-        stream_options: { include_usage: true },
-      });
-
-      let reply = "";
-      for await (const chunk of chunks) {
-        const delta = chunk.choices?.[0]?.delta?.content || "";
-        if (delta) {
-          reply += delta;
-          aiBubble.textContent = reply;
-          msgsEl.scrollTop = msgsEl.scrollHeight;
-        }
-      }
-
-      // final message in engine + store in our history
-      const full = await engine.getMessage();
-      messages.push({ role: "assistant", content: full });
-
-      // Optional: usage anzeigen
-      // (Tokens sind hier nur Kontext-/Antwortlänge, nicht "Kosten")
-    } catch (e) {
-      console.error(e);
-      aiBubble.textContent = "Fehler beim Antworten (WebGPU/Model/Memory).";
-    }
-  }
-
-  // --- UI wiring ---
-  btn.addEventListener("click", () => panel.classList.toggle("open"));
-  closeBtn.addEventListener("click", () => panel.classList.remove("open"));
-
-  panel.querySelectorAll("[data-action]").forEach((b) => {
-    b.addEventListener("click", async () => {
-      const action = b.getAttribute("data-action");
-      if (action === "start") await startModel();
-      if (action === "clear") {
-        msgsEl.innerHTML = "";
-        progressEl.textContent = ready ? "Bereit." : "";
-        messages.length = 0;
-        if (ready) messages.push({ role: "system", content: SYSTEM_PROMPT });
-      }
+    const chunks = await engine.chat.completions.create({
+      messages: scopedMessages,
+      temperature: 0.2,
+      stream: true,
     });
-  });
 
-  sendEl.addEventListener("click", sendMessage);
-  inputEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendMessage();
+    let reply = "";
+    for await (const chunk of chunks) {
+      const delta = chunk.choices?.[0]?.delta?.content || "";
+      if (!delta) continue;
+      reply += delta;
+      aiBubble.textContent = reply;
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+
+    messages.push({ role: "assistant", content: reply });
+  } catch (e) {
+    console.error(e);
+    aiBubble.textContent = "Fehler beim Antworten.";
+  }
+}
+
+/* =======================
+   6) UI wiring
+   ======================= */
+btn.addEventListener("click", () => panel.classList.toggle("open"));
+closeBtn.addEventListener("click", () => panel.classList.remove("open"));
+
+panel.querySelectorAll("[data-action]").forEach((b) => {
+  b.addEventListener("click", async () => {
+    const action = b.getAttribute("data-action");
+    if (action === "start") await startModel();
+    if (action === "clear") {
+      msgsEl.innerHTML = "";
+      progressEl.textContent = ready ? "Bereit." : "";
+      messages.length = 0;
+    }
   });
+});
+
+sendEl.addEventListener("click", sendMessage);
+inputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendMessage();
+});
