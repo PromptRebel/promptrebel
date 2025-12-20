@@ -1,6 +1,7 @@
 // assets/js/local-ai.js
 // PromptRebel Local-AI Widget (WebLLM / WebGPU) – STABLE FIRST
 // Model: Qwen2-0.5B-Instruct-q4f16_1-MLC
+// Strategy: Q&A Retrieval (scored) + Direct Answer when confident, else LLM fallback
 // Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
 
 import { MLCEngine } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
@@ -12,16 +13,19 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
   window.__PROMPTREBEL_LOCAL_AI__ = true;
 
   // ========= Config =========
-  const DEFAULT_MODEL = "Qwen2-0.5B-Instruct-q4f16_1-MLC";
+  const DEFAULT_MODEL = "Qwen2-0.5B-Instruct-q4f16_1-MLC"; // <- Standard: kleines, stabiles Modell
 
   // Answer behavior
-  const TEMPERATURE = 0.0;         // deterministic
-  const MAX_TOKENS = 260;          // allow decent answers
-  const MAX_QA_CONTEXT = 3;        // inject only top 1–3 QAs
-  const HISTORY_MAX_MSGS = 2;      // keep minimal history: current user + current assistant
+  const TEMPERATURE = 0.0;          // deterministic
+  const MAX_TOKENS = 320;           // allow full answers
+  const HISTORY_MAX_MSGS = 2;       // minimal history (user + assistant)
+
+  // Retrieval behavior
+  const MAX_QA_CONTEXT = 4;         // inject top N QAs when LLM needed
+  const MIN_SCORE_TO_USE = 0.22;    // below => "Ich weiß es nicht."
+  const DIRECT_ANSWER_SCORE = 0.62; // above => return answer directly (no LLM)
 
   // ========= Knowledge index (assets/knowledge/*.md) =========
-  // local-ai.js is in assets/js/ -> ../knowledge/... resolves to assets/knowledge/...
   const KNOWLEDGE = {
     about:     new URL("../knowledge/about.md", import.meta.url).href,
     faq:       new URL("../knowledge/faq.md", import.meta.url).href,
@@ -31,12 +35,12 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
     video:     new URL("../knowledge/video.md", import.meta.url).href,
     tools:     new URL("../knowledge/tools.md", import.meta.url).href,
     stories:   new URL("../knowledge/stories.md", import.meta.url).href,
+    // optional später: extras: new URL("../knowledge/extras.md", import.meta.url).href,
   };
 
   // ========= Caches =========
-  const fileTextCache = new Map();    // key -> raw markdown
-  const qaCache = new Map();          // key -> parsed QAs [{q,a}]
-  const normQCache = new Map();       // key -> normalized question tokens cache (optional)
+  const fileTextCache = new Map(); // key -> raw markdown
+  const qaCache = new Map();       // key -> parsed QAs [{q,a,file, qTokens, qaTokens}]
 
   // ========= Helpers =========
   function hasWebGPU() { return !!navigator.gpu; }
@@ -45,9 +49,7 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
     while (history.length > HISTORY_MAX_MSGS) history.shift();
   }
 
-  function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
-  }
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
   function normalizeText(s) {
     return (s || "")
@@ -62,24 +64,36 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
     const t = normalizeText(s);
     if (!t) return [];
     const raw = t.split(" ");
-    // keep tokens >= 3 chars, but allow "cc"
-    return raw.filter(w => w.length >= 3 || w === "cc");
+    // keep tokens >= 3 chars, but allow "cc", "by"
+    return raw.filter(w => w.length >= 3 || w === "cc" || w === "by");
   }
 
-  function scoreOverlap(queryTokens, candidateTokens) {
-    if (!queryTokens.length || !candidateTokens.length) return 0;
+  // Jaccard-ish overlap + small phrase bonus
+  function scoreCandidate(queryTokens, candTokens, queryNorm, candNorm) {
+    if (!queryTokens.length || !candTokens.length) return 0;
 
-    const set = new Set(candidateTokens);
+    const set = new Set(candTokens);
     let hit = 0;
     for (const w of queryTokens) if (set.has(w)) hit++;
 
-    // small bonus if important keywords present
-    const q = queryTokens.join(" ");
-    let bonus = 0;
-    if (q.includes("lizenz") || q.includes("license") || q.includes("by-nc-sa") || q.includes("cc")) bonus += 1.2;
-    if (q.includes("iphone") || q.includes("ios") || q.includes("webgpu")) bonus += 0.8;
+    // base overlap: hits normalized by query length
+    let score = hit / Math.max(3, queryTokens.length);
 
-    return (hit / Math.max(3, queryTokens.length)) + bonus;
+    // phrase bonus: if normalized query is contained as substring (or important part)
+    // (helps for "was ist promptrebel" matching a Q exactly)
+    if (queryNorm && candNorm) {
+      if (candNorm.includes(queryNorm)) score += 0.25;
+      // also bonus for 2-word phrase matches
+      const qWords = queryNorm.split(" ").filter(Boolean);
+      if (qWords.length >= 2) {
+        const bigrams = [];
+        for (let i = 0; i < qWords.length - 1; i++) bigrams.push(`${qWords[i]} ${qWords[i+1]}`);
+        const bgHit = bigrams.some(bg => candNorm.includes(bg));
+        if (bgHit) score += 0.15;
+      }
+    }
+
+    return score;
   }
 
   // ========= Fetch + Parse Q&A =========
@@ -95,9 +109,9 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
   }
 
   // Parse markdown:
-  // - find "## Question" headings
-  // - answer is text until next "## " heading (or EOF)
-  function parseMarkdownToQA(md) {
+  // - Q in "## ..."
+  // - A is until next "## ..."
+  function parseMarkdownToQA(md, fileKey) {
     const lines = (md || "").split(/\r?\n/);
     const qa = [];
     let currentQ = null;
@@ -105,7 +119,21 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
 
     const flush = () => {
       const a = buf.join("\n").trim();
-      if (currentQ && a) qa.push({ q: currentQ.trim(), a });
+      if (currentQ && a) {
+        const qNorm = normalizeText(currentQ);
+        const aNorm = normalizeText(a);
+        const qTokens = tokenize(currentQ);
+        const qaTokens = tokenize(`${currentQ} ${a}`); // IMPORTANT: include answer tokens too
+        qa.push({
+          q: currentQ.trim(),
+          a,
+          file: fileKey,
+          qNorm,
+          aNorm,
+          qTokens,
+          qaTokens
+        });
+      }
       currentQ = null;
       buf = [];
     };
@@ -120,7 +148,6 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
       if (currentQ) buf.push(line);
     }
     flush();
-
     return qa;
   }
 
@@ -130,16 +157,15 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
       if (!KNOWLEDGE[k]) continue;
       if (!qaCache.has(k)) {
         const md = await loadFileText(k);
-        qaCache.set(k, parseMarkdownToQA(md));
+        qaCache.set(k, parseMarkdownToQA(md, k));
       }
       const qas = qaCache.get(k) || [];
-      for (const item of qas) {
-        all.push({ ...item, file: k });
-      }
+      for (const item of qas) all.push(item);
     }
     return all;
   }
 
+  // ========= Cheap routing (keyword) =========
   function pickSourcesHeuristic(question) {
     const q = (question || "").toLowerCase();
 
@@ -155,38 +181,46 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
     return ["faq"];
   }
 
-  function selectBestQAs(allQAs, userQuestion, limit = 3) {
+  function selectBestQAs(allQAs, userQuestion, limit = 4) {
+    const qNorm = normalizeText(userQuestion);
     const qTokens = tokenize(userQuestion);
+
     const scored = allQAs.map(item => {
-      // cache candidate tokens per file+question if you like (not required)
-      const candTokens = tokenize(item.q);
-      const s = scoreOverlap(qTokens, candTokens);
+      // score against QA tokens (Q + A), not only Q
+      const s = scoreCandidate(qTokens, item.qaTokens, qNorm, item.qNorm);
       return { ...item, score: s };
     });
 
     scored.sort((a, b) => b.score - a.score);
-    const best = scored.filter(x => x.score > 0.2).slice(0, limit); // threshold avoids garbage matches
-    return best;
+    return scored.slice(0, limit);
   }
 
-  // ========= Prompt =========
+  // ========= Prompt (only for fallback) =========
   const SYSTEM_PROMPT = `
 Du bist "PromptRebel Local AI" (läuft lokal im Browser).
 
-WICHTIG:
-- Antworte NUR anhand der Q&A im KONTEXT.
-- Wenn keine passende Q&A vorhanden ist: antworte exakt "Ich weiß es nicht." (ohne Zusatz).
+Regeln:
+- Antworte NUR mit Informationen aus dem KONTEXT (Q&A).
+- Wenn der Kontext nicht reicht: antworte exakt "Ich weiß es nicht." (ohne Zusatz).
 - Keine Vermutungen, keine erfundenen Fakten.
-- Antworte kurz und konkret (1–4 Sätze).
-- Wenn möglich: ergänze am Ende in Klammern die Datei, z.B. "(faq.md)" oder "(licensing.md)".
+- Antworte kurz & klar (1–6 Sätze).
+- Hänge am Ende die Quelle an, z.B. "(faq.md)".
 `.trim();
 
   function buildContextFromQAs(qas) {
-    if (!qas.length) return "";
     const chunks = qas.map(x =>
       `Q: ${x.q}\nA: ${x.a}\nSOURCE: ${x.file}.md`
     );
     return chunks.join("\n\n---\n\n");
+  }
+
+  function formatDirectAnswer(best) {
+    // Directly return the stored answer (most stable / no hallucination)
+    // Ensure it ends with source marker:
+    const src = `(${best.file}.md)`;
+    const a = (best.a || "").trim();
+    if (!a) return "Ich weiß es nicht.";
+    return a.endsWith(src) ? a : `${a} ${src}`;
   }
 
   // ========= CSS =========
@@ -206,7 +240,6 @@ WICHTIG:
     border-color: rgba(34,211,238,.8);
     box-shadow:0 0 18px rgba(34,211,238,.35), 0 10px 30px rgba(2,6,23,.7);
   }
-
   .pr-ai-panel{
     position:fixed; right:16px; bottom:68px; z-index:999999;
     width:min(420px, calc(100vw - 32px));
@@ -219,7 +252,6 @@ WICHTIG:
     backdrop-filter: blur(14px);
   }
   .pr-ai-panel.open{ display:flex; }
-
   .pr-ai-top{
     display:flex; align-items:center; justify-content:space-between;
     padding:10px 12px; gap:10px;
@@ -228,7 +260,6 @@ WICHTIG:
     font:700 13px/1 system-ui; color:#e5e7eb;
   }
   .pr-ai-top small{ font-weight:600; color:#94a3b8; }
-
   .pr-ai-x{
     border:1px solid rgba(148,163,184,.25);
     background:rgba(15,23,42,.7);
@@ -236,7 +267,6 @@ WICHTIG:
     padding:6px 10px; cursor:pointer; font:700 12px/1 system-ui;
   }
   .pr-ai-x[disabled]{ opacity:.55; cursor:not-allowed; }
-
   .pr-ai-body{
     display:flex;
     flex-direction:column;
@@ -245,7 +275,6 @@ WICHTIG:
     height:100%;
     min-height:0;
   }
-
   .pr-ai-note{
     font:12px/1.35 system-ui; color:#94a3b8;
     border:1px solid rgba(148,163,184,.14);
@@ -253,7 +282,6 @@ WICHTIG:
     padding:10px 12px; border-radius:14px;
   }
   .pr-ai-progress{ font:12px/1.35 system-ui; color:#94a3b8; }
-
   .pr-ai-actions{ display:flex; gap:8px; flex-wrap:wrap; }
   .pr-ai-action{
     border-radius:999px; padding:8px 10px;
@@ -263,7 +291,6 @@ WICHTIG:
     cursor:pointer;
   }
   .pr-ai-action[disabled]{ opacity:.55; cursor:not-allowed; }
-
   .pr-ai-msgs{
     flex:1;
     min-height:0;
@@ -276,7 +303,6 @@ WICHTIG:
     font:13px/1.45 system-ui;
     color:#e5e7eb;
   }
-
   .pr-ai-bubble{
     max-width:92%;
     padding:10px 12px;
@@ -287,7 +313,6 @@ WICHTIG:
   }
   .pr-ai-bubble.user{ align-self:flex-end; border-color: rgba(34,211,238,.22); }
   .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
-
   .pr-ai-row{
     position:sticky;
     bottom:0;
@@ -299,7 +324,6 @@ WICHTIG:
     backdrop-filter: blur(8px);
     border-top: 1px solid rgba(148,163,184,.15);
   }
-
   .pr-ai-input{
     flex:1; border-radius:999px;
     border:1px solid rgba(148,163,184,.22);
@@ -308,7 +332,6 @@ WICHTIG:
     outline:none; font:600 13px/1 system-ui;
   }
   .pr-ai-input[disabled]{ opacity:.55; cursor:not-allowed; }
-
   .pr-ai-send{
     border-radius:999px; padding:10px 12px;
     border:1px solid rgba(34,211,238,.35);
@@ -448,21 +471,18 @@ WICHTIG:
       inputEl.value = "";
 
       addBubble(text, "user");
-      const aiBubble = addBubble("Denke nach…", "ai");
+      const aiBubble = addBubble("Suche passende Q&A…", "ai");
 
       try {
         // Minimal history
         chatHistory.push({ role: "user", content: text });
         clampHistory(chatHistory);
 
-        // 1) choose sources (cheap heuristic)
+        // 1) choose sources
         const sources = pickSourcesHeuristic(text);
 
-        // 2) load + parse QAs from those sources
-        aiBubble.textContent = "Suche passende Q&A…";
+        // 2) load + parse QAs
         const allQAs = await loadQAs(sources);
-
-        // If no QAs parsed at all -> hard fail to "Ich weiß es nicht."
         if (!allQAs.length) {
           aiBubble.textContent = "Ich weiß es nicht.";
           chatHistory.push({ role: "assistant", content: aiBubble.textContent });
@@ -470,27 +490,35 @@ WICHTIG:
           return;
         }
 
-        // 3) select best matches
-        const best = selectBestQAs(allQAs, text, MAX_QA_CONTEXT);
+        // 3) rank best
+        const ranked = selectBestQAs(allQAs, text, MAX_QA_CONTEXT);
+        const best = ranked[0];
 
-        if (!best.length) {
+        if (!best || best.score < MIN_SCORE_TO_USE) {
           aiBubble.textContent = "Ich weiß es nicht.";
           chatHistory.push({ role: "assistant", content: aiBubble.textContent });
           clampHistory(chatHistory);
           return;
         }
 
-        // 4) Build tight context ONLY from best QAs
-        const context = buildContextFromQAs(best);
+        // 4) DIRECT ANSWER when confident (most stable & most correct)
+        if (best.score >= DIRECT_ANSWER_SCORE) {
+          const out = formatDirectAnswer(best);
+          aiBubble.textContent = out;
+          chatHistory.push({ role: "assistant", content: out });
+          clampHistory(chatHistory);
+          return;
+        }
 
-        // 5) Ask model with strict system prompt
+        // 5) fallback to LLM with tight context (top QAs)
+        const context = buildContextFromQAs(ranked);
         const messages = [
           { role: "system", content: `${SYSTEM_PROMPT}\n\nKONTEXT (Q&A):\n${context}` },
           ...chatHistory
         ];
 
-        // Small cooldown helps on some Windows/WebGPU setups
-        await sleep(30);
+        // tiny cooldown (some Windows/WebGPU setups behave better)
+        await sleep(20);
 
         const chunks = await engine.chat.completions.create({
           messages,
