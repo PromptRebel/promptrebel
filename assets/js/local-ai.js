@@ -17,8 +17,8 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
 
   // Stability limits
   const HISTORY_MAX_MSGS = 2;        // keep only last 2 messages total (user+assistant)
-  const MAX_TOKENS = 180;            // keep answers short-ish (stability)
-  const KNOWLEDGE_MAX_CHARS = 3200;  // cap injected knowledge
+  const MAX_TOKENS = 256;            // keep answers short-ish (stability)
+  const KNOWLEDGE_MAX_CHARS = 6400;  // cap injected knowledge
   const MAX_SENTENCES = 3;           // enforce 2–3 sentences
 
   // ========= Knowledge index (assets/knowledge/*.md) =========
@@ -400,7 +400,7 @@ Regeln:
 
         const chunks = await engine.chat.completions.create({
           messages: scopedMessages,
-          temperature: 0.2,
+          temperature: 0.1,
           stream: true,
           max_tokens: MAX_TOKENS,
         });
