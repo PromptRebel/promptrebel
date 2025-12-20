@@ -17,8 +17,8 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
 
   // Stability limits
   const HISTORY_MAX_MSGS = 2;        // keep only last 2 messages total (user+assistant)
-  const MAX_TOKENS = 256;            // keep answers short-ish (stability)
-  const KNOWLEDGE_MAX_CHARS = 6400;  // cap injected knowledge
+  const MAX_TOKENS = 260;            // keep answers short-ish (stability)
+  const KNOWLEDGE_MAX_CHARS = 3200;  // cap injected knowledge
   const MAX_SENTENCES = 3;           // enforce 2–3 sentences
 
   // ========= Knowledge index (assets/knowledge/*.md) =========
