@@ -1,6 +1,6 @@
 // assets/js/local-ai.js
 // PromptRebel Local-AI Widget (WebLLM / WebGPU)
-// Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
+// WebLLM docs: https://webllm.mlc.ai/docs/user/basic_usage.html
 
 import { MLCEngine } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
 
@@ -10,17 +10,26 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
 } else {
   window.__PROMPTREBEL_LOCAL_AI__ = true;
 
-  // ========= Config =========
-  const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+  // ========= Model candidates (smallest first) =========
+  // If a model id doesn't exist in your build, engine.reload will fail -> we try the next.
+  const MODEL_CANDIDATES = [
+    // very small models (preferred)
+    "Qwen2-0.5B-Instruct-q4f16_1-MLC",
+    "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+    "Phi-3.5-mini-instruct-q4f16_1-MLC", // may be larger; kept as optional fallback
+    // your previous model
+    "Llama-3.2-1B-Instruct-q4f16_1-MLC",
+  ];
 
-  // Stability limits
+  // ========= Stability limits =========
   const HISTORY_MAX_MSGS = 2;        // keep only last 2 messages total (user+assistant)
-  const MAX_TOKENS = 160;            // keep answers short
-  const KNOWLEDGE_MAX_CHARS = 2400;  // hard cap for injected knowledge
-  const MAX_SENTENCES = 3;           // enforce 2–3 sentences
+  const MAX_TOKENS = 96;             // smaller = less GPU stress
+  const KNOWLEDGE_MAX_CHARS = 1800;  // keep injected context small
+  const MAX_SENTENCES = 3;           // 2–3 Sätze
+  const COOLDOWN_MS = 120;           // tiny breather for WebGPU
 
-  // ========= Knowledge index (your structure: assets/knowledge/*.md) =========
-  // local-ai.js is in assets/js/ -> ../knowledge/... resolves to assets/knowledge/...
+  // ========= Knowledge index (assets/knowledge/*.md) =========
+  // local-ai.js is in assets/js/ -> ../knowledge/... => assets/knowledge/...
   const KNOWLEDGE = {
     about:     new URL("../knowledge/about.md", import.meta.url).href,
     faq:       new URL("../knowledge/faq.md", import.meta.url).href,
@@ -53,15 +62,13 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
   // ========= Routing (NO LLM) =========
   function pickSourcesHeuristic(question) {
     const q = (question || "").toLowerCase();
-
     if (q.includes("lizenz") || q.includes("license") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
     if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
     if (q.includes("bild") || q.includes("visual") || q.includes("cover")) return ["visuals", "faq"];
     if (q.includes("video") || q.includes("sora")) return ["video", "faq"];
     if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) return ["tools", "faq"];
     if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) return ["stories", "faq"];
-    if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist promptrebel") || q.includes("was ist")) return ["about", "faq"];
-
+    if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist")) return ["about", "faq"];
     return ["faq"];
   }
 
@@ -70,7 +77,8 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
 Du bist "PromptRebel Local AI", ein lokaler Assistent für die Website PromptRebel.
 
 Regeln:
-- Antworte NUR anhand des WISSENSKONTEXTS unten. Wenn dort nichts steht: sage ehrlich "Ich weiß es nicht" und nenne kurz, welche Info fehlt.
+- Antworte NUR anhand des WISSENSKONTEXTS unten.
+- Wenn die Info im Kontext fehlt: sage ehrlich "Ich weiß es nicht" und nenne kurz, welche Info fehlt.
 - Keine Vermutungen, keine erfundenen Fakten.
 - Antworte in 2 bis 3 Sätzen (maximal 3).
 - Wenn möglich: nenne die relevante Datei (z.B. "laut licensing.md").
@@ -82,6 +90,7 @@ Regeln:
 
   // ========= Helpers =========
   function hasWebGPU() { return !!navigator.gpu; }
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   function trimToMaxSentences(text, maxSentences = 3) {
     const t = (text || "").trim();
@@ -96,29 +105,42 @@ Regeln:
   }
 
   function shortenKnowledge(docs, question) {
-    // ultra-simple "keyword-ish" cut: keep whole doc if short, otherwise keep first part + lines matching words
     const q = (question || "").toLowerCase();
-    const words = q.split(/[^a-zäöüß0-9]+/i).filter(w => w.length >= 4).slice(0, 8);
+    const words = q.split(/[^a-zäöüß0-9]+/i).filter(w => w.length >= 4).slice(0, 10);
 
-    let combined = docs.map(d => `### ${d.key.toUpperCase()}\n${d.text}`).join("\n\n");
-
+    let combined = docs.map(d => `### ${d.key.toUpperCase()}\n${d.text}`).join("\n\n").trim();
     if (combined.length <= KNOWLEDGE_MAX_CHARS) return combined;
 
-    // try to keep matching lines
     const lines = combined.split("\n");
     const kept = [];
     for (const line of lines) {
       const l = line.toLowerCase();
-      if (kept.length < 20 && (l.startsWith("### ") || l.startsWith("-") || l.startsWith("•"))) {
+
+      // keep headers + first bullets for structure
+      if (l.startsWith("### ") || l.startsWith("-") || l.startsWith("•")) {
         kept.push(line);
-        continue;
       }
+
+      // keep lines matching query words
       if (words.some(w => l.includes(w))) kept.push(line);
+
       if (kept.join("\n").length >= KNOWLEDGE_MAX_CHARS) break;
     }
 
-    const out = kept.join("\n");
-    return out.length ? out.slice(0, KNOWLEDGE_MAX_CHARS) : combined.slice(0, KNOWLEDGE_MAX_CHARS);
+    const out = kept.join("\n").trim();
+    return (out || combined).slice(0, KNOWLEDGE_MAX_CHARS);
+  }
+
+  function isDeviceLostError(e) {
+    const msg = String(e?.message || e || "").toLowerCase();
+    return (
+      msg.includes("disposed") ||
+      msg.includes("device was lost") ||
+      msg.includes("devicelost") ||
+      msg.includes("device_hung") ||
+      msg.includes("dxgi_error_device_hung") ||
+      msg.includes("getdeviceremovedreason")
+    );
   }
 
   // ========= CSS =========
@@ -134,11 +156,6 @@ Regeln:
     box-shadow:0 10px 30px rgba(2,6,23,.7);
     cursor:pointer;
   }
-  .pr-ai-btn:hover{
-    border-color: rgba(34,211,238,.8);
-    box-shadow:0 0 18px rgba(34,211,238,.35), 0 10px 30px rgba(2,6,23,.7);
-  }
-
   .pr-ai-panel{
     position:fixed; right:16px; bottom:68px; z-index:999999;
     width:min(420px, calc(100vw - 32px));
@@ -151,7 +168,6 @@ Regeln:
     backdrop-filter: blur(14px);
   }
   .pr-ai-panel.open{ display:flex; }
-
   .pr-ai-top{
     display:flex; align-items:center; justify-content:space-between;
     padding:10px 12px; gap:10px;
@@ -159,8 +175,6 @@ Regeln:
     border-bottom:1px solid rgba(148,163,184,.15);
     font:700 13px/1 system-ui; color:#e5e7eb;
   }
-  .pr-ai-top small{ font-weight:600; color:#94a3b8; }
-
   .pr-ai-x{
     border:1px solid rgba(148,163,184,.25);
     background:rgba(15,23,42,.7);
@@ -168,16 +182,7 @@ Regeln:
     padding:6px 10px; cursor:pointer; font:700 12px/1 system-ui;
   }
   .pr-ai-x[disabled]{ opacity:.55; cursor:not-allowed; }
-
-  .pr-ai-body{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    padding:12px;
-    height:100%;
-    min-height:0;
-  }
-
+  .pr-ai-body{ display:flex; flex-direction:column; gap:10px; padding:12px; height:100%; min-height:0; }
   .pr-ai-note{
     font:12px/1.35 system-ui; color:#94a3b8;
     border:1px solid rgba(148,163,184,.14);
@@ -185,7 +190,6 @@ Regeln:
     padding:10px 12px; border-radius:14px;
   }
   .pr-ai-progress{ font:12px/1.35 system-ui; color:#94a3b8; }
-
   .pr-ai-actions{ display:flex; gap:8px; flex-wrap:wrap; }
   .pr-ai-action{
     border-radius:999px; padding:8px 10px;
@@ -195,20 +199,12 @@ Regeln:
     cursor:pointer;
   }
   .pr-ai-action[disabled]{ opacity:.55; cursor:not-allowed; }
-
   .pr-ai-msgs{
-    flex:1;
-    min-height:0;
-    overflow-y:auto;
-    padding:12px;
-    padding-bottom:96px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    font:13px/1.45 system-ui;
-    color:#e5e7eb;
+    flex:1; min-height:0; overflow-y:auto;
+    padding:12px; padding-bottom:96px;
+    display:flex; flex-direction:column; gap:10px;
+    font:13px/1.45 system-ui; color:#e5e7eb;
   }
-
   .pr-ai-bubble{
     max-width:92%;
     padding:10px 12px;
@@ -219,19 +215,12 @@ Regeln:
   }
   .pr-ai-bubble.user{ align-self:flex-end; border-color: rgba(34,211,238,.22); }
   .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
-
   .pr-ai-row{
-    position:sticky;
-    bottom:0;
-    display:flex;
-    gap:8px;
-    padding:12px;
-    margin-top:12px;
-    background: rgba(2,6,23,.88);
-    backdrop-filter: blur(8px);
+    position:sticky; bottom:0;
+    display:flex; gap:8px; padding:12px; margin-top:12px;
+    background: rgba(2,6,23,.88); backdrop-filter: blur(8px);
     border-top: 1px solid rgba(148,163,184,.15);
   }
-
   .pr-ai-input{
     flex:1; border-radius:999px;
     border:1px solid rgba(148,163,184,.22);
@@ -240,7 +229,6 @@ Regeln:
     outline:none; font:600 13px/1 system-ui;
   }
   .pr-ai-input[disabled]{ opacity:.55; cursor:not-allowed; }
-
   .pr-ai-send{
     border-radius:999px; padding:10px 12px;
     border:1px solid rgba(34,211,238,.35);
@@ -257,8 +245,10 @@ Regeln:
   let ready = false;
   let starting = false;
   let busy = false;
+  let currentModelIndex = 0;
+  let currentModelId = null;
 
-  const chatHistory = []; // minimal
+  const chatHistory = []; // minimal history
 
   // ========= UI init =========
   function initUI() {
@@ -273,17 +263,19 @@ Regeln:
     panel.className = "pr-ai-panel";
     panel.innerHTML = `
       <div class="pr-ai-top">
-        <div>PromptRebel Local AI <small>· läuft lokal (WebGPU)</small></div>
+        <div>PromptRebel Local AI <small id="prAiModel">· Modell: —</small></div>
         <button class="pr-ai-x" type="button" aria-label="Close">×</button>
       </div>
       <div class="pr-ai-body">
         <div class="pr-ai-note">
-          <b>Experiment:</b> Läuft lokal im Browser via <b>WebGPU</b>. Beim ersten Start wird ein Modell geladen.
+          <b>Experiment:</b> Läuft lokal via <b>WebGPU</b>. Bei Windows kann es bei GPU-Resets zu Abbrüchen kommen.
+          Dieses Widget wechselt dann automatisch auf ein kleineres Modell.
         </div>
 
         <div class="pr-ai-actions">
           <button class="pr-ai-action" type="button" data-action="start">Start (Model laden)</button>
           <button class="pr-ai-action" type="button" data-action="clear">Chat löschen</button>
+          <button class="pr-ai-action" type="button" data-action="smaller">Kleineres Modell</button>
         </div>
 
         <div class="pr-ai-progress" id="prAiProgress"></div>
@@ -300,12 +292,14 @@ Regeln:
     document.body.appendChild(panel);
 
     const closeBtn = panel.querySelector(".pr-ai-x");
+    const modelEl = panel.querySelector("#prAiModel");
     const progressEl = panel.querySelector("#prAiProgress");
     const msgsEl = panel.querySelector("#prAiMsgs");
     const inputEl = panel.querySelector("#prAiInput");
     const sendEl = panel.querySelector("#prAiSend");
     const startBtn = panel.querySelector('[data-action="start"]');
     const clearBtn = panel.querySelector('[data-action="clear"]');
+    const smallerBtn = panel.querySelector('[data-action="smaller"]');
 
     function setBusy(on) {
       busy = !!on;
@@ -313,6 +307,7 @@ Regeln:
       inputEl.toggleAttribute("disabled", busy);
       startBtn.toggleAttribute("disabled", busy);
       clearBtn.toggleAttribute("disabled", busy);
+      smallerBtn.toggleAttribute("disabled", busy);
       closeBtn.toggleAttribute("disabled", busy);
     }
 
@@ -330,42 +325,87 @@ Regeln:
       progressEl.textContent = `Loading: ${msg}`;
     }
 
+    function resetEngineState() {
+      ready = false;
+      engine = null;
+      currentModelId = null;
+      progressEl.textContent = "Engine zurückgesetzt. Bitte Start klicken.";
+      modelEl.textContent = "· Modell: —";
+    }
+
+    async function tryLoadModelByIndex(idx) {
+      const modelId = MODEL_CANDIDATES[idx];
+      progressEl.textContent = `Lade Modell: ${modelId} …`;
+      modelEl.textContent = `· Modell: ${modelId}`;
+
+      engine = new MLCEngine({ initProgressCallback });
+      await engine.reload(modelId);
+
+      currentModelId = modelId;
+      ready = true;
+      progressEl.textContent = "Bereit.";
+      return true;
+    }
+
     async function startModel() {
       if (starting || busy) return;
       if (ready && engine) return;
 
       if (!hasWebGPU()) {
-        progressEl.textContent =
-          "WebGPU nicht verfügbar. Nutze Desktop (Chrome/Edge) oder Safari mit WebGPU aktiviert.";
+        progressEl.textContent = "WebGPU nicht verfügbar. Nutze Desktop (Chrome/Edge).";
         return;
       }
 
       starting = true;
       setBusy(true);
-      progressEl.textContent = "Initialisiere…";
 
       try {
-        engine = new MLCEngine({ initProgressCallback });
-        await engine.reload(DEFAULT_MODEL);
-        ready = true;
+        // Try from currentModelIndex forward
+        let loaded = false;
+        for (let i = currentModelIndex; i < MODEL_CANDIDATES.length; i++) {
+          try {
+            currentModelIndex = i;
+            await tryLoadModelByIndex(i);
+            loaded = true;
+            break;
+          } catch (e) {
+            console.warn("Model load failed:", MODEL_CANDIDATES[i], e);
+            if (isDeviceLostError(e)) {
+              // device lost: wait a moment, then try smaller/next
+              await sleep(300);
+            }
+          }
+        }
 
-        progressEl.textContent = "Bereit.";
+        if (!loaded) {
+          resetEngineState();
+          progressEl.textContent = "Konnte kein Modell laden. (Siehe Konsole).";
+          return;
+        }
+
         msgsEl.innerHTML = "";
         chatHistory.length = 0;
-
-        addBubble("Hi! Stell mir eine Frage zu PromptRebel.", "ai");
+        addBubble("Hi! Stell mir eine Frage – ich nutze nur das passende Wissen aus den MD-Dateien.", "ai");
       } catch (e) {
         console.error(e);
-        ready = false;
-        engine = null;
-        const msg = String(e?.message || e || "");
-        progressEl.textContent = msg.toLowerCase().includes("disposed")
-          ? "WebGPU/Engine wurde zurückgesetzt (disposed). Bitte erneut Start klicken."
-          : "Fehler beim Laden des Modells. (Konsole prüfen)";
+        resetEngineState();
+        progressEl.textContent = isDeviceLostError(e)
+          ? "WebGPU Device lost. Bitte Seite neu laden und Start erneut klicken."
+          : "Fehler beim Laden (Konsole prüfen).";
       } finally {
         starting = false;
         setBusy(false);
       }
+    }
+
+    async function forceSmallerModel() {
+      if (busy || starting) return;
+      // move to next candidate (which is "bigger" in our list order?) -> our list is smallest first.
+      // For a "smaller" button, we actually want to move to the FIRST available smallest.
+      // If currently not at 0, jump to 0; else keep 0.
+      currentModelIndex = 0;
+      resetEngineState();
+      await startModel();
     }
 
     async function sendMessage() {
@@ -384,7 +424,7 @@ Regeln:
       const aiBubble = addBubble("Denke nach…", "ai");
 
       try {
-        // Minimal history: keep only last 1 user+assistant pair
+        // Minimal history
         chatHistory.push({ role: "user", content: text });
         clampHistory(chatHistory);
 
@@ -395,11 +435,14 @@ Regeln:
         const knowledgeContext = shortenKnowledge(docs, text);
         const system = buildCombinedSystem(knowledgeContext);
 
+        // cool down before GPU-heavy generation
+        await sleep(COOLDOWN_MS);
+
         const scopedMessages = [{ role: "system", content: system }, ...chatHistory];
 
         const chunks = await engine.chat.completions.create({
           messages: scopedMessages,
-          temperature: 0.2,
+          temperature: 0.1,
           stream: true,
           max_tokens: MAX_TOKENS,
         });
@@ -421,12 +464,24 @@ Regeln:
         clampHistory(chatHistory);
       } catch (e) {
         console.error(e);
-        const msg = String(e?.message || e || "");
-        if (msg.toLowerCase().includes("disposed")) {
-          aiBubble.textContent = "WebGPU/Engine wurde zurückgesetzt („disposed“). Bitte Seite neu laden und Start erneut klicken.";
-          ready = false;
-          engine = null;
-          progressEl.textContent = "Engine nicht bereit (disposed).";
+
+        if (isDeviceLostError(e)) {
+          aiBubble.textContent =
+            "WebGPU wurde zurückgesetzt (Device lost / disposed). Ich versuche ein kleineres Modell…";
+
+          // Attempt automatic downgrade by restarting engine from the smallest candidate
+          resetEngineState();
+          await sleep(400);
+          currentModelIndex = 0;
+          await startModel();
+
+          if (!ready) {
+            aiBubble.textContent =
+              "WebGPU Reset. Bitte Seite neu laden. (Windows-Tipp: andere GPU-lastige Tabs schließen).";
+          } else {
+            aiBubble.textContent =
+              "Ich bin wieder bereit (kleineres Modell). Bitte Frage erneut senden.";
+          }
         } else {
           aiBubble.textContent = "Fehler beim Antworten. (Konsole prüfen)";
         }
@@ -444,6 +499,7 @@ Regeln:
     });
 
     startBtn.addEventListener("click", startModel);
+    smallerBtn.addEventListener("click", forceSmallerModel);
 
     clearBtn.addEventListener("click", () => {
       if (busy) return;
