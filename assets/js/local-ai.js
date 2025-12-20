@@ -1,6 +1,6 @@
 // assets/js/local-ai.js
-// PromptRebel Local-AI Widget (WebLLM / WebGPU) – STABLE baseline
-// Uses a smaller default model for stability on Windows/WebGPU.
+// PromptRebel Local-AI Widget (WebLLM / WebGPU) – STABLE FIRST
+// Model: Qwen2-0.5B-Instruct-q4f16_1-MLC
 // Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
 
 import { MLCEngine } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
@@ -12,14 +12,13 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
   window.__PROMPTREBEL_LOCAL_AI__ = true;
 
   // ========= Config =========
-  // Stable default model:
   const DEFAULT_MODEL = "Qwen2-0.5B-Instruct-q4f16_1-MLC";
 
-  // Stability limits
-  const HISTORY_MAX_MSGS = 2;        // keep only last 2 messages total (user+assistant)
-  const MAX_TOKENS = 260;            // keep answers short-ish (stability)
-  const KNOWLEDGE_MAX_CHARS = 3200;  // cap injected knowledge
-  const MAX_SENTENCES = 3;           // enforce 2–3 sentences
+  // Answer behavior
+  const TEMPERATURE = 0.0;         // deterministic
+  const MAX_TOKENS = 260;          // allow decent answers
+  const MAX_QA_CONTEXT = 3;        // inject only top 1–3 QAs
+  const HISTORY_MAX_MSGS = 2;      // keep minimal history: current user + current assistant
 
   // ========= Knowledge index (assets/knowledge/*.md) =========
   // local-ai.js is in assets/js/ -> ../knowledge/... resolves to assets/knowledge/...
@@ -32,116 +31,162 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
     video:     new URL("../knowledge/video.md", import.meta.url).href,
     tools:     new URL("../knowledge/tools.md", import.meta.url).href,
     stories:   new URL("../knowledge/stories.md", import.meta.url).href,
-    extras:   new URL("../knowledge/extras.md", import.meta.url).href,
   };
 
-  const knowledgeCache = new Map(); // key -> text
-
-  async function loadKnowledge(keys) {
-    const out = [];
-    for (const k of keys) {
-      if (!KNOWLEDGE[k]) continue;
-
-      if (!knowledgeCache.has(k)) {
-        const res = await fetch(KNOWLEDGE[k], { cache: "force-cache" });
-        if (!res.ok) throw new Error(`Knowledge fetch failed: ${k} (${res.status})`);
-        const txt = ((await res.text()) || "").trim();
-        knowledgeCache.set(k, txt);
-      }
-      out.push({ key: k, text: knowledgeCache.get(k) });
-    }
-    return out;
-  }
-
-  // ========= Routing (NO LLM) =========
-  function pickSourcesHeuristic(question) {
-    const q = (question || "").toLowerCase();
-
-    if (q.includes("lizenz") || q.includes("license") || q.includes("cc") || q.includes("by-nc-sa"))
-      return ["licensing", "faq"];
-
-    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud"))
-      return ["music", "faq"];
-
-    if (q.includes("bild") || q.includes("visual") || q.includes("cover"))
-      return ["visuals", "faq"];
-
-    if (q.includes("video") || q.includes("sora"))
-      return ["video", "faq"];
-
-    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste"))
-      return ["tools", "faq"];
-
-    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt"))
-      return ["stories", "faq"];
-
-    if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist"))
-      return ["about", "faq"];
-
-    if (q.includes("extras") || q.includes("discord") || q.includes("prompting"))
-      return ["extras"];
-
-    return ["faq"];
-  }
-
-  // ========= Prompts =========
-  const BASE_SYSTEM_PROMPT = `
-Du bist "PromptRebel Local AI", ein lokaler Assistent für die Website PromptRebel.
-
-Regeln:
-- Antworte NUR anhand des WISSENSKONTEXTS unten.
-- Antworte locker und freundlich, ohne Slang.
-- Verwende maximal 1 passendes Emoji, wenn es natürlich wirkt (z. B. bei Begrüßung oder Erklärung).
-- Keine Emoji-Ketten, kein Spam.
-- Wenn dort nicht genug steht: sage ehrlich "Ich weiß es nicht" und nenne kurz, welche Info fehlt.
-- Keine Vermutungen, keine erfundenen Fakten.
-- Antworte in 2 bis 3 Sätzen (maximal 3).
-- Wenn möglich: nenne die relevante Datei (z.B. "laut licensing.md").
-`.trim();
-
-  function buildCombinedSystem(knowledgeContext) {
-    return `${BASE_SYSTEM_PROMPT}\n\nWISSENSKONTEXT:\n${knowledgeContext}\n`;
-  }
+  // ========= Caches =========
+  const fileTextCache = new Map();    // key -> raw markdown
+  const qaCache = new Map();          // key -> parsed QAs [{q,a}]
+  const normQCache = new Map();       // key -> normalized question tokens cache (optional)
 
   // ========= Helpers =========
   function hasWebGPU() { return !!navigator.gpu; }
-
-  function trimToMaxSentences(text, maxSentences = 3) {
-    const t = (text || "").trim();
-    if (!t) return t;
-    const parts = t.split(/(?<=[.!?])\s+/);
-    if (parts.length <= maxSentences) return t;
-    return parts.slice(0, maxSentences).join(" ").trim();
-  }
 
   function clampHistory(history) {
     while (history.length > HISTORY_MAX_MSGS) history.shift();
   }
 
-  function shortenKnowledge(docs, question) {
-    const q = (question || "").toLowerCase();
-    const words = q.split(/[^a-zäöüß0-9]+/i).filter(w => w.length >= 4).slice(0, 8);
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
 
-    let combined = docs.map(d => `### ${d.key.toUpperCase()}\n${d.text}`).join("\n\n");
-    if (combined.length <= KNOWLEDGE_MAX_CHARS) return combined;
+  function normalizeText(s) {
+    return (s || "")
+      .toLowerCase()
+      .replace(/[\u2013\u2014]/g, "-")
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
 
-    const lines = combined.split("\n");
-    const kept = [];
+  function tokenize(s) {
+    const t = normalizeText(s);
+    if (!t) return [];
+    const raw = t.split(" ");
+    // keep tokens >= 3 chars, but allow "cc"
+    return raw.filter(w => w.length >= 3 || w === "cc");
+  }
+
+  function scoreOverlap(queryTokens, candidateTokens) {
+    if (!queryTokens.length || !candidateTokens.length) return 0;
+
+    const set = new Set(candidateTokens);
+    let hit = 0;
+    for (const w of queryTokens) if (set.has(w)) hit++;
+
+    // small bonus if important keywords present
+    const q = queryTokens.join(" ");
+    let bonus = 0;
+    if (q.includes("lizenz") || q.includes("license") || q.includes("by-nc-sa") || q.includes("cc")) bonus += 1.2;
+    if (q.includes("iphone") || q.includes("ios") || q.includes("webgpu")) bonus += 0.8;
+
+    return (hit / Math.max(3, queryTokens.length)) + bonus;
+  }
+
+  // ========= Fetch + Parse Q&A =========
+  async function loadFileText(key) {
+    if (!KNOWLEDGE[key]) return "";
+    if (fileTextCache.has(key)) return fileTextCache.get(key);
+
+    const res = await fetch(KNOWLEDGE[key], { cache: "force-cache" });
+    if (!res.ok) throw new Error(`Knowledge fetch failed: ${key} (${res.status})`);
+    const txt = ((await res.text()) || "").trim();
+    fileTextCache.set(key, txt);
+    return txt;
+  }
+
+  // Parse markdown:
+  // - find "## Question" headings
+  // - answer is text until next "## " heading (or EOF)
+  function parseMarkdownToQA(md) {
+    const lines = (md || "").split(/\r?\n/);
+    const qa = [];
+    let currentQ = null;
+    let buf = [];
+
+    const flush = () => {
+      const a = buf.join("\n").trim();
+      if (currentQ && a) qa.push({ q: currentQ.trim(), a });
+      currentQ = null;
+      buf = [];
+    };
+
     for (const line of lines) {
-      const l = line.toLowerCase();
-
-      // keep headers + bullets early
-      if (kept.length < 24 && (l.startsWith("### ") || l.startsWith("-") || l.startsWith("•"))) {
-        kept.push(line);
-      } else if (words.some(w => l.includes(w))) {
-        kept.push(line);
+      const m = line.match(/^##\s+(.*)\s*$/);
+      if (m) {
+        flush();
+        currentQ = m[1];
+        continue;
       }
-
-      if (kept.join("\n").length >= KNOWLEDGE_MAX_CHARS) break;
+      if (currentQ) buf.push(line);
     }
+    flush();
 
-    const out = kept.join("\n");
-    return out.length ? out.slice(0, KNOWLEDGE_MAX_CHARS) : combined.slice(0, KNOWLEDGE_MAX_CHARS);
+    return qa;
+  }
+
+  async function loadQAs(keys) {
+    const all = [];
+    for (const k of keys) {
+      if (!KNOWLEDGE[k]) continue;
+      if (!qaCache.has(k)) {
+        const md = await loadFileText(k);
+        qaCache.set(k, parseMarkdownToQA(md));
+      }
+      const qas = qaCache.get(k) || [];
+      for (const item of qas) {
+        all.push({ ...item, file: k });
+      }
+    }
+    return all;
+  }
+
+  function pickSourcesHeuristic(question) {
+    const q = (question || "").toLowerCase();
+
+    if (q.includes("lizenz") || q.includes("license") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
+    if (q.includes("iphone") || q.includes("ios") || q.includes("webgpu")) return ["faq"];
+    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
+    if (q.includes("bild") || q.includes("visual") || q.includes("cover")) return ["visuals", "faq"];
+    if (q.includes("video") || q.includes("sora")) return ["video", "faq"];
+    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) return ["tools", "faq"];
+    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) return ["stories", "faq"];
+    if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist")) return ["about", "faq"];
+
+    return ["faq"];
+  }
+
+  function selectBestQAs(allQAs, userQuestion, limit = 3) {
+    const qTokens = tokenize(userQuestion);
+    const scored = allQAs.map(item => {
+      // cache candidate tokens per file+question if you like (not required)
+      const candTokens = tokenize(item.q);
+      const s = scoreOverlap(qTokens, candTokens);
+      return { ...item, score: s };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    const best = scored.filter(x => x.score > 0.2).slice(0, limit); // threshold avoids garbage matches
+    return best;
+  }
+
+  // ========= Prompt =========
+  const SYSTEM_PROMPT = `
+Du bist "PromptRebel Local AI" (läuft lokal im Browser).
+
+WICHTIG:
+- Antworte NUR anhand der Q&A im KONTEXT.
+- Wenn keine passende Q&A vorhanden ist: antworte exakt "Ich weiß es nicht." (ohne Zusatz).
+- Keine Vermutungen, keine erfundenen Fakten.
+- Antworte kurz und konkret (1–4 Sätze).
+- Wenn möglich: ergänze am Ende in Klammern die Datei, z.B. "(faq.md)" oder "(licensing.md)".
+`.trim();
+
+  function buildContextFromQAs(qas) {
+    if (!qas.length) return "";
+    const chunks = qas.map(x =>
+      `Q: ${x.q}\nA: ${x.a}\nSOURCE: ${x.file}.md`
+    );
+    return chunks.join("\n\n---\n\n");
   }
 
   // ========= CSS =========
@@ -161,6 +206,7 @@ Regeln:
     border-color: rgba(34,211,238,.8);
     box-shadow:0 0 18px rgba(34,211,238,.35), 0 10px 30px rgba(2,6,23,.7);
   }
+
   .pr-ai-panel{
     position:fixed; right:16px; bottom:68px; z-index:999999;
     width:min(420px, calc(100vw - 32px));
@@ -173,6 +219,7 @@ Regeln:
     backdrop-filter: blur(14px);
   }
   .pr-ai-panel.open{ display:flex; }
+
   .pr-ai-top{
     display:flex; align-items:center; justify-content:space-between;
     padding:10px 12px; gap:10px;
@@ -181,6 +228,7 @@ Regeln:
     font:700 13px/1 system-ui; color:#e5e7eb;
   }
   .pr-ai-top small{ font-weight:600; color:#94a3b8; }
+
   .pr-ai-x{
     border:1px solid rgba(148,163,184,.25);
     background:rgba(15,23,42,.7);
@@ -188,10 +236,16 @@ Regeln:
     padding:6px 10px; cursor:pointer; font:700 12px/1 system-ui;
   }
   .pr-ai-x[disabled]{ opacity:.55; cursor:not-allowed; }
+
   .pr-ai-body{
-    display:flex; flex-direction:column; gap:10px;
-    padding:12px; height:100%; min-height:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:12px;
+    height:100%;
+    min-height:0;
   }
+
   .pr-ai-note{
     font:12px/1.35 system-ui; color:#94a3b8;
     border:1px solid rgba(148,163,184,.14);
@@ -199,6 +253,7 @@ Regeln:
     padding:10px 12px; border-radius:14px;
   }
   .pr-ai-progress{ font:12px/1.35 system-ui; color:#94a3b8; }
+
   .pr-ai-actions{ display:flex; gap:8px; flex-wrap:wrap; }
   .pr-ai-action{
     border-radius:999px; padding:8px 10px;
@@ -208,12 +263,20 @@ Regeln:
     cursor:pointer;
   }
   .pr-ai-action[disabled]{ opacity:.55; cursor:not-allowed; }
+
   .pr-ai-msgs{
-    flex:1; min-height:0; overflow-y:auto;
-    padding:12px; padding-bottom:96px;
-    display:flex; flex-direction:column; gap:10px;
-    font:13px/1.45 system-ui; color:#e5e7eb;
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    padding:12px;
+    padding-bottom:96px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    font:13px/1.45 system-ui;
+    color:#e5e7eb;
   }
+
   .pr-ai-bubble{
     max-width:92%;
     padding:10px 12px;
@@ -224,14 +287,19 @@ Regeln:
   }
   .pr-ai-bubble.user{ align-self:flex-end; border-color: rgba(34,211,238,.22); }
   .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
+
   .pr-ai-row{
-    position:sticky; bottom:0;
-    display:flex; gap:8px;
-    padding:12px; margin-top:12px;
+    position:sticky;
+    bottom:0;
+    display:flex;
+    gap:8px;
+    padding:12px;
+    margin-top:12px;
     background: rgba(2,6,23,.88);
     backdrop-filter: blur(8px);
     border-top: 1px solid rgba(148,163,184,.15);
   }
+
   .pr-ai-input{
     flex:1; border-radius:999px;
     border:1px solid rgba(148,163,184,.22);
@@ -240,6 +308,7 @@ Regeln:
     outline:none; font:600 13px/1 system-ui;
   }
   .pr-ai-input[disabled]{ opacity:.55; cursor:not-allowed; }
+
   .pr-ai-send{
     border-radius:999px; padding:10px 12px;
     border:1px solid rgba(34,211,238,.35);
@@ -256,10 +325,9 @@ Regeln:
   let ready = false;
   let starting = false;
   let busy = false;
+  const chatHistory = [];
 
-  const chatHistory = []; // minimal
-
-  // ========= UI init =========
+  // ========= UI =========
   function initUI() {
     if (document.querySelector(".pr-ai-btn") || document.querySelector(".pr-ai-panel")) return;
 
@@ -272,12 +340,12 @@ Regeln:
     panel.className = "pr-ai-panel";
     panel.innerHTML = `
       <div class="pr-ai-top">
-        <div>PromptRebel Local AI <small>· Modell: ${DEFAULT_MODEL}</small></div>
+        <div>PromptRebel Local AI <small>· Modell: Qwen2-0.5B (WebGPU)</small></div>
         <button class="pr-ai-x" type="button" aria-label="Close">×</button>
       </div>
       <div class="pr-ai-body">
         <div class="pr-ai-note">
-          <b>Stabiler Modus:</b> Kleineres Modell als Standard. Antworten basieren nur auf den MD-Dateien (Wissenskontext).
+          <b>Stabiler Modus:</b> Antworten basieren nur auf passenden Q&A aus den MD-Dateien.
         </div>
 
         <div class="pr-ai-actions">
@@ -352,15 +420,14 @@ Regeln:
         msgsEl.innerHTML = "";
         chatHistory.length = 0;
 
-        addBubble("Hi! Stell mir eine Frage – ich nutze nur das passende Wissen aus den MD-Dateien.", "ai");
+        addBubble("Hi! Stell mir eine Frage – ich nutze nur passende Q&A aus den MD-Dateien.", "ai");
       } catch (e) {
         console.error(e);
         ready = false;
         engine = null;
-
-        const msg = String(e?.message || e || "").toLowerCase();
-        progressEl.textContent = msg.includes("disposed") || msg.includes("device") || msg.includes("hung")
-          ? "WebGPU/Engine wurde zurückgesetzt. Bitte Seite neu laden und Start erneut klicken."
+        const msg = String(e?.message || e || "");
+        progressEl.textContent = msg.toLowerCase().includes("disposed")
+          ? "WebGPU/Engine wurde zurückgesetzt (disposed). Bitte Seite neu laden und erneut Start klicken."
           : "Fehler beim Laden des Modells. (Konsole prüfen)";
       } finally {
         starting = false;
@@ -381,26 +448,53 @@ Regeln:
       inputEl.value = "";
 
       addBubble(text, "user");
-      const aiBubble = addBubble("Suche Wissen…", "ai");
+      const aiBubble = addBubble("Denke nach…", "ai");
 
       try {
         // Minimal history
         chatHistory.push({ role: "user", content: text });
         clampHistory(chatHistory);
 
+        // 1) choose sources (cheap heuristic)
         const sources = pickSourcesHeuristic(text);
 
-        const docs = await loadKnowledge(sources);
-        const knowledgeContext = shortenKnowledge(docs, text);
-        const system = buildCombinedSystem(knowledgeContext);
+        // 2) load + parse QAs from those sources
+        aiBubble.textContent = "Suche passende Q&A…";
+        const allQAs = await loadQAs(sources);
 
-        aiBubble.textContent = "Antworte…";
+        // If no QAs parsed at all -> hard fail to "Ich weiß es nicht."
+        if (!allQAs.length) {
+          aiBubble.textContent = "Ich weiß es nicht.";
+          chatHistory.push({ role: "assistant", content: aiBubble.textContent });
+          clampHistory(chatHistory);
+          return;
+        }
 
-        const scopedMessages = [{ role: "system", content: system }, ...chatHistory];
+        // 3) select best matches
+        const best = selectBestQAs(allQAs, text, MAX_QA_CONTEXT);
+
+        if (!best.length) {
+          aiBubble.textContent = "Ich weiß es nicht.";
+          chatHistory.push({ role: "assistant", content: aiBubble.textContent });
+          clampHistory(chatHistory);
+          return;
+        }
+
+        // 4) Build tight context ONLY from best QAs
+        const context = buildContextFromQAs(best);
+
+        // 5) Ask model with strict system prompt
+        const messages = [
+          { role: "system", content: `${SYSTEM_PROMPT}\n\nKONTEXT (Q&A):\n${context}` },
+          ...chatHistory
+        ];
+
+        // Small cooldown helps on some Windows/WebGPU setups
+        await sleep(30);
 
         const chunks = await engine.chat.completions.create({
-          messages: scopedMessages,
-          temperature: 0.1,
+          messages,
+          temperature: TEMPERATURE,
           stream: true,
           max_tokens: MAX_TOKENS,
         });
@@ -415,20 +509,19 @@ Regeln:
           }
         }
 
-        const finalAnswer = trimToMaxSentences(reply, MAX_SENTENCES);
-        aiBubble.textContent = finalAnswer || "Ich weiß es nicht (im Wissenskontext steht dazu nichts).";
+        const final = (reply || "").trim() || "Ich weiß es nicht.";
+        aiBubble.textContent = final;
 
-        chatHistory.push({ role: "assistant", content: aiBubble.textContent });
+        chatHistory.push({ role: "assistant", content: final });
         clampHistory(chatHistory);
       } catch (e) {
         console.error(e);
-        const msg = String(e?.message || e || "").toLowerCase();
-
-        if (msg.includes("disposed") || msg.includes("device") || msg.includes("hung")) {
-          aiBubble.textContent = "WebGPU/Engine wurde zurückgesetzt. Bitte Seite neu laden und Start erneut klicken.";
+        const msg = String(e?.message || e || "");
+        if (msg.toLowerCase().includes("disposed") || msg.toLowerCase().includes("device was lost")) {
+          aiBubble.textContent = "WebGPU wurde zurückgesetzt. Bitte Seite neu laden und Modell erneut starten.";
           ready = false;
           engine = null;
-          progressEl.textContent = "Engine nicht bereit (reset).";
+          progressEl.textContent = "Engine nicht bereit.";
         } else {
           aiBubble.textContent = "Fehler beim Antworten. (Konsole prüfen)";
         }
