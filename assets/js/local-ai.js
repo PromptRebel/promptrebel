@@ -1,3 +1,4 @@
+// assets/js/local-ai.js
 // PromptRebel Local-AI Widget (WebLLM / WebGPU)
 // Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
 
@@ -12,24 +13,41 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
   // ========= Config =========
   const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
-  // ========= System prompt =========
+  // ========= System prompt (Answer) =========
   const SYSTEM_PROMPT = `
 Du bist "PromptRebel Local AI", ein lokaler Assistent für die Website PromptRebel.
-Du antwortest kurz, konkret und faktenbasiert. Wenn etwas nicht im Wissenskontext steht, sag das offen.
+Du antwortest kurz und hilfreich (ca. 2–4 Sätze), konkret und faktenbasiert.
+Wenn die Information NICHT im bereitgestellten Wissenskontext steht, sag offen: "Das weiß ich nicht aus der Wissensbasis."
 
 Kontext:
 - PromptRebel ist ein persönliches KI-Labor (Musik, Visuals, Video, Tools, Stories).
-- Inhalte sind experimentell, oft als Prototyp/Work-in-progress.
+- Inhalte sind experimentell, oft Prototyp/Work-in-progress.
 - Lizenz: CC BY-NC-SA 4.0 (nicht-kommerziell, Namensnennung, Weitergabe unter gleichen Bedingungen).
 
-Aufgabe:
-- Erkläre Navigation, Inhalte und Projekte.
-- Gib praktische Hinweise (z.B. Prompt-Anpassung), aber erfinde keine Fakten.
+Regeln:
+- Erfinde keine Fakten.
+- Nutze ausschließlich das geladene Wissen.
+`.trim();
+
+  // ========= Router prompt (Step A) =========
+  // 1–3 sources, ausschließlich JSON.
+  const ROUTER_SYSTEM = `
+Du bist ein Router. Du wählst passende Wissensquellen für eine Nutzerfrage.
+Gib ausschließlich gültiges JSON zurück, z.B.:
+{"sources":["licensing","faq"]}
+
+Erlaubte sources:
+about, faq, licensing, music, visuals, video, tools, stories
+
+Regeln:
+- Wähle 1 bis 3 sources.
+- Wenn unklar: ["faq"].
+- Keine Erklärtexte, nur JSON.
 `.trim();
 
   // ========= Knowledge index =========
-  // local-ai.js liegt in /assets/js/
-  // knowledge liegt in /assets/knowledge/
+  // local-ai.js liegt in assets/js/
+  // knowledge liegt in assets/knowledge/
   const KNOWLEDGE = {
     about:     new URL("../knowledge/about.md", import.meta.url).href,
     faq:       new URL("../knowledge/faq.md", import.meta.url).href,
@@ -60,49 +78,42 @@ Aufgabe:
     return out;
   }
 
-  // ========= Stable routing (NO LLM router) =========
-  function pickSourcesByRules(question) {
+  // ========= Router helpers =========
+  function ruleFallback(question) {
     const q = (question || "").toLowerCase();
-
-    // Lizenz / Recht
-    if (q.includes("lizenz") || q.includes("license") || q.includes("cc") || q.includes("by-nc-sa")) {
-      return ["licensing", "faq"];
-    }
-
-    // Musik / Audio
-    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) {
-      return ["music", "faq"];
-    }
-
-    // Visuals / Bilder
-    if (q.includes("bild") || q.includes("visual") || q.includes("cover") || q.includes("art")) {
-      return ["visuals", "faq"];
-    }
-
-    // Video
-    if (q.includes("video") || q.includes("sora")) {
-      return ["video", "faq"];
-    }
-
-    // Tools / Apps / Game
-    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste") || q.includes("wizard")) {
-      return ["tools", "faq"];
-    }
-
-    // Stories
-    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) {
-      return ["stories", "faq"];
-    }
-
-    // About / was ist promptrebel
-    if (q.includes("wer bist du") || q.includes("was ist promptrebel") || q.includes("promptrebel")) {
-      return ["about", "faq"];
-    }
-
+    if (q.includes("lizenz") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
+    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
+    if (q.includes("bild") || q.includes("visual") || q.includes("cover")) return ["visuals", "faq"];
+    if (q.includes("video") || q.includes("sora")) return ["video", "faq"];
+    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) return ["tools", "faq"];
+    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) return ["stories", "faq"];
+    if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist promptrebel")) return ["about", "faq"];
     return ["faq"];
   }
 
-  // ========= UI/CSS =========
+  function safeParseRouterJSON(raw) {
+    if (!raw) return null;
+    const t = raw.trim();
+    try { return JSON.parse(t); } catch {}
+    const m = t.match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    try { return JSON.parse(m[0]); } catch {}
+    return null;
+  }
+
+  // ========= WebGPU check =========
+  function hasWebGPU() {
+    return !!navigator.gpu;
+  }
+
+  // ========= Engine / state =========
+  let engine = null;
+  let ready = false;
+  let starting = false;
+  let busy = false; // SINGLE FLIGHT lock
+  const chatHistory = []; // only user/assistant (we add system+knowledge per request)
+
+  // ========= CSS =========
   const style = document.createElement("style");
   style.textContent = `
   .pr-ai-btn{
@@ -119,6 +130,7 @@ Aufgabe:
     border-color: rgba(34,211,238,.8);
     box-shadow:0 0 18px rgba(34,211,238,.35), 0 10px 30px rgba(2,6,23,.7);
   }
+  .pr-ai-btn[disabled]{ opacity:.55; cursor:not-allowed; }
 
   .pr-ai-panel{
     position:fixed; right:16px; bottom:68px; z-index:999999;
@@ -148,10 +160,15 @@ Aufgabe:
     color:#e5e7eb; border-radius:999px;
     padding:6px 10px; cursor:pointer; font:700 12px/1 system-ui;
   }
+  .pr-ai-x[disabled]{ opacity:.45; cursor:not-allowed; }
 
   .pr-ai-body{
-    display:flex; flex-direction:column; gap:10px;
-    padding:12px; height:100%; min-height:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:12px;
+    height:100%;
+    min-height:0;
   }
 
   .pr-ai-note{
@@ -173,11 +190,21 @@ Aufgabe:
   .pr-ai-action[disabled]{ opacity:.55; cursor:not-allowed; }
 
   .pr-ai-msgs{
-    flex:1; min-height:0;
+    flex:1;
+    min-height:0;
     overflow-y:auto;
-    padding:12px; padding-bottom:96px;
-    display:flex; flex-direction:column; gap:10px;
-    font:13px/1.45 system-ui; color:#e5e7eb;
+    padding:12px;
+    padding-bottom:96px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    font:13px/1.45 system-ui;
+    color:#e5e7eb;
+  }
+  .pr-ai-msgs::-webkit-scrollbar{ width:6px; }
+  .pr-ai-msgs::-webkit-scrollbar-thumb{
+    background: rgba(148,163,184,.25);
+    border-radius: 6px;
   }
 
   .pr-ai-bubble{
@@ -192,9 +219,12 @@ Aufgabe:
   .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
 
   .pr-ai-row{
-    position:sticky; bottom:0;
-    display:flex; gap:8px;
-    padding:12px; margin-top:12px;
+    position:sticky;
+    bottom:0;
+    display:flex;
+    gap:8px;
+    padding:12px;
+    margin-top:12px;
     background: rgba(2,6,23,.88);
     backdrop-filter: blur(8px);
     border-top: 1px solid rgba(148,163,184,.15);
@@ -218,19 +248,7 @@ Aufgabe:
   `;
   document.head.appendChild(style);
 
-  function hasWebGPU() {
-    return !!navigator.gpu;
-  }
-
-  // ========= Engine state (single instance) =========
-  let engine = null;
-  let ready = false;
-  let starting = false;
-  let generating = false;
-
-  // Chat history: ONLY user/assistant (system is added per request)
-  const history = [];
-
+  // ========= UI init =========
   function initUI() {
     if (document.querySelector(".pr-ai-btn") || document.querySelector(".pr-ai-panel")) return;
 
@@ -246,7 +264,6 @@ Aufgabe:
         <div>PromptRebel Local AI <small>· läuft lokal (WebGPU)</small></div>
         <button class="pr-ai-x" type="button">×</button>
       </div>
-
       <div class="pr-ai-body">
         <div class="pr-ai-note">
           <b>Experiment:</b> Läuft lokal im Browser via <b>WebGPU</b>. Beim ersten Start wird ein Modell geladen (100MB+ möglich).
@@ -285,6 +302,28 @@ Aufgabe:
       d.textContent = text;
       msgsEl.appendChild(d);
       msgsEl.scrollTop = msgsEl.scrollHeight;
+      return d;
+    }
+
+    function setBusy(v) {
+      busy = v;
+
+      // Disable everything during Step A+B
+      if (v) {
+        sendEl.setAttribute("disabled", "disabled");
+        startBtn.setAttribute("disabled", "disabled");
+        clearBtn.setAttribute("disabled", "disabled");
+        closeBtn.setAttribute("disabled", "disabled");
+        btn.setAttribute("disabled", "disabled"); // prevents closing/opening toggles
+        inputEl.setAttribute("disabled", "disabled");
+      } else {
+        sendEl.removeAttribute("disabled");
+        startBtn.removeAttribute("disabled");
+        clearBtn.removeAttribute("disabled");
+        closeBtn.removeAttribute("disabled");
+        btn.removeAttribute("disabled");
+        inputEl.removeAttribute("disabled");
+      }
     }
 
     function initProgressCallback(p) {
@@ -293,15 +332,12 @@ Aufgabe:
     }
 
     async function startModel() {
-      if (starting || generating) return;
-      if (ready && engine) {
-        progressEl.textContent = "Bereit.";
-        return;
-      }
+      if (starting || busy) return;
+      if (ready && engine) return; // IMPORTANT: don't recreate engine if already ready
 
       if (!hasWebGPU()) {
         progressEl.textContent =
-          "WebGPU nicht verfügbar. Auf iPhone/iOS kann WebGPU je nach Version/Feature-Flag fehlen. Nutze Desktop (Chrome/Edge) oder Safari mit WebGPU aktiviert.";
+          "WebGPU nicht verfügbar. Auf iPhone/iOS fehlt WebGPU oft. Nutze Desktop (Chrome/Edge).";
         return;
       }
 
@@ -310,28 +346,95 @@ Aufgabe:
       progressEl.textContent = "Initialisiere…";
 
       try {
-        // Create engine once
-        if (!engine) engine = new MLCEngine({ initProgressCallback });
-
-        // optional existence check (no throw)
+        // optional existence check (non-blocking)
         prebuiltAppConfig.model_list?.some((m) => m.model_id === DEFAULT_MODEL || m.model === DEFAULT_MODEL);
 
+        engine = new MLCEngine({ initProgressCallback });
         await engine.reload(DEFAULT_MODEL);
-        ready = true;
 
+        ready = true;
         progressEl.textContent = "Bereit.";
         msgsEl.innerHTML = "";
-        history.length = 0;
+        chatHistory.length = 0;
 
-        addBubble("Hi! Frag mich etwas zu PromptRebel (Wissen wird dynamisch geladen).", "ai");
+        addBubble("Hi! Frag mich etwas zu PromptRebel. 🙂", "ai");
       } catch (e) {
         console.error(e);
+        progressEl.textContent = "Fehler beim Laden des Modells. (Browser/WebGPU/Download prüfen)";
         ready = false;
-        progressEl.textContent = "Fehler beim Laden des Modells. (Konsole prüfen)";
+        engine = null;
       } finally {
         starting = false;
         startBtn.removeAttribute("disabled");
       }
+    }
+
+    // Step A: classify (no stream, temp 0)
+    async function classifySources(question) {
+      // If not ready, fallback
+      if (!engine || !ready) return ruleFallback(question);
+
+      try {
+        const r = await engine.chat.completions.create({
+          messages: [
+            { role: "system", content: ROUTER_SYSTEM },
+            { role: "user", content: question },
+          ],
+          temperature: 0,
+          stream: false,
+        });
+
+        const raw = r?.choices?.[0]?.message?.content?.trim() || "";
+        const json = safeParseRouterJSON(raw);
+
+        const allowed = new Set(Object.keys(KNOWLEDGE));
+        const sources = Array.isArray(json?.sources) ? json.sources : ruleFallback(question);
+        const cleaned = sources.filter(s => allowed.has(s)).slice(0, 3);
+
+        return cleaned.length ? cleaned : ruleFallback(question);
+      } catch (e) {
+        // Router must never kill the session
+        console.warn("Router failed, using fallback", e);
+        return ruleFallback(question);
+      }
+    }
+
+    // Step B: answer (stream ok) using ONLY loaded knowledge
+    async function answerWithKnowledge(question, docs, aiBubble) {
+      const knowledgeContext = docs
+        .map(d => `### ${d.key.toUpperCase()}\n${d.text}`)
+        .join("\n\n");
+
+      // We rebuild messages per request:
+      // system + "use only" + knowledge + chat history + latest question
+      const scopedMessages = [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "system",
+          content:
+            "Nutze ausschließlich das folgende Wissen. " +
+            "Wenn etwas nicht enthalten ist, antworte: 'Das weiß ich nicht aus der Wissensbasis.'\n\n" +
+            knowledgeContext
+        },
+        ...chatHistory,
+      ];
+
+      const chunks = await engine.chat.completions.create({
+        messages: scopedMessages,
+        temperature: 0.2,
+        stream: true,
+      });
+
+      let reply = "";
+      for await (const chunk of chunks) {
+        const delta = chunk.choices?.[0]?.delta?.content || "";
+        if (delta) {
+          reply += delta;
+          aiBubble.textContent = reply;
+          msgsEl.scrollTop = msgsEl.scrollHeight;
+        }
+      }
+      return reply.trim();
     }
 
     async function sendMessage() {
@@ -342,92 +445,84 @@ Aufgabe:
         addBubble("Model ist noch nicht geladen. Klicke zuerst auf „Start (Model laden)“.", "ai");
         return;
       }
+      if (busy) return;
 
-      if (generating) return; // hard lock against parallel requests
+      // UI: lock everything
+      setBusy(true);
 
-      generating = true;
-      sendEl.setAttribute("disabled", "disabled");
-      startBtn.setAttribute("disabled", "disabled");
-
+      // add user bubble
       inputEl.value = "";
       addBubble(text, "user");
-      history.push({ role: "user", content: text });
+      chatHistory.push({ role: "user", content: text });
 
-      const aiBubble = document.createElement("div");
-      aiBubble.className = "pr-ai-bubble ai";
-      aiBubble.textContent = "";
-      msgsEl.appendChild(aiBubble);
-      msgsEl.scrollTop = msgsEl.scrollHeight;
+      // add AI bubble with status
+      const aiBubble = addBubble("denke nach…", "ai");
 
       try {
-        // 1) pick sources (stable rules)
-        const sources = pickSourcesByRules(text);
+        // Step A: classify
+        const sources = await classifySources(text);
 
-        // 2) load docs
+        // show status
+        aiBubble.textContent = "suche Wissen…";
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+
+        // Load only needed docs
         const docs = await loadKnowledge(sources);
 
-        // 3) build knowledge context
-        const knowledgeContext = docs
-          .map(d => `### ${d.key.toUpperCase()}\n${d.text}`)
-          .join("\n\n");
+        // Step B: answer
+        const reply = await answerWithKnowledge(text, docs, aiBubble);
 
-        // 4) IMPORTANT: system must be FIRST in messages
-        const scopedMessages = [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "system",
-            content:
-              "Nutze ausschließlich das folgende Wissen zur Beantwortung. " +
-              "Wenn etwas nicht enthalten ist, sage offen, dass du es nicht weißt.\n\n" +
-              knowledgeContext
-          },
-          ...history
-        ];
+        // Save assistant reply
+        const finalReply = reply || "Das weiß ich nicht aus der Wissensbasis.";
+        aiBubble.textContent = finalReply;
+        chatHistory.push({ role: "assistant", content: finalReply });
 
-        const chunks = await engine.chat.completions.create({
-          messages: scopedMessages,
-          temperature: 0.2,
-          stream: true,
-        });
-
-        let reply = "";
-        for await (const chunk of chunks) {
-          const delta = chunk.choices?.[0]?.delta?.content || "";
-          if (delta) {
-            reply += delta;
-            aiBubble.textContent = reply;
-            msgsEl.scrollTop = msgsEl.scrollHeight;
-          }
-        }
-
-        history.push({ role: "assistant", content: reply || aiBubble.textContent || "" });
       } catch (e) {
         console.error(e);
-        aiBubble.textContent =
-          "Fehler beim Antworten. Tipp: Seite neu laden + Model neu starten. (Konsole prüfen)";
+
+        // common WebLLM issue: disposed
+        const msg = String(e?.message || e || "");
+        if (msg.toLowerCase().includes("disposed")) {
+          aiBubble.textContent =
+            "Session-Fehler (Engine disposed). Bitte lade die Seite neu und starte das Modell erneut.";
+          ready = false;
+          engine = null;
+        } else {
+          aiBubble.textContent = "Fehler beim Antworten. (Konsole prüfen)";
+        }
       } finally {
-        generating = false;
-        sendEl.removeAttribute("disabled");
-        startBtn.removeAttribute("disabled");
+        setBusy(false);
       }
     }
 
-    // wiring
-    btn.addEventListener("click", () => panel.classList.toggle("open"));
-    closeBtn.addEventListener("click", () => panel.classList.remove("open"));
+    // ========= wiring =========
+    btn.addEventListener("click", () => {
+      if (busy) return;               // do not allow toggle while working
+      panel.classList.toggle("open");
+    });
+
+    closeBtn.addEventListener("click", () => {
+      if (busy) return;               // do not allow closing while working
+      panel.classList.remove("open");
+    });
 
     startBtn.addEventListener("click", startModel);
 
     clearBtn.addEventListener("click", () => {
+      if (busy) return;
       msgsEl.innerHTML = "";
-      progressEl.textContent = ready ? "Bereit." : "";
-      history.length = 0;
+      chatHistory.length = 0;
       addBubble("Chat gelöscht.", "ai");
+      progressEl.textContent = ready ? "Bereit." : "";
     });
 
     sendEl.addEventListener("click", sendMessage);
+
     inputEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") sendMessage();
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
     });
   }
 
