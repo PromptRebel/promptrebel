@@ -12,14 +12,10 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
   // ========= Config =========
   const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
-  // ========= System prompt (base) =========
-  const BASE_SYSTEM_PROMPT = `
+  // ========= System prompt =========
+  const SYSTEM_PROMPT = `
 Du bist "PromptRebel Local AI", ein lokaler Assistent für die Website PromptRebel.
-Du antwortest kurz, konkret und faktenbasiert.
-
-Wichtig:
-- Nutze ausschließlich das bereitgestellte Wissenskontext-Material.
-- Wenn etwas nicht im Wissenskontext steht, sage offen: "Das weiß ich nicht aus der Wissensbasis."
+Du antwortest kurz, konkret und faktenbasiert. Wenn etwas nicht im Wissenskontext steht, sag das offen.
 
 Kontext:
 - PromptRebel ist ein persönliches KI-Labor (Musik, Visuals, Video, Tools, Stories).
@@ -31,7 +27,9 @@ Aufgabe:
 - Gib praktische Hinweise (z.B. Prompt-Anpassung), aber erfinde keine Fakten.
 `.trim();
 
-  // ========= Knowledge index (paths from assets/js -> assets/knowledge) =========
+  // ========= Knowledge index =========
+  // local-ai.js liegt in /assets/js/
+  // knowledge liegt in /assets/knowledge/
   const KNOWLEDGE = {
     about:     new URL("../knowledge/about.md", import.meta.url).href,
     faq:       new URL("../knowledge/faq.md", import.meta.url).href,
@@ -48,99 +46,63 @@ Aufgabe:
   async function loadKnowledge(keys) {
     const out = [];
     for (const k of keys) {
-      if (!KNOWLEDGE[k]) continue;
+      const url = KNOWLEDGE[k];
+      if (!url) continue;
 
       if (!knowledgeCache.has(k)) {
-        const res = await fetch(KNOWLEDGE[k], { cache: "force-cache" });
+        const res = await fetch(url, { cache: "force-cache" });
         if (!res.ok) throw new Error(`Knowledge fetch failed: ${k} (${res.status})`);
         const txt = await res.text();
         knowledgeCache.set(k, txt);
       }
-
       out.push({ key: k, text: knowledgeCache.get(k) });
     }
     return out;
   }
 
-  // ========= Router (LLM + fallback) =========
-  const ROUTER_SYSTEM = `
-Du bist ein Router. Du wählst passende Wissensquellen für eine Frage.
-Gib ausschließlich gültiges JSON zurück:
-{"sources":["music","faq"]}
-
-Erlaubte sources:
-about, faq, licensing, music, visuals, video, tools, stories
-
-Regeln:
-- Wähle 1-3 sources.
-- Wenn unklar: ["faq"].
-- Keine Erklärtexte, nur JSON.
-`.trim();
-
-  function ruleFallback(question) {
+  // ========= Stable routing (NO LLM router) =========
+  function pickSourcesByRules(question) {
     const q = (question || "").toLowerCase();
-    if (q.includes("lizenz") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
-    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
-    if (q.includes("bild") || q.includes("visual") || q.includes("cover")) return ["visuals", "faq"];
-    if (q.includes("video") || q.includes("sora")) return ["video", "faq"];
-    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) return ["tools", "faq"];
-    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) return ["stories", "faq"];
-    if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist promptrebel")) return ["about", "faq"];
+
+    // Lizenz / Recht
+    if (q.includes("lizenz") || q.includes("license") || q.includes("cc") || q.includes("by-nc-sa")) {
+      return ["licensing", "faq"];
+    }
+
+    // Musik / Audio
+    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) {
+      return ["music", "faq"];
+    }
+
+    // Visuals / Bilder
+    if (q.includes("bild") || q.includes("visual") || q.includes("cover") || q.includes("art")) {
+      return ["visuals", "faq"];
+    }
+
+    // Video
+    if (q.includes("video") || q.includes("sora")) {
+      return ["video", "faq"];
+    }
+
+    // Tools / Apps / Game
+    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste") || q.includes("wizard")) {
+      return ["tools", "faq"];
+    }
+
+    // Stories
+    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) {
+      return ["stories", "faq"];
+    }
+
+    // About / was ist promptrebel
+    if (q.includes("wer bist du") || q.includes("was ist promptrebel") || q.includes("promptrebel")) {
+      return ["about", "faq"];
+    }
+
     return ["faq"];
   }
 
-  function safeParseRouterJSON(raw) {
-    if (!raw) return null;
-    const t = raw.trim();
-
-    try { return JSON.parse(t); } catch {}
-    const m = t.match(/\{[\s\S]*\}/);
-    if (!m) return null;
-    try { return JSON.parse(m[0]); } catch {}
-    return null;
-  }
-
-  // ========= Engine / state =========
-  let engine = null;
-  let ready = false;
-  let starting = false;
-  let generating = false;
-
-  // IMPORTANT: store only user/assistant turns (NO system inside)
-  const chatHistory = []; // [{role:"user"|"assistant", content:"..."}]
-
-  async function pickSources(question) {
-    // If engine not ready, don't use LLM router
-    if (!engine || !ready) return ruleFallback(question);
-
-    try {
-      const r = await engine.chat.completions.create({
-        messages: [
-          { role: "system", content: ROUTER_SYSTEM },
-          { role: "user", content: question }
-        ],
-        temperature: 0,
-        stream: false,
-      });
-
-      const raw = r?.choices?.[0]?.message?.content?.trim() || "";
-      const json = safeParseRouterJSON(raw);
-
-      const sources = Array.isArray(json?.sources) ? json.sources : ruleFallback(question);
-      const allowed = new Set(Object.keys(KNOWLEDGE));
-      const cleaned = sources.filter(s => allowed.has(s)).slice(0, 3);
-
-      return cleaned.length ? cleaned : ruleFallback(question);
-    } catch {
-      return ruleFallback(question);
-    }
-  }
-
-  function hasWebGPU() {
-    return !!navigator.gpu;
-  }
-
-  // ========= CSS =========
+  // ========= UI/CSS =========
   const style = document.createElement("style");
   style.textContent = `
   .pr-ai-btn{
@@ -188,12 +150,8 @@ Regeln:
   }
 
   .pr-ai-body{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    padding:12px;
-    height:100%;
-    min-height:0;
+    display:flex; flex-direction:column; gap:10px;
+    padding:12px; height:100%; min-height:0;
   }
 
   .pr-ai-note{
@@ -215,16 +173,11 @@ Regeln:
   .pr-ai-action[disabled]{ opacity:.55; cursor:not-allowed; }
 
   .pr-ai-msgs{
-    flex:1;
-    min-height:0;
+    flex:1; min-height:0;
     overflow-y:auto;
-    padding:12px;
-    padding-bottom:96px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    font:13px/1.45 system-ui;
-    color:#e5e7eb;
+    padding:12px; padding-bottom:96px;
+    display:flex; flex-direction:column; gap:10px;
+    font:13px/1.45 system-ui; color:#e5e7eb;
   }
 
   .pr-ai-bubble{
@@ -239,12 +192,9 @@ Regeln:
   .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
 
   .pr-ai-row{
-    position:sticky;
-    bottom:0;
-    display:flex;
-    gap:8px;
-    padding:12px;
-    margin-top:12px;
+    position:sticky; bottom:0;
+    display:flex; gap:8px;
+    padding:12px; margin-top:12px;
     background: rgba(2,6,23,.88);
     backdrop-filter: blur(8px);
     border-top: 1px solid rgba(148,163,184,.15);
@@ -268,7 +218,19 @@ Regeln:
   `;
   document.head.appendChild(style);
 
-  // ========= UI init (wait for DOM) =========
+  function hasWebGPU() {
+    return !!navigator.gpu;
+  }
+
+  // ========= Engine state (single instance) =========
+  let engine = null;
+  let ready = false;
+  let starting = false;
+  let generating = false;
+
+  // Chat history: ONLY user/assistant (system is added per request)
+  const history = [];
+
   function initUI() {
     if (document.querySelector(".pr-ai-btn") || document.querySelector(".pr-ai-panel")) return;
 
@@ -284,6 +246,7 @@ Regeln:
         <div>PromptRebel Local AI <small>· läuft lokal (WebGPU)</small></div>
         <button class="pr-ai-x" type="button">×</button>
       </div>
+
       <div class="pr-ai-body">
         <div class="pr-ai-note">
           <b>Experiment:</b> Läuft lokal im Browser via <b>WebGPU</b>. Beim ersten Start wird ein Modell geladen (100MB+ möglich).
@@ -295,6 +258,7 @@ Regeln:
         </div>
 
         <div class="pr-ai-progress" id="prAiProgress"></div>
+
         <div class="pr-ai-msgs" id="prAiMsgs"></div>
 
         <div class="pr-ai-row">
@@ -330,36 +294,40 @@ Regeln:
 
     async function startModel() {
       if (starting || generating) return;
+      if (ready && engine) {
+        progressEl.textContent = "Bereit.";
+        return;
+      }
 
       if (!hasWebGPU()) {
         progressEl.textContent =
           "WebGPU nicht verfügbar. Auf iPhone/iOS kann WebGPU je nach Version/Feature-Flag fehlen. Nutze Desktop (Chrome/Edge) oder Safari mit WebGPU aktiviert.";
         return;
       }
-      if (ready) return;
 
       starting = true;
       startBtn.setAttribute("disabled", "disabled");
       progressEl.textContent = "Initialisiere…";
 
       try {
-        engine = new MLCEngine({ initProgressCallback });
+        // Create engine once
+        if (!engine) engine = new MLCEngine({ initProgressCallback });
 
-        // optional existence check (non-blocking)
+        // optional existence check (no throw)
         prebuiltAppConfig.model_list?.some((m) => m.model_id === DEFAULT_MODEL || m.model === DEFAULT_MODEL);
 
         await engine.reload(DEFAULT_MODEL);
-
         ready = true;
-        progressEl.textContent = "Bereit.";
 
+        progressEl.textContent = "Bereit.";
         msgsEl.innerHTML = "";
-        chatHistory.length = 0;
+        history.length = 0;
 
         addBubble("Hi! Frag mich etwas zu PromptRebel (Wissen wird dynamisch geladen).", "ai");
       } catch (e) {
         console.error(e);
-        progressEl.textContent = "Fehler beim Laden des Modells. (Browser/WebGPU/Download prüfen)";
+        ready = false;
+        progressEl.textContent = "Fehler beim Laden des Modells. (Konsole prüfen)";
       } finally {
         starting = false;
         startBtn.removeAttribute("disabled");
@@ -370,20 +338,20 @@ Regeln:
       const text = inputEl.value.trim();
       if (!text) return;
 
-      if (!ready) {
+      if (!ready || !engine) {
         addBubble("Model ist noch nicht geladen. Klicke zuerst auf „Start (Model laden)“.", "ai");
         return;
       }
-      if (generating) return;
+
+      if (generating) return; // hard lock against parallel requests
 
       generating = true;
       sendEl.setAttribute("disabled", "disabled");
       startBtn.setAttribute("disabled", "disabled");
-      clearBtn.setAttribute("disabled", "disabled");
 
       inputEl.value = "";
       addBubble(text, "user");
-      chatHistory.push({ role: "user", content: text });
+      history.push({ role: "user", content: text });
 
       const aiBubble = document.createElement("div");
       aiBubble.className = "pr-ai-bubble ai";
@@ -392,23 +360,28 @@ Regeln:
       msgsEl.scrollTop = msgsEl.scrollHeight;
 
       try {
-        // 1) Quellen bestimmen
-        const sources = await pickSources(text);
+        // 1) pick sources (stable rules)
+        const sources = pickSourcesByRules(text);
 
-        // 2) Wissen laden
+        // 2) load docs
         const docs = await loadKnowledge(sources);
 
-        // 3) Kontext bauen
+        // 3) build knowledge context
         const knowledgeContext = docs
           .map(d => `### ${d.key.toUpperCase()}\n${d.text}`)
           .join("\n\n");
 
-        // 4) IMPORTANT: Only ONE system message at index 0
-        const singleSystem = `${BASE_SYSTEM_PROMPT}\n\n---\nWISSENSKONTEXT:\n${knowledgeContext}`.trim();
-
+        // 4) IMPORTANT: system must be FIRST in messages
         const scopedMessages = [
-          { role: "system", content: singleSystem },
-          ...chatHistory
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "system",
+            content:
+              "Nutze ausschließlich das folgende Wissen zur Beantwortung. " +
+              "Wenn etwas nicht enthalten ist, sage offen, dass du es nicht weißt.\n\n" +
+              knowledgeContext
+          },
+          ...history
         ];
 
         const chunks = await engine.chat.completions.create({
@@ -427,15 +400,15 @@ Regeln:
           }
         }
 
-        chatHistory.push({ role: "assistant", content: reply || aiBubble.textContent || "" });
+        history.push({ role: "assistant", content: reply || aiBubble.textContent || "" });
       } catch (e) {
         console.error(e);
-        aiBubble.textContent = `Fehler beim Antworten: ${e?.message || "Konsole prüfen"}`;
+        aiBubble.textContent =
+          "Fehler beim Antworten. Tipp: Seite neu laden + Model neu starten. (Konsole prüfen)";
       } finally {
         generating = false;
         sendEl.removeAttribute("disabled");
         startBtn.removeAttribute("disabled");
-        clearBtn.removeAttribute("disabled");
       }
     }
 
@@ -446,10 +419,9 @@ Regeln:
     startBtn.addEventListener("click", startModel);
 
     clearBtn.addEventListener("click", () => {
-      if (generating) return;
       msgsEl.innerHTML = "";
       progressEl.textContent = ready ? "Bereit." : "";
-      chatHistory.length = 0;
+      history.length = 0;
       addBubble("Chat gelöscht.", "ai");
     });
 
