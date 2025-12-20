@@ -1,9 +1,10 @@
 // assets/js/local-ai.js
 // PromptRebel Local-AI Widget (WebLLM / WebGPU)
-// Stable variant: 1 LLM call per user question (no LLM-router), tiny history, small context.
+// Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
 
 import { MLCEngine } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
 
+// ---- Guard: prevent double init (double script tag / navigation) ----
 if (window.__PROMPTREBEL_LOCAL_AI__) {
   // already initialized
 } else {
@@ -13,13 +14,13 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
   const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
   // Stability limits
-  const HISTORY_MAX_MSGS = 2;     // only last user+assistant
-  const MAX_SENTENCES = 3;        // 2–3 Sätze
-  const MAX_TOKENS = 120;         // keep small for stability
-  const COOLDOWN_MS = 120;        // tiny pause before GPU-heavy operations
+  const HISTORY_MAX_MSGS = 2;        // keep only last 2 messages total (user+assistant)
+  const MAX_TOKENS = 160;            // keep answers short
+  const KNOWLEDGE_MAX_CHARS = 2400;  // hard cap for injected knowledge
+  const MAX_SENTENCES = 3;           // enforce 2–3 sentences
 
-  // ========= Knowledge index =========
-  // local-ai.js is in assets/js/ -> ../knowledge/... => assets/knowledge/...
+  // ========= Knowledge index (your structure: assets/knowledge/*.md) =========
+  // local-ai.js is in assets/js/ -> ../knowledge/... resolves to assets/knowledge/...
   const KNOWLEDGE = {
     about:     new URL("../knowledge/about.md", import.meta.url).href,
     faq:       new URL("../knowledge/faq.md", import.meta.url).href,
@@ -49,61 +50,38 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
     return out;
   }
 
-  // ========= Rule-based router (NO LLM) =========
-  // This keeps "1 inference per question" => big stability win.
-  function pickSourcesRuleBased(question) {
+  // ========= Routing (NO LLM) =========
+  function pickSourcesHeuristic(question) {
     const q = (question || "").toLowerCase();
 
-    if (q.includes("lizenz") || q.includes("license") || q.includes("cc") || q.includes("by-nc-sa")) {
-      return ["licensing", "faq"];
-    }
-    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) {
-      return ["music", "faq"];
-    }
-    if (q.includes("bild") || q.includes("visual") || q.includes("cover")) {
-      return ["visuals", "faq"];
-    }
-    if (q.includes("video") || q.includes("sora")) {
-      return ["video", "faq"];
-    }
-    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) {
-      return ["tools", "faq"];
-    }
-    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) {
-      return ["stories", "faq"];
-    }
-    if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist")) {
-      return ["about", "faq"];
-    }
+    if (q.includes("lizenz") || q.includes("license") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
+    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
+    if (q.includes("bild") || q.includes("visual") || q.includes("cover")) return ["visuals", "faq"];
+    if (q.includes("video") || q.includes("sora")) return ["video", "faq"];
+    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) return ["tools", "faq"];
+    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) return ["stories", "faq"];
+    if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist promptrebel") || q.includes("was ist")) return ["about", "faq"];
+
     return ["faq"];
   }
 
-  // Hard clamp: max 2 sources (smaller context)
-  function clampSources(sources) {
-    const allowed = new Set(Object.keys(KNOWLEDGE));
-    const cleaned = (sources || []).filter(s => allowed.has(s));
-    return cleaned.slice(0, 2).length ? cleaned.slice(0, 2) : ["faq"];
-  }
-
-  // ========= Prompt =========
+  // ========= Prompts =========
   const BASE_SYSTEM_PROMPT = `
 Du bist "PromptRebel Local AI", ein lokaler Assistent für die Website PromptRebel.
 
 Regeln:
-- Antworte NUR anhand des WISSENSKONTEXTS unten.
-- Wenn die Antwort dort nicht steht: sage ehrlich "Ich weiß es nicht" und nenne kurz, welche Information fehlt.
+- Antworte NUR anhand des WISSENSKONTEXTS unten. Wenn dort nichts steht: sage ehrlich "Ich weiß es nicht" und nenne kurz, welche Info fehlt.
 - Keine Vermutungen, keine erfundenen Fakten.
-- Antworte in 2 bis 3 Sätzen (max. 3).
-- Wenn möglich: nenne die Quelle als Dateiname (z.B. "laut licensing.md").
+- Antworte in 2 bis 3 Sätzen (maximal 3).
+- Wenn möglich: nenne die relevante Datei (z.B. "laut licensing.md").
 `.trim();
 
-  function buildSystem(knowledgeContext) {
+  function buildCombinedSystem(knowledgeContext) {
     return `${BASE_SYSTEM_PROMPT}\n\nWISSENSKONTEXT:\n${knowledgeContext}\n`;
   }
 
   // ========= Helpers =========
   function hasWebGPU() { return !!navigator.gpu; }
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
   function trimToMaxSentences(text, maxSentences = 3) {
     const t = (text || "").trim();
@@ -113,8 +91,34 @@ Regeln:
     return parts.slice(0, maxSentences).join(" ").trim();
   }
 
-  function clampHistory(chatHistory) {
-    while (chatHistory.length > HISTORY_MAX_MSGS) chatHistory.shift();
+  function clampHistory(history) {
+    while (history.length > HISTORY_MAX_MSGS) history.shift();
+  }
+
+  function shortenKnowledge(docs, question) {
+    // ultra-simple "keyword-ish" cut: keep whole doc if short, otherwise keep first part + lines matching words
+    const q = (question || "").toLowerCase();
+    const words = q.split(/[^a-zäöüß0-9]+/i).filter(w => w.length >= 4).slice(0, 8);
+
+    let combined = docs.map(d => `### ${d.key.toUpperCase()}\n${d.text}`).join("\n\n");
+
+    if (combined.length <= KNOWLEDGE_MAX_CHARS) return combined;
+
+    // try to keep matching lines
+    const lines = combined.split("\n");
+    const kept = [];
+    for (const line of lines) {
+      const l = line.toLowerCase();
+      if (kept.length < 20 && (l.startsWith("### ") || l.startsWith("-") || l.startsWith("•"))) {
+        kept.push(line);
+        continue;
+      }
+      if (words.some(w => l.includes(w))) kept.push(line);
+      if (kept.join("\n").length >= KNOWLEDGE_MAX_CHARS) break;
+    }
+
+    const out = kept.join("\n");
+    return out.length ? out.slice(0, KNOWLEDGE_MAX_CHARS) : combined.slice(0, KNOWLEDGE_MAX_CHARS);
   }
 
   // ========= CSS =========
@@ -253,11 +257,10 @@ Regeln:
   let ready = false;
   let starting = false;
   let busy = false;
-  let disposed = false;
 
-  const chatHistory = []; // last user+assistant only
+  const chatHistory = []; // minimal
 
-  // ========= UI =========
+  // ========= UI init =========
   function initUI() {
     if (document.querySelector(".pr-ai-btn") || document.querySelector(".pr-ai-panel")) return;
 
@@ -275,7 +278,7 @@ Regeln:
       </div>
       <div class="pr-ai-body">
         <div class="pr-ai-note">
-          <b>Experiment:</b> Läuft lokal im Browser via <b>WebGPU</b>. Beim ersten Start wird ein Modell geladen (100MB+ möglich).
+          <b>Experiment:</b> Läuft lokal im Browser via <b>WebGPU</b>. Beim ersten Start wird ein Modell geladen.
         </div>
 
         <div class="pr-ai-actions">
@@ -284,7 +287,6 @@ Regeln:
         </div>
 
         <div class="pr-ai-progress" id="prAiProgress"></div>
-
         <div class="pr-ai-msgs" id="prAiMsgs"></div>
 
         <div class="pr-ai-row">
@@ -328,16 +330,9 @@ Regeln:
       progressEl.textContent = `Loading: ${msg}`;
     }
 
-    function markDisposed() {
-      disposed = true;
-      ready = false;
-      engine = null;
-      progressEl.textContent = "WebGPU/Engine zurückgesetzt (disposed). Bitte Seite neu laden und „Start“ klicken.";
-    }
-
     async function startModel() {
       if (starting || busy) return;
-      if (ready && engine && !disposed) return;
+      if (ready && engine) return;
 
       if (!hasWebGPU()) {
         progressEl.textContent =
@@ -346,94 +341,38 @@ Regeln:
       }
 
       starting = true;
-      disposed = false;
       setBusy(true);
       progressEl.textContent = "Initialisiere…";
 
       try {
-        // Create engine only if null (avoid accidental dispose chains)
-        engine = engine || new MLCEngine({ initProgressCallback });
+        engine = new MLCEngine({ initProgressCallback });
         await engine.reload(DEFAULT_MODEL);
-
         ready = true;
-        progressEl.textContent = "Bereit.";
 
+        progressEl.textContent = "Bereit.";
         msgsEl.innerHTML = "";
         chatHistory.length = 0;
-        addBubble("Hi! Stell mir eine Frage – ich lade das passende Wissen dynamisch.", "ai");
+
+        addBubble("Hi! Stell mir eine Frage zu PromptRebel.", "ai");
       } catch (e) {
         console.error(e);
-        const msg = String(e?.message || e || "").toLowerCase();
-        progressEl.textContent = "Fehler beim Laden des Modells. (Konsole prüfen)";
-        if (msg.includes("disposed") || msg.includes("device") || msg.includes("lost")) markDisposed();
+        ready = false;
+        engine = null;
+        const msg = String(e?.message || e || "");
+        progressEl.textContent = msg.toLowerCase().includes("disposed")
+          ? "WebGPU/Engine wurde zurückgesetzt (disposed). Bitte erneut Start klicken."
+          : "Fehler beim Laden des Modells. (Konsole prüfen)";
       } finally {
         starting = false;
         setBusy(false);
       }
     }
 
-    async function answerOnce(question, aiBubble) {
-      // Step A (UI only, no LLM router)
-      aiBubble.textContent = "Denke nach…";
-      await sleep(COOLDOWN_MS);
-
-      // pick & load knowledge
-      const sources = clampSources(pickSourcesRuleBased(question));
-      aiBubble.textContent = "Suche Wissen…";
-      const docs = await loadKnowledge(sources);
-
-      // Build compact context
-      const knowledgeContext = docs
-        .map(d => `### ${d.key}.md\n${d.text}`)
-        .join("\n\n")
-        .trim();
-
-      const system = buildSystem(knowledgeContext);
-
-      // Use only last user+assistant
-      clampHistory(chatHistory);
-
-      const scopedMessages = [
-        { role: "system", content: system },
-        ...chatHistory,
-        { role: "user", content: question }
-      ];
-
-      // Single inference (stream ok)
-      const chunks = await engine.chat.completions.create({
-        messages: scopedMessages,
-        temperature: 0.1,
-        stream: true,
-        max_tokens: MAX_TOKENS,
-      });
-
-      let reply = "";
-      for await (const chunk of chunks) {
-        const delta = chunk.choices?.[0]?.delta?.content || "";
-        if (delta) {
-          reply += delta;
-          aiBubble.textContent = reply;
-          msgsEl.scrollTop = msgsEl.scrollHeight;
-        }
-      }
-
-      reply = trimToMaxSentences(reply, MAX_SENTENCES);
-      aiBubble.textContent = reply || "Ich weiß es nicht.";
-
-      // store minimal history: last turn only
-      chatHistory.push({ role: "user", content: question });
-      chatHistory.push({ role: "assistant", content: reply || "Ich weiß es nicht." });
-      clampHistory(chatHistory);
-
-      return reply;
-    }
-
     async function sendMessage() {
       const text = inputEl.value.trim();
-      if (!text) return;
-      if (busy) return;
+      if (!text || busy) return;
 
-      if (!ready || !engine || disposed) {
+      if (!ready || !engine) {
         addBubble("Model ist nicht bereit. Klicke zuerst auf „Start (Model laden)“.", "ai");
         return;
       }
@@ -445,13 +384,49 @@ Regeln:
       const aiBubble = addBubble("Denke nach…", "ai");
 
       try {
-        await answerOnce(text, aiBubble);
+        // Minimal history: keep only last 1 user+assistant pair
+        chatHistory.push({ role: "user", content: text });
+        clampHistory(chatHistory);
+
+        const sources = pickSourcesHeuristic(text);
+
+        aiBubble.textContent = "Suche Wissen…";
+        const docs = await loadKnowledge(sources);
+        const knowledgeContext = shortenKnowledge(docs, text);
+        const system = buildCombinedSystem(knowledgeContext);
+
+        const scopedMessages = [{ role: "system", content: system }, ...chatHistory];
+
+        const chunks = await engine.chat.completions.create({
+          messages: scopedMessages,
+          temperature: 0.2,
+          stream: true,
+          max_tokens: MAX_TOKENS,
+        });
+
+        let reply = "";
+        for await (const chunk of chunks) {
+          const delta = chunk.choices?.[0]?.delta?.content || "";
+          if (delta) {
+            reply += delta;
+            aiBubble.textContent = reply;
+            msgsEl.scrollTop = msgsEl.scrollHeight;
+          }
+        }
+
+        const finalAnswer = trimToMaxSentences(reply, MAX_SENTENCES);
+        aiBubble.textContent = finalAnswer || "Ich weiß es nicht (kein passender Kontext gefunden).";
+
+        chatHistory.push({ role: "assistant", content: aiBubble.textContent });
+        clampHistory(chatHistory);
       } catch (e) {
         console.error(e);
-        const msg = String(e?.message || e || "").toLowerCase();
-        if (msg.includes("disposed") || msg.includes("device") || msg.includes("lost")) {
-          aiBubble.textContent = "WebGPU-Ressourcen wurden zurückgesetzt („disposed“). Bitte Seite neu laden und „Start“ erneut klicken.";
-          markDisposed();
+        const msg = String(e?.message || e || "");
+        if (msg.toLowerCase().includes("disposed")) {
+          aiBubble.textContent = "WebGPU/Engine wurde zurückgesetzt („disposed“). Bitte Seite neu laden und Start erneut klicken.";
+          ready = false;
+          engine = null;
+          progressEl.textContent = "Engine nicht bereit (disposed).";
         } else {
           aiBubble.textContent = "Fehler beim Antworten. (Konsole prüfen)";
         }
@@ -473,7 +448,6 @@ Regeln:
     clearBtn.addEventListener("click", () => {
       if (busy) return;
       msgsEl.innerHTML = "";
-      progressEl.textContent = ready ? "Bereit." : "";
       chatHistory.length = 0;
       addBubble("Chat gelöscht.", "ai");
     });
@@ -484,6 +458,7 @@ Regeln:
     });
   }
 
+  // Init
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initUI, { once: true });
   } else {
