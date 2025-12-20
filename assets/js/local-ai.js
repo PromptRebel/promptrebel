@@ -3,9 +3,9 @@
 
 import { MLCEngine, prebuiltAppConfig } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
 
-// ---- Guard: prevent double init (double script tag / navigation) ----
+// ---- Guard: prevent double init ----
 if (window.__PROMPTREBEL_LOCAL_AI__) {
-  // already initialized -> do nothing
+  // already initialized
 } else {
   window.__PROMPTREBEL_LOCAL_AI__ = true;
 
@@ -27,93 +27,47 @@ Aufgabe:
 - Gib praktische Hinweise (z.B. Prompt-Anpassung), aber erfinde keine Fakten.
 `.trim();
 
-  // ========= Helpers =========
-  function hasWebGPU() {
-    return !!navigator.gpu;
+  // ========= Knowledge index (robust paths) =========
+  // Deine Struktur: /assets/knowledge/*.md
+  // local-ai.js kann in /assets/ oder /assets/js/ liegen -> wir probieren beides.
+  function kUrl(relFromHere, relFromParent) {
+    return [
+      new URL(relFromHere, import.meta.url).href,
+      new URL(relFromParent, import.meta.url).href,
+    ];
   }
 
-  function safeParseRouterJSON(raw) {
-    if (!raw) return null;
-    const t = raw.trim();
+  const KNOWLEDGE = {
+    about:     kUrl("./knowledge/about.md", "../knowledge/about.md"),
+    faq:       kUrl("./knowledge/faq.md", "../knowledge/faq.md"),
+    licensing: kUrl("./knowledge/licensing.md", "../knowledge/licensing.md"),
+    music:     kUrl("./knowledge/music.md", "../knowledge/music.md"),
+    visuals:   kUrl("./knowledge/visuals.md", "../knowledge/visuals.md"),
+    video:     kUrl("./knowledge/video.md", "../knowledge/video.md"),
+    tools:     kUrl("./knowledge/tools.md", "../knowledge/tools.md"),
+    stories:   kUrl("./knowledge/stories.md", "../knowledge/stories.md"),
+  };
 
-    // 1) direct JSON
-    try { return JSON.parse(t); } catch {}
-
-    // 2) fenced ```json ... ```
-    const fenced = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    if (fenced?.[1]) {
-      try { return JSON.parse(fenced[1].trim()); } catch {}
-    }
-
-    // 3) first {...} blob
-    const m = t.match(/\{[\s\S]*\}/);
-    if (!m) return null;
-    try { return JSON.parse(m[0]); } catch {}
-
-    return null;
-  }
-
-  async function fetchTextOrThrow(url) {
-    const res = await fetch(url, { cache: "force-cache" });
-    if (!res.ok) {
-      throw new Error(`Fetch failed ${res.status} for ${url}`);
-    }
-    return await res.text();
-  }
+  const knowledgeCache = new Map(); // key -> text
 
   async function fetchFirstOk(urls) {
     let lastErr = null;
     for (const u of urls) {
       try {
-        return await fetchTextOrThrow(u);
+        const res = await fetch(u, { cache: "force-cache" });
+        if (res.ok) return await res.text();
+        lastErr = new Error(`HTTP ${res.status} for ${u}`);
       } catch (e) {
         lastErr = e;
       }
     }
-    throw lastErr || new Error("Fetch failed (no candidates).");
+    throw lastErr || new Error("Knowledge fetch failed (all candidates).");
   }
-
-  // ========= Knowledge index =========
-  // Ziel: Egal ob local-ai.js in /assets/ oder /assets/js/ liegt und egal auf welcher Seite du bist:
-  // wir finden /assets/knowledge/*.md sicher.
-  function candidatesFor(file) {
-    // A) relativ zum Script-Ordner (wenn Script in /assets/)
-    const a = new URL(`./knowledge/${file}`, import.meta.url).href;
-    // B) relativ zum Parent (wenn Script in /assets/js/)
-    const b = new URL(`../knowledge/${file}`, import.meta.url).href;
-
-    // C) repo-root Variante (GitHub Pages /<repo>/...)
-    // versucht: <origin>/<repo>/assets/knowledge/file
-    const parts = location.pathname.split("/").filter(Boolean);
-    const repo = parts.length ? parts[0] : ""; // erstes Segment ist oft repo-name
-    const c = repo
-      ? `${location.origin}/${repo}/assets/knowledge/${file}`
-      : `${location.origin}/assets/knowledge/${file}`;
-
-    // D) absolute root (falls du custom domain ohne /repo/ nutzt)
-    const d = `${location.origin}/assets/knowledge/${file}`;
-
-    return Array.from(new Set([a, b, c, d]));
-  }
-
-  const KNOWLEDGE = {
-    about:     candidatesFor("about.md"),
-    faq:       candidatesFor("faq.md"),
-    licensing: candidatesFor("licensing.md"),
-    music:     candidatesFor("music.md"),
-    visuals:   candidatesFor("visuals.md"),
-    video:     candidatesFor("video.md"),
-    tools:     candidatesFor("tools.md"),
-    stories:   candidatesFor("stories.md"),
-  };
-
-  const knowledgeCache = new Map(); // key -> text
 
   async function loadKnowledge(keys) {
     const out = [];
     for (const k of keys) {
       if (!KNOWLEDGE[k]) continue;
-
       if (!knowledgeCache.has(k)) {
         const txt = await fetchFirstOk(KNOWLEDGE[k]);
         knowledgeCache.set(k, txt);
@@ -123,22 +77,8 @@ Aufgabe:
     return out;
   }
 
-  // ========= Router =========
-  const ROUTER_SYSTEM = `
-Du bist ein Router. Du wählst passende Wissensquellen für eine Frage.
-Gib ausschließlich gültiges JSON zurück:
-{"sources":["music","faq"]}
-
-Erlaubte sources:
-about, faq, licensing, music, visuals, video, tools, stories
-
-Regeln:
-- Wähle 1-3 sources.
-- Wenn unklar: ["faq"].
-- Keine Erklärtexte, nur JSON.
-`.trim();
-
-  function ruleFallback(question) {
+  // ========= Router (stabil: rule-based) =========
+  function pickSourcesRuleBased(question) {
     const q = (question || "").toLowerCase();
     if (q.includes("lizenz") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
     if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
@@ -150,34 +90,17 @@ Regeln:
     return ["faq"];
   }
 
+  // ========= Engine / state =========
   let engine = null;
   let ready = false;
   let starting = false;
-  const messages = []; // user/assistant only
+  let isGenerating = false;
 
-  async function pickSources(question) {
-    if (!engine || !ready) return ruleFallback(question);
+  // Chat history: nur user/assistant turns
+  const history = [];
 
-    try {
-      const r = await engine.chat.completions.create({
-        messages: [
-          { role: "system", content: ROUTER_SYSTEM },
-          { role: "user", content: question }
-        ],
-        temperature: 0,
-        stream: false,
-      });
-
-      const raw = r?.choices?.[0]?.message?.content?.trim() || "";
-      const json = safeParseRouterJSON(raw);
-      const sources = Array.isArray(json?.sources) ? json.sources : ruleFallback(question);
-
-      const allowed = new Set(Object.keys(KNOWLEDGE));
-      const cleaned = sources.filter(s => allowed.has(s)).slice(0, 3);
-      return cleaned.length ? cleaned : ruleFallback(question);
-    } catch {
-      return ruleFallback(question);
-    }
+  function hasWebGPU() {
+    return !!navigator.gpu;
   }
 
   // ========= CSS =========
@@ -228,11 +151,8 @@ Regeln:
   }
 
   .pr-ai-body{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    padding:12px;
-    height:100%;
+    display:flex; flex-direction:column;
+    gap:10px; padding:12px; height:100%;
     min-height:0;
   }
 
@@ -255,21 +175,11 @@ Regeln:
   .pr-ai-action[disabled]{ opacity:.55; cursor:not-allowed; }
 
   .pr-ai-msgs{
-    flex:1;
-    min-height:0;
+    flex:1; min-height:0;
     overflow-y:auto;
-    padding:12px;
-    padding-bottom:96px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    font:13px/1.45 system-ui;
-    color:#e5e7eb;
-  }
-  .pr-ai-msgs::-webkit-scrollbar{ width:6px; }
-  .pr-ai-msgs::-webkit-scrollbar-thumb{
-    background: rgba(148,163,184,.25);
-    border-radius: 6px;
+    padding:12px; padding-bottom:96px;
+    display:flex; flex-direction:column; gap:10px;
+    font:13px/1.45 system-ui; color:#e5e7eb;
   }
 
   .pr-ai-bubble{
@@ -284,12 +194,9 @@ Regeln:
   .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
 
   .pr-ai-row{
-    position:sticky;
-    bottom:0;
-    display:flex;
-    gap:8px;
-    padding:12px;
-    margin-top:12px;
+    position:sticky; bottom:0;
+    display:flex; gap:8px;
+    padding:12px; margin-top:12px;
     background: rgba(2,6,23,.88);
     backdrop-filter: blur(8px);
     border-top: 1px solid rgba(148,163,184,.15);
@@ -340,6 +247,7 @@ Regeln:
         </div>
 
         <div class="pr-ai-progress" id="prAiProgress"></div>
+
         <div class="pr-ai-msgs" id="prAiMsgs"></div>
 
         <div class="pr-ai-row">
@@ -374,17 +282,17 @@ Regeln:
     }
 
     async function startModel() {
-      if (starting) return;
+      if (starting || ready) return;
 
       if (!hasWebGPU()) {
         progressEl.textContent =
-          "WebGPU nicht verfügbar. Auf iPhone/iOS kann WebGPU je nach Version/Feature-Flag fehlen.";
+          "WebGPU nicht verfügbar. Auf iPhone/iOS kann WebGPU je nach Version/Feature-Flag fehlen. Nutze Desktop (Chrome/Edge) oder Safari mit WebGPU aktiviert.";
         return;
       }
-      if (ready) return;
 
       starting = true;
-      startBtn.setAttribute("disabled", "disabled");
+      startBtn.disabled = true;
+      sendEl.disabled = true;
       progressEl.textContent = "Initialisiere…";
 
       try {
@@ -397,16 +305,18 @@ Regeln:
 
         ready = true;
         progressEl.textContent = "Bereit.";
+
         msgsEl.innerHTML = "";
-        messages.length = 0;
+        history.length = 0;
 
         addBubble("Hi! Frag mich etwas zu PromptRebel (Wissen wird dynamisch geladen).", "ai");
       } catch (e) {
         console.error(e);
-        progressEl.textContent = "Fehler beim Laden des Modells. (Konsole prüfen)";
+        progressEl.textContent = "Fehler beim Laden des Modells. (Browser/WebGPU/Download prüfen)";
       } finally {
         starting = false;
-        startBtn.removeAttribute("disabled");
+        startBtn.disabled = false;
+        sendEl.disabled = false;
       }
     }
 
@@ -414,14 +324,17 @@ Regeln:
       const text = inputEl.value.trim();
       if (!text) return;
 
-      if (!ready) {
+      if (!ready || !engine) {
         addBubble("Model ist noch nicht geladen. Klicke zuerst auf „Start (Model laden)“.", "ai");
         return;
       }
 
+      if (isGenerating) return; // verhindert Parallel-Calls (disposed)
+      isGenerating = true;
+      sendEl.disabled = true;
+
       inputEl.value = "";
       addBubble(text, "user");
-      messages.push({ role: "user", content: text });
 
       const aiBubble = document.createElement("div");
       aiBubble.className = "pr-ai-bubble ai";
@@ -429,42 +342,41 @@ Regeln:
       msgsEl.appendChild(aiBubble);
       msgsEl.scrollTop = msgsEl.scrollHeight;
 
-      sendEl.setAttribute("disabled", "disabled");
-
       try {
-        // 1) Quellen bestimmen (Router)
-        const sources = await pickSources(text);
+        // 1) Sources (stabil)
+        const sources = pickSourcesRuleBased(text);
 
         // 2) Wissen laden
         const docs = await loadKnowledge(sources);
 
         // 3) Kontext bauen
-        const knowledgeContext = docs.map(d => `### ${d.key.toUpperCase()}\n${d.text}`).join("\n\n");
+        const knowledgeContext = docs
+          .map(d => `### ${d.key.toUpperCase()}\n${d.text}`)
+          .join("\n\n");
 
-        // 4) System + Wissen + Verlauf
-        const scopedMessages = [
-  {
-    role: "system",
-    content:
-      SYSTEM_PROMPT +
-      "\n\n---\n" +
-      "WISSENSKONTEXT:\n" +
-      knowledgeContext +
-      "\n\nRegel: Nutze ausschließlich den obigen Wissenskontext. "
-      + "Wenn etwas nicht enthalten ist, sage offen, dass du es nicht weißt."
-  },
-  ...messages
-];
+        // 4) Request messages: SYSTEM muss IMMER an Position 0 stehen
+        const requestMessages = [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "system",
+            content:
+              "Nutze ausschließlich das folgende Wissen zur Beantwortung. " +
+              "Wenn etwas nicht enthalten ist, sage offen, dass du es nicht weißt.\n\n" +
+              knowledgeContext
+          },
+          ...history,
+          { role: "user", content: text },
+        ];
 
         const chunks = await engine.chat.completions.create({
-          messages: scopedMessages,
+          messages: requestMessages,
           temperature: 0.2,
           stream: true,
         });
 
         let reply = "";
         for await (const chunk of chunks) {
-          const delta = chunk?.choices?.[0]?.delta?.content || "";
+          const delta = chunk.choices?.[0]?.delta?.content || "";
           if (delta) {
             reply += delta;
             aiBubble.textContent = reply;
@@ -472,25 +384,29 @@ Regeln:
           }
         }
 
-        messages.push({ role: "assistant", content: reply || aiBubble.textContent || "" });
+        // Jetzt erst History erweitern (verhindert System-first Fehler)
+        history.push({ role: "user", content: text });
+        history.push({ role: "assistant", content: reply || aiBubble.textContent || "" });
+
       } catch (e) {
         console.error(e);
-        // sehr konkrete Fehlermeldung in der UI
-        aiBubble.textContent = `Fehler beim Antworten: ${e?.message || e}`;
+        aiBubble.textContent = `Fehler beim Antworten: ${e?.message || "Konsole prüfen"}`;
       } finally {
-        sendEl.removeAttribute("disabled");
+        isGenerating = false;
+        sendEl.disabled = false;
       }
     }
 
     // wiring
     btn.addEventListener("click", () => panel.classList.toggle("open"));
     closeBtn.addEventListener("click", () => panel.classList.remove("open"));
+
     startBtn.addEventListener("click", startModel);
 
     clearBtn.addEventListener("click", () => {
       msgsEl.innerHTML = "";
       progressEl.textContent = ready ? "Bereit." : "";
-      messages.length = 0;
+      history.length = 0;
       addBubble("Chat gelöscht.", "ai");
     });
 
@@ -500,7 +416,6 @@ Regeln:
     });
   }
 
-  // Init
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initUI, { once: true });
   } else {
