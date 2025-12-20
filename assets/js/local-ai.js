@@ -443,16 +443,18 @@ Regeln:
 
         // 4) System + Wissen + Verlauf
         const scopedMessages = [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "system",
-            content:
-              "Nutze ausschließlich das folgende Wissen zur Beantwortung. " +
-              "Wenn etwas nicht enthalten ist, sage offen, dass du es nicht weißt.\n\n" +
-              knowledgeContext
-          },
-          ...messages
-        ];
+  {
+    role: "system",
+    content:
+      SYSTEM_PROMPT +
+      "\n\n---\n" +
+      "WISSENSKONTEXT:\n" +
+      knowledgeContext +
+      "\n\nRegel: Nutze ausschließlich den obigen Wissenskontext. "
+      + "Wenn etwas nicht enthalten ist, sage offen, dass du es nicht weißt."
+  },
+  ...messages
+];
 
         const chunks = await engine.chat.completions.create({
           messages: scopedMessages,
