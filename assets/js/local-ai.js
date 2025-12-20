@@ -32,6 +32,7 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
     video:     new URL("../knowledge/video.md", import.meta.url).href,
     tools:     new URL("../knowledge/tools.md", import.meta.url).href,
     stories:   new URL("../knowledge/stories.md", import.meta.url).href,
+    extras:   new URL("../knowledge/extras.md", import.meta.url).href,
   };
 
   const knowledgeCache = new Map(); // key -> text
@@ -76,6 +77,9 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
 
     if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist"))
       return ["about", "faq"];
+
+    if (q.includes("extras") || q.includes("discord") || q.includes("prompting"))
+      return ["extras"];
 
     return ["faq"];
   }
