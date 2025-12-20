@@ -1,10 +1,10 @@
-# About – PromptRebel
+# FAQ – PromptRebel
 
-## Wer steckt hinter PromptRebel?
-PromptRebel ist ein unabhängiges Einzelprojekt. Alle Inhalte entstehen experimentell und ohne kommerziellen Hintergrund.
+## Q: Was ist PromptRebel?
+A: PromptRebel ist ein persönliches KI-Labor (Musik, Visuals, Video, Tools, Stories). Alles ist experimentell und im Aufbau.
 
-## Was ist das Ziel von PromptRebel?
-Ziel ist es zu zeigen, was mit KI technisch und kreativ möglich ist – auch ohne Server, APIs oder kostenpflichtige Plattformen. Viele Experimente laufen vollständig lokal im Browser.
+## Q: Welche Lizenz gilt?
+A: CC BY-NC-SA 4.0: Namensnennung, nicht-kommerziell, Weitergabe unter gleichen Bedingungen.
 
-## Ist PromptRebel ein fertiges Produkt?
-Nein. PromptRebel ist ein offenes Experimentierfeld. Inhalte, Tools und Konzepte können sich jederzeit ändern oder erweitert werden.
+## Q: Warum geht Local AI nicht auf iPhone?
+A: WebGPU ist auf iOS je nach Version/Browser eingeschränkt. Desktop-Browser mit WebGPU funktionieren zuverlässiger.
