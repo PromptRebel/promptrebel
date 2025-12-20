@@ -3,7 +3,7 @@
 
 import { MLCEngine, prebuiltAppConfig } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
 
-// ---- Guard: prevent double init ----
+// ---- Guard: prevent double init (double script tag / navigation) ----
 if (window.__PROMPTREBEL_LOCAL_AI__) {
   // already initialized
 } else {
@@ -12,10 +12,14 @@ if (window.__PROMPTREBEL_LOCAL_AI__) {
   // ========= Config =========
   const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
-  // ========= System prompt =========
-  const SYSTEM_PROMPT = `
+  // ========= System prompt (base) =========
+  const BASE_SYSTEM_PROMPT = `
 Du bist "PromptRebel Local AI", ein lokaler Assistent für die Website PromptRebel.
-Du antwortest kurz, konkret und faktenbasiert. Wenn etwas nicht im Wissenskontext steht, sag das offen.
+Du antwortest kurz, konkret und faktenbasiert.
+
+Wichtig:
+- Nutze ausschließlich das bereitgestellte Wissenskontext-Material.
+- Wenn etwas nicht im Wissenskontext steht, sage offen: "Das weiß ich nicht aus der Wissensbasis."
 
 Kontext:
 - PromptRebel ist ein persönliches KI-Labor (Musik, Visuals, Video, Tools, Stories).
@@ -27,58 +31,53 @@ Aufgabe:
 - Gib praktische Hinweise (z.B. Prompt-Anpassung), aber erfinde keine Fakten.
 `.trim();
 
-  // ========= Knowledge index (robust paths) =========
-  // Deine Struktur: /assets/knowledge/*.md
-  // local-ai.js kann in /assets/ oder /assets/js/ liegen -> wir probieren beides.
-  function kUrl(relFromHere, relFromParent) {
-    return [
-      new URL(relFromHere, import.meta.url).href,
-      new URL(relFromParent, import.meta.url).href,
-    ];
-  }
-
+  // ========= Knowledge index (paths from assets/js -> assets/knowledge) =========
   const KNOWLEDGE = {
-    about:     kUrl("./knowledge/about.md", "../knowledge/about.md"),
-    faq:       kUrl("./knowledge/faq.md", "../knowledge/faq.md"),
-    licensing: kUrl("./knowledge/licensing.md", "../knowledge/licensing.md"),
-    music:     kUrl("./knowledge/music.md", "../knowledge/music.md"),
-    visuals:   kUrl("./knowledge/visuals.md", "../knowledge/visuals.md"),
-    video:     kUrl("./knowledge/video.md", "../knowledge/video.md"),
-    tools:     kUrl("./knowledge/tools.md", "../knowledge/tools.md"),
-    stories:   kUrl("./knowledge/stories.md", "../knowledge/stories.md"),
+    about:     new URL("../knowledge/about.md", import.meta.url).href,
+    faq:       new URL("../knowledge/faq.md", import.meta.url).href,
+    licensing: new URL("../knowledge/licensing.md", import.meta.url).href,
+    music:     new URL("../knowledge/music.md", import.meta.url).href,
+    visuals:   new URL("../knowledge/visuals.md", import.meta.url).href,
+    video:     new URL("../knowledge/video.md", import.meta.url).href,
+    tools:     new URL("../knowledge/tools.md", import.meta.url).href,
+    stories:   new URL("../knowledge/stories.md", import.meta.url).href,
   };
 
   const knowledgeCache = new Map(); // key -> text
-
-  async function fetchFirstOk(urls) {
-    let lastErr = null;
-    for (const u of urls) {
-      try {
-        const res = await fetch(u, { cache: "force-cache" });
-        if (res.ok) return await res.text();
-        lastErr = new Error(`HTTP ${res.status} for ${u}`);
-      } catch (e) {
-        lastErr = e;
-      }
-    }
-    throw lastErr || new Error("Knowledge fetch failed (all candidates).");
-  }
 
   async function loadKnowledge(keys) {
     const out = [];
     for (const k of keys) {
       if (!KNOWLEDGE[k]) continue;
+
       if (!knowledgeCache.has(k)) {
-        const txt = await fetchFirstOk(KNOWLEDGE[k]);
+        const res = await fetch(KNOWLEDGE[k], { cache: "force-cache" });
+        if (!res.ok) throw new Error(`Knowledge fetch failed: ${k} (${res.status})`);
+        const txt = await res.text();
         knowledgeCache.set(k, txt);
       }
+
       out.push({ key: k, text: knowledgeCache.get(k) });
     }
     return out;
   }
 
-  // ========= Router (stabil: rule-based) =========
-  function pickSourcesRuleBased(question) {
+  // ========= Router (LLM + fallback) =========
+  const ROUTER_SYSTEM = `
+Du bist ein Router. Du wählst passende Wissensquellen für eine Frage.
+Gib ausschließlich gültiges JSON zurück:
+{"sources":["music","faq"]}
+
+Erlaubte sources:
+about, faq, licensing, music, visuals, video, tools, stories
+
+Regeln:
+- Wähle 1-3 sources.
+- Wenn unklar: ["faq"].
+- Keine Erklärtexte, nur JSON.
+`.trim();
+
+  function ruleFallback(question) {
     const q = (question || "").toLowerCase();
     if (q.includes("lizenz") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
     if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
@@ -90,14 +89,52 @@ Aufgabe:
     return ["faq"];
   }
 
+  function safeParseRouterJSON(raw) {
+    if (!raw) return null;
+    const t = raw.trim();
+
+    try { return JSON.parse(t); } catch {}
+    const m = t.match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    try { return JSON.parse(m[0]); } catch {}
+    return null;
+  }
+
   // ========= Engine / state =========
   let engine = null;
   let ready = false;
   let starting = false;
-  let isGenerating = false;
+  let generating = false;
 
-  // Chat history: nur user/assistant turns
-  const history = [];
+  // IMPORTANT: store only user/assistant turns (NO system inside)
+  const chatHistory = []; // [{role:"user"|"assistant", content:"..."}]
+
+  async function pickSources(question) {
+    // If engine not ready, don't use LLM router
+    if (!engine || !ready) return ruleFallback(question);
+
+    try {
+      const r = await engine.chat.completions.create({
+        messages: [
+          { role: "system", content: ROUTER_SYSTEM },
+          { role: "user", content: question }
+        ],
+        temperature: 0,
+        stream: false,
+      });
+
+      const raw = r?.choices?.[0]?.message?.content?.trim() || "";
+      const json = safeParseRouterJSON(raw);
+
+      const sources = Array.isArray(json?.sources) ? json.sources : ruleFallback(question);
+      const allowed = new Set(Object.keys(KNOWLEDGE));
+      const cleaned = sources.filter(s => allowed.has(s)).slice(0, 3);
+
+      return cleaned.length ? cleaned : ruleFallback(question);
+    } catch {
+      return ruleFallback(question);
+    }
+  }
 
   function hasWebGPU() {
     return !!navigator.gpu;
@@ -151,8 +188,11 @@ Aufgabe:
   }
 
   .pr-ai-body{
-    display:flex; flex-direction:column;
-    gap:10px; padding:12px; height:100%;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:12px;
+    height:100%;
     min-height:0;
   }
 
@@ -175,11 +215,16 @@ Aufgabe:
   .pr-ai-action[disabled]{ opacity:.55; cursor:not-allowed; }
 
   .pr-ai-msgs{
-    flex:1; min-height:0;
+    flex:1;
+    min-height:0;
     overflow-y:auto;
-    padding:12px; padding-bottom:96px;
-    display:flex; flex-direction:column; gap:10px;
-    font:13px/1.45 system-ui; color:#e5e7eb;
+    padding:12px;
+    padding-bottom:96px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    font:13px/1.45 system-ui;
+    color:#e5e7eb;
   }
 
   .pr-ai-bubble{
@@ -194,9 +239,12 @@ Aufgabe:
   .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
 
   .pr-ai-row{
-    position:sticky; bottom:0;
-    display:flex; gap:8px;
-    padding:12px; margin-top:12px;
+    position:sticky;
+    bottom:0;
+    display:flex;
+    gap:8px;
+    padding:12px;
+    margin-top:12px;
     background: rgba(2,6,23,.88);
     backdrop-filter: blur(8px);
     border-top: 1px solid rgba(148,163,184,.15);
@@ -220,7 +268,7 @@ Aufgabe:
   `;
   document.head.appendChild(style);
 
-  // ========= UI init =========
+  // ========= UI init (wait for DOM) =========
   function initUI() {
     if (document.querySelector(".pr-ai-btn") || document.querySelector(".pr-ai-panel")) return;
 
@@ -247,7 +295,6 @@ Aufgabe:
         </div>
 
         <div class="pr-ai-progress" id="prAiProgress"></div>
-
         <div class="pr-ai-msgs" id="prAiMsgs"></div>
 
         <div class="pr-ai-row">
@@ -282,17 +329,17 @@ Aufgabe:
     }
 
     async function startModel() {
-      if (starting || ready) return;
+      if (starting || generating) return;
 
       if (!hasWebGPU()) {
         progressEl.textContent =
           "WebGPU nicht verfügbar. Auf iPhone/iOS kann WebGPU je nach Version/Feature-Flag fehlen. Nutze Desktop (Chrome/Edge) oder Safari mit WebGPU aktiviert.";
         return;
       }
+      if (ready) return;
 
       starting = true;
-      startBtn.disabled = true;
-      sendEl.disabled = true;
+      startBtn.setAttribute("disabled", "disabled");
       progressEl.textContent = "Initialisiere…";
 
       try {
@@ -307,7 +354,7 @@ Aufgabe:
         progressEl.textContent = "Bereit.";
 
         msgsEl.innerHTML = "";
-        history.length = 0;
+        chatHistory.length = 0;
 
         addBubble("Hi! Frag mich etwas zu PromptRebel (Wissen wird dynamisch geladen).", "ai");
       } catch (e) {
@@ -315,8 +362,7 @@ Aufgabe:
         progressEl.textContent = "Fehler beim Laden des Modells. (Browser/WebGPU/Download prüfen)";
       } finally {
         starting = false;
-        startBtn.disabled = false;
-        sendEl.disabled = false;
+        startBtn.removeAttribute("disabled");
       }
     }
 
@@ -324,17 +370,20 @@ Aufgabe:
       const text = inputEl.value.trim();
       if (!text) return;
 
-      if (!ready || !engine) {
+      if (!ready) {
         addBubble("Model ist noch nicht geladen. Klicke zuerst auf „Start (Model laden)“.", "ai");
         return;
       }
+      if (generating) return;
 
-      if (isGenerating) return; // verhindert Parallel-Calls (disposed)
-      isGenerating = true;
-      sendEl.disabled = true;
+      generating = true;
+      sendEl.setAttribute("disabled", "disabled");
+      startBtn.setAttribute("disabled", "disabled");
+      clearBtn.setAttribute("disabled", "disabled");
 
       inputEl.value = "";
       addBubble(text, "user");
+      chatHistory.push({ role: "user", content: text });
 
       const aiBubble = document.createElement("div");
       aiBubble.className = "pr-ai-bubble ai";
@@ -343,8 +392,8 @@ Aufgabe:
       msgsEl.scrollTop = msgsEl.scrollHeight;
 
       try {
-        // 1) Sources (stabil)
-        const sources = pickSourcesRuleBased(text);
+        // 1) Quellen bestimmen
+        const sources = await pickSources(text);
 
         // 2) Wissen laden
         const docs = await loadKnowledge(sources);
@@ -354,22 +403,16 @@ Aufgabe:
           .map(d => `### ${d.key.toUpperCase()}\n${d.text}`)
           .join("\n\n");
 
-        // 4) Request messages: SYSTEM muss IMMER an Position 0 stehen
-        const requestMessages = [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "system",
-            content:
-              "Nutze ausschließlich das folgende Wissen zur Beantwortung. " +
-              "Wenn etwas nicht enthalten ist, sage offen, dass du es nicht weißt.\n\n" +
-              knowledgeContext
-          },
-          ...history,
-          { role: "user", content: text },
+        // 4) IMPORTANT: Only ONE system message at index 0
+        const singleSystem = `${BASE_SYSTEM_PROMPT}\n\n---\nWISSENSKONTEXT:\n${knowledgeContext}`.trim();
+
+        const scopedMessages = [
+          { role: "system", content: singleSystem },
+          ...chatHistory
         ];
 
         const chunks = await engine.chat.completions.create({
-          messages: requestMessages,
+          messages: scopedMessages,
           temperature: 0.2,
           stream: true,
         });
@@ -384,16 +427,15 @@ Aufgabe:
           }
         }
 
-        // Jetzt erst History erweitern (verhindert System-first Fehler)
-        history.push({ role: "user", content: text });
-        history.push({ role: "assistant", content: reply || aiBubble.textContent || "" });
-
+        chatHistory.push({ role: "assistant", content: reply || aiBubble.textContent || "" });
       } catch (e) {
         console.error(e);
         aiBubble.textContent = `Fehler beim Antworten: ${e?.message || "Konsole prüfen"}`;
       } finally {
-        isGenerating = false;
-        sendEl.disabled = false;
+        generating = false;
+        sendEl.removeAttribute("disabled");
+        startBtn.removeAttribute("disabled");
+        clearBtn.removeAttribute("disabled");
       }
     }
 
@@ -404,9 +446,10 @@ Aufgabe:
     startBtn.addEventListener("click", startModel);
 
     clearBtn.addEventListener("click", () => {
+      if (generating) return;
       msgsEl.innerHTML = "";
       progressEl.textContent = ready ? "Bereit." : "";
-      history.length = 0;
+      chatHistory.length = 0;
       addBubble("Chat gelöscht.", "ai");
     });
 
@@ -416,6 +459,7 @@ Aufgabe:
     });
   }
 
+  // Init
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initUI, { once: true });
   } else {
