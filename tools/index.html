@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>PromptRebel – Tools</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     :root { --scroll: 0; }
 
-    /* --- Reset / Basics --- */
+    /* Reset */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; scroll-behavior: smooth; }
 
@@ -19,17 +19,16 @@
       line-height:1.6;
       padding-top:64px;
     }
+    a{ color: inherit; text-decoration: none; }
 
-    a{ color:inherit; text-decoration:none; }
-
-    /* --- Background / Noise / Glows --- */
+    /* Background glow + grid */
     body::before{
       content:"";
       position:fixed;
       inset:0;
       background:
-        radial-gradient(circle at 10% 0%, rgba(236, 72, 153, 0.35), transparent 55%),
-        radial-gradient(circle at 90% 100%, rgba(56, 189, 248, 0.35), transparent 55%);
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,0.35), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(56,189,248,0.35), transparent 55%);
       z-index:-2;
     }
     body::after{
@@ -42,17 +41,13 @@
         linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
       background-size:3px 3px, 3px 3px;
-      mix-blend-mode: soft-light;
+      mix-blend-mode:soft-light;
       z-index:-1;
     }
 
-    .page{
-      max-width:1120px;
-      margin:0 auto;
-      padding:16px 16px 40px;
-    }
+    .page{ max-width:1120px; margin:0 auto; padding:16px 16px 40px; }
 
-    /* --- Skip-Link --- */
+    /* Skip link */
     .skip-link{
       position:absolute;
       left:50%;
@@ -71,14 +66,14 @@
       outline-offset:2px;
     }
 
-    /* --- Top-Navigation + Scroll-Progress --- */
+    /* Nav + scroll progress */
     .nav{
       position:fixed;
       top:0; left:0; right:0;
       z-index:40;
-      backdrop-filter: blur(14px);
-      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
-      border-bottom:1px solid rgba(148,163,184,0.1);
+      backdrop-filter:blur(14px);
+      background:linear-gradient(to bottom, rgba(15,23,42,.95), rgba(15,23,42,.6));
+      border-bottom:1px solid rgba(148,163,184,.1);
     }
     .nav-inner{
       max-width:1120px;
@@ -92,70 +87,57 @@
     .nav::after{
       content:"";
       position:absolute;
-      left:0; right:0;
-      bottom:0;
+      left:0; right:0; bottom:0;
       height:2px;
-      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      background:linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
       transform-origin:left;
-      transform: scaleX(var(--scroll));
-      transition: transform .1s linear;
+      transform:scaleX(var(--scroll));
+      transition:transform .1s linear;
       pointer-events:none;
     }
 
     .brand{
       font-size:22px;
       font-weight:800;
-      letter-spacing:0.05em;
+      letter-spacing:.05em;
       cursor:pointer;
-      position:relative;
       white-space:nowrap;
-      text-shadow: 0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4);
+      text-shadow:0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4);
     }
     .brand span.accent{
-      background: linear-gradient(135deg, #f472b6, #22d3ee);
+      background:linear-gradient(135deg, #f472b6, #22d3ee);
       -webkit-background-clip:text;
       color:transparent;
     }
     .brand.glitch{ animation: brand-glitch .7s ease-out; }
     @keyframes brand-glitch{
-      0%   { text-shadow: 0 0 0 rgba(236,72,153,0.9), 0 0 0 rgba(56,189,248,0.9); }
-      30%  { text-shadow: 2px 0 rgba(236,72,153,0.9), -2px 0 rgba(56,189,248,0.9); }
-      60%  { text-shadow: -2px 0 rgba(236,72,153,0.7), 2px 0 rgba(56,189,248,0.7); }
-      100% { text-shadow: 0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4); }
+      0%{ text-shadow:0 0 0 rgba(236,72,153,.9), 0 0 0 rgba(56,189,248,.9); }
+      30%{ text-shadow:2px 0 rgba(236,72,153,.9), -2px 0 rgba(56,189,248,.9); }
+      60%{ text-shadow:-2px 0 rgba(236,72,153,.7), 2px 0 rgba(56,189,248,.7); }
+      100%{ text-shadow:0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4); }
     }
 
-    .nav-links{
-      display:flex;
-      gap:18px;
-      font-size:14px;
-    }
-    .nav-link{
-      position:relative;
-      padding-block:4px;
-    }
+    .nav-links{ display:flex; gap:18px; font-size:14px; }
+    .nav-link{ position:relative; padding-block:4px; }
     .nav-link::after{
       content:"";
       position:absolute;
-      left:0;
-      bottom:-2px;
-      width:0;
-      height:2px;
+      left:0; bottom:-2px;
+      width:0; height:2px;
       border-radius:999px;
-      background: linear-gradient(90deg, #f472b6, #22d3ee);
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
-      transition: width .25s ease;
+      background:linear-gradient(90deg, #f472b6, #22d3ee);
+      box-shadow:0 0 8px rgba(56,189,248,.8);
+      transition:width .25s ease;
     }
     .nav-link:hover::after,
-    .nav-link:focus-visible::after{
-      width:100%;
-    }
+    .nav-link:focus-visible::after{ width:100%; }
     .nav-link:focus-visible{ outline:none; }
 
-    /* --- Sections / Layout --- */
+    /* Sections */
     .section{ padding:40px 16px 8px; }
     .section:first-of-type{ padding-top:28px; }
 
-    @media (min-width: 768px){
+    @media (min-width:768px){
       .hero-layout{
         display:grid;
         grid-template-columns:minmax(0, 3fr) minmax(0, 2.2fr);
@@ -164,7 +146,7 @@
       }
     }
 
-    /* --- Hero --- */
+    /* Hero */
     .category-label{
       font-size:12px;
       letter-spacing:.25em;
@@ -173,57 +155,31 @@
       margin-bottom:6px;
     }
     .hero-title{
-      font-size: clamp(32px, 5vw, 46px);
+      font-size:clamp(32px, 5vw, 46px);
       font-weight:800;
-      letter-spacing:.01em;
       margin-bottom:10px;
-      text-shadow: 0 0 14px rgba(236,72,153,0.6), 0 0 20px rgba(34,211,238,0.4);
+      text-shadow:0 0 14px rgba(236,72,153,.6), 0 0 20px rgba(34,211,238,.4);
     }
-    .hero-breadcrumbs{
-      font-size:12px;
-      color:#9ca3af;
-      margin-bottom:16px;
-    }
-    .hero-breadcrumbs a{
-      text-decoration: underline;
-      text-underline-offset:3px;
-    }
-    .hero-text-main{
-      font-size:15px;
-      color:#e5e7eb;
-      margin-bottom:8px;
-      max-width:40rem;
-    }
-    .hero-text-sub{
-      font-size:14px;
-      color:#cbd5f5;
-      margin-bottom:16px;
-      max-width:44rem;
-    }
+    .hero-breadcrumbs{ font-size:12px; color:#9ca3af; margin-bottom:16px; }
+    .hero-breadcrumbs a{ text-decoration:underline; text-underline-offset:3px; }
 
-    .hero-note{
-      font-size:11px;
-      color:#9ca3af;
-      border:1px solid rgba(148,163,184,0.14);
-      background: rgba(15,23,42,0.55);
-      padding:10px 12px;
-      border-radius:14px;
-      max-width:44rem;
-    }
-    .hero-note b{ color:#e5e7eb; }
+    .hero-text-main{ font-size:15px; margin-bottom:8px; max-width:40rem; }
+    .hero-text-sub{ font-size:14px; color:#cbd5f5; margin-bottom:18px; max-width:40rem; }
 
-    /* --- Terminal Right --- */
+    .hero-note{ font-size:11px; color:#9ca3af; }
+
+    /* Terminal panel */
     .panel-glass{
       border-radius:18px;
-      border:1px solid rgba(148,163,184,0.18);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(18px);
+      border:1px solid rgba(148,163,184,.18);
+      background:radial-gradient(circle at top left, rgba(15,23,42,.9), rgba(15,23,42,.98));
+      box-shadow:0 18px 45px rgba(15,23,42,.95);
+      backdrop-filter:blur(18px);
       padding:14px 16px 12px;
     }
     .panel-header{
       font-size:12px;
-      letter-spacing:0.16em;
+      letter-spacing:.16em;
       text-transform:uppercase;
       color:#9ca3af;
       margin-bottom:6px;
@@ -233,42 +189,33 @@
     }
     .panel-header span.icon{ font-size:14px; color:#f97316; }
     .terminal{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
       font-size:12px;
       white-space:pre-line;
       color:#e5e7eb;
     }
     .terminal .dim{ color:#6b7280; }
 
-    /* --- Grid Cards --- */
-    .section-title{
-      font-size:18px;
-      font-weight:700;
-      margin-bottom:8px;
-    }
-    .section-subtitle{
-      font-size:13px;
-      color:#9ca3af;
-      margin-bottom:18px;
-      max-width:44rem;
-    }
+    /* Grid */
+    .section-title{ font-size:18px; font-weight:700; margin-bottom:8px; }
+    .section-subtitle{ font-size:13px; color:#9ca3af; margin-bottom:18px; max-width:40rem; }
 
     .category-grid{ display:grid; gap:18px; }
-    @media (min-width: 768px){
-      .category-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (min-width:768px){
+      .category-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
     }
 
     .category-card{
-      --accent: rgba(236,72,153,0.85);
+      --accent: rgba(236,72,153,.85);
       position:relative;
       border-radius:20px;
       padding:16px 18px 14px;
-      border:1px solid rgba(148,163,184,0.18);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.99));
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(18px);
+      border:1px solid rgba(148,163,184,.18);
+      background:radial-gradient(circle at top left, rgba(15,23,42,.96), rgba(15,23,42,.99));
+      box-shadow:0 18px 40px rgba(15,23,42,.96);
+      backdrop-filter:blur(18px);
       overflow:hidden;
-      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+      transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
       cursor:pointer;
     }
     .category-card::before{
@@ -276,27 +223,25 @@
       position:absolute;
       inset:-1px;
       border-radius:inherit;
-      background: radial-gradient(circle at top left, var(--accent), transparent 60%);
-      opacity:0.22;
+      background:radial-gradient(circle at top left, var(--accent), transparent 60%);
+      opacity:.22;
       pointer-events:none;
-      mix-blend-mode: screen;
+      mix-blend-mode:screen;
     }
     .category-card:hover{
-      transform: translateY(-3px);
-      box-shadow: 0 26px 60px rgba(15, 23, 42, 0.98);
-      border-color: rgba(209, 213, 219, 0.3);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.99), rgba(15, 23, 42, 1));
+      transform:translateY(-3px);
+      box-shadow:0 26px 60px rgba(15,23,42,.98);
+      border-color:rgba(209,213,219,.3);
+      background:radial-gradient(circle at top left, rgba(15,23,42,.99), rgba(15,23,42,1));
     }
     .category-card:hover::before{
       inset:-2px;
       border:1px solid var(--accent);
-      opacity:0.4;
-      animation: pulse 2s infinite;
+      opacity:.4;
+      animation:pulse 2s infinite;
     }
     @keyframes pulse{
-      0%{ opacity:0.15; }
-      50%{ opacity:0.45; }
-      100%{ opacity:0.15; }
+      0%{ opacity:.15; } 50%{ opacity:.45; } 100%{ opacity:.15; }
     }
 
     .category-card-top{
@@ -308,7 +253,7 @@
     .category-icon{ font-size:20px; }
     .category-tag{
       font-size:11px;
-      letter-spacing:0.16em;
+      letter-spacing:.16em;
       text-transform:uppercase;
       color:#cbd5e1;
     }
@@ -317,120 +262,32 @@
       font-weight:700;
       margin-bottom:6px;
       color:#f9fafb;
-      text-shadow: 0 0 10px var(--accent);
+      text-shadow:0 0 10px var(--accent);
     }
-    .category-text{
-      font-size:13px;
-      color:#d1d5db;
-      margin-bottom:12px;
-    }
-
+    .category-text{ font-size:13px; color:#d1d5db; margin-bottom:12px; }
     .category-meta{
       display:flex;
       justify-content:space-between;
       align-items:center;
       font-size:12px;
       color:#9ca3af;
-      gap:10px;
     }
     .category-chip{
       border-radius:999px;
       padding:2px 8px;
-      border:1px solid rgba(148,163,184,0.35);
+      border:1px solid rgba(148,163,184,.35);
       font-size:11px;
       color:#e2e8f0;
-      opacity:0.9;
-      white-space:nowrap;
+      opacity:.9;
     }
-    .category-links{
-      display:flex;
-      gap:12px;
-      font-size:13px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .category-link{
-      text-decoration: underline;
-      text-underline-offset:3px;
-      color:#e5e7eb;
-    }
-    .category-link:focus-visible{
-      outline:2px solid #22d3ee;
-      outline-offset:2px;
-    }
+    .category-links{ display:flex; gap:12px; font-size:13px; }
+    .category-link{ text-decoration:underline; text-underline-offset:3px; }
 
-    /* --- Sub-Sections Cards --- */
-    .subgrid{
-      display:grid;
-      gap:14px;
-      margin-top:14px;
-    }
-    @media (min-width: 768px){
-      .subgrid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-    }
-
-    .item-card{
-      border-radius:18px;
-      border:1px solid rgba(148,163,184,0.18);
-      background: rgba(15,23,42,0.72);
-      box-shadow: 0 18px 40px rgba(15,23,42,0.9);
-      padding:14px 14px 12px;
-      position:relative;
-      overflow:hidden;
-    }
-    .item-card::before{
-      content:"";
-      position:absolute;
-      inset:-1px;
-      background: radial-gradient(circle at top left, rgba(34,211,238,0.22), transparent 55%);
-      opacity:0.45;
-      pointer-events:none;
-      mix-blend-mode:screen;
-    }
-    .item-top{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:8px;
-    }
-    .item-title{
-      font-weight:800;
-      font-size:14px;
-      letter-spacing:.01em;
-      color:#f9fafb;
-    }
-    .item-badge{
-      font-size:11px;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.3);
-      color:#cbd5e1;
-      white-space:nowrap;
-      background: rgba(2,6,23,0.35);
-    }
-    .item-desc{
-      font-size:13px;
-      color:#d1d5db;
-      margin-bottom:10px;
-      max-width:52rem;
-    }
-    .item-actions{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      font-size:13px;
-    }
-    .item-actions a{
-      text-decoration: underline;
-      text-underline-offset:3px;
-    }
-
-    /* --- Footer --- */
+    /* Footer */
     footer{
       margin-top:40px;
       padding-top:16px;
-      border-top:1px solid rgba(15,23,42,0.9);
+      border-top:1px solid rgba(15,23,42,.9);
       font-size:11px;
       color:#94a3b8;
       display:flex;
@@ -440,38 +297,16 @@
       align-items:center;
     }
     footer .center-links{ display:flex; gap:10px; }
-    footer a{ text-decoration: underline; text-underline-offset:3px; }
+    footer a{ text-decoration:underline; text-underline-offset:3px; }
 
-    .build-highlight{
-      color:#22d3ee;
-      text-shadow: 0 0 10px rgba(34,211,238,0.9);
-      cursor:pointer;
-    }
-
-    /* --- Retro Mode --- */
-    body.retro-mode::before{
-      background:
-        radial-gradient(circle at 0% 0%, rgba(236,72,153,0.9), transparent 55%),
-        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.9), transparent 60%);
-    }
-    body.retro-mode::after{ opacity:0.3; }
-    body.retro-mode .page{ filter: contrast(1.05) saturate(1.2); }
-    body.retro-mode .brand{ animation: retro-scan 1.1s infinite alternate; }
-    @keyframes retro-scan{
-      from { text-shadow: 0 0 6px rgba(248,250,252,0.9); }
-      to   { text-shadow: 0 0 16px rgba(251,113,133,0.95); }
-    }
-
-    /* --- Mobile Tweaks --- */
-    @media (max-width: 767px){
+    /* Mobile */
+    @media (max-width:767px){
       body{ padding-top:60px; }
       .nav-inner{ gap:8px; }
       .nav-links{ font-size:13px; gap:12px; }
       .section{ padding-top:32px; }
       .hero-layout{ display:block; }
       .panel-glass{ margin-top:20px; }
-      .category-meta{ align-items:flex-start; flex-direction:column; }
-      .category-links{ justify-content:flex-start; }
     }
   </style>
 </head>
@@ -479,7 +314,7 @@
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
 
-  <!-- NAVIGATION -->
+  <!-- NAV -->
   <header class="nav">
     <div class="nav-inner">
       <div id="brand" class="brand" onclick="window.location.href='../index.html'">
@@ -494,7 +329,6 @@
   </header>
 
   <main class="page" id="main">
-
     <!-- HERO -->
     <section class="section">
       <div class="hero-layout">
@@ -507,304 +341,107 @@
           </div>
 
           <p class="hero-text-main">
-            Hier ist die Werkbank: kleine Apps, Games, Micro Tools und Agent-Templates.
+            Kleine Dinge mit großem Effekt: Agents, Browser-Games und Micro Tools.
           </p>
-
           <p class="hero-text-sub">
-            Fokus: schnell nutzbar, leicht nachbaubar, experimentell.
-            Viele Tools laufen direkt im Browser (ohne Server). Agenten öffnen ChatGPT und sind
-            als Templates gedacht, die du an dich anpassen kannst.
+            Alles hier ist experimentell und zum Nachbauen gedacht: klare Templates,
+            kurze Erklärungen, und (wo möglich) direkte Demos.
           </p>
 
-          <div class="hero-note">
-            <b>Transparenz:</b> Wenn du „Testen →“ klickst, verlässt du PromptRebel und öffnest ChatGPT.
-            Dort gelten die Datenschutz-/Nutzungsbedingungen von OpenAI. Hier auf der Seite wird dadurch
-            kein Zugriff auf deinen Chat hergestellt.
-          </div>
+          <p class="hero-note">
+            Hinweis: Externe Links (z.B. ChatGPT-Agents) öffnen eine andere Website.
+          </p>
         </div>
 
         <!-- Terminal -->
         <aside class="panel-glass">
           <div class="panel-header">
-            <span class="icon">🧪</span>
-            <span>NOW LOADING · TOOL INDEX</span>
+            <span class="icon">🧰</span>
+            <span>NOW LOADING · TOOLS INDEX</span>
           </div>
           <div class="terminal">
 promptrebel:tools$ ls categories/
 
-> agents/       # GPTs, Rollen, Templates
-> games/        # Browser-Games & Prototypen
-> microtools/   # kleine Tools, Snippets, Helpers
+> agents/       # GPTs & Templates
+> games/        # browser games
+> micro-tools/  # kleine Helfer & Snippets
 
-<span class="dim"># wähle eine Kategorie oder scrolle nach unten…</span>
+<span class="dim"># wähle eine Kategorie…</span>
           </div>
         </aside>
       </div>
     </section>
 
-    <!-- CATEGORY GRID -->
+    <!-- GRID -->
     <section class="section" aria-labelledby="tools-sections-title">
-      <h2 class="section-title" id="tools-sections-title">Tools-Bereiche</h2>
+      <h2 class="section-title" id="tools-sections-title">Tool-Bereiche</h2>
       <p class="section-subtitle">
-        Drei Einstiege – je nachdem, ob du Agenten testen willst, Games spielen möchtest oder kleine Helfer suchst.
+        Drei Einstiege – sauber getrennt, damit du schnell findest, was du suchst.
       </p>
 
       <div class="category-grid">
         <!-- Agents -->
-        <a href="#agents" class="category-card"
+        <a href="./agents.html" class="category-card"
            style="--accent: rgba(34,211,238,0.95);"
            role="region" aria-labelledby="card-agents-title">
           <div class="category-card-top">
             <div class="category-icon">🤖</div>
-            <div class="category-tag">AGENTEN</div>
+            <div class="category-tag">AGENTS</div>
           </div>
-          <h3 class="category-title" id="card-agents-title">Agenten & Templates</h3>
+          <h3 class="category-title" id="card-agents-title">Agenten</h3>
           <p class="category-text">
-            Fertige Rollen/Agenten als Startpunkt: Tutor, Coach, Ideen-Generator, Architekt.
-            Ziel: wiederholbare Ergebnisse durch klare Regeln – nicht „magische“ Antworten.
+            Fertige Rollen/Setups als GPTs (z.B. KI-Tutor) + Copy-Paste-Templates.
+            Fokus: klarer Zweck, sofort testbar, leicht anpassbar.
           </p>
           <div class="category-meta">
-            <span class="category-chip">ChatGPT · shareable</span>
+            <span class="category-chip">Templates · Links · Hinweise</span>
             <div class="category-links">
-              <span class="category-link">View →</span>
-              <span class="category-link">Testen →</span>
+              <span class="category-link">Open →</span>
             </div>
           </div>
         </a>
 
         <!-- Games -->
-        <a href="#games" class="category-card"
+        <a href="./games.html" class="category-card"
            style="--accent: rgba(236,72,153,0.95);"
            role="region" aria-labelledby="card-games-title">
           <div class="category-card-top">
             <div class="category-icon">🎮</div>
-            <div class="category-tag">SPIELE</div>
+            <div class="category-tag">GAMES</div>
           </div>
-          <h3 class="category-title" id="card-games-title">Games & Prototypen</h3>
+          <h3 class="category-title" id="card-games-title">Games</h3>
           <p class="category-text">
-            Kleine Browser-Games und Experimente (z.B. WasteWizard).
-            Fokus: schnell testbar, iterierbar, „build in public“.
+            Kleine Browser-Games (z.B. WasteWizard) als spielbare Demos
+            – inklusive kurzer Notizen zum Aufbau.
           </p>
           <div class="category-meta">
             <span class="category-chip">HTML · no server</span>
             <div class="category-links">
               <span class="category-link">Play →</span>
-              <span class="category-link">Code →</span>
             </div>
           </div>
         </a>
 
         <!-- Micro Tools -->
-        <a href="#microtools" class="category-card"
-           style="--accent: rgba(244,114,182,0.95);"
+        <a href="./micro-tools.html" class="category-card"
+           style="--accent: rgba(251,146,60,0.95);"
            role="region" aria-labelledby="card-micro-title">
           <div class="category-card-top">
-            <div class="category-icon">🧰</div>
+            <div class="category-icon">🧩</div>
             <div class="category-tag">MICRO TOOLS</div>
           </div>
-          <h3 class="category-title" id="card-micro-title">Kleine Helfer & Snippets</h3>
+          <h3 class="category-title" id="card-micro-title">Kleine Helfer</h3>
           <p class="category-text">
-            Mini-Tools, Prompt-Snippets, Cheatsheets und kleine Bausteine,
-            die man direkt kopieren oder im eigenen Workflow nutzen kann.
+            Mini-Tools, Snippets und Utilities: z.B. Prompt-Builder, Checklisten,
+            kleine Rechner oder Demo-Widgets.
           </p>
           <div class="category-meta">
-            <span class="category-chip">copy/paste · practical</span>
+            <span class="category-chip">Snippets · Utilities</span>
             <div class="category-links">
-              <span class="category-link">View →</span>
-              <span class="category-link">Copy →</span>
+              <span class="category-link">Browse →</span>
             </div>
           </div>
         </a>
-      </div>
-    </section>
-
-    <!-- AGENTS -->
-    <section class="section" id="agents" aria-labelledby="agents-title">
-      <h2 class="section-title" id="agents-title">Agenten</h2>
-      <p class="section-subtitle">
-        Agenten sind Templates mit klarer Rolle. Du kannst sie nutzen – anpassen kann sie nur der Owner des GPT.
-      </p>
-
-      <div class="subgrid">
-        <div class="item-card">
-          <div class="item-top">
-            <div>
-              <div class="item-title">KI-Tutor (PromptRebel)</div>
-              <div class="item-desc">
-                Tutor für strukturiertes Lernen (z.B. Office/Grundlagen). Fokus: Schritte, Übungen, Feedback.
-              </div>
-            </div>
-            <div class="item-badge">LIVE GPT</div>
-          </div>
-          <div class="item-actions">
-            <a class="category-link" href="https://chatgpt.com/g/g-691173c5da84819195fde543ec5ff478-tutor" target="_blank" rel="noopener noreferrer">
-              Testen → (öffnet ChatGPT)
-            </a>
-            <a class="category-link" href="#" title="Platzhalter: hier könntest du eine Detailseite/Prompt-Template verlinken">
-              Template → (coming soon)
-            </a>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-top">
-            <div>
-              <div class="item-title">Biohacking-Coach (Template)</div>
-              <div class="item-desc">
-                Template für Reflexion & Routinen. Hinweis: kein Ersatz für medizinische Beratung.
-              </div>
-            </div>
-            <div class="item-badge">TEMPLATE</div>
-          </div>
-          <div class="item-actions">
-            <a class="category-link" href="#" title="Platzhalter: GPT-Link einsetzen, sobald du ihn erstellt hast">
-              Testen → (Link folgt)
-            </a>
-            <a class="category-link" href="#" title="Platzhalter: Prompt/Template-Textseite verlinken">
-              Template → (coming soon)
-            </a>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-top">
-            <div>
-              <div class="item-title">Ideen-Maschine / Architekt (Template)</div>
-              <div class="item-desc">
-                Von Idee → grobe Skizze (z.B. Power Platform / O365). Ziel: schneller Aufwand-Check & erste Struktur.
-              </div>
-            </div>
-            <div class="item-badge">TEMPLATE</div>
-          </div>
-          <div class="item-actions">
-            <a class="category-link" href="#" title="Platzhalter: GPT-Link einsetzen, sobald du ihn erstellt hast">
-              Testen → (Link folgt)
-            </a>
-            <a class="category-link" href="#" title="Platzhalter: Prompt/Template-Textseite verlinken">
-              Template → (coming soon)
-            </a>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-top">
-            <div>
-              <div class="item-title">Local-AI Chatbot (Browser)</div>
-              <div class="item-desc">
-                WebLLM/WebGPU-Widget: lokaler Chatbot direkt im Browser. Fokus: Stabilität & Nachbaubarkeit.
-              </div>
-            </div>
-            <div class="item-badge">LOCAL</div>
-          </div>
-          <div class="item-actions">
-            <a class="category-link" href="#" title="Platzhalter: Demo-Seite verlinken, falls du eine anlegst">
-              View → (Demo)
-            </a>
-            <a class="category-link" href="#" title="Platzhalter: Code/How-To-Seite verlinken">
-              How-to → (coming soon)
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- GAMES -->
-    <section class="section" id="games" aria-labelledby="games-title">
-      <h2 class="section-title" id="games-title">Spiele</h2>
-      <p class="section-subtitle">
-        Kleine HTML-Games & Prototypen. Ziel: direkt spielbar, schnell iterierbar.
-      </p>
-
-      <div class="subgrid">
-        <div class="item-card">
-          <div class="item-top">
-            <div>
-              <div class="item-title">WasteWizard</div>
-              <div class="item-desc">
-                Browser-Game/Prototype rund um Entsorgung, Chaos und Level-Grind. (Du verlinkst hier deine echte Seite.)
-              </div>
-            </div>
-            <div class="item-badge">GAME</div>
-          </div>
-          <div class="item-actions">
-            <a class="category-link" href="#" title="Platzhalter: Pfad zu deinem WasteWizard HTML">
-              Play → (coming soon)
-            </a>
-            <a class="category-link" href="#" title="Platzhalter: Repo/Source-Seite verlinken">
-              Code → (coming soon)
-            </a>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-top">
-            <div>
-              <div class="item-title">Duck-Loot Prototype</div>
-              <div class="item-desc">
-                Dein Enten-Loot-Game als Browser-Version. Gute Stelle für Iterations-Changelog + Patchnotes.
-              </div>
-            </div>
-            <div class="item-badge">WIP</div>
-          </div>
-          <div class="item-actions">
-            <a class="category-link" href="#" title="Platzhalter">
-              Play → (coming soon)
-            </a>
-            <a class="category-link" href="#" title="Platzhalter">
-              Patchnotes → (coming soon)
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MICROTOOLS -->
-    <section class="section" id="microtools" aria-labelledby="micro-title">
-      <h2 class="section-title" id="micro-title">Micro Tools</h2>
-      <p class="section-subtitle">
-        Kleine Helfer, Snippets, Prompt-Bausteine. Kurz, klar, kopierbar.
-      </p>
-
-      <div class="subgrid">
-        <div class="item-card">
-          <div class="item-top">
-            <div>
-              <div class="item-title">Prompt-Generator: Musiktexte</div>
-              <div class="item-desc">
-                Copy-Prompt, der Nutzerparameter abfragt (Stil, Thema, Hook, Länge) und daraus einen fertigen Songtext + Soundprompt erzeugt.
-              </div>
-            </div>
-            <div class="item-badge">PROMPT</div>
-          </div>
-          <div class="item-actions">
-            <a class="category-link" href="#" title="Platzhalter: Textseite mit dem Prompt">
-              View → (coming soon)
-            </a>
-            <a class="category-link" href="#" title="Platzhalter: Direkt zum Prompt-Anker">
-              Copy → (coming soon)
-            </a>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-top">
-            <div>
-              <div class="item-title">Bild-Prompt Cheatsheet (Kurz)</div>
-              <div class="item-desc">
-                Kleine Strukturhilfe: Motiv → Stil → Licht → Details → Hintergrund. Nicht „richtig“, nur reproduzierbar.
-              </div>
-            </div>
-            <div class="item-badge">CHEATSHEET</div>
-          </div>
-          <div class="item-actions">
-            <a class="category-link" href="#" title="Platzhalter">
-              View → (coming soon)
-            </a>
-            <a class="category-link" href="#" title="Platzhalter">
-              Copy → (coming soon)
-            </a>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -812,16 +449,16 @@ promptrebel:tools$ ls categories/
     <footer>
       <div>© PromptRebel | CC BY-NC-SA 4.0</div>
       <div class="center-links">
-        <a href="#">Imprint</a>
+        <a href="../imprint.html">Imprint</a>
         <span>·</span>
-        <a href="#">Privacy</a>
+        <a href="../privacy.html">Privacy</a>
       </div>
-      <div>current build: <span id="buildVersion" class="build-highlight">v0.1.tools</span> – tools index</div>
+      <div>current build: <span id="buildVersion" style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,0.9); cursor:pointer;">v0.1.tools</span></div>
     </footer>
   </main>
 
   <script>
-    // --- Scroll-Progress ---
+    // Scroll progress
     window.addEventListener("scroll", () => {
       const doc = document.documentElement;
       const scrollable = doc.scrollHeight - window.innerHeight;
@@ -829,47 +466,20 @@ promptrebel:tools$ ls categories/
       document.documentElement.style.setProperty("--scroll", ratio.toString());
     });
 
-    // --- Brand Glitch on Load + Easter Egg (3x Click) ---
+    // Brand glitch on load
     const brandEl = document.getElementById("brand");
-
     window.addEventListener("load", () => {
       brandEl.classList.add("glitch");
       setTimeout(() => brandEl.classList.remove("glitch"), 800);
     });
 
-    let clickCount = 0;
-    let clickTimer = null;
-
-    brandEl.addEventListener("click", () => {
-      clickCount++;
-      if (!clickTimer) {
-        clickTimer = setTimeout(() => {
-          clickCount = 0;
-          clickTimer = null;
-        }, 600);
-      }
-      if (clickCount >= 3) {
-        clickCount = 0;
-        clearTimeout(clickTimer);
-        clickTimer = null;
-        triggerRetroMode();
-      }
-    });
-
-    function triggerRetroMode() {
-      document.body.classList.add("retro-mode");
-      setTimeout(() => {
-        document.body.classList.remove("retro-mode");
-      }, 12000);
-    }
-
-    // --- Footer Version Click ---
-    const buildVersionEl = document.getElementById("buildVersion");
-    buildVersionEl.addEventListener("click", () => {
+    // Footer build click
+    const buildEl = document.getElementById("buildVersion");
+    buildEl.addEventListener("click", () => {
       const versions = ["v0.1.tools", "v0.2.tools", "v0.6.9.tools", "v1.0.tools", "v∞.tools"];
       let i = 0;
       const int = setInterval(() => {
-        buildVersionEl.textContent = versions[i++ % versions.length];
+        buildEl.textContent = versions[i++ % versions.length];
         if (i > 10) clearInterval(int);
       }, 120);
     });
