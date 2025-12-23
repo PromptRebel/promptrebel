@@ -67,127 +67,111 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     state._smoothPath = path;
     return path;
   }
+// ---------- Props ----------
+function buildProps() {
+  const cols = Math.ceil(state.w / TILE);
+  const rows = Math.ceil(state.h / TILE);
 
-  // ---------- Props ----------
-  function buildProps() {
-    const cols = Math.ceil(state.w / TILE);
-    const rows = Math.ceil(state.h / TILE);
+  const blocked = new Set();
 
-    const blocked = new Set();
-
-    // block slots (um Tower-Nodes herum Platz lassen)
-    const slotPadTiles = 1;
-    for (const s of state.slots) {
-      const cx = Math.floor(s.x / TILE);
-      const cy = Math.floor(s.y / TILE);
-      for (let dy = -slotPadTiles; dy <= slotPadTiles; dy++) {
-        for (let dx = -slotPadTiles; dx <= slotPadTiles; dx++) {
-          const xx = cx + dx, yy = cy + dy;
-          if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) blocked.add(`${xx},${yy}`);
+  // block slots (Tower-Plätze freihalten)
+  const slotPadTiles = 1;
+  for (const s of state.slots) {
+    const cx = Math.floor(s.x / TILE);
+    const cy = Math.floor(s.y / TILE);
+    for (let dy = -slotPadTiles; dy <= slotPadTiles; dy++) {
+      for (let dx = -slotPadTiles; dx <= slotPadTiles; dx++) {
+        const xx = cx + dx, yy = cy + dy;
+        if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) {
+          blocked.add(`${xx},${yy}`);
         }
       }
     }
+  }
 
-    // block start/end area a bit
-    for (let i = 0; i < Math.min(3, state.path.length); i++) {
-      const p = state.path[i];
-      const cx = Math.floor(p.x / TILE);
-      const cy = Math.floor(p.y / TILE);
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) blocked.add(`${cx+dx},${cy+dy}`);
+  // Start- und Endbereich vom Pfad freihalten
+  const pathMargin = 2;
+  for (const p of state.path) {
+    const cx = Math.floor(p.x / TILE);
+    const cy = Math.floor(p.y / TILE);
+    for (let dy = -pathMargin; dy <= pathMargin; dy++) {
+      for (let dx = -pathMargin; dx <= pathMargin; dx++) {
+        blocked.add(`${cx+dx},${cy+dy}`);
       }
     }
-    for (let i = Math.max(0, state.path.length - 3); i < state.path.length; i++) {
-      const p = state.path[i];
-      const cx = Math.floor(p.x / TILE);
-      const cy = Math.floor(p.y / TILE);
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) blocked.add(`${cx+dx},${cy+dy}`);
-      }
-    }
+  }
 
-    const props = [];
+  const props = [];
 
-    function footprintOK(x, y, sizeTiles) {
-      if (x < 0 || y < 0 || x + sizeTiles > cols || y + sizeTiles > rows) return false;
+  // Mindestabstand vom Pfad
+  const minPathDist = (PATH_W * 0.6) + 12;
+
+  function tryPlace(kind, tries, sizeTiles) {
+    for (let t = 0; t < tries; t++) {
+      const x = Math.floor(Math.random() * cols);
+      const y = Math.floor(Math.random() * rows);
+
+      let ok = true;
       for (let yy = 0; yy < sizeTiles; yy++) {
         for (let xx = 0; xx < sizeTiles; xx++) {
-          if (blocked.has(`${x+xx},${y+yy}`)) return false;
+          if (blocked.has(`${x+xx},${y+yy}`)) {
+            ok = false; break;
+          }
         }
+        if (!ok) break;
       }
-      return true;
-    }
+      if (!ok) continue;
 
-    function reserve(x, y, sizeTiles) {
-      for (let yy = 0; yy < sizeTiles; yy++) {
-        for (let xx = 0; xx < sizeTiles; xx++) blocked.add(`${x+xx},${y+yy}`);
-      }
-    }
-
-    function farEnoughFromPath(x, y, sizeTiles) {
       const wx = (x + sizeTiles/2) * TILE;
       const wy = (y + sizeTiles/2) * TILE;
-      return distToPolyline(wx, wy, state.path) >= PATH_CLEARANCE;
-    }
+      if (distToPolyline(wx, wy, state.path) < minPathDist) continue;
 
-    function tryPlace(kind, tries, sizeTiles = 1) {
-      for (let t = 0; t < tries; t++) {
-        const x = Math.floor(Math.random() * cols);
-        const y = Math.floor(Math.random() * rows);
-
-        if (!footprintOK(x, y, sizeTiles)) continue;
-        if (!farEnoughFromPath(x, y, sizeTiles)) continue;
-
-        reserve(x, y, sizeTiles);
-
-        props.push({
-          kind,
-          x: x * TILE,
-          y: y * TILE,
-          w: TILE * sizeTiles,
-          h: TILE * sizeTiles,
-          sizeTiles
-        });
-        return true;
+      // reservieren
+      for (let yy = 0; yy < sizeTiles; yy++) {
+        for (let xx = 0; xx < sizeTiles; xx++) {
+          blocked.add(`${x+xx},${y+yy}`);
+        }
       }
-      return false;
+
+      props.push({
+        kind,
+        x: x * TILE,
+        y: y * TILE,
+        w: TILE * sizeTiles,
+        h: TILE * sizeTiles
+      });
+      return true;
     }
-
-    // --- Chests (mehr, aber nicht zu viele) ---
-    const chestCount = Math.max(2, Math.floor(2 * DENSITY_MULT));
-    for (let i = 0; i < chestCount; i++) tryPlace("chest", 800, 1);
-
-    // --- Deko Dichte ---
-    const total = cols * rows;
-
-    // Baseline (dein alt): tree 3%, bush 2%, rock 1.5%
-    // Jetzt multipliziert + etwas mehr Busch/Stein, damit es "lebt"
-    const treeTotal = Math.floor(total * 0.030 * DENSITY_MULT);
-    const bushTotal = Math.floor(total * 0.028 * DENSITY_MULT);
-    const rockTotal = Math.floor(total * 0.022 * DENSITY_MULT);
-
-    // Trees: Mischung aus 1x1, 2x2, 3x3
-    const tree3 = Math.floor(treeTotal * BIG_TREE_3x3_RATIO);
-    const tree2 = Math.floor(treeTotal * BIG_TREE_2x2_RATIO);
-    const tree1 = Math.max(0, treeTotal - tree2 - tree3);
-
-    for (let i = 0; i < tree3; i++) tryPlace("tree", 1600, 3);
-    for (let i = 0; i < tree2; i++) tryPlace("tree", 1200, 2);
-    for (let i = 0; i < tree1; i++) tryPlace("tree", 16, 1);
-
-    // Bushes/Rocks (auch ein paar große Cluster)
-    const bush2 = Math.floor(bushTotal * 0.22);
-    const bush1 = Math.max(0, bushTotal - bush2);
-    for (let i = 0; i < bush2; i++) tryPlace("bush", 900, 2);
-    for (let i = 0; i < bush1; i++) tryPlace("bush", 14, 1);
-
-    const rock2 = Math.floor(rockTotal * 0.18);
-    const rock1 = Math.max(0, rockTotal - rock2);
-    for (let i = 0; i < rock2; i++) tryPlace("rock", 900, 2);
-    for (let i = 0; i < rock1; i++) tryPlace("rock", 14, 1);
-
-    state._props = props;
+    return false;
   }
+
+  // Schatzkisten (bleiben 1×1)
+  tryPlace("chest", 600, 1);
+  tryPlace("chest", 600, 1);
+  tryPlace("chest", 600, 1);
+
+  const total = cols * rows;
+
+  // 🌳 BÄUME
+  const tree3Count = Math.floor(total * 0.018); // Hauptbäume 3×3
+  const tree2Count = Math.floor(total * 0.010); // kleinere Gruppen 2×2
+
+  // 🌿 BÜSCHE (bleiben 1×1, aber weniger dominant)
+  const bushCount = Math.floor(total * 0.018);
+
+  // 🪨 STEINE (neu: 2×2 statt 1×1)
+  const rock2Count = Math.floor(total * 0.014);
+
+  for (let i = 0; i < tree3Count; i++) tryPlace("tree", 16, 3);
+  for (let i = 0; i < tree2Count; i++) tryPlace("tree", 14, 2);
+
+  for (let i = 0; i < bushCount; i++) tryPlace("bush", 12, 1);
+
+  for (let i = 0; i < rock2Count; i++) tryPlace("rock", 14, 2);
+
+  state._props = props;
+}
+  
 
   // ---------- Background draw ----------
   function drawGrass(ctx2) {
