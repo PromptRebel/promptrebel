@@ -2,62 +2,64 @@
 // Smooth path following state.path + tiled grass + props (bigger trees), plus:
 // - Start gate (cave) at first path point + fog/particles
 // - End gate at last path point + subtle glow aura
-// - Extra small bushes/rocks placed "between slots" (corridors), but capped
+// - Extra small bushes/rocks placed "between slots" (corridors), capped + sparse
 // Pixelart crisp: imageSmoothingEnabled = false.
 
 export function createRenderer({ canvas, ctx, state, assets }) {
-  // --- Tunables ---
   const TILE = 32;
 
-  // Pfadbreite (px) – dein “guter Stand”
+  // Dein guter Stand
   const PATH_W = 28;
 
-  // Deko – bewusst konservativ (damit nicht wieder zu voll)
-  const DENSITY = 1.0; // 1.0 = normal, 1.2 = leicht mehr
-  const TREE_3_COUNT_FACTOR = 0.010; // pro Tile-Zelle
-  const TREE_2_COUNT_FACTOR = 0.008;
+  // -------------------------
+  // Deko-Tuning (sparsam!)
+  // -------------------------
+  // Bäume: bevorzugt 3x3, optional ein paar 2x2, KEINE 1x1 Trees
+  const TREE_3_FACTOR = 0.008; // pro Zelle (cols*rows)
+  const TREE_2_FACTOR = 0.004;
 
-  // Base scatter (nicht zwischen Slots)
-  const BUSH_BASE_FACTOR = 0.010;
-  const ROCK_BASE_FACTOR = 0.008; // 1x1 rocks, few
+  // Base scatter (überall, aber wenig)
+  const BUSH_BASE_FACTOR = 0.006; // 1x1
+  const ROCK_BASE_FACTOR = 0.004; // 1x1
 
-  // "Zwischen Slots" Deko (gezielt, aber limitiert)
-  const SLOT_PAD_TILES_CORE = 1;   // direkte Zone (frei halten)
-  const SLOT_PAD_TILES_SOFT = 2;   // “Korridor” Zone (hier darf Deko rein)
-  const BETWEEN_SLOTS_MAX = 16;    // harte Obergrenze extra Props
-  const BETWEEN_TRIES = 900;
+  // Zwischen Slots: gezielt aber gedeckelt
+  const SLOT_PAD_CORE = 1;      // um Slot frei halten (Tiles)
+  const SLOT_PAD_SOFT = 2;      // “Korridor”-Ring (hier dürfen 1x1 rein)
+  const BETWEEN_MAX = 10;       // harte Obergrenze extra Props
+  const BETWEEN_BUSH_RATIO = 0.6;
 
-  // Abstand vom Pfad für Props
+  // Abstand vom Weg
   const PATH_CLEARANCE = (PATH_W * 0.6) + 12;
 
-  // Prop shadows (sehr dezent). 0 = aus
-  const PROP_SHADOW_ALPHA = 0.10;
+  // Schatten Props sehr dezent (0 = aus)
+  const PROP_SHADOW_ALPHA = 0.08;
 
-  // Gate sizes (in Pixeln; werden auf TILE Raster “gefühlt”)
-  // Du kannst hier easy anpassen, ohne Assets neu zu machen.
+  // Gates: Größe (du kannst hier easy tweaken)
   const START_GATE_W = 96;
   const START_GATE_H = 96;
   const END_GATE_W   = 96;
   const END_GATE_H   = 96;
 
-  // Start-Fog / Particles
-  const CAVE_PARTICLE_RATE = 28;      // Partikel pro Sekunde
-  const CAVE_PARTICLE_MAX  = 140;
-  const CAVE_PARTICLE_LIFE = [0.9, 1.7]; // Sekunden
-  const CAVE_PARTICLE_SPEED = [18, 52];  // px/s
+  // Start-Nebel / Partikel
+  const CAVE_PARTICLE_RATE = 22;      // pro Sekunde
+  const CAVE_PARTICLE_MAX  = 110;
+  const CAVE_PARTICLE_LIFE = [0.9, 1.6]; // Sekunden
+  const CAVE_PARTICLE_SPEED = [16, 46];  // px/s
   const CAVE_PARTICLE_SPREAD = 14;       // px
 
   // End-Gate Glow
-  const END_GLOW_RADIUS = 70;
-  const END_GLOW_ALPHA  = 0.22;
+  const END_GLOW_RADIUS = 64;
+  const END_GLOW_ALPHA  = 0.20;
 
-  // Offscreen Background (grass + road + gates + props) – rebuild on resize/rebuild()
+  // Offscreen background cache
   const bg = document.createElement("canvas");
   const bgCtx = bg.getContext("2d");
 
   const setCrisp = (c) => { c.imageSmoothingEnabled = false; };
 
-  // --- Geometry helpers ---
+  // -------------------------
+  // Helpers
+  // -------------------------
   function distPointToSegment(px, py, ax, ay, bx, by) {
     const abx = bx - ax, aby = by - ay;
     const apx = px - ax, apy = py - ay;
@@ -86,7 +88,6 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const path = new Path2D();
     path.moveTo(pts[0].x, pts[0].y);
 
-    // Quadratic smoothing (midpoint technique)
     for (let i = 1; i < pts.length - 1; i++) {
       const xc = (pts[i].x + pts[i + 1].x) / 2;
       const yc = (pts[i].y + pts[i + 1].y) / 2;
@@ -98,19 +99,31 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     return path;
   }
 
-  // Direction helper (for particles / optional gate rotation)
   function dirFromTo(a, b) {
     const dx = (b.x - a.x), dy = (b.y - a.y);
     const d = Math.hypot(dx, dy) || 1;
     return { nx: dx / d, ny: dy / d, ang: Math.atan2(dy, dx) };
   }
 
-  // --- Props placement ---
+  // Key-robust: akzeptiert startGate/start_gate/start_gate.png etc.
+  function getPropImg(...keys) {
+    const p = assets?.props;
+    if (!p) return null;
+    for (const k of keys) {
+      if (p[k]) return p[k];
+    }
+    return null;
+  }
+
+  // -------------------------
+  // Props placement
+  // -------------------------
   function buildProps() {
     const cols = Math.ceil(state.w / TILE);
     const rows = Math.ceil(state.h / TILE);
 
     const blocked = new Set();
+    const props = [];
 
     const slotCells = state.slots.map(s => ({
       cx: Math.floor(s.x / TILE),
@@ -118,34 +131,30 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       x: s.x, y: s.y
     }));
 
-    // 1) Hard-block core around slots (keep tower area clean)
+    // Core block um Slots
     for (const sc of slotCells) {
-      for (let dy = -SLOT_PAD_TILES_CORE; dy <= SLOT_PAD_TILES_CORE; dy++) {
-        for (let dx = -SLOT_PAD_TILES_CORE; dx <= SLOT_PAD_TILES_CORE; dx++) {
+      for (let dy = -SLOT_PAD_CORE; dy <= SLOT_PAD_CORE; dy++) {
+        for (let dx = -SLOT_PAD_CORE; dx <= SLOT_PAD_CORE; dx++) {
           const xx = sc.cx + dx, yy = sc.cy + dy;
           if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) blocked.add(`${xx},${yy}`);
         }
       }
     }
 
-    // 2) Block start/end a bit
-    for (let i = 0; i < Math.min(3, state.path.length); i++) {
-      const p = state.path[i];
+    // Start/End etwas freihalten
+    const pts = state.path || [];
+    for (let i = 0; i < Math.min(3, pts.length); i++) {
+      const p = pts[i];
       const cx = Math.floor(p.x / TILE);
       const cy = Math.floor(p.y / TILE);
       for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) blocked.add(`${cx+dx},${cy+dy}`);
     }
-    for (let i = Math.max(0, state.path.length - 3); i < state.path.length; i++) {
-      const p = state.path[i];
+    for (let i = Math.max(0, pts.length - 3); i < pts.length; i++) {
+      const p = pts[i];
       const cx = Math.floor(p.x / TILE);
       const cy = Math.floor(p.y / TILE);
       for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) blocked.add(`${cx+dx},${cy+dy}`);
     }
-
-    // 3) Block the path corridor lightly (prevents props on the road)
-    // We do not rasterize the whole path; distance check is enough.
-
-    const props = [];
 
     function footprintFree(x, y, sizeTiles) {
       for (let yy = 0; yy < sizeTiles; yy++) {
@@ -162,20 +171,18 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       }
     }
 
-    function farFromPathCenter(x, y, sizeTiles) {
+    function farFromPath(x, y, sizeTiles) {
       const wx = (x + sizeTiles / 2) * TILE;
       const wy = (y + sizeTiles / 2) * TILE;
       return distToPolyline(wx, wy, state.path) >= PATH_CLEARANCE;
     }
 
-    function tryPlace(kind, tries, sizeTiles, constraintFn) {
+    function tryPlace(kind, tries, sizeTiles) {
       for (let t = 0; t < tries; t++) {
         const x = Math.floor(Math.random() * cols);
         const y = Math.floor(Math.random() * rows);
-
         if (!footprintFree(x, y, sizeTiles)) continue;
-        if (!farFromPathCenter(x, y, sizeTiles)) continue;
-        if (constraintFn && !constraintFn(x, y, sizeTiles)) continue;
+        if (!farFromPath(x, y, sizeTiles)) continue;
 
         reserve(x, y, sizeTiles);
         props.push({ kind, x: x*TILE, y: y*TILE, w: TILE*sizeTiles, h: TILE*sizeTiles });
@@ -184,50 +191,46 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       return false;
     }
 
-    // --- Base scatter: chests, trees (2x2/3x3), some bushes/rocks ---
     const total = cols * rows;
 
+    // Chests: wenige
     const chestCount = Math.max(2, Math.floor(total * 0.002));
-    for (let i = 0; i < chestCount; i++) tryPlace("chest", 700, 1);
+    for (let i = 0; i < chestCount; i++) tryPlace("chest", 800, 1);
 
-    // Trees: only 2x2 and 3x3 (no 1x1)
-    const tree3Count = Math.min(10, Math.floor(total * TREE_3_COUNT_FACTOR * DENSITY));
-    const tree2Count = Math.min(14, Math.floor(total * TREE_2_COUNT_FACTOR * DENSITY));
+    // Trees: 3x3 bevorzugt + ein paar 2x2
+    const tree3Count = Math.min(10, Math.floor(total * TREE_3_FACTOR));
+    const tree2Count = Math.min(8,  Math.floor(total * TREE_2_FACTOR));
 
-    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 1400, 3);
-    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 1100, 2);
+    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 1800, 3);
+    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 1400, 2);
 
-    // A few base bushes & rocks (1x1), not too many
-    const bushBase = Math.min(18, Math.floor(total * BUSH_BASE_FACTOR * DENSITY));
-    const rockBase = Math.min(16, Math.floor(total * ROCK_BASE_FACTOR * DENSITY));
+    // Base bushes/rocks (1x1), wenig
+    const bushBase = Math.min(14, Math.floor(total * BUSH_BASE_FACTOR));
+    const rockBase = Math.min(10, Math.floor(total * ROCK_BASE_FACTOR));
 
-    for (let i = 0; i < bushBase; i++) tryPlace("bush", 500, 1);
-    for (let i = 0; i < rockBase; i++) tryPlace("rock", 500, 1);
+    for (let i = 0; i < bushBase; i++) tryPlace("bush", 700, 1);
+    for (let i = 0; i < rockBase; i++) tryPlace("rock", 700, 1);
 
-    // --- “Between slots” placement (small bushes/rocks) ---
-    // Idea: place near slot corridors, but NOT inside core slot area.
-    // We allow within a “soft ring” around slots, and also near midpoints between slot pairs.
-    const betweenCandidates = [];
+    // “Between slots”: Kandidatenring + paar Midpoints – aber sparsamer
+    const candidates = [];
 
-    // ring around each slot (soft zone)
     for (const sc of slotCells) {
-      for (let dy = -SLOT_PAD_TILES_SOFT; dy <= SLOT_PAD_TILES_SOFT; dy++) {
-        for (let dx = -SLOT_PAD_TILES_SOFT; dx <= SLOT_PAD_TILES_SOFT; dx++) {
+      for (let dy = -SLOT_PAD_SOFT; dy <= SLOT_PAD_SOFT; dy++) {
+        for (let dx = -SLOT_PAD_SOFT; dx <= SLOT_PAD_SOFT; dx++) {
+          const man = Math.abs(dx) + Math.abs(dy);
+          if (man <= SLOT_PAD_CORE) continue;
           const xx = sc.cx + dx, yy = sc.cy + dy;
-          const manhattan = Math.abs(dx) + Math.abs(dy);
-          if (manhattan <= SLOT_PAD_TILES_CORE) continue; // keep core clear
           if (xx < 0 || yy < 0 || xx >= cols || yy >= rows) continue;
-          betweenCandidates.push({ x: xx, y: yy });
+          candidates.push({ x: xx, y: yy });
         }
       }
     }
 
-    // midpoints between “near” slots (corridor feeling)
     for (let i = 0; i < slotCells.length; i++) {
       for (let j = i + 1; j < slotCells.length; j++) {
         const a = slotCells[i], b = slotCells[j];
         const d = Math.hypot(a.x - b.x, a.y - b.y);
-        if (d < 120 || d > 260) continue; // corridor-ish distances
+        if (d < 120 || d > 260) continue;
         const mx = (a.x + b.x) / 2;
         const my = (a.y + b.y) / 2;
         const cx = Math.floor(mx / TILE);
@@ -235,21 +238,21 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
           const xx = cx + dx, yy = cy + dy;
           if (xx < 0 || yy < 0 || xx >= cols || yy >= rows) continue;
-          betweenCandidates.push({ x: xx, y: yy });
+          candidates.push({ x: xx, y: yy });
         }
       }
     }
 
     function tryPlaceFromCandidates(kind, maxCount) {
       let placed = 0;
-      for (let tries = 0; tries < BETWEEN_TRIES && placed < maxCount; tries++) {
-        const c = betweenCandidates[Math.floor(Math.random() * betweenCandidates.length)];
+      const tries = 650;
+      for (let t = 0; t < tries && placed < maxCount; t++) {
+        const c = candidates[Math.floor(Math.random() * candidates.length)];
         if (!c) break;
-
         const x = c.x, y = c.y;
+
         if (!footprintFree(x, y, 1)) continue;
 
-        // keep off the road
         const wx = (x + 0.5) * TILE;
         const wy = (y + 0.5) * TILE;
         if (distToPolyline(wx, wy, state.path) < PATH_CLEARANCE) continue;
@@ -260,10 +263,8 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       }
     }
 
-    // Keep it modest: few extra between slots
-    const betweenTotal = BETWEEN_SLOTS_MAX;
-    const betweenBush = Math.floor(betweenTotal * 0.55);
-    const betweenRock = betweenTotal - betweenBush;
+    const betweenBush = Math.floor(BETWEEN_MAX * BETWEEN_BUSH_RATIO);
+    const betweenRock = BETWEEN_MAX - betweenBush;
 
     tryPlaceFromCandidates("bush", betweenBush);
     tryPlaceFromCandidates("rock", betweenRock);
@@ -271,7 +272,9 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     state._props = props;
   }
 
-  // --- Background draw ---
+  // -------------------------
+  // Background draw
+  // -------------------------
   function drawGrass(ctx2) {
     const cols = Math.ceil(state.w / TILE);
     const rows = Math.ceil(state.h / TILE);
@@ -298,17 +301,14 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     ctx2.lineJoin = "round";
     ctx2.lineCap = "round";
 
-    // body
     ctx2.strokeStyle = "rgba(148,163,184,0.16)";
     ctx2.lineWidth = PATH_W;
     ctx2.stroke(path);
 
-    // inner highlight
     ctx2.strokeStyle = "rgba(226,232,240,0.08)";
     ctx2.lineWidth = Math.max(6, PATH_W * 0.55);
     ctx2.stroke(path);
 
-    // edge hint
     ctx2.strokeStyle = "rgba(34,211,238,0.08)";
     ctx2.lineWidth = Math.max(2, PATH_W * 0.10);
     ctx2.stroke(path);
@@ -326,46 +326,41 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const end = pts[pts.length - 1];
     const endDir = dirFromTo(pts[pts.length - 2], pts[pts.length - 1]);
 
-    const startImg = assets?.props?.startGate;
-    const endImg = assets?.props?.endGate;
+    // Robust key lookup (dein Loader kann snake_case machen)
+    const startImg = getPropImg(
+      "startGate", "start_gate", "start_gate.png", "start_gate.webp", "start_gate.jpg"
+    );
+    const endImg = getPropImg(
+      "endGate", "end_gate", "end_gate.png", "end_gate.webp", "end_gate.jpg"
+    );
 
-    // Start gate (opening should face right in your art; we only do slight rotation if needed)
+    // Start gate (leicht hinter dem ersten Punkt, damit es “aus der Höhle” kommt)
     if (startImg) {
       ctx2.save();
       setCrisp(ctx2);
 
-      // place slightly behind the first point, so monsters "exit" into the road
-      const ox = start.x - startDir.nx * 24;
-      const oy = start.y - startDir.ny * 24;
+      const ox = start.x - startDir.nx * 22;
+      const oy = start.y - startDir.ny * 22;
 
       ctx2.translate(ox, oy);
-
-      // If you ever want to auto-rotate, uncomment next line:
-      // ctx2.rotate(startDir.ang);
-
       ctx2.drawImage(startImg, -START_GATE_W/2, -START_GATE_H/2, START_GATE_W, START_GATE_H);
       ctx2.restore();
     }
 
-    // End gate (we’ll add glow per-frame, but draw base gate here)
+    // End gate (leicht vor den letzten Punkt)
     if (endImg) {
       ctx2.save();
       setCrisp(ctx2);
 
-      // place slightly ahead of last point so it feels like they run "into" it
       const ox = end.x + endDir.nx * 18;
       const oy = end.y + endDir.ny * 18;
 
       ctx2.translate(ox, oy);
-
-      // Optional rotation (keep minimal; your sprite is already angled)
-      // ctx2.rotate(endDir.ang);
-
       ctx2.drawImage(endImg, -END_GATE_W/2, -END_GATE_H/2, END_GATE_W, END_GATE_H);
       ctx2.restore();
     }
 
-    // Cache positions for per-frame effects
+    // Cache for FX
     state._gate = {
       start: { x: start.x, y: start.y, dx: startDir.nx, dy: startDir.ny },
       end:   { x: end.x,   y: end.y,   dx: endDir.nx,   dy: endDir.ny },
@@ -378,7 +373,6 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     for (const p of (state._props || [])) {
       const img = assets?.props?.[p.kind];
 
-      // subtle shadow
       if (PROP_SHADOW_ALPHA > 0) {
         ctx2.save();
         ctx2.globalAlpha = PROP_SHADOW_ALPHA;
@@ -420,20 +414,20 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   }
 
   function rebuild() {
-    // init particles container
-    if (!state._caveFx) state._caveFx = { particles: [], acc: 0 };
+    if (!state._caveFx) state._caveFx = { particles: [], acc: 0, lastNow: null };
     buildSmoothPath();
     buildProps();
     buildBackground();
   }
 
-  // --- Foreground draw helpers ---
+  // -------------------------
+  // Foreground draw
+  // -------------------------
   function drawBackground() {
     setCrisp(ctx);
     ctx.drawImage(bg, 0, 0);
   }
 
-  // Slots: keine dunklen “Blöcke” unter Türmen
   function drawSlots() {
     for (const s of state.slots) {
       const isHovered = state.selectedType && !s.occupied;
@@ -460,19 +454,19 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     }
   }
 
-  // --- Cave fog/particles (start gate) ---
+  // Start cave particles
   function updateAndDrawCaveParticles(now) {
     if (!state._gate?.hasStart) return;
 
-    if (!state._caveFx) state._caveFx = { particles: [], acc: 0 };
-    if (state._caveFx.lastNow == null) state._caveFx.lastNow = now;
-    const dt = Math.min((now - state._caveFx.lastNow) / 1000, 0.05);
-    state._caveFx.lastNow = now;
-
+    if (!state._caveFx) state._caveFx = { particles: [], acc: 0, lastNow: null };
     const fx = state._caveFx;
+
+    if (fx.lastNow == null) fx.lastNow = now;
+    const dt = Math.min((now - fx.lastNow) / 1000, 0.05);
+    fx.lastNow = now;
+
     const gate = state._gate.start;
 
-    // emit
     fx.acc += dt * CAVE_PARTICLE_RATE;
     const emitCount = Math.floor(fx.acc);
     fx.acc -= emitCount;
@@ -481,29 +475,24 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       if (fx.particles.length >= CAVE_PARTICLE_MAX) break;
 
       const life = CAVE_PARTICLE_LIFE[0] + Math.random() * (CAVE_PARTICLE_LIFE[1] - CAVE_PARTICLE_LIFE[0]);
-      const spd = CAVE_PARTICLE_SPEED[0] + Math.random() * (CAVE_PARTICLE_SPEED[1] - CAVE_PARTICLE_SPEED[0]);
+      const spd  = CAVE_PARTICLE_SPEED[0] + Math.random() * (CAVE_PARTICLE_SPEED[1] - CAVE_PARTICLE_SPEED[0]);
 
-      // spawn slightly behind start point, drifting along first segment direction
       const sx = gate.x - gate.dx * 12 + (Math.random() - 0.5) * CAVE_PARTICLE_SPREAD;
       const sy = gate.y - gate.dy * 12 + (Math.random() - 0.5) * CAVE_PARTICLE_SPREAD;
 
-      // little sideways variance
       const sideX = -gate.dy;
       const sideY = gate.dx;
       const lateral = (Math.random() - 0.5) * 0.55;
 
       fx.particles.push({
-        x: sx,
-        y: sy,
+        x: sx, y: sy,
         vx: (gate.dx + sideX * lateral) * spd,
         vy: (gate.dy + sideY * lateral) * spd,
-        life,
-        maxLife: life,
+        life, maxLife: life,
         r: 1.6 + Math.random() * 1.8
       });
     }
 
-    // update + draw
     ctx.save();
     setCrisp(ctx);
     for (let i = fx.particles.length - 1; i >= 0; i--) {
@@ -515,7 +504,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       p.y += p.vy * dt;
 
       const a = Math.max(0, p.life / p.maxLife);
-      ctx.globalAlpha = 0.10 + a * 0.22;
+      ctx.globalAlpha = 0.08 + a * 0.20;
       ctx.fillStyle = "rgba(226,232,240,1)";
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
@@ -525,13 +514,11 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     ctx.globalAlpha = 1;
   }
 
-  // --- End gate glow aura ---
+  // End gate glow aura (over background)
   function drawEndGlow(now) {
     if (!state._gate?.hasEnd) return;
 
     const g = state._gate.end;
-
-    // subtle pulsing
     const pulse = 0.65 + 0.35 * Math.sin(now * 0.004);
     const radius = END_GLOW_RADIUS * (0.9 + 0.2 * pulse);
 
@@ -541,7 +528,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     ctx.save();
     const grad = ctx.createRadialGradient(gx, gy, 6, gx, gy, radius);
     grad.addColorStop(0, `rgba(34,211,238,${END_GLOW_ALPHA * 0.55})`);
-    grad.addColorStop(0.45, `rgba(167,139,250,${END_GLOW_ALPHA * 0.30})`);
+    grad.addColorStop(0.45, `rgba(167,139,250,${END_GLOW_ALPHA * 0.28})`);
     grad.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = grad;
     ctx.beginPath();
@@ -574,7 +561,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         ctx.shadowBlur = 0;
       }
 
-      // HP bar (nur für ENEMIES – props haben hiermit nichts zu tun)
+      // HP bar (nur enemies)
       const hpPct = Math.max(0, e.hp / e.maxHp);
       ctx.fillStyle = "rgba(0,0,0,0.45)";
       ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32, 4);
@@ -587,7 +574,6 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     for (const t of state.towers) {
       const img = assets?.towers?.[t.id];
 
-      // deine großen Tower-PNGs
       const w = 96, h = 120;
 
       if (img) {
@@ -657,7 +643,6 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     drawBackground();
 
     const now = performance.now();
-    // Effects (above background, below enemies)
     drawEndGlow(now);
     updateAndDrawCaveParticles(now);
 
