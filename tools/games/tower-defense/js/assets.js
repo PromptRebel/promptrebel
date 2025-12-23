@@ -24,6 +24,11 @@ export async function loadAssets() {
       bush: "assets/props/bush.png",
       rock: "assets/props/rock.png",
       chest: "assets/props/chest.png",
+      // ✅ Gates (NEU)
+      startGate: "assets/props/start_gate.png",
+      endGate: "assets/props/end_gate.png",
+    },
+    
     },
     towers: {
       archer: "assets/towers/archer.png",
