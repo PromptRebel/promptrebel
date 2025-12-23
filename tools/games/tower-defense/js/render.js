@@ -1,32 +1,26 @@
 // js/render.js
 // Smooth path exactly following state.path (enemy route), plus tiled grass + props.
-// Pixelart-Assets werden "crisp" gerendert über imageSmoothingEnabled=false.
+// Pixelart-Assets "crisp": imageSmoothingEnabled=false.
 
 export function createRenderer({ canvas, ctx, state, assets }) {
-  // Tilegröße fürs Grass-Pattern / Props-Placement (unabhängig vom Path)
+  // Tile size for grass tiling + prop placement
   const TILE = 32;
 
-  // Pfadbreite (px im Canvas-Koordinatensystem, NICHT dpr)
+  // Road width in canvas pixels
   const PATH_W = 28;
 
-  // ---------- Deko-Tuning ----------
-  // Props-Schatten (sehr dezent). Wenn du KEINE Props-Schatten willst: 0.
-  const PROP_SHADOW_ALPHA = 0.10;
+  // ---- Deco tuning ----
+  const DENSITY_MULT = 2.0;      // 1.0 = vorher, 2.0 = deutlich mehr Props
+  const PATH_CLEARANCE = (PATH_W * 0.6) + 10; // Abstand Props zum Pfad
 
-  // Mindestabstand vom Pfad (damit nichts auf dem Weg steht)
-  const PATH_CLEARANCE = (PATH_W * 0.6) + 10;
+  // Trees: ONLY 3x3 + 2x2 (no 1x1 trees)
+  const TREE3_SHARE = 0.65;      // Anteil 3x3 von allen Bäumen
+  const TREE2_SHARE = 0.35;      // Anteil 2x2 von allen Bäumen
 
-  // Deko-Dichte (anpassen nach Geschmack)
-  // Werte sind "Anteil von total tiles" (cols*rows). 0.02 = 2% der Tiles als Objekte (über tries verteilt).
-  const DENSITY = {
-    chest: 0.006,     // 1x1
-    tree3: 0.010,     // 3x3
-    tree2: 0.014,     // 2x2
-    bush:  0.020,     // 1x1
-    rock2: 0.014      // 2x2
-  };
+  // Rocks: ONLY 2x2
+  const PROP_SHADOW_ALPHA = 0.12; // 0 = aus, 0.08..0.18 = ok
 
-  // Offscreen Background (grass + path + props) wird bei rebuild neu gemalt
+  // Offscreen background (grass + road + props), rebuilt on resize/rebuild
   const bg = document.createElement("canvas");
   const bgCtx = bg.getContext("2d");
 
@@ -36,8 +30,8 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   function distPointToSegment(px, py, ax, ay, bx, by) {
     const abx = bx - ax, aby = by - ay;
     const apx = px - ax, apy = py - ay;
-    const abLen2 = abx * abx + aby * aby || 1e-9;
-    let t = (apx * abx + apy * aby) / abLen2;
+    const abLen2 = abx*abx + aby*aby || 1e-9;
+    let t = (apx*abx + apy*aby) / abLen2;
     t = Math.max(0, Math.min(1, t));
     const cx = ax + abx * t, cy = ay + aby * t;
     const dx = px - cx, dy = py - cy;
@@ -80,7 +74,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
     const blocked = new Set();
 
-    // block slots (um Tower-Nodes herum Platz lassen)
+    // Block tower slots area (keep room around nodes)
     const slotPadTiles = 1;
     for (const s of state.slots) {
       const cx = Math.floor(s.x / TILE);
@@ -93,8 +87,8 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       }
     }
 
-    // block start/end a bit (aber NICHT alle Path-Points blocken!)
-    const keepClear = (p, pad) => {
+    // Block only start/end area a bit (NOT the whole path)
+    const blockAroundPathPoint = (p, pad) => {
       const cx = Math.floor(p.x / TILE);
       const cy = Math.floor(p.y / TILE);
       for (let dy = -pad; dy <= pad; dy++) {
@@ -104,55 +98,41 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         }
       }
     };
-    if (state.path?.length) {
-      keepClear(state.path[0], 2);
-      keepClear(state.path[1] || state.path[0], 2);
-      keepClear(state.path[state.path.length - 1], 2);
-      keepClear(state.path[state.path.length - 2] || state.path[state.path.length - 1], 2);
-    }
+
+    for (let i = 0; i < Math.min(3, state.path.length); i++) blockAroundPathPoint(state.path[i], 1);
+    for (let i = Math.max(0, state.path.length - 3); i < state.path.length; i++) blockAroundPathPoint(state.path[i], 1);
 
     const props = [];
-
-    function canPlace(x, y, sizeTiles) {
-      // bounds (wichtig für 2x2/3x3!)
-      if (x < 0 || y < 0 || (x + sizeTiles) > cols || (y + sizeTiles) > rows) return false;
-
-      // footprint blocked?
-      for (let yy = 0; yy < sizeTiles; yy++) {
-        for (let xx = 0; xx < sizeTiles; xx++) {
-          if (blocked.has(`${x + xx},${y + yy}`)) return false;
-        }
-      }
-
-      // Abstand zum Pfad (center of footprint)
-      const wx = (x + sizeTiles / 2) * TILE;
-      const wy = (y + sizeTiles / 2) * TILE;
-      if (distToPolyline(wx, wy, state.path) < PATH_CLEARANCE) return false;
-
-      return true;
-    }
-
-    function reserve(x, y, sizeTiles) {
-      for (let yy = 0; yy < sizeTiles; yy++) {
-        for (let xx = 0; xx < sizeTiles; xx++) blocked.add(`${x + xx},${y + yy}`);
-      }
-    }
+    const pts = state.path;
 
     function tryPlace(kind, tries, sizeTiles = 1) {
       for (let t = 0; t < tries; t++) {
         const x = Math.floor(Math.random() * cols);
         const y = Math.floor(Math.random() * rows);
 
-        if (!canPlace(x, y, sizeTiles)) continue;
+        // footprint check
+        let ok = true;
+        for (let yy = 0; yy < sizeTiles; yy++) {
+          for (let xx = 0; xx < sizeTiles; xx++) {
+            const xx2 = x + xx, yy2 = y + yy;
+            if (xx2 < 0 || yy2 < 0 || xx2 >= cols || yy2 >= rows) { ok = false; break; }
+            if (blocked.has(`${xx2},${yy2}`)) { ok = false; break; }
+          }
+          if (!ok) break;
+        }
+        if (!ok) continue;
 
-        reserve(x, y, sizeTiles);
-        props.push({
-          kind,
-          x: x * TILE,
-          y: y * TILE,
-          w: TILE * sizeTiles,
-          h: TILE * sizeTiles
-        });
+        // path distance check (center of footprint)
+        const wx = (x + sizeTiles/2) * TILE;
+        const wy = (y + sizeTiles/2) * TILE;
+        if (distToPolyline(wx, wy, pts) < PATH_CLEARANCE) continue;
+
+        // reserve footprint
+        for (let yy = 0; yy < sizeTiles; yy++) {
+          for (let xx = 0; xx < sizeTiles; xx++) blocked.add(`${x+xx},${y+yy}`);
+        }
+
+        props.push({ kind, x: x*TILE, y: y*TILE, w: TILE*sizeTiles, h: TILE*sizeTiles });
         return true;
       }
       return false;
@@ -160,28 +140,25 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
     const total = cols * rows;
 
-    // Counts (keine 1x1 Bäume)
-    const chestCount = Math.floor(total * DENSITY.chest);
+    // Chests: 1x1
+    const chestCount = Math.max(2, Math.floor((total * 0.003) * DENSITY_MULT));
+    for (let i = 0; i < chestCount; i++) tryPlace("chest", 600, 1);
 
-    const tree3Count = Math.floor(total * DENSITY.tree3);
-    const tree2Count = Math.floor(total * DENSITY.tree2);
+    // Trees: mix of 3x3 + 2x2 ONLY
+    const treeTotal = Math.floor((total * 0.020) * DENSITY_MULT); // overall tree density
+    const tree3Count = Math.floor(treeTotal * TREE3_SHARE);
+    const tree2Count = Math.max(0, treeTotal - tree3Count);
 
-    const bushCount  = Math.floor(total * DENSITY.bush);
+    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 30, 3);
+    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 24, 2);
 
-    const rock2Count = Math.floor(total * DENSITY.rock2);
+    // Bushes: 1x1 (optional – kannst du auch erhöhen)
+    const bushCount = Math.floor((total * 0.018) * DENSITY_MULT);
+    for (let i = 0; i < bushCount; i++) tryPlace("bush", 14, 1);
 
-    // Chests (1x1)
-    for (let i = 0; i < chestCount; i++) tryPlace("chest", 900, 1);
-
-    // Trees: erst die großen, dann 2x2
-    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 1200, 3);
-    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 900, 2);
-
-    // Bushes (1x1)
-    for (let i = 0; i < bushCount; i++) tryPlace("bush", 450, 1);
-
-    // Rocks (2x2)
-    for (let i = 0; i < rock2Count; i++) tryPlace("rock", 900, 2);
+    // Rocks: 2x2 ONLY
+    const rock2Count = Math.floor((total * 0.014) * DENSITY_MULT);
+    for (let i = 0; i < rock2Count; i++) tryPlace("rock", 18, 2);
 
     state._props = props;
   }
@@ -198,7 +175,6 @@ export function createRenderer({ canvas, ctx, state, assets }) {
           setCrisp(ctx2);
           ctx2.drawImage(assets.tiles.grass, gx, gy, TILE, TILE);
         } else {
-          // fallback dark checker
           ctx2.fillStyle = ((x + y) & 1) ? "rgba(2,6,23,0.92)" : "rgba(2,6,23,0.86)";
           ctx2.fillRect(gx, gy, TILE, TILE);
         }
@@ -236,6 +212,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     for (const p of (state._props || [])) {
       const img = assets?.props?.[p.kind];
 
+      // subtle shadow (props only)
       if (PROP_SHADOW_ALPHA > 0) {
         ctx2.save();
         ctx2.globalAlpha = PROP_SHADOW_ALPHA;
@@ -256,8 +233,8 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         setCrisp(ctx2);
         ctx2.drawImage(img, p.x, p.y, p.w, p.h);
       } else {
-        // fallback
-        ctx2.fillStyle = "rgba(148,163,184,0.25)";
+        // fallback: visible block (so you notice missing assets)
+        ctx2.fillStyle = "rgba(148,163,184,0.30)";
         ctx2.fillRect(p.x + 6, p.y + 6, p.w - 12, p.h - 12);
       }
     }
@@ -288,7 +265,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     ctx.drawImage(bg, 0, 0);
   }
 
-  // Slots: dezent, ohne "dicke Blöcke"
+  // Slots: nur dezente Rahmen, keine dunklen “Podeste”
   function drawSlots() {
     for (const s of state.slots) {
       const isHovered = state.selectedType && !s.occupied;
@@ -325,30 +302,26 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
       if (img) {
         setCrisp(ctx);
-        ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
+        ctx.drawImage(img, e.x - w/2, e.y - h/2, w, h);
       } else {
-        const color = isSlowed
-          ? "#a78bfa"
-          : (e.isBoss ? "#f43f5e" : (e.type === "fast" ? "#22d3ee" : "#fb7185"));
-
+        const color = isSlowed ? "#a78bfa" : (e.isBoss ? "#f43f5e" : (e.type === "fast" ? "#22d3ee" : "#fb7185"));
         ctx.shadowBlur = 5;
         ctx.shadowColor = color;
         ctx.fillStyle = color;
-
         if (e.shape === "circle") {
-          ctx.beginPath(); ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(e.x, e.y, e.size, 0, Math.PI*2); ctx.fill();
         } else {
-          ctx.beginPath(); ctx.roundRect(e.x - e.size, e.y - e.size, e.size * 2, e.size * 2, 4); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(e.x - e.size, e.y - e.size, e.size*2, e.size*2, 4); ctx.fill();
         }
         ctx.shadowBlur = 0;
       }
 
-      // HP bar
+      // HP bar (enemies only!)
       const hpPct = Math.max(0, e.hp / e.maxHp);
       ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.fillRect(e.x - 16, e.y - (h / 2) - 10, 32, 4);
+      ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32, 4);
       ctx.fillStyle = hpPct > 0.5 ? "#10b981" : (hpPct > 0.2 ? "#f59e0b" : "#ef4444");
-      ctx.fillRect(e.x - 16, e.y - (h / 2) - 10, 32 * hpPct, 4);
+      ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32 * hpPct, 4);
     }
   }
 
@@ -356,12 +329,12 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     for (const t of state.towers) {
       const img = assets?.towers?.[t.id];
 
-      // Tower-Rendergröße (passt zu deinen großen PNGs)
+      // towers large for your new PNGs
       const w = 96, h = 120;
 
       if (img) {
         setCrisp(ctx);
-        ctx.drawImage(img, t.x - w / 2, t.y - h / 2, w, h);
+        ctx.drawImage(img, t.x - w/2, t.y - h/2, w, h);
       } else {
         ctx.save();
         ctx.translate(t.x, t.y);
@@ -377,13 +350,13 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         ctx.restore();
       }
 
-      // Level pips
+      // level pips
       ctx.save();
       ctx.translate(t.x, t.y);
       ctx.fillStyle = "rgba(226,232,240,0.8)";
       for (let i = 0; i < Math.min(t.level, 10); i++) {
         ctx.beginPath();
-        ctx.arc(-14 + (i * 3.3), 18, 1.2, 0, Math.PI * 2);
+        ctx.arc(-14 + (i * 3.3), 18, 1.2, 0, Math.PI*2);
         ctx.fill();
       }
       ctx.restore();
@@ -394,7 +367,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     for (const p of state.projectiles) {
       ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
       ctx.fill();
     }
   }
@@ -411,7 +384,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   function drawRange() {
     if (!state.activeTower) return;
     ctx.beginPath();
-    ctx.arc(state.activeTower.x, state.activeTower.y, state.activeTower.range, 0, Math.PI * 2);
+    ctx.arc(state.activeTower.x, state.activeTower.y, state.activeTower.range, 0, Math.PI*2);
     ctx.fillStyle = "rgba(255,255,255,0.03)";
     ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.setLineDash([6, 6]);
