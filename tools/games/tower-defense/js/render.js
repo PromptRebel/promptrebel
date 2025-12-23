@@ -1,26 +1,22 @@
 // js/render.js
-// Smooth path exactly following state.path (enemy route), plus tiled grass + props.
-// Pixelart-Assets "crisp": imageSmoothingEnabled=false.
+// Smooth path exactly following state.path (enemy route), plus tiled grass + more/larger props.
+// Pixelart-Assets "crisp": imageSmoothingEnabled = false.
 
 export function createRenderer({ canvas, ctx, state, assets }) {
-  // Tile size for grass tiling + prop placement
+  // Tilegröße fürs Grass-Pattern / Props-Placement (unabhängig vom Path)
   const TILE = 32;
 
-  // Road width in canvas pixels
+  // Pfadbreite (px im Canvas-Koordinatensystem, NICHT dpr)
   const PATH_W = 28;
 
-  // ---- Deco tuning ----
-  const DENSITY_MULT = 2.0;      // 1.0 = vorher, 2.0 = deutlich mehr Props
-  const PATH_CLEARANCE = (PATH_W * 0.6) + 10; // Abstand Props zum Pfad
+  // --- Deko Tuning ---
+  const DENSITY_MULT = 2.0; // mehr Deko insgesamt (1.0 = vorher)
+  const PROP_SHADOW_ALPHA = 0.12; // 0 = keine Props-Schatten
 
-  // Trees: ONLY 3x3 + 2x2 (no 1x1 trees)
-  const TREE3_SHARE = 0.65;      // Anteil 3x3 von allen Bäumen
-  const TREE2_SHARE = 0.35;      // Anteil 2x2 von allen Bäumen
+  // Mindestabstand vom Pfad (damit nichts auf dem Weg steht)
+  const PATH_CLEARANCE = (PATH_W * 0.6) + 12;
 
-  // Rocks: ONLY 2x2
-  const PROP_SHADOW_ALPHA = 0.12; // 0 = aus, 0.08..0.18 = ok
-
-  // Offscreen background (grass + road + props), rebuilt on resize/rebuild
+  // Offscreen Background (grass + path + props) wird bei rebuild neu gemalt
   const bg = document.createElement("canvas");
   const bgCtx = bg.getContext("2d");
 
@@ -74,7 +70,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
     const blocked = new Set();
 
-    // Block tower slots area (keep room around nodes)
+    // block slots (Tower-Plätze freihalten)
     const slotPadTiles = 1;
     for (const s of state.slots) {
       const cx = Math.floor(s.x / TILE);
@@ -87,47 +83,52 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       }
     }
 
-    // Block only start/end area a bit (NOT the whole path)
-    const blockAroundPathPoint = (p, pad) => {
+    // Start/End Bereich etwas frei lassen (wie im funktionierenden Code)
+    for (let i = 0; i < Math.min(3, state.path.length); i++) {
+      const p = state.path[i];
       const cx = Math.floor(p.x / TILE);
       const cy = Math.floor(p.y / TILE);
-      for (let dy = -pad; dy <= pad; dy++) {
-        for (let dx = -pad; dx <= pad; dx++) {
-          const xx = cx + dx, yy = cy + dy;
-          if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) blocked.add(`${xx},${yy}`);
-        }
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) blocked.add(`${cx+dx},${cy+dy}`);
       }
-    };
-
-    for (let i = 0; i < Math.min(3, state.path.length); i++) blockAroundPathPoint(state.path[i], 1);
-    for (let i = Math.max(0, state.path.length - 3); i < state.path.length; i++) blockAroundPathPoint(state.path[i], 1);
+    }
+    for (let i = Math.max(0, state.path.length - 3); i < state.path.length; i++) {
+      const p = state.path[i];
+      const cx = Math.floor(p.x / TILE);
+      const cy = Math.floor(p.y / TILE);
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) blocked.add(`${cx+dx},${cy+dy}`);
+      }
+    }
 
     const props = [];
-    const pts = state.path;
 
     function tryPlace(kind, tries, sizeTiles = 1) {
+      // kleine Sicherheitsmarge: nicht am Rand clippen
+      const maxX = cols - sizeTiles;
+      const maxY = rows - sizeTiles;
+      if (maxX <= 0 || maxY <= 0) return false;
+
       for (let t = 0; t < tries; t++) {
-        const x = Math.floor(Math.random() * cols);
-        const y = Math.floor(Math.random() * rows);
+        const x = Math.floor(Math.random() * maxX);
+        const y = Math.floor(Math.random() * maxY);
 
         // footprint check
         let ok = true;
         for (let yy = 0; yy < sizeTiles; yy++) {
           for (let xx = 0; xx < sizeTiles; xx++) {
-            const xx2 = x + xx, yy2 = y + yy;
-            if (xx2 < 0 || yy2 < 0 || xx2 >= cols || yy2 >= rows) { ok = false; break; }
-            if (blocked.has(`${xx2},${yy2}`)) { ok = false; break; }
+            if (blocked.has(`${x+xx},${y+yy}`)) { ok = false; break; }
           }
           if (!ok) break;
         }
         if (!ok) continue;
 
-        // path distance check (center of footprint)
+        // path distance check (use center of footprint)
         const wx = (x + sizeTiles/2) * TILE;
         const wy = (y + sizeTiles/2) * TILE;
-        if (distToPolyline(wx, wy, pts) < PATH_CLEARANCE) continue;
+        if (distToPolyline(wx, wy, state.path) < PATH_CLEARANCE) continue;
 
-        // reserve footprint
+        // reserve
         for (let yy = 0; yy < sizeTiles; yy++) {
           for (let xx = 0; xx < sizeTiles; xx++) blocked.add(`${x+xx},${y+yy}`);
         }
@@ -138,27 +139,28 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       return false;
     }
 
+    // Chests 1×1
+    const chestCount = Math.max(2, Math.floor(3 * DENSITY_MULT));
+    for (let i = 0; i < chestCount; i++) tryPlace("chest", 700, 1);
+
     const total = cols * rows;
 
-    // Chests: 1x1
-    const chestCount = Math.max(2, Math.floor((total * 0.003) * DENSITY_MULT));
-    for (let i = 0; i < chestCount; i++) tryPlace("chest", 600, 1);
+    // 🌳 Bäume: nur 3×3 & 2×2 (keine 1×1)
+    const tree3Count = Math.floor(total * 0.010 * DENSITY_MULT);
+    const tree2Count = Math.floor(total * 0.014 * DENSITY_MULT);
 
-    // Trees: mix of 3x3 + 2x2 ONLY
-    const treeTotal = Math.floor((total * 0.020) * DENSITY_MULT); // overall tree density
-    const tree3Count = Math.floor(treeTotal * TREE3_SHARE);
-    const tree2Count = Math.max(0, treeTotal - tree3Count);
+    // 🌿 Büsche: 1×1
+    const bushCount  = Math.floor(total * 0.020 * DENSITY_MULT);
 
-    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 30, 3);
-    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 24, 2);
+    // 🪨 Steine: 2×2
+    const rock2Count = Math.floor(total * 0.012 * DENSITY_MULT);
 
-    // Bushes: 1x1 (optional – kannst du auch erhöhen)
-    const bushCount = Math.floor((total * 0.018) * DENSITY_MULT);
-    for (let i = 0; i < bushCount; i++) tryPlace("bush", 14, 1);
+    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 18, 3);
+    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 16, 2);
 
-    // Rocks: 2x2 ONLY
-    const rock2Count = Math.floor((total * 0.014) * DENSITY_MULT);
-    for (let i = 0; i < rock2Count; i++) tryPlace("rock", 18, 2);
+    for (let i = 0; i < bushCount; i++) tryPlace("bush", 12, 1);
+
+    for (let i = 0; i < rock2Count; i++) tryPlace("rock", 16, 2);
 
     state._props = props;
   }
@@ -212,18 +214,18 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     for (const p of (state._props || [])) {
       const img = assets?.props?.[p.kind];
 
-      // subtle shadow (props only)
+      // subtle shadow (optional)
       if (PROP_SHADOW_ALPHA > 0) {
         ctx2.save();
         ctx2.globalAlpha = PROP_SHADOW_ALPHA;
         ctx2.fillStyle = "black";
         ctx2.beginPath();
         ctx2.ellipse(
-          p.x + p.w * 0.55,
-          p.y + p.h * 0.82,
-          p.w * 0.34,
-          p.h * 0.16,
-          0, 0, Math.PI * 2
+          p.x + p.w*0.55,
+          p.y + p.h*0.82,
+          p.w*0.34,
+          p.h*0.16,
+          0, 0, Math.PI*2
         );
         ctx2.fill();
         ctx2.restore();
@@ -233,9 +235,12 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         setCrisp(ctx2);
         ctx2.drawImage(img, p.x, p.y, p.w, p.h);
       } else {
-        // fallback: visible block (so you notice missing assets)
-        ctx2.fillStyle = "rgba(148,163,184,0.30)";
+        // fallback: damit man sofort sieht, wenn ein Asset-Key fehlt (z.B. rock)
+        ctx2.save();
+        ctx2.globalAlpha = 0.35;
+        ctx2.fillStyle = "rgba(148,163,184,0.8)";
         ctx2.fillRect(p.x + 6, p.y + 6, p.w - 12, p.h - 12);
+        ctx2.restore();
       }
     }
   }
@@ -265,7 +270,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     ctx.drawImage(bg, 0, 0);
   }
 
-  // Slots: nur dezente Rahmen, keine dunklen “Podeste”
+  // Slots: dezenter Rahmen (keine dunklen Blöcke)
   function drawSlots() {
     for (const s of state.slots) {
       const isHovered = state.selectedType && !s.occupied;
@@ -316,7 +321,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         ctx.shadowBlur = 0;
       }
 
-      // HP bar (enemies only!)
+      // HP bar
       const hpPct = Math.max(0, e.hp / e.maxHp);
       ctx.fillStyle = "rgba(0,0,0,0.45)";
       ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32, 4);
@@ -328,8 +333,6 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   function drawTowers() {
     for (const t of state.towers) {
       const img = assets?.towers?.[t.id];
-
-      // towers large for your new PNGs
       const w = 96, h = 120;
 
       if (img) {
@@ -350,7 +353,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         ctx.restore();
       }
 
-      // level pips
+      // Level pips
       ctx.save();
       ctx.translate(t.x, t.y);
       ctx.fillStyle = "rgba(226,232,240,0.8)";
