@@ -11,7 +11,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
   // ---------- Deko Tuning ----------
   // Gesamt-Deko
-  const DENSITY_MULT = 1.9;               // 1.0 = wie alt, 2.0 = deutlich mehr
+  const DENSITY_MULT = 1.4;               // 1.0 = wie alt, 2.0 = deutlich mehr
   const PROP_SHADOW_ALPHA = 0.12;         // sehr dezent (0 => aus)
 
   // Bäume: nur 3x3 + 2x2
