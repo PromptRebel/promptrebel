@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>Cyber Defense · Tower Tactics</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
@@ -12,11 +11,6 @@
       --bg:#020617;
       --panel:rgba(15,23,42,.9);
       --stroke:rgba(148,163,184,.2);
-      --cyan:#22d3ee;
-      --pink:#ec4899;
-      --violet:#8b5cf6;
-      --emerald:#10b981;
-      --rose:#f43f5e;
     }
     body{
       background:var(--bg);
@@ -36,7 +30,7 @@
       background-size:40px 40px;
       opacity:.10;
     }
-    canvas{touch-action:none; cursor:crosshair;}
+    canvas{touch-action:none;}
     .glass{
       background:var(--panel);
       backdrop-filter:blur(16px);
@@ -46,17 +40,14 @@
     .btn-action{transition:all .2s cubic-bezier(.4,0,.2,1);}
     .btn-action:active{transform:scale(.95);}
     .btn-action:disabled{opacity:.4; cursor:not-allowed; filter:grayscale(1);}
-
-    .shake{animation:shake .4s cubic-bezier(.36,.07,.19,.97) both;}
-    @keyframes shake{
-      10%,90%{transform:translate3d(-1px,0,0);}
-      20%,80%{transform:translate3d(2px,0,0);}
-      30%,50%,70%{transform:translate3d(-4px,0,0);}
-      40%,60%{transform:translate3d(4px,0,0);}
-    }
-
     .no-scrollbar::-webkit-scrollbar{display:none;}
     .no-scrollbar{-ms-overflow-style:none; scrollbar-width:none;}
+
+    /* wichtig für Pixelart (CSS-seitig) */
+    #canvas{
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
   </style>
 </head>
 
@@ -64,7 +55,7 @@
   <div class="mesh-bg"></div>
   <div class="mesh-grid"></div>
 
-  <!-- Header -->
+  <!-- Header Stats -->
   <header class="glass rounded-2xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50">
     <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
       <div class="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-700/50">
@@ -135,18 +126,17 @@
           <div id="selTip" class="text-[10px] text-slate-400">Tap a free node to deploy</div>
         </div>
       </div>
-      <button class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2 rounded-xl text-xs font-bold pointer-events-auto" onclick="window.cancelSelection?.()">
+      <button id="btnCancelSel" class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2 rounded-xl text-xs font-bold pointer-events-auto">
         Cancel
       </button>
     </div>
 
     <!-- Overlay -->
     <div id="overlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-6">
-      <div id="overlayContent" class="glass rounded-3xl w-full max-w-md p-6 flex flex-col gap-4">
-        <h2 id="overlayTitle" class="text-2xl font-black text-white text-center">Defeat</h2>
+      <div class="glass rounded-3xl w-full max-w-md p-6 flex flex-col gap-4">
+        <h2 id="overlayTitle" class="text-2xl font-black text-white text-center">System Critical</h2>
         <div id="overlayText" class="text-center text-slate-400 text-sm">System compromised.</div>
-        <div id="leaderboardList" class="flex flex-col gap-2 max-h-60 overflow-y-auto pr-2 no-scrollbar"></div>
-        <button onclick="window.closeOverlay?.()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-2xl transition-colors">
+        <button id="btnCloseOverlay" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-2xl transition-colors">
           Return
         </button>
       </div>
@@ -174,34 +164,16 @@
 
   <!-- Boot -->
   <script type="module">
-    // WICHTIG: index.html liegt in /tower-defense/
-    // daher passen diese relativen Pfade:
     import { loadAssets } from "./js/assets.js";
-    import * as Game from "./js/game.js";
-    import * as Render from "./js/render.js";
-
-    // global helpers (falls game.js die benutzt)
-    window.closeOverlay = () => document.getElementById('overlay')?.classList.add('hidden');
-    window.cancelSelection = () => Game.cancelSelection?.();
+    import { createGame } from "./js/game.js";
 
     const canvas = document.getElementById("canvas");
-    const stage  = document.getElementById("gameStage");
-    const ctx    = canvas.getContext("2d");
-
-    // Pixelart crisp
+    const ctx = canvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
 
+    // Assets laden und Spiel starten
     const assets = await loadAssets();
-
-    // Start: je nach Export-Name in game.js
-    if (typeof Game.startGame === "function") {
-      Game.startGame({ canvas, ctx, stage, assets, Render });
-    } else if (typeof Game.initGame === "function") {
-      Game.initGame({ canvas, ctx, stage, assets, Render });
-    } else {
-      console.error("game.js exportiert weder startGame() noch initGame().");
-      alert("Fehler: game.js hat keine start/init Funktion exportiert.");
-    }
+    createGame({ assets }); // baut alles (renderer, state, loop, UI events)
   </script>
 </body>
 </html>
