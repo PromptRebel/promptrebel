@@ -1,382 +1,373 @@
 // js/render.js
+// Smooth path exactly following state.path (enemy route), plus tiled grass + more/larger props.
+// Pixelart-Assets "crisp": imageSmoothingEnabled = false.
+
 export function createRenderer({ canvas, ctx, state, assets }) {
-  // ====== SETTINGS ======
+  // Tilegröße fürs Grass-Pattern / Props-Placement (unabhängig vom Path)
   const TILE = 32;
 
-  // Smooth path look (passt du bei Bedarf an)
-  const PATH_OUTER = 44;   // äußere Breite (gesamt) -> breiter
-  const PATH_INNER = 28;   // innere Breite (gesamt) -> Kern
-  const PATH_SOFT  = 18;   // weiche Glow-Schicht
+  // Pfadbreite (px im Canvas-Koordinatensystem, NICHT dpr)
+  const PATH_W = 28;
 
-  // Deko-Dichte
-  const DENSITY = {
-    trees: 0.050,   // 5% der Tiles
-    bushes: 0.035,
-    rocks: 0.020,
-    crumbs: 0.010,  // kleine Deko (zufällige „Steinchen“ / squares)
-    chests: 3
-  };
+  // --- Deko Tuning ---
+  // Mehr Props insgesamt
+  const DENSITY_MULT = 2.1;          // 1.0 = alt, 2.0 = ~doppelt
+  // Größere Bäume (in Tiles)
+  const BIG_TREE_2x2_RATIO = 0.55;   // Anteil großer Bäume (2x2)
+  const BIG_TREE_3x3_RATIO = 0.25;   // Anteil sehr großer Bäume (3x3)
+  // Mindestabstand vom Pfad
+  const PATH_CLEARANCE = (PATH_W * 0.6) + 10;
 
-  // Baumskalierung
-  const TREE_SCALE_BASE = 2.0; // <- "doppelt so groß"
-  const BUSH_SCALE_BASE = 1.4;
-  const ROCK_SCALE_BASE = 1.3;
-  const CHEST_SCALE_BASE = 1.2;
+  // Props-Schatten (sehr dezent). Wenn du KEINE Schatten willst: auf 0 setzen.
+  const PROP_SHADOW_ALPHA = 0.12;
 
-  // ====== OFFSCREEN BACKGROUND CACHE ======
+  // Offscreen Background (grass + path + props) wird bei rebuild neu gemalt
   const bg = document.createElement("canvas");
   const bgCtx = bg.getContext("2d");
 
   const setCrisp = (c) => { c.imageSmoothingEnabled = false; };
 
-  function worldToCell(x, y) {
-    return { cx: Math.floor(x / TILE), cy: Math.floor(y / TILE) };
+  // ---------- Geometry helpers ----------
+  function distPointToSegment(px, py, ax, ay, bx, by) {
+    const abx = bx - ax, aby = by - ay;
+    const apx = px - ax, apy = py - ay;
+    const abLen2 = abx*abx + aby*aby || 1e-9;
+    let t = (apx*abx + apy*aby) / abLen2;
+    t = Math.max(0, Math.min(1, t));
+    const cx = ax + abx * t, cy = ay + aby * t;
+    const dx = px - cx, dy = py - cy;
+    return Math.hypot(dx, dy);
   }
 
-  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-
-  // ====== PATH: Catmull-Rom -> Bezier ======
-  // erzeugt eine glatte Kurve, die durch die Punkte läuft
-  function drawSmoothPath(ctx2, pts) {
-    if (!pts || pts.length < 2) return;
-
-    // Catmull-Rom to Bezier helper
-    const cr2bz = (p0, p1, p2, p3, t = 0.5) => {
-      // t = tension (0.5 gut)
-      const cp1 = {
-        x: p1.x + (p2.x - p0.x) / 6 * t,
-        y: p1.y + (p2.y - p0.y) / 6 * t
-      };
-      const cp2 = {
-        x: p2.x - (p3.x - p1.x) / 6 * t,
-        y: p2.y - (p3.y - p1.y) / 6 * t
-      };
-      return [cp1, cp2];
-    };
-
-    ctx2.save();
-    ctx2.lineCap = "round";
-    ctx2.lineJoin = "round";
-
-    // --- Build a single bezier path
-    ctx2.beginPath();
-    ctx2.moveTo(pts[0].x, pts[0].y);
-
+  function distToPolyline(px, py, pts) {
+    let best = Infinity;
     for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[i - 1] || pts[i];
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const p3 = pts[i + 2] || p2;
-      const [cp1, cp2] = cr2bz(p0, p1, p2, p3, 0.9);
-      ctx2.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
+      const a = pts[i], b = pts[i + 1];
+      const d = distPointToSegment(px, py, a.x, a.y, b.x, b.y);
+      if (d < best) best = d;
     }
-
-    // --- Layer 1: soft glow (breit)
-    ctx2.globalAlpha = 0.22;
-    ctx2.strokeStyle = "rgba(56,189,248,0.35)";
-    ctx2.lineWidth = PATH_OUTER + PATH_SOFT;
-    ctx2.stroke();
-
-    // --- Layer 2: outer body
-    ctx2.globalAlpha = 0.26;
-    ctx2.strokeStyle = "rgba(148,163,184,0.55)";
-    ctx2.lineWidth = PATH_OUTER;
-    ctx2.stroke();
-
-    // --- Layer 3: inner core
-    ctx2.globalAlpha = 0.35;
-    ctx2.strokeStyle = "rgba(226,232,240,0.35)";
-    ctx2.lineWidth = PATH_INNER;
-    ctx2.stroke();
-
-    // --- Optional: subtle center highlight
-    ctx2.globalAlpha = 0.18;
-    ctx2.strokeStyle = "rgba(255,255,255,0.35)";
-    ctx2.lineWidth = 6;
-    ctx2.stroke();
-
-    ctx2.restore();
+    return best;
   }
 
-  // ====== GRID + BLOCKING ======
-  function buildBlockingGrid() {
+  function buildSmoothPath() {
+    const pts = state.path;
+    if (!pts || pts.length < 2) return null;
+
+    const path = new Path2D();
+    path.moveTo(pts[0].x, pts[0].y);
+
+    // Quadratic smoothing (midpoint technique)
+    for (let i = 1; i < pts.length - 1; i++) {
+      const xc = (pts[i].x + pts[i + 1].x) / 2;
+      const yc = (pts[i].y + pts[i + 1].y) / 2;
+      path.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+    }
+    path.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+
+    state._smoothPath = path;
+    return path;
+  }
+
+  // ---------- Props ----------
+  function buildProps() {
     const cols = Math.ceil(state.w / TILE);
     const rows = Math.ceil(state.h / TILE);
 
-    // blocked cells
     const blocked = new Set();
 
-    // 1) Block around the smooth path by sampling points
-    const pts = state.path || [];
-    if (pts.length >= 2) {
-      const step = TILE / 3;
-      const radiusTiles = 2; // block radius around path in tiles
-
-      for (let i = 0; i < pts.length - 1; i++) {
-        const a = pts[i], b = pts[i + 1];
-        const dx = b.x - a.x, dy = b.y - a.y;
-        const dist = Math.hypot(dx, dy) || 1;
-        const n = Math.ceil(dist / step);
-        for (let k = 0; k <= n; k++) {
-          const t = k / n;
-          const x = a.x + dx * t;
-          const y = a.y + dy * t;
-          const { cx, cy } = worldToCell(x, y);
-
-          for (let yy = -radiusTiles; yy <= radiusTiles; yy++) {
-            for (let xx = -radiusTiles; xx <= radiusTiles; xx++) {
-              const X = cx + xx, Y = cy + yy;
-              if (X >= 0 && Y >= 0 && X < cols && Y < rows) blocked.add(`${X},${Y}`);
-            }
-          }
-        }
-      }
-    }
-
-    // 2) Block tower slots (bigger padding)
-    const slotPad = 2; // tiles
-    for (const s of (state.slots || [])) {
-      const { cx, cy } = worldToCell(s.x, s.y);
-      for (let dy = -slotPad; dy <= slotPad; dy++) {
-        for (let dx = -slotPad; dx <= slotPad; dx++) {
+    // block slots (um Tower-Nodes herum Platz lassen)
+    const slotPadTiles = 1;
+    for (const s of state.slots) {
+      const cx = Math.floor(s.x / TILE);
+      const cy = Math.floor(s.y / TILE);
+      for (let dy = -slotPadTiles; dy <= slotPadTiles; dy++) {
+        for (let dx = -slotPadTiles; dx <= slotPadTiles; dx++) {
           const xx = cx + dx, yy = cy + dy;
           if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) blocked.add(`${xx},${yy}`);
         }
       }
     }
 
-    // 3) Start/End area freihalten
-    const keep = 4;
-    for (let i = 0; i < Math.min(3, (state.path || []).length); i++) {
-      const { cx, cy } = worldToCell(state.path[i].x, state.path[i].y);
-      for (let dy = -keep; dy <= keep; dy++) {
-        for (let dx = -keep; dx <= keep; dx++) blocked.add(`${cx + dx},${cy + dy}`);
+    // block start/end area a bit
+    for (let i = 0; i < Math.min(3, state.path.length); i++) {
+      const p = state.path[i];
+      const cx = Math.floor(p.x / TILE);
+      const cy = Math.floor(p.y / TILE);
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) blocked.add(`${cx+dx},${cy+dy}`);
       }
     }
-    for (let i = Math.max(0, (state.path || []).length - 3); i < (state.path || []).length; i++) {
-      const { cx, cy } = worldToCell(state.path[i].x, state.path[i].y);
-      for (let dy = -keep; dy <= keep; dy++) {
-        for (let dx = -keep; dx <= keep; dx++) blocked.add(`${cx + dx},${cy + dy}`);
+    for (let i = Math.max(0, state.path.length - 3); i < state.path.length; i++) {
+      const p = state.path[i];
+      const cx = Math.floor(p.x / TILE);
+      const cy = Math.floor(p.y / TILE);
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) blocked.add(`${cx+dx},${cy+dy}`);
       }
     }
-
-    state._grid = { cols, rows, blocked };
-  }
-
-  // ====== PROPS ======
-  function buildProps() {
-    const { cols, rows, blocked } = state._grid;
 
     const props = [];
 
-    function tryPlace(kind, tries, footprintTiles = 1, scaleBase = 1.0) {
+    function footprintOK(x, y, sizeTiles) {
+      if (x < 0 || y < 0 || x + sizeTiles > cols || y + sizeTiles > rows) return false;
+      for (let yy = 0; yy < sizeTiles; yy++) {
+        for (let xx = 0; xx < sizeTiles; xx++) {
+          if (blocked.has(`${x+xx},${y+yy}`)) return false;
+        }
+      }
+      return true;
+    }
+
+    function reserve(x, y, sizeTiles) {
+      for (let yy = 0; yy < sizeTiles; yy++) {
+        for (let xx = 0; xx < sizeTiles; xx++) blocked.add(`${x+xx},${y+yy}`);
+      }
+    }
+
+    function farEnoughFromPath(x, y, sizeTiles) {
+      const wx = (x + sizeTiles/2) * TILE;
+      const wy = (y + sizeTiles/2) * TILE;
+      return distToPolyline(wx, wy, state.path) >= PATH_CLEARANCE;
+    }
+
+    function tryPlace(kind, tries, sizeTiles = 1) {
       for (let t = 0; t < tries; t++) {
         const x = Math.floor(Math.random() * cols);
         const y = Math.floor(Math.random() * rows);
 
-        // footprint check
-        let ok = true;
-        for (let yy = 0; yy < footprintTiles; yy++) {
-          for (let xx = 0; xx < footprintTiles; xx++) {
-            const key = `${x + xx},${y + yy}`;
-            if (blocked.has(key)) { ok = false; break; }
-          }
-          if (!ok) break;
-        }
-        if (!ok) continue;
+        if (!footprintOK(x, y, sizeTiles)) continue;
+        if (!farEnoughFromPath(x, y, sizeTiles)) continue;
 
-        // reserve + small buffer ring
-        const buffer = 0; // setze 1 wenn du mehr Abstand willst
-        for (let yy = -buffer; yy < footprintTiles + buffer; yy++) {
-          for (let xx = -buffer; xx < footprintTiles + buffer; xx++) {
-            const X = x + xx, Y = y + yy;
-            if (X >= 0 && Y >= 0 && X < cols && Y < rows) blocked.add(`${X},${Y}`);
-          }
-        }
-
-        // scale with slight variation
-        const scale = scaleBase * (0.90 + Math.random() * 0.20);
+        reserve(x, y, sizeTiles);
 
         props.push({
           kind,
           x: x * TILE,
           y: y * TILE,
-          w: TILE * footprintTiles * scale,
-          h: TILE * footprintTiles * scale,
-          // anchor bottom-center nicer for trees
-          anchor: (kind === "tree") ? "bottom" : "center"
+          w: TILE * sizeTiles,
+          h: TILE * sizeTiles,
+          sizeTiles
         });
         return true;
       }
       return false;
     }
 
-    // counts based on map size
+    // --- Chests (mehr, aber nicht zu viele) ---
+    const chestCount = Math.max(2, Math.floor(2 * DENSITY_MULT));
+    for (let i = 0; i < chestCount; i++) tryPlace("chest", 800, 1);
+
+    // --- Deko Dichte ---
     const total = cols * rows;
-    const treeCount  = Math.floor(total * DENSITY.trees);
-    const bushCount  = Math.floor(total * DENSITY.bushes);
-    const rockCount  = Math.floor(total * DENSITY.rocks);
-    const crumbCount = Math.floor(total * DENSITY.crumbs);
 
-    // chests
-    for (let i = 0; i < DENSITY.chests; i++) tryPlace("chest", 600, 1, CHEST_SCALE_BASE);
+    // Baseline (dein alt): tree 3%, bush 2%, rock 1.5%
+    // Jetzt multipliziert + etwas mehr Busch/Stein, damit es "lebt"
+    const treeTotal = Math.floor(total * 0.030 * DENSITY_MULT);
+    const bushTotal = Math.floor(total * 0.028 * DENSITY_MULT);
+    const rockTotal = Math.floor(total * 0.022 * DENSITY_MULT);
 
-    // BIG trees (2x, footprint 1 tile, aber groß gezeichnet)
-    for (let i = 0; i < treeCount; i++) tryPlace("tree", 12, 1, TREE_SCALE_BASE);
+    // Trees: Mischung aus 1x1, 2x2, 3x3
+    const tree3 = Math.floor(treeTotal * BIG_TREE_3x3_RATIO);
+    const tree2 = Math.floor(treeTotal * BIG_TREE_2x2_RATIO);
+    const tree1 = Math.max(0, treeTotal - tree2 - tree3);
 
-    // bushes / rocks
-    for (let i = 0; i < bushCount; i++) tryPlace("bush", 10, 1, BUSH_SCALE_BASE);
-    for (let i = 0; i < rockCount; i++) tryPlace("rock", 10, 1, ROCK_SCALE_BASE);
+    for (let i = 0; i < tree3; i++) tryPlace("tree", 1600, 3);
+    for (let i = 0; i < tree2; i++) tryPlace("tree", 1200, 2);
+    for (let i = 0; i < tree1; i++) tryPlace("tree", 16, 1);
 
-    // crumbs: kleine graue squares als Extra-Deko (optional)
-    for (let i = 0; i < crumbCount; i++) {
-      // place as "crumb" without image
-      const placed = tryPlace("crumb", 6, 1, 1.0);
-      if (!placed) break;
-    }
+    // Bushes/Rocks (auch ein paar große Cluster)
+    const bush2 = Math.floor(bushTotal * 0.22);
+    const bush1 = Math.max(0, bushTotal - bush2);
+    for (let i = 0; i < bush2; i++) tryPlace("bush", 900, 2);
+    for (let i = 0; i < bush1; i++) tryPlace("bush", 14, 1);
+
+    const rock2 = Math.floor(rockTotal * 0.18);
+    const rock1 = Math.max(0, rockTotal - rock2);
+    for (let i = 0; i < rock2; i++) tryPlace("rock", 900, 2);
+    for (let i = 0; i < rock1; i++) tryPlace("rock", 14, 1);
 
     state._props = props;
   }
 
-  // ====== BACKGROUND ======
+  // ---------- Background draw ----------
+  function drawGrass(ctx2) {
+    const cols = Math.ceil(state.w / TILE);
+    const rows = Math.ceil(state.h / TILE);
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const gx = x * TILE, gy = y * TILE;
+        if (assets?.tiles?.grass) {
+          setCrisp(ctx2);
+          ctx2.drawImage(assets.tiles.grass, gx, gy, TILE, TILE);
+        } else {
+          ctx2.fillStyle = ((x + y) & 1) ? "rgba(2,6,23,0.92)" : "rgba(2,6,23,0.86)";
+          ctx2.fillRect(gx, gy, TILE, TILE);
+        }
+      }
+    }
+  }
+
+  function drawSmoothRoad(ctx2) {
+    const path = state._smoothPath || buildSmoothPath();
+    if (!path) return;
+
+    ctx2.save();
+    ctx2.lineJoin = "round";
+    ctx2.lineCap = "round";
+
+    // body
+    ctx2.strokeStyle = "rgba(148,163,184,0.16)";
+    ctx2.lineWidth = PATH_W;
+    ctx2.stroke(path);
+
+    // inner highlight
+    ctx2.strokeStyle = "rgba(226,232,240,0.08)";
+    ctx2.lineWidth = Math.max(6, PATH_W * 0.55);
+    ctx2.stroke(path);
+
+    // edge hint
+    ctx2.strokeStyle = "rgba(34,211,238,0.08)";
+    ctx2.lineWidth = Math.max(2, PATH_W * 0.10);
+    ctx2.stroke(path);
+
+    ctx2.restore();
+  }
+
+  function drawProps(ctx2) {
+    for (const p of (state._props || [])) {
+      const img = assets?.props?.[p.kind];
+
+      // optional subtle shadow (very light)
+      if (PROP_SHADOW_ALPHA > 0) {
+        ctx2.save();
+        ctx2.globalAlpha = PROP_SHADOW_ALPHA;
+        ctx2.fillStyle = "black";
+        ctx2.beginPath();
+        ctx2.ellipse(
+          p.x + p.w*0.55,
+          p.y + p.h*0.82,
+          p.w*0.34,
+          p.h*0.16,
+          0, 0, Math.PI*2
+        );
+        ctx2.fill();
+        ctx2.restore();
+      }
+
+      if (img) {
+        setCrisp(ctx2);
+        ctx2.drawImage(img, p.x, p.y, p.w, p.h);
+      } else {
+        ctx2.fillStyle = "rgba(148,163,184,0.22)";
+        ctx2.fillRect(p.x + 6, p.y + 6, p.w - 12, p.h - 12);
+      }
+    }
+  }
+
   function buildBackground() {
     bg.width = Math.ceil(state.w);
     bg.height = Math.ceil(state.h);
     setCrisp(bgCtx);
 
-    // --- Grass tile base
-    const { cols, rows } = state._grid;
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const gx = x * TILE, gy = y * TILE;
-        if (assets?.tiles?.grass) bgCtx.drawImage(assets.tiles.grass, gx, gy, TILE, TILE);
-        else {
-          bgCtx.fillStyle = ((x + y) & 1) ? "rgba(2,6,23,0.92)" : "rgba(2,6,23,0.86)";
-          bgCtx.fillRect(gx, gy, TILE, TILE);
-        }
-      }
-    }
+    bgCtx.clearRect(0, 0, bg.width, bg.height);
 
-    // --- Smooth path drawn ON TOP of grass
-    drawSmoothPath(bgCtx, state.path);
-
-    // --- Props + shadow
-    for (const p of (state._props || [])) {
-      // shadow
-      bgCtx.save();
-      bgCtx.globalAlpha = 0.22;
-      bgCtx.fillStyle = "black";
-      bgCtx.beginPath();
-      const sx = p.x + p.w * 0.55;
-      const sy = p.y + p.h * 0.80;
-      bgCtx.ellipse(sx, sy, p.w * 0.32, p.h * 0.14, 0, 0, Math.PI * 2);
-      bgCtx.fill();
-      bgCtx.restore();
-
-      if (p.kind === "crumb") {
-        bgCtx.fillStyle = "rgba(148,163,184,0.18)";
-        bgCtx.fillRect(p.x + 10, p.y + 10, 8, 8);
-        continue;
-      }
-
-      const img = assets?.props?.[p.kind];
-
-      // anchor correction: trees bottom-anchored
-      let drawX = p.x;
-      let drawY = p.y;
-      if (p.anchor === "bottom") {
-        drawX = p.x - (p.w - TILE) * 0.25;
-        drawY = p.y - (p.h - TILE) * 0.55;
-      }
-
-      if (img) bgCtx.drawImage(img, drawX, drawY, p.w, p.h);
-      else {
-        bgCtx.fillStyle = "rgba(148,163,184,0.25)";
-        bgCtx.fillRect(drawX + 6, drawY + 6, p.w - 12, p.h - 12);
-      }
-    }
+    drawGrass(bgCtx);
+    buildSmoothPath();
+    drawSmoothRoad(bgCtx);
+    drawProps(bgCtx);
   }
 
-  // ====== REBUILD ======
   function rebuild() {
-    buildBlockingGrid();
+    buildSmoothPath();
     buildProps();
     buildBackground();
   }
 
-  // ====== FOREGROUND DRAWS ======
+  // ---------- Foreground draw ----------
   function drawBackground() {
     setCrisp(ctx);
     ctx.drawImage(bg, 0, 0);
   }
 
+  // ✅ Slots: keine dunklen “Blöcke” mehr unter Türmen
   function drawSlots() {
-    for (const s of (state.slots || [])) {
+    for (const s of state.slots) {
       const isHovered = state.selectedType && !s.occupied;
-      ctx.fillStyle = s.occupied
-        ? "rgba(15,23,42,0.70)"
-        : (isHovered ? "rgba(34,211,238,0.12)" : "rgba(30,41,59,0.10)");
-      ctx.strokeStyle = isHovered ? "rgba(34,211,238,0.45)" : "rgba(148,163,184,0.10)";
-      ctx.lineWidth = 2;
+
+      // nur ein dezenter Rahmen / Ring
+      ctx.save();
+      ctx.lineWidth = isHovered ? 2.5 : 2;
+
+      if (s.occupied) {
+        ctx.strokeStyle = "rgba(148,163,184,0.18)";
+        ctx.fillStyle = "rgba(0,0,0,0)"; // transparent
+      } else if (isHovered) {
+        ctx.strokeStyle = "rgba(34,211,238,0.55)";
+        ctx.fillStyle = "rgba(34,211,238,0.06)";
+      } else {
+        ctx.strokeStyle = "rgba(148,163,184,0.10)";
+        ctx.fillStyle = "rgba(148,163,184,0.03)";
+      }
+
       ctx.beginPath();
-      ctx.roundRect(s.x - 22, s.y - 22, 44, 44, 10);
+      ctx.roundRect(s.x - 20, s.y - 20, 40, 40, 10);
       ctx.fill();
       ctx.stroke();
+      ctx.restore();
     }
   }
 
   function drawEnemies(now) {
-    for (const e of (state.enemies || [])) {
+    for (const e of state.enemies) {
       const img = assets?.enemies?.[e.type];
       const isSlowed = e.slowEnd > now;
 
-      const w = Math.max(26, e.size * 2.8);
+      const w = Math.max(24, e.size * 2.6);
       const h = w;
 
       if (img) {
         setCrisp(ctx);
-        ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
+        ctx.drawImage(img, e.x - w/2, e.y - h/2, w, h);
       } else {
         const color = isSlowed ? "#a78bfa" : (e.isBoss ? "#f43f5e" : (e.type === "fast" ? "#22d3ee" : "#fb7185"));
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 5;
         ctx.shadowColor = color;
         ctx.fillStyle = color;
         if (e.shape === "circle") {
-          ctx.beginPath(); ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(e.x, e.y, e.size, 0, Math.PI*2); ctx.fill();
         } else {
-          ctx.beginPath(); ctx.roundRect(e.x - e.size, e.y - e.size, e.size * 2, e.size * 2, 4); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(e.x - e.size, e.y - e.size, e.size*2, e.size*2, 4); ctx.fill();
         }
         ctx.shadowBlur = 0;
       }
 
       // HP bar
-      const hpPct = clamp(e.hp / e.maxHp, 0, 1);
+      const hpPct = Math.max(0, e.hp / e.maxHp);
       ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.fillRect(e.x - 18, e.y - (h / 2) - 11, 36, 5);
+      ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32, 4);
       ctx.fillStyle = hpPct > 0.5 ? "#10b981" : (hpPct > 0.2 ? "#f59e0b" : "#ef4444");
-      ctx.fillRect(e.x - 18, e.y - (h / 2) - 11, 36 * hpPct, 5);
+      ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32 * hpPct, 4);
     }
   }
 
   function drawTowers() {
-    for (const t of (state.towers || [])) {
+    for (const t of state.towers) {
       const img = assets?.towers?.[t.id];
 
-      // towers in deiner render.js wurden fix mit 40 gezeichnet.
-      // Wenn du jetzt 64x80 Sprites nutzt, zeichnen wir die passend:
-      const w = 64;
-      const h = 80;
+      // Du drawst Towers groß – passt zu deinen neuen PNGs
+      const w = 96, h = 120;
 
       if (img) {
         setCrisp(ctx);
-        ctx.drawImage(img, t.x - w / 2, t.y - h * 0.78, w, h); // bottom-ish anchor
+        ctx.drawImage(img, t.x - w/2, t.y - h/2, w, h);
       } else {
-        ctx.save(); ctx.translate(t.x, t.y);
+        ctx.save();
+        ctx.translate(t.x, t.y);
         ctx.fillStyle = "#0f172a";
         ctx.strokeStyle = t.color;
         ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(-18, -18, 36, 36, 10);
+        ctx.beginPath(); ctx.roundRect(-16, -16, 32, 32, 8);
         ctx.fill(); ctx.stroke();
         ctx.fillStyle = t.color;
         ctx.font = "bold 18px sans-serif";
@@ -391,7 +382,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       ctx.fillStyle = "rgba(226,232,240,0.8)";
       for (let i = 0; i < Math.min(t.level, 10); i++) {
         ctx.beginPath();
-        ctx.arc(-16 + (i * 3.6), 20, 1.3, 0, Math.PI * 2);
+        ctx.arc(-14 + (i * 3.3), 18, 1.2, 0, Math.PI*2);
         ctx.fill();
       }
       ctx.restore();
@@ -399,16 +390,16 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   }
 
   function drawProjectiles() {
-    for (const p of (state.projectiles || [])) {
+    for (const p of state.projectiles) {
       ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 3.6, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
       ctx.fill();
     }
   }
 
   function drawParticles() {
-    for (const p of (state.particles || [])) {
+    for (const p of state.particles) {
       ctx.globalAlpha = p.life;
       ctx.fillStyle = p.color;
       ctx.fillRect(p.x, p.y, 2, 2);
@@ -419,7 +410,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   function drawRange() {
     if (!state.activeTower) return;
     ctx.beginPath();
-    ctx.arc(state.activeTower.x, state.activeTower.y, state.activeTower.range, 0, Math.PI * 2);
+    ctx.arc(state.activeTower.x, state.activeTower.y, state.activeTower.range, 0, Math.PI*2);
     ctx.fillStyle = "rgba(255,255,255,0.03)";
     ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.setLineDash([6, 6]);
