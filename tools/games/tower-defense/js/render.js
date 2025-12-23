@@ -1,61 +1,63 @@
 // js/render.js
-// Smooth path following state.path + tiled grass + props + start/end gates.
-// Pixelart "crisp": imageSmoothingEnabled = false.
+// Smooth path following state.path + tiled grass + props (bigger trees), plus:
+// - Start gate (cave) at first path point + fog/particles
+// - End gate at last path point + subtle glow aura
+// - Extra small bushes/rocks placed "between slots" (corridors), but capped
+// Pixelart crisp: imageSmoothingEnabled = false.
 
 export function createRenderer({ canvas, ctx, state, assets }) {
-  // Tilegröße fürs Grass-Pattern / Props-Placement (unabhängig vom Path)
+  // --- Tunables ---
   const TILE = 32;
 
-  // Pfadbreite (px im Canvas-Koordinatensystem, NICHT dpr)
+  // Pfadbreite (px) – dein “guter Stand”
   const PATH_W = 28;
 
-  // ---------- Deko Tuning ----------
-  // Gesamt-Deko
-  const DENSITY_MULT = 1.4;               // 1.0 = wie alt, 2.0 = deutlich mehr
-  const PROP_SHADOW_ALPHA = 0.12;         // sehr dezent (0 => aus)
+  // Deko – bewusst konservativ (damit nicht wieder zu voll)
+  const DENSITY = 1.0; // 1.0 = normal, 1.2 = leicht mehr
+  const TREE_3_COUNT_FACTOR = 0.010; // pro Tile-Zelle
+  const TREE_2_COUNT_FACTOR = 0.008;
 
-  // Bäume: nur 3x3 + 2x2
-  const TREE3_SHARE = 0.70;               // Anteil der Baum-Placements, die 3x3 sind
-  const TREE2_SHARE = 0.30;               // Rest 2x2
+  // Base scatter (nicht zwischen Slots)
+  const BUSH_BASE_FACTOR = 0.010;
+  const ROCK_BASE_FACTOR = 0.008; // 1x1 rocks, few
 
-  // extra 1x1 near slots ("zwischen Slots")
-  const NEAR_SLOT_RING_MIN = 1;           // Tiles Abstand vom Slot-Zentrum
-  const NEAR_SLOT_RING_MAX = 3;           // Tiles Abstand
-  const NEAR_SLOT_SPAWN_TRIES = 900;      // wie aggressiv gesucht wird
+  // "Zwischen Slots" Deko (gezielt, aber limitiert)
+  const SLOT_PAD_TILES_CORE = 1;   // direkte Zone (frei halten)
+  const SLOT_PAD_TILES_SOFT = 2;   // “Korridor” Zone (hier darf Deko rein)
+  const BETWEEN_SLOTS_MAX = 16;    // harte Obergrenze extra Props
+  const BETWEEN_TRIES = 900;
 
-  // Pfad-Clearance für Props (damit nichts auf dem Weg steht)
-  const PATH_CLEARANCE = (PATH_W * 0.6) + 10;
+  // Abstand vom Pfad für Props
+  const PATH_CLEARANCE = (PATH_W * 0.6) + 12;
 
-  // Start/End Gate Settings
-  const START_FOG = {
-    enabled: true,
-    spawnRate: 28,       // Partikel / Sekunde
-    max: 160,
-    spread: 22,          // Spawn-Radius
-    drift: 18,           // seitliches Driften
-    rise: 28,            // nach oben
-    alpha: 0.10,         // Grundalpha
-    sizeMin: 1.0,
-    sizeMax: 2.6,
-  };
+  // Prop shadows (sehr dezent). 0 = aus
+  const PROP_SHADOW_ALPHA = 0.10;
 
-  const END_GLOW = {
-    enabled: true,
-    radius: 90,
-    alpha: 0.28,
-  };
+  // Gate sizes (in Pixeln; werden auf TILE Raster “gefühlt”)
+  // Du kannst hier easy anpassen, ohne Assets neu zu machen.
+  const START_GATE_W = 96;
+  const START_GATE_H = 96;
+  const END_GATE_W   = 96;
+  const END_GATE_H   = 96;
 
-  // Offscreen Background (grass + path + props + gates) wird bei rebuild neu gemalt
+  // Start-Fog / Particles
+  const CAVE_PARTICLE_RATE = 28;      // Partikel pro Sekunde
+  const CAVE_PARTICLE_MAX  = 140;
+  const CAVE_PARTICLE_LIFE = [0.9, 1.7]; // Sekunden
+  const CAVE_PARTICLE_SPEED = [18, 52];  // px/s
+  const CAVE_PARTICLE_SPREAD = 14;       // px
+
+  // End-Gate Glow
+  const END_GLOW_RADIUS = 70;
+  const END_GLOW_ALPHA  = 0.22;
+
+  // Offscreen Background (grass + road + gates + props) – rebuild on resize/rebuild()
   const bg = document.createElement("canvas");
   const bgCtx = bg.getContext("2d");
 
   const setCrisp = (c) => { c.imageSmoothingEnabled = false; };
 
-  // Fog particles state (renderer-local)
-  let fog = [];
-  let lastFogTs = performance.now();
-
-  // ---------- Geometry helpers ----------
+  // --- Geometry helpers ---
   function distPointToSegment(px, py, ax, ay, bx, by) {
     const abx = bx - ax, aby = by - ay;
     const apx = px - ax, apy = py - ay;
@@ -96,205 +98,180 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     return path;
   }
 
-  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-
-  // ---------- Start / End gate placement helpers ----------
-  function getStartAnchor() {
-    const pts = state.path || [];
-    if (pts.length < 2) return { x: 0, y: 0 };
-    // Start kann offscreen liegen; wir ziehen es leicht ins Bild
-    const p0 = pts[0], p1 = pts[1];
-    const x = clamp(p0.x + 16, 20, state.w - 20);
-    const y = clamp(p0.y, 20, state.h - 20);
-
-    // Richtung (für Fog-Drift grob)
-    const dx = p1.x - p0.x;
-    const dy = p1.y - p0.y;
-    const len = Math.hypot(dx, dy) || 1;
-    return { x, y, dir: { x: dx / len, y: dy / len } };
+  // Direction helper (for particles / optional gate rotation)
+  function dirFromTo(a, b) {
+    const dx = (b.x - a.x), dy = (b.y - a.y);
+    const d = Math.hypot(dx, dy) || 1;
+    return { nx: dx / d, ny: dy / d, ang: Math.atan2(dy, dx) };
   }
 
-  function getEndAnchor() {
-    const pts = state.path || [];
-    if (pts.length < 2) return { x: state.w, y: state.h };
-    const pn = pts[pts.length - 1];
-    const pm = pts[pts.length - 2];
-
-    // End kann offscreen liegen; wir ziehen es leicht ins Bild
-    const x = clamp(pn.x - 22, 30, state.w - 30);
-    const y = clamp(pn.y, 30, state.h - 30);
-
-    const dx = pn.x - pm.x;
-    const dy = pn.y - pm.y;
-    const len = Math.hypot(dx, dy) || 1;
-    return { x, y, dir: { x: dx / len, y: dy / len } };
-  }
-
-  // ---------- Props ----------
+  // --- Props placement ---
   function buildProps() {
     const cols = Math.ceil(state.w / TILE);
     const rows = Math.ceil(state.h / TILE);
 
     const blocked = new Set();
 
-    // Slot-Sperrzone (kleiner als vorher, damit "zwischen Slots" mehr geht)
-    // Wichtig: mindestens der Slot-Tile selbst bleibt gesperrt.
-    const slotPadTiles = 0;
-    for (const s of state.slots) {
-      const cx = Math.floor(s.x / TILE);
-      const cy = Math.floor(s.y / TILE);
+    const slotCells = state.slots.map(s => ({
+      cx: Math.floor(s.x / TILE),
+      cy: Math.floor(s.y / TILE),
+      x: s.x, y: s.y
+    }));
 
-      // Slot selbst blocken
-      blocked.add(`${cx},${cy}`);
-
-      // optional minimal padding (0 => nix)
-      for (let dy = -slotPadTiles; dy <= slotPadTiles; dy++) {
-        for (let dx = -slotPadTiles; dx <= slotPadTiles; dx++) {
-          const xx = cx + dx, yy = cy + dy;
+    // 1) Hard-block core around slots (keep tower area clean)
+    for (const sc of slotCells) {
+      for (let dy = -SLOT_PAD_TILES_CORE; dy <= SLOT_PAD_TILES_CORE; dy++) {
+        for (let dx = -SLOT_PAD_TILES_CORE; dx <= SLOT_PAD_TILES_CORE; dx++) {
+          const xx = sc.cx + dx, yy = sc.cy + dy;
           if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) blocked.add(`${xx},${yy}`);
         }
       }
     }
 
-    // Start/Endbereich frei halten
-    const pts = state.path || [];
-    const start = pts[0];
-    const end = pts[pts.length - 1];
-    const protect = (p, r) => {
-      if (!p) return;
+    // 2) Block start/end a bit
+    for (let i = 0; i < Math.min(3, state.path.length); i++) {
+      const p = state.path[i];
       const cx = Math.floor(p.x / TILE);
       const cy = Math.floor(p.y / TILE);
-      for (let dy = -r; dy <= r; dy++) {
-        for (let dx = -r; dx <= r; dx++) {
-          const xx = cx + dx, yy = cy + dy;
-          if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) blocked.add(`${xx},${yy}`);
-        }
-      }
-    };
-    protect(start, 2);
-    protect(end, 2);
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) blocked.add(`${cx+dx},${cy+dy}`);
+    }
+    for (let i = Math.max(0, state.path.length - 3); i < state.path.length; i++) {
+      const p = state.path[i];
+      const cx = Math.floor(p.x / TILE);
+      const cy = Math.floor(p.y / TILE);
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) blocked.add(`${cx+dx},${cy+dy}`);
+    }
+
+    // 3) Block the path corridor lightly (prevents props on the road)
+    // We do not rasterize the whole path; distance check is enough.
 
     const props = [];
 
-    function reserve(x, y, sizeTiles) {
+    function footprintFree(x, y, sizeTiles) {
       for (let yy = 0; yy < sizeTiles; yy++) {
         for (let xx = 0; xx < sizeTiles; xx++) {
-          blocked.add(`${x + xx},${y + yy}`);
+          if (blocked.has(`${x+xx},${y+yy}`)) return false;
         }
       }
-    }
-
-    function canPlace(x, y, sizeTiles) {
-      for (let yy = 0; yy < sizeTiles; yy++) {
-        for (let xx = 0; xx < sizeTiles; xx++) {
-          const xx2 = x + xx, yy2 = y + yy;
-          if (xx2 < 0 || yy2 < 0 || xx2 >= cols || yy2 >= rows) return false;
-          if (blocked.has(`${xx2},${yy2}`)) return false;
-        }
-      }
-      // Pfad-Abstand Check (Center)
-      const wx = (x + sizeTiles / 2) * TILE;
-      const wy = (y + sizeTiles / 2) * TILE;
-      if (distToPolyline(wx, wy, state.path) < PATH_CLEARANCE) return false;
-
       return true;
     }
 
-    function placeAt(kind, x, y, sizeTiles) {
-      reserve(x, y, sizeTiles);
-      props.push({
-        kind,
-        x: x * TILE,
-        y: y * TILE,
-        w: TILE * sizeTiles,
-        h: TILE * sizeTiles
-      });
+    function reserve(x, y, sizeTiles) {
+      for (let yy = 0; yy < sizeTiles; yy++) {
+        for (let xx = 0; xx < sizeTiles; xx++) blocked.add(`${x+xx},${y+yy}`);
+      }
     }
 
-    function tryPlace(kind, tries, sizeTiles = 1) {
+    function farFromPathCenter(x, y, sizeTiles) {
+      const wx = (x + sizeTiles / 2) * TILE;
+      const wy = (y + sizeTiles / 2) * TILE;
+      return distToPolyline(wx, wy, state.path) >= PATH_CLEARANCE;
+    }
+
+    function tryPlace(kind, tries, sizeTiles, constraintFn) {
       for (let t = 0; t < tries; t++) {
         const x = Math.floor(Math.random() * cols);
         const y = Math.floor(Math.random() * rows);
-        if (!canPlace(x, y, sizeTiles)) continue;
-        placeAt(kind, x, y, sizeTiles);
+
+        if (!footprintFree(x, y, sizeTiles)) continue;
+        if (!farFromPathCenter(x, y, sizeTiles)) continue;
+        if (constraintFn && !constraintFn(x, y, sizeTiles)) continue;
+
+        reserve(x, y, sizeTiles);
+        props.push({ kind, x: x*TILE, y: y*TILE, w: TILE*sizeTiles, h: TILE*sizeTiles });
         return true;
       }
       return false;
     }
 
-    // --- 1) gezielte Deko "zwischen Slots" (Ring um Slots) ---
-    // Hier packen wir *nur* 1x1 Steine + 1x1 Büsche rein.
-    const nearSlotCandidates = [];
-    for (const s of state.slots) {
-      const cx = Math.floor(s.x / TILE);
-      const cy = Math.floor(s.y / TILE);
+    // --- Base scatter: chests, trees (2x2/3x3), some bushes/rocks ---
+    const total = cols * rows;
 
-      for (let dy = -NEAR_SLOT_RING_MAX; dy <= NEAR_SLOT_RING_MAX; dy++) {
-        for (let dx = -NEAR_SLOT_RING_MAX; dx <= NEAR_SLOT_RING_MAX; dx++) {
-          const rr = Math.max(Math.abs(dx), Math.abs(dy));
-          if (rr < NEAR_SLOT_RING_MIN || rr > NEAR_SLOT_RING_MAX) continue;
+    const chestCount = Math.max(2, Math.floor(total * 0.002));
+    for (let i = 0; i < chestCount; i++) tryPlace("chest", 700, 1);
 
-          const x = cx + dx;
-          const y = cy + dy;
-          if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
-          nearSlotCandidates.push({ x, y });
+    // Trees: only 2x2 and 3x3 (no 1x1)
+    const tree3Count = Math.min(10, Math.floor(total * TREE_3_COUNT_FACTOR * DENSITY));
+    const tree2Count = Math.min(14, Math.floor(total * TREE_2_COUNT_FACTOR * DENSITY));
+
+    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 1400, 3);
+    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 1100, 2);
+
+    // A few base bushes & rocks (1x1), not too many
+    const bushBase = Math.min(18, Math.floor(total * BUSH_BASE_FACTOR * DENSITY));
+    const rockBase = Math.min(16, Math.floor(total * ROCK_BASE_FACTOR * DENSITY));
+
+    for (let i = 0; i < bushBase; i++) tryPlace("bush", 500, 1);
+    for (let i = 0; i < rockBase; i++) tryPlace("rock", 500, 1);
+
+    // --- “Between slots” placement (small bushes/rocks) ---
+    // Idea: place near slot corridors, but NOT inside core slot area.
+    // We allow within a “soft ring” around slots, and also near midpoints between slot pairs.
+    const betweenCandidates = [];
+
+    // ring around each slot (soft zone)
+    for (const sc of slotCells) {
+      for (let dy = -SLOT_PAD_TILES_SOFT; dy <= SLOT_PAD_TILES_SOFT; dy++) {
+        for (let dx = -SLOT_PAD_TILES_SOFT; dx <= SLOT_PAD_TILES_SOFT; dx++) {
+          const xx = sc.cx + dx, yy = sc.cy + dy;
+          const manhattan = Math.abs(dx) + Math.abs(dy);
+          if (manhattan <= SLOT_PAD_TILES_CORE) continue; // keep core clear
+          if (xx < 0 || yy < 0 || xx >= cols || yy >= rows) continue;
+          betweenCandidates.push({ x: xx, y: yy });
         }
       }
     }
 
-    // shuffle
-    for (let i = nearSlotCandidates.length - 1; i > 0; i--) {
-      const j = (Math.random() * (i + 1)) | 0;
-      [nearSlotCandidates[i], nearSlotCandidates[j]] = [nearSlotCandidates[j], nearSlotCandidates[i]];
+    // midpoints between “near” slots (corridor feeling)
+    for (let i = 0; i < slotCells.length; i++) {
+      for (let j = i + 1; j < slotCells.length; j++) {
+        const a = slotCells[i], b = slotCells[j];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d < 120 || d > 260) continue; // corridor-ish distances
+        const mx = (a.x + b.x) / 2;
+        const my = (a.y + b.y) / 2;
+        const cx = Math.floor(mx / TILE);
+        const cy = Math.floor(my / TILE);
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const xx = cx + dx, yy = cy + dy;
+          if (xx < 0 || yy < 0 || xx >= cols || yy >= rows) continue;
+          betweenCandidates.push({ x: xx, y: yy });
+        }
+      }
     }
 
-    const nearCountBase = Math.floor((state.slots.length * 2.2) * DENSITY_MULT);
-    let nearPlaced = 0;
+    function tryPlaceFromCandidates(kind, maxCount) {
+      let placed = 0;
+      for (let tries = 0; tries < BETWEEN_TRIES && placed < maxCount; tries++) {
+        const c = betweenCandidates[Math.floor(Math.random() * betweenCandidates.length)];
+        if (!c) break;
 
-    for (let i = 0; i < nearSlotCandidates.length && nearPlaced < nearCountBase; i++) {
-      const { x, y } = nearSlotCandidates[i];
+        const x = c.x, y = c.y;
+        if (!footprintFree(x, y, 1)) continue;
 
-      // wir blocken Slot selbst schon, also ok.
-      if (!canPlace(x, y, 1)) continue;
+        // keep off the road
+        const wx = (x + 0.5) * TILE;
+        const wy = (y + 0.5) * TILE;
+        if (distToPolyline(wx, wy, state.path) < PATH_CLEARANCE) continue;
 
-      // 60% bush, 40% rock
-      const kind = (Math.random() < 0.60) ? "bush" : "rock";
-      placeAt(kind, x, y, 1);
-      nearPlaced++;
+        reserve(x, y, 1);
+        props.push({ kind, x: x*TILE, y: y*TILE, w: TILE, h: TILE });
+        placed++;
+      }
     }
 
-    // --- 2) allgemeine Deko (random) ---
-    // Schatzkisten 1x1
-    const chestCount = Math.max(2, Math.floor(2 * DENSITY_MULT));
-    for (let i = 0; i < chestCount; i++) tryPlace("chest", 900, 1);
+    // Keep it modest: few extra between slots
+    const betweenTotal = BETWEEN_SLOTS_MAX;
+    const betweenBush = Math.floor(betweenTotal * 0.55);
+    const betweenRock = betweenTotal - betweenBush;
 
-    // Counts
-    const total = cols * rows;
-
-    // Bäume (nur 3x3 & 2x2)
-    const treePlacements = Math.floor(total * 0.012 * DENSITY_MULT);
-    const tree3Count = Math.floor(treePlacements * TREE3_SHARE);
-    const tree2Count = Math.floor(treePlacements * TREE2_SHARE);
-
-    // Büsche 1x1 allgemein
-    const bushCount = Math.floor(total * 0.015 * DENSITY_MULT);
-
-    // Steine: 2x2 plus 1x1 allgemein
-    const rock2Count = Math.floor(total * 0.007 * DENSITY_MULT);
-    const rock1Count = Math.floor(total * 0.010 * DENSITY_MULT);
-
-    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 1200, 3);
-    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 1000, 2);
-
-    for (let i = 0; i < bushCount; i++) tryPlace("bush", 800, 1);
-
-    for (let i = 0; i < rock2Count; i++) tryPlace("rock", 1200, 2);
-    for (let i = 0; i < rock1Count; i++) tryPlace("rock", 900, 1);
+    tryPlaceFromCandidates("bush", betweenBush);
+    tryPlaceFromCandidates("rock", betweenRock);
 
     state._props = props;
   }
 
-  // ---------- Background draw ----------
+  // --- Background draw ---
   function drawGrass(ctx2) {
     const cols = Math.ceil(state.w / TILE);
     const rows = Math.ceil(state.h / TILE);
@@ -306,7 +283,6 @@ export function createRenderer({ canvas, ctx, state, assets }) {
           setCrisp(ctx2);
           ctx2.drawImage(assets.tiles.grass, gx, gy, TILE, TILE);
         } else {
-          // fallback dark checker
           ctx2.fillStyle = ((x + y) & 1) ? "rgba(2,6,23,0.92)" : "rgba(2,6,23,0.86)";
           ctx2.fillRect(gx, gy, TILE, TILE);
         }
@@ -340,60 +316,80 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     ctx2.restore();
   }
 
-  function drawStartEndGates(ctx2) {
-    const startImg = assets?.props?.startCave;
+  function drawGatesToBackground(ctx2) {
+    const pts = state.path;
+    if (!pts || pts.length < 2) return;
+
+    const start = pts[0];
+    const startDir = dirFromTo(pts[0], pts[1]);
+
+    const end = pts[pts.length - 1];
+    const endDir = dirFromTo(pts[pts.length - 2], pts[pts.length - 1]);
+
+    const startImg = assets?.props?.startGate;
     const endImg = assets?.props?.endGate;
 
-    const s = getStartAnchor();
-    const e = getEndAnchor();
-
-    // Start cave: leicht links versetzen (weil Pfad oft offscreen links beginnt)
+    // Start gate (opening should face right in your art; we only do slight rotation if needed)
     if (startImg) {
-      const w = 96;   // 3x3 tiles (optisch)
-      const h = 96;
-      const x = clamp(s.x - 40, 0, state.w - w);
-      const y = clamp(s.y - h / 2, 0, state.h - h);
-
+      ctx2.save();
       setCrisp(ctx2);
-      ctx2.drawImage(startImg, x, y, w, h);
 
-      state._startCaveAnchor = { x: x + w * 0.62, y: y + h * 0.55, dir: s.dir };
-    } else {
-      state._startCaveAnchor = { x: s.x, y: s.y, dir: s.dir };
+      // place slightly behind the first point, so monsters "exit" into the road
+      const ox = start.x - startDir.nx * 24;
+      const oy = start.y - startDir.ny * 24;
+
+      ctx2.translate(ox, oy);
+
+      // If you ever want to auto-rotate, uncomment next line:
+      // ctx2.rotate(startDir.ang);
+
+      ctx2.drawImage(startImg, -START_GATE_W/2, -START_GATE_H/2, START_GATE_W, START_GATE_H);
+      ctx2.restore();
     }
 
-    // End gate: platzieren am Ende (unten/rechts) und Glow danach im FG zeichnen
+    // End gate (we’ll add glow per-frame, but draw base gate here)
     if (endImg) {
-      const w = 110;
-      const h = 110;
-      const x = clamp(e.x - w * 0.55, 0, state.w - w);
-      const y = clamp(e.y - h * 0.60, 0, state.h - h);
-
+      ctx2.save();
       setCrisp(ctx2);
-      ctx2.drawImage(endImg, x, y, w, h);
 
-      state._endGateAnchor = { x: x + w * 0.52, y: y + h * 0.55 };
-    } else {
-      state._endGateAnchor = { x: e.x, y: e.y };
+      // place slightly ahead of last point so it feels like they run "into" it
+      const ox = end.x + endDir.nx * 18;
+      const oy = end.y + endDir.ny * 18;
+
+      ctx2.translate(ox, oy);
+
+      // Optional rotation (keep minimal; your sprite is already angled)
+      // ctx2.rotate(endDir.ang);
+
+      ctx2.drawImage(endImg, -END_GATE_W/2, -END_GATE_H/2, END_GATE_W, END_GATE_H);
+      ctx2.restore();
     }
+
+    // Cache positions for per-frame effects
+    state._gate = {
+      start: { x: start.x, y: start.y, dx: startDir.nx, dy: startDir.ny },
+      end:   { x: end.x,   y: end.y,   dx: endDir.nx,   dy: endDir.ny },
+      hasStart: !!startImg,
+      hasEnd: !!endImg
+    };
   }
 
   function drawProps(ctx2) {
     for (const p of (state._props || [])) {
       const img = assets?.props?.[p.kind];
 
-      // optional subtle shadow
+      // subtle shadow
       if (PROP_SHADOW_ALPHA > 0) {
         ctx2.save();
         ctx2.globalAlpha = PROP_SHADOW_ALPHA;
         ctx2.fillStyle = "black";
         ctx2.beginPath();
         ctx2.ellipse(
-          p.x + p.w * 0.55,
-          p.y + p.h * 0.82,
-          p.w * 0.34,
-          p.h * 0.16,
-          0, 0, Math.PI * 2
+          p.x + p.w*0.55,
+          p.y + p.h*0.82,
+          p.w*0.34,
+          p.h*0.16,
+          0, 0, Math.PI*2
         );
         ctx2.fill();
         ctx2.restore();
@@ -419,30 +415,25 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     drawGrass(bgCtx);
     buildSmoothPath();
     drawSmoothRoad(bgCtx);
-
-    // Gates werden ins Background gebacken (statisch)
-    drawStartEndGates(bgCtx);
-
-    // Props
+    drawGatesToBackground(bgCtx);
     drawProps(bgCtx);
   }
 
   function rebuild() {
+    // init particles container
+    if (!state._caveFx) state._caveFx = { particles: [], acc: 0 };
     buildSmoothPath();
     buildProps();
     buildBackground();
-
-    // Fog reset (optional)
-    fog = [];
-    lastFogTs = performance.now();
   }
 
-  // ---------- Foreground draw ----------
+  // --- Foreground draw helpers ---
   function drawBackground() {
     setCrisp(ctx);
     ctx.drawImage(bg, 0, 0);
   }
 
+  // Slots: keine dunklen “Blöcke” unter Türmen
   function drawSlots() {
     for (const s of state.slots) {
       const isHovered = state.selectedType && !s.occupied;
@@ -469,6 +460,96 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     }
   }
 
+  // --- Cave fog/particles (start gate) ---
+  function updateAndDrawCaveParticles(now) {
+    if (!state._gate?.hasStart) return;
+
+    if (!state._caveFx) state._caveFx = { particles: [], acc: 0 };
+    if (state._caveFx.lastNow == null) state._caveFx.lastNow = now;
+    const dt = Math.min((now - state._caveFx.lastNow) / 1000, 0.05);
+    state._caveFx.lastNow = now;
+
+    const fx = state._caveFx;
+    const gate = state._gate.start;
+
+    // emit
+    fx.acc += dt * CAVE_PARTICLE_RATE;
+    const emitCount = Math.floor(fx.acc);
+    fx.acc -= emitCount;
+
+    for (let i = 0; i < emitCount; i++) {
+      if (fx.particles.length >= CAVE_PARTICLE_MAX) break;
+
+      const life = CAVE_PARTICLE_LIFE[0] + Math.random() * (CAVE_PARTICLE_LIFE[1] - CAVE_PARTICLE_LIFE[0]);
+      const spd = CAVE_PARTICLE_SPEED[0] + Math.random() * (CAVE_PARTICLE_SPEED[1] - CAVE_PARTICLE_SPEED[0]);
+
+      // spawn slightly behind start point, drifting along first segment direction
+      const sx = gate.x - gate.dx * 12 + (Math.random() - 0.5) * CAVE_PARTICLE_SPREAD;
+      const sy = gate.y - gate.dy * 12 + (Math.random() - 0.5) * CAVE_PARTICLE_SPREAD;
+
+      // little sideways variance
+      const sideX = -gate.dy;
+      const sideY = gate.dx;
+      const lateral = (Math.random() - 0.5) * 0.55;
+
+      fx.particles.push({
+        x: sx,
+        y: sy,
+        vx: (gate.dx + sideX * lateral) * spd,
+        vy: (gate.dy + sideY * lateral) * spd,
+        life,
+        maxLife: life,
+        r: 1.6 + Math.random() * 1.8
+      });
+    }
+
+    // update + draw
+    ctx.save();
+    setCrisp(ctx);
+    for (let i = fx.particles.length - 1; i >= 0; i--) {
+      const p = fx.particles[i];
+      p.life -= dt;
+      if (p.life <= 0) { fx.particles.splice(i, 1); continue; }
+
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+
+      const a = Math.max(0, p.life / p.maxLife);
+      ctx.globalAlpha = 0.10 + a * 0.22;
+      ctx.fillStyle = "rgba(226,232,240,1)";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // --- End gate glow aura ---
+  function drawEndGlow(now) {
+    if (!state._gate?.hasEnd) return;
+
+    const g = state._gate.end;
+
+    // subtle pulsing
+    const pulse = 0.65 + 0.35 * Math.sin(now * 0.004);
+    const radius = END_GLOW_RADIUS * (0.9 + 0.2 * pulse);
+
+    const gx = g.x + g.dx * 18;
+    const gy = g.y + g.dy * 18;
+
+    ctx.save();
+    const grad = ctx.createRadialGradient(gx, gy, 6, gx, gy, radius);
+    grad.addColorStop(0, `rgba(34,211,238,${END_GLOW_ALPHA * 0.55})`);
+    grad.addColorStop(0.45, `rgba(167,139,250,${END_GLOW_ALPHA * 0.30})`);
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(gx, gy, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   function drawEnemies(now) {
     for (const e of state.enemies) {
       const img = assets?.enemies?.[e.type];
@@ -479,26 +560,26 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
       if (img) {
         setCrisp(ctx);
-        ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
+        ctx.drawImage(img, e.x - w/2, e.y - h/2, w, h);
       } else {
         const color = isSlowed ? "#a78bfa" : (e.isBoss ? "#f43f5e" : (e.type === "fast" ? "#22d3ee" : "#fb7185"));
         ctx.shadowBlur = 5;
         ctx.shadowColor = color;
         ctx.fillStyle = color;
         if (e.shape === "circle") {
-          ctx.beginPath(); ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(e.x, e.y, e.size, 0, Math.PI*2); ctx.fill();
         } else {
-          ctx.beginPath(); ctx.roundRect(e.x - e.size, e.y - e.size, e.size * 2, e.size * 2, 4); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(e.x - e.size, e.y - e.size, e.size*2, e.size*2, 4); ctx.fill();
         }
         ctx.shadowBlur = 0;
       }
 
-      // HP bar (nur für echte Enemies aus state.enemies!)
+      // HP bar (nur für ENEMIES – props haben hiermit nichts zu tun)
       const hpPct = Math.max(0, e.hp / e.maxHp);
       ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.fillRect(e.x - 16, e.y - (h / 2) - 10, 32, 4);
+      ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32, 4);
       ctx.fillStyle = hpPct > 0.5 ? "#10b981" : (hpPct > 0.2 ? "#f59e0b" : "#ef4444");
-      ctx.fillRect(e.x - 16, e.y - (h / 2) - 10, 32 * hpPct, 4);
+      ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32 * hpPct, 4);
     }
   }
 
@@ -511,7 +592,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
       if (img) {
         setCrisp(ctx);
-        ctx.drawImage(img, t.x - w / 2, t.y - h / 2, w, h);
+        ctx.drawImage(img, t.x - w/2, t.y - h/2, w, h);
       } else {
         ctx.save();
         ctx.translate(t.x, t.y);
@@ -533,7 +614,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       ctx.fillStyle = "rgba(226,232,240,0.8)";
       for (let i = 0; i < Math.min(t.level, 10); i++) {
         ctx.beginPath();
-        ctx.arc(-14 + (i * 3.3), 18, 1.2, 0, Math.PI * 2);
+        ctx.arc(-14 + (i * 3.3), 18, 1.2, 0, Math.PI*2);
         ctx.fill();
       }
       ctx.restore();
@@ -544,7 +625,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     for (const p of state.projectiles) {
       ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
       ctx.fill();
     }
   }
@@ -558,86 +639,10 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     ctx.globalAlpha = 1;
   }
 
-  // ---------- Start fog + End glow (foreground overlay) ----------
-  function spawnFog(dt) {
-    if (!START_FOG.enabled) return;
-    const a = state._startCaveAnchor || getStartAnchor();
-    const want = START_FOG.spawnRate * dt;
-    let n = want;
-    while (n > 0) {
-      if (fog.length >= START_FOG.max) break;
-      if (Math.random() < n) {
-        const ang = Math.random() * Math.PI * 2;
-        const r = Math.random() * START_FOG.spread;
-        const x = a.x + Math.cos(ang) * r;
-        const y = a.y + Math.sin(ang) * r;
-
-        fog.push({
-          x, y,
-          vx: (Math.random() - 0.5) * START_FOG.drift + (a.dir?.x || 1) * 8,
-          vy: -Math.random() * START_FOG.rise + (a.dir?.y || 0) * 6,
-          life: 0.8 + Math.random() * 1.3,
-          size: START_FOG.sizeMin + Math.random() * (START_FOG.sizeMax - START_FOG.sizeMin),
-          a: START_FOG.alpha + Math.random() * 0.10
-        });
-      }
-      n -= 1;
-    }
-  }
-
-  function updateFog(dt) {
-    for (let i = fog.length - 1; i >= 0; i--) {
-      const p = fog[i];
-      p.life -= dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vx *= (1 - dt * 0.8);
-      p.vy *= (1 - dt * 0.3);
-
-      if (p.life <= 0) fog.splice(i, 1);
-    }
-  }
-
-  function drawFog(now) {
-    if (!START_FOG.enabled) return;
-    // soft dots
-    for (const p of fog) {
-      const t = Math.max(0, Math.min(1, p.life));
-      ctx.globalAlpha = p.a * t;
-
-      // leicht "milchig" statt knallweiß
-      ctx.fillStyle = "rgba(226,232,240,1)";
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  function drawEndGlow() {
-    if (!END_GLOW.enabled) return;
-    const g = state._endGateAnchor;
-    if (!g) return;
-
-    const r = END_GLOW.radius;
-    const grd = ctx.createRadialGradient(g.x, g.y, 6, g.x, g.y, r);
-    grd.addColorStop(0, `rgba(167,139,250,${END_GLOW.alpha})`);     // violet
-    grd.addColorStop(0.55, `rgba(34,211,238,${END_GLOW.alpha * 0.35})`); // cyan hint
-    grd.addColorStop(1, "rgba(0,0,0,0)");
-
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-    ctx.fillStyle = grd;
-    ctx.beginPath();
-    ctx.arc(g.x, g.y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
   function drawRange() {
     if (!state.activeTower) return;
     ctx.beginPath();
-    ctx.arc(state.activeTower.x, state.activeTower.y, state.activeTower.range, 0, Math.PI * 2);
+    ctx.arc(state.activeTower.x, state.activeTower.y, state.activeTower.range, 0, Math.PI*2);
     ctx.fillStyle = "rgba(255,255,255,0.03)";
     ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.setLineDash([6, 6]);
@@ -647,27 +652,20 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   }
 
   function drawFrame() {
-    // dt für Fog aus Zeit ableiten
-    const now = performance.now();
-    const dt = Math.min(0.05, (now - lastFogTs) / 1000);
-    lastFogTs = now;
-
-    spawnFog(dt);
-    updateFog(dt);
-
     ctx.clearRect(0, 0, state.w, state.h);
-    drawBackground();
-    drawSlots();
 
+    drawBackground();
+
+    const now = performance.now();
+    // Effects (above background, below enemies)
+    drawEndGlow(now);
+    updateAndDrawCaveParticles(now);
+
+    drawSlots();
     drawEnemies(now);
     drawTowers();
     drawProjectiles();
     drawParticles();
-
-    // overlays
-    drawEndGlow();
-    drawFog(now);
-
     drawRange();
   }
 
