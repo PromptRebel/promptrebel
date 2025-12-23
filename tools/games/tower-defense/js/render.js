@@ -298,7 +298,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   function drawTowers() {
     for (const t of state.towers) {
       const img = assets?.towers?.[t.id];
-      const w = 40, h = 40;
+      const w = 64, h = 80;
 
       if (img) {
         setCrisp(ctx);
