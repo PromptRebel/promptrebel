@@ -29,7 +29,6 @@ export async function loadAssets() {
       endGate: "assets/props/end_gate.png",
     },
     
-    },
     towers: {
       archer: "assets/towers/archer.png",
       cannon: "assets/towers/cannon.png",
