@@ -1,1 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Cyber Defense · Tower Tactics</title>
 
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root{
+      --bg:#020617;
+      --panel:rgba(15,23,42,.9);
+      --stroke:rgba(148,163,184,.2);
+      --cyan:#22d3ee;
+      --pink:#ec4899;
+      --violet:#8b5cf6;
+      --emerald:#10b981;
+      --rose:#f43f5e;
+    }
+    body{
+      background:var(--bg);
+      color:#e2e8f0;
+      overflow:hidden;
+      touch-action:none;
+      -webkit-tap-highlight-color:transparent;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .mesh-bg{position:fixed; inset:0; z-index:-1;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(34,211,238,.12), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(236,72,153,.10), transparent 40%);
+    }
+    .mesh-grid{position:fixed; inset:0; z-index:-1;
+      background-image: linear-gradient(var(--stroke) 1px, transparent 1px), linear-gradient(90deg, var(--stroke) 1px, transparent 1px);
+      background-size:40px 40px;
+      opacity:.10;
+    }
+    canvas{touch-action:none; cursor:crosshair;}
+    .glass{
+      background:var(--panel);
+      backdrop-filter:blur(16px);
+      border:1px solid var(--stroke);
+      box-shadow:0 8px 32px rgba(0,0,0,.4);
+    }
+    .btn-action{transition:all .2s cubic-bezier(.4,0,.2,1);}
+    .btn-action:active{transform:scale(.95);}
+    .btn-action:disabled{opacity:.4; cursor:not-allowed; filter:grayscale(1);}
+
+    .shake{animation:shake .4s cubic-bezier(.36,.07,.19,.97) both;}
+    @keyframes shake{
+      10%,90%{transform:translate3d(-1px,0,0);}
+      20%,80%{transform:translate3d(2px,0,0);}
+      30%,50%,70%{transform:translate3d(-4px,0,0);}
+      40%,60%{transform:translate3d(4px,0,0);}
+    }
+
+    .no-scrollbar::-webkit-scrollbar{display:none;}
+    .no-scrollbar{-ms-overflow-style:none; scrollbar-width:none;}
+  </style>
+</head>
+
+<body class="flex flex-col h-screen p-2 md:p-4 space-y-3">
+  <div class="mesh-bg"></div>
+  <div class="mesh-grid"></div>
+
+  <!-- Header -->
+  <header class="glass rounded-2xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50">
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <div class="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-700/50">
+        <span class="text-rose-500">❤️</span>
+        <span id="hp" class="font-bold text-sm md:text-base">10</span>
+      </div>
+
+      <div class="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-700/50">
+        <span class="text-amber-400">🪙</span>
+        <span id="gold" class="font-bold text-sm md:text-base">120</span>
+      </div>
+
+      <div class="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-700/50">
+        <span class="text-slate-400 text-[10px] font-black uppercase">Wave</span>
+        <span id="wave" class="font-bold text-sm md:text-base text-cyan-400">0</span>
+        <span id="waveProgress" class="text-[10px] text-slate-500 font-medium ml-1">Secure</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 ml-auto">
+      <button id="btnStart" class="btn-action bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-1 rounded-full text-xs font-bold hover:bg-emerald-500/30">
+        ▶ Start Wave
+      </button>
+
+      <button id="btnAuto" class="btn-action bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 rounded-full text-xs font-bold">
+        Auto: Off
+      </button>
+
+      <button id="btnRestart" class="btn-action bg-rose-500/15 text-rose-300 border border-rose-500/30 px-3 py-1 rounded-full text-xs font-bold hover:bg-rose-500/25">
+        ↻ Restart
+      </button>
+
+      <button id="btnSpeed" class="btn-action bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 rounded-full text-xs font-bold">1x</button>
+      <button id="btnLeaderboard" class="btn-action bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 rounded-full text-xs font-bold">🏆</button>
+    </div>
+  </header>
+
+  <!-- Main Game Area -->
+  <main id="gameStage" class="relative flex-1 glass rounded-3xl overflow-hidden group">
+    <canvas id="canvas"></canvas>
+
+    <!-- Context Menu -->
+    <div id="ctxMenu" class="hidden absolute glass rounded-2xl p-2 z-20 flex flex-col gap-1 w-44 pointer-events-auto">
+      <div class="text-[10px] uppercase tracking-widest text-slate-500 px-2 py-1 font-bold">Unit Actions</div>
+
+      <button id="btnTarget" class="btn-action flex items-center justify-between px-2 py-2 bg-slate-800/50 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700/50 text-xs font-bold">
+        <span>Target:</span>
+        <span id="targetMode" class="text-cyan-400">First</span>
+      </button>
+
+      <button id="btnUpgrade" class="btn-action flex items-center justify-between px-2 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/20 text-xs font-bold">
+        <span id="upgradeLabel">Upgrade</span>
+        <span id="upgradeCost" class="text-[10px]">—</span>
+      </button>
+
+      <button id="btnSell" class="btn-action flex items-center justify-between px-2 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl border border-rose-500/20 text-xs font-bold">
+        <span>Sell</span>
+        <span id="sellValue" class="text-[10px]">—</span>
+      </button>
+    </div>
+
+    <!-- Placement Overlay -->
+    <div id="selectionBar" class="absolute bottom-3 left-3 right-3 h-14 glass rounded-2xl flex items-center px-4 justify-between pointer-events-none translate-y-24 transition-transform duration-300 z-30">
+      <div class="flex items-center gap-3">
+        <div id="selIcon" class="w-9 h-9 rounded-xl flex items-center justify-center text-xl bg-slate-900 border border-slate-700 shadow-inner">🏹</div>
+        <div>
+          <div id="selName" class="font-bold text-sm text-white">Archer</div>
+          <div id="selTip" class="text-[10px] text-slate-400">Tap a free node to deploy</div>
+        </div>
+      </div>
+      <button class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2 rounded-xl text-xs font-bold pointer-events-auto" onclick="window.cancelSelection?.()">
+        Cancel
+      </button>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+      <div id="overlayContent" class="glass rounded-3xl w-full max-w-md p-6 flex flex-col gap-4">
+        <h2 id="overlayTitle" class="text-2xl font-black text-white text-center">Defeat</h2>
+        <div id="overlayText" class="text-center text-slate-400 text-sm">System compromised.</div>
+        <div id="leaderboardList" class="flex flex-col gap-2 max-h-60 overflow-y-auto pr-2 no-scrollbar"></div>
+        <button onclick="window.closeOverlay?.()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-2xl transition-colors">
+          Return
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Shop Footer -->
+  <footer class="glass rounded-2xl px-3 py-2 grid grid-cols-3 gap-3 shrink-0">
+    <button data-buy="archer" class="btn-buy bg-slate-900/40 border border-slate-700/50 hover:border-cyan-500/50 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
+      <span class="text-2xl">🏹</span>
+      <span class="font-bold text-[10px] uppercase tracking-wider">Archer</span>
+      <span class="text-xs text-cyan-400 font-black">20🪙</span>
+    </button>
+    <button data-buy="cannon" class="btn-buy bg-slate-900/40 border border-slate-700/50 hover:border-pink-500/50 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
+      <span class="text-2xl">💣</span>
+      <span class="font-bold text-[10px] uppercase tracking-wider">Cannon</span>
+      <span class="text-xs text-pink-400 font-black">45🪙</span>
+    </button>
+    <button data-buy="mage" class="btn-buy bg-slate-900/40 border border-slate-700/50 hover:border-violet-500/50 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
+      <span class="text-2xl">✨</span>
+      <span class="font-bold text-[10px] uppercase tracking-wider">Mage</span>
+      <span class="text-xs text-violet-400 font-black">40🪙</span>
+    </button>
+  </footer>
+
+  <!-- Boot -->
+  <script type="module">
+    // WICHTIG: index.html liegt in /tower-defense/
+    // daher passen diese relativen Pfade:
+    import { loadAssets } from "./js/assets.js";
+    import * as Game from "./js/game.js";
+    import * as Render from "./js/render.js";
+
+    // global helpers (falls game.js die benutzt)
+    window.closeOverlay = () => document.getElementById('overlay')?.classList.add('hidden');
+    window.cancelSelection = () => Game.cancelSelection?.();
+
+    const canvas = document.getElementById("canvas");
+    const stage  = document.getElementById("gameStage");
+    const ctx    = canvas.getContext("2d");
+
+    // Pixelart crisp
+    ctx.imageSmoothingEnabled = false;
+
+    const assets = await loadAssets();
+
+    // Start: je nach Export-Name in game.js
+    if (typeof Game.startGame === "function") {
+      Game.startGame({ canvas, ctx, stage, assets, Render });
+    } else if (typeof Game.initGame === "function") {
+      Game.initGame({ canvas, ctx, stage, assets, Render });
+    } else {
+      console.error("game.js exportiert weder startGame() noch initGame().");
+      alert("Fehler: game.js hat keine start/init Funktion exportiert.");
+    }
+  </script>
+</body>
+</html>
