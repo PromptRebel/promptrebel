@@ -32,8 +32,8 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   const PATH_CLEARANCE = (PATH_W * 0.6) + 12;
 
   // Gate size
-  const START_GATE_W = 96;
-  const START_GATE_H = 182;
+  const START_GATE_W = 124;
+  const START_GATE_H = 212;
   const END_GATE_W   = 110;
   const END_GATE_H   = 184;
 
@@ -126,7 +126,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const dir = dirFromTo(p0, p1);
 
     // “pull into view”: put start gate near left side if path starts offscreen
-    const x = clamp(p0.x - 150, 0, state.w - 70);
+    const x = clamp(p0.x - 100, 0, state.w - 70);
     const y = clamp(p0.y, 70, state.h - 70);
 
     return { x, y, dir };
@@ -141,8 +141,8 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const dir = dirFromTo(pm, pn);
 
     // “push into view”: move slightly to the right/down but clamp to canvas
-    const x = clamp(pn.x - 140, 0, state.w - 80);
-    const y = clamp(pn.y, 80, state.h - 80);
+    const x = clamp(pn.x + 140, 0, state.w - 80);
+    const y = clamp(pn.y, 10, state.h - 10);
 
     return { x, y, dir };
   }
