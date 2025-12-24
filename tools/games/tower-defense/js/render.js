@@ -126,7 +126,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const dir = dirFromTo(p0, p1);
 
     // “pull into view”: put start gate near left side if path starts offscreen
-    const x = clamp(p0.x - 100, 0, state.w - 70);
+    const x = clamp(p0.x - 160, - 60, state.w - 70);
     const y = clamp(p0.y, 70, state.h - 70);
 
     return { x, y, dir };
