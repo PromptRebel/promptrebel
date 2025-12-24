@@ -1,55 +1,64 @@
 // js/render.js
-// Smooth path following state.path + tiled grass + props (bigger trees), plus:
-// - Start gate (cave) at first path point + fog/particles
-// - End gate at last path point + subtle glow aura
-// - Extra small bushes/rocks placed "between slots" (corridors), capped + sparse
-// Pixelart crisp: imageSmoothingEnabled = false.
+// Smooth path + props + start/end gates (with fog + glow)
+// Works with assets.js keys:
+//   assets.props.startGate  -> "assets/props/start_gate.png"
+//   assets.props.endGate    -> "assets/props/end_gate.png"
 
 export function createRenderer({ canvas, ctx, state, assets }) {
   const TILE = 32;
-
-  // Dein guter Stand
   const PATH_W = 28;
 
-  // -------------------------
-  // Deko-Tuning (sparsam!)
-  // -------------------------
-  // Bäume: bevorzugt 3x3, optional ein paar 2x2, KEINE 1x1 Trees
-  const TREE_3_FACTOR = 0.008; // pro Zelle (cols*rows)
-  const TREE_2_FACTOR = 0.004;
+  // ---- Deco tuning (reduziert!) ----
+  const DENSITY = 0.75; // <— weniger als vorher
+  const PROP_SHADOW_ALPHA = 0.10;
 
-  // Base scatter (überall, aber wenig)
-  const BUSH_BASE_FACTOR = 0.006; // 1x1
-  const ROCK_BASE_FACTOR = 0.004; // 1x1
+  // Trees (2x2/3x3), no 1x1 trees
+  const TREE3_FACTOR = 0.007 * DENSITY;
+  const TREE2_FACTOR = 0.004 * DENSITY;
 
-  // Zwischen Slots: gezielt aber gedeckelt
-  const SLOT_PAD_CORE = 1;      // um Slot frei halten (Tiles)
-  const SLOT_PAD_SOFT = 2;      // “Korridor”-Ring (hier dürfen 1x1 rein)
-  const BETWEEN_MAX = 10;       // harte Obergrenze extra Props
-  const BETWEEN_BUSH_RATIO = 0.6;
+  // Base scatter (few)
+  const BUSH_BASE_FACTOR = 0.006 * DENSITY; // 1x1
+  const ROCK_BASE_FACTOR = 0.004 * DENSITY; // 1x1
+  const CHEST_FACTOR     = 0.002 * DENSITY;
 
-  // Abstand vom Weg
+  // “Between slots” props (very few)
+  const BETWEEN_MAX = 8;               // absolute cap
+  const BETWEEN_BUSH_RATIO = 0.55;     // rest rocks
+  const SLOT_PAD_CORE = 1;             // tiles blocked around slot
+  const SLOT_RING_MIN = 2;             // place near slot but not on it
+  const SLOT_RING_MAX = 3;
+
+  // Path clearance
   const PATH_CLEARANCE = (PATH_W * 0.6) + 12;
 
-  // Schatten Props sehr dezent (0 = aus)
-  const PROP_SHADOW_ALPHA = 0.08;
-
-  // Gates: Größe (du kannst hier easy tweaken)
+  // Gate size
   const START_GATE_W = 96;
   const START_GATE_H = 96;
-  const END_GATE_W   = 96;
-  const END_GATE_H   = 96;
+  const END_GATE_W   = 110;
+  const END_GATE_H   = 110;
 
-  // Start-Nebel / Partikel
-  const CAVE_PARTICLE_RATE = 22;      // pro Sekunde
-  const CAVE_PARTICLE_MAX  = 110;
-  const CAVE_PARTICLE_LIFE = [0.9, 1.6]; // Sekunden
-  const CAVE_PARTICLE_SPEED = [16, 46];  // px/s
-  const CAVE_PARTICLE_SPREAD = 14;       // px
+  // Start fog particles
+  const FOG = {
+    enabled: true,
+    spawnRate: 26,     // per second
+    max: 140,
+    spread: 18,        // spawn radius
+    drift: 18,
+    push: 12,          // push along path dir
+    rise: 20,          // slight upward
+    alpha: 0.10,
+    sizeMin: 1.0,
+    sizeMax: 2.4,
+    lifeMin: 0.9,
+    lifeMax: 1.8
+  };
 
-  // End-Gate Glow
-  const END_GLOW_RADIUS = 64;
-  const END_GLOW_ALPHA  = 0.20;
+  // End glow aura
+  const GLOW = {
+    enabled: true,
+    radius: 85,
+    alpha: 0.26
+  };
 
   // Offscreen background cache
   const bg = document.createElement("canvas");
@@ -57,9 +66,11 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
   const setCrisp = (c) => { c.imageSmoothingEnabled = false; };
 
-  // -------------------------
-  // Helpers
-  // -------------------------
+  // fog state (renderer-local)
+  let fog = [];
+  let lastTs = performance.now();
+
+  // ---------- Geometry helpers ----------
   function distPointToSegment(px, py, ax, ay, bx, by) {
     const abx = bx - ax, aby = by - ay;
     const apx = px - ax, apy = py - ay;
@@ -67,8 +78,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     let t = (apx * abx + apy * aby) / abLen2;
     t = Math.max(0, Math.min(1, t));
     const cx = ax + abx * t, cy = ay + aby * t;
-    const dx = px - cx, dy = py - cy;
-    return Math.hypot(dx, dy);
+    return Math.hypot(px - cx, py - cy);
   }
 
   function distToPolyline(px, py, pts) {
@@ -79,6 +89,14 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       if (d < best) best = d;
     }
     return best;
+  }
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function dirFromTo(a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const d = Math.hypot(dx, dy) || 1;
+    return { x: dx / d, y: dy / d, ang: Math.atan2(dy, dx) };
   }
 
   function buildSmoothPath() {
@@ -99,25 +117,37 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     return path;
   }
 
-  function dirFromTo(a, b) {
-    const dx = (b.x - a.x), dy = (b.y - a.y);
-    const d = Math.hypot(dx, dy) || 1;
-    return { nx: dx / d, ny: dy / d, ang: Math.atan2(dy, dx) };
+  // ---------- Gate anchors that NEVER go offscreen ----------
+  function getStartAnchor() {
+    const pts = state.path || [];
+    if (pts.length < 2) return { x: 60, y: state.h * 0.5, dir: { x: 1, y: 0 } };
+
+    const p0 = pts[0], p1 = pts[1];
+    const dir = dirFromTo(p0, p1);
+
+    // “pull into view”: put start gate near left side if path starts offscreen
+    const x = clamp(p0.x + 120, 70, state.w - 70);
+    const y = clamp(p0.y, 70, state.h - 70);
+
+    return { x, y, dir };
   }
 
-  // Key-robust: akzeptiert startGate/start_gate/start_gate.png etc.
-  function getPropImg(...keys) {
-    const p = assets?.props;
-    if (!p) return null;
-    for (const k of keys) {
-      if (p[k]) return p[k];
-    }
-    return null;
+  function getEndAnchor() {
+    const pts = state.path || [];
+    if (pts.length < 2) return { x: state.w - 60, y: state.h - 60, dir: { x: 1, y: 0 } };
+
+    const pn = pts[pts.length - 1];
+    const pm = pts[pts.length - 2];
+    const dir = dirFromTo(pm, pn);
+
+    // “push into view”: move slightly to the right/down but clamp to canvas
+    const x = clamp(pn.x + 76, 80, state.w - 80);
+    const y = clamp(pn.y, 80, state.h - 80);
+
+    return { x, y, dir };
   }
 
-  // -------------------------
-  // Props placement
-  // -------------------------
+  // ---------- Props placement ----------
   function buildProps() {
     const cols = Math.ceil(state.w / TILE);
     const rows = Math.ceil(state.h / TILE);
@@ -125,36 +155,34 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const blocked = new Set();
     const props = [];
 
-    const slotCells = state.slots.map(s => ({
-      cx: Math.floor(s.x / TILE),
-      cy: Math.floor(s.y / TILE),
-      x: s.x, y: s.y
-    }));
+    const pts = state.path || [];
+    const start = pts[0];
+    const end = pts[pts.length - 1];
 
-    // Core block um Slots
-    for (const sc of slotCells) {
+    // block around slots
+    for (const s of state.slots) {
+      const cx = Math.floor(s.x / TILE);
+      const cy = Math.floor(s.y / TILE);
       for (let dy = -SLOT_PAD_CORE; dy <= SLOT_PAD_CORE; dy++) {
         for (let dx = -SLOT_PAD_CORE; dx <= SLOT_PAD_CORE; dx++) {
-          const xx = sc.cx + dx, yy = sc.cy + dy;
+          const xx = cx + dx, yy = cy + dy;
           if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) blocked.add(`${xx},${yy}`);
         }
       }
     }
 
-    // Start/End etwas freihalten
-    const pts = state.path || [];
-    for (let i = 0; i < Math.min(3, pts.length); i++) {
-      const p = pts[i];
+    // protect start/end zone
+    function protectPoint(p, r) {
+      if (!p) return;
       const cx = Math.floor(p.x / TILE);
       const cy = Math.floor(p.y / TILE);
-      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) blocked.add(`${cx+dx},${cy+dy}`);
+      for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+        const xx = cx + dx, yy = cy + dy;
+        if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) blocked.add(`${xx},${yy}`);
+      }
     }
-    for (let i = Math.max(0, pts.length - 3); i < pts.length; i++) {
-      const p = pts[i];
-      const cx = Math.floor(p.x / TILE);
-      const cy = Math.floor(p.y / TILE);
-      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) blocked.add(`${cx+dx},${cy+dy}`);
-    }
+    protectPoint(start, 2);
+    protectPoint(end, 2);
 
     function footprintFree(x, y, sizeTiles) {
       for (let yy = 0; yy < sizeTiles; yy++) {
@@ -191,66 +219,51 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       return false;
     }
 
+    // base counts
     const total = cols * rows;
 
-    // Chests: wenige
-    const chestCount = Math.max(2, Math.floor(total * 0.002));
-    for (let i = 0; i < chestCount; i++) tryPlace("chest", 800, 1);
+    const chestCount = Math.max(1, Math.floor(total * CHEST_FACTOR));
+    for (let i = 0; i < chestCount; i++) tryPlace("chest", 900, 1);
 
-    // Trees: 3x3 bevorzugt + ein paar 2x2
-    const tree3Count = Math.min(10, Math.floor(total * TREE_3_FACTOR));
-    const tree2Count = Math.min(8,  Math.floor(total * TREE_2_FACTOR));
+    const tree3Count = Math.min(10, Math.floor(total * TREE3_FACTOR));
+    const tree2Count = Math.min(8,  Math.floor(total * TREE2_FACTOR));
+    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 1600, 3);
+    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 1200, 2);
 
-    for (let i = 0; i < tree3Count; i++) tryPlace("tree", 1800, 3);
-    for (let i = 0; i < tree2Count; i++) tryPlace("tree", 1400, 2);
-
-    // Base bushes/rocks (1x1), wenig
     const bushBase = Math.min(14, Math.floor(total * BUSH_BASE_FACTOR));
     const rockBase = Math.min(10, Math.floor(total * ROCK_BASE_FACTOR));
+    for (let i = 0; i < bushBase; i++) tryPlace("bush", 800, 1);
+    for (let i = 0; i < rockBase; i++) tryPlace("rock", 800, 1);
 
-    for (let i = 0; i < bushBase; i++) tryPlace("bush", 700, 1);
-    for (let i = 0; i < rockBase; i++) tryPlace("rock", 700, 1);
-
-    // “Between slots”: Kandidatenring + paar Midpoints – aber sparsamer
+    // between slots: ring candidates (few)
     const candidates = [];
-
-    for (const sc of slotCells) {
-      for (let dy = -SLOT_PAD_SOFT; dy <= SLOT_PAD_SOFT; dy++) {
-        for (let dx = -SLOT_PAD_SOFT; dx <= SLOT_PAD_SOFT; dx++) {
-          const man = Math.abs(dx) + Math.abs(dy);
-          if (man <= SLOT_PAD_CORE) continue;
-          const xx = sc.cx + dx, yy = sc.cy + dy;
-          if (xx < 0 || yy < 0 || xx >= cols || yy >= rows) continue;
-          candidates.push({ x: xx, y: yy });
+    for (const s of state.slots) {
+      const cx = Math.floor(s.x / TILE);
+      const cy = Math.floor(s.y / TILE);
+      for (let dy = -SLOT_RING_MAX; dy <= SLOT_RING_MAX; dy++) {
+        for (let dx = -SLOT_RING_MAX; dx <= SLOT_RING_MAX; dx++) {
+          const rr = Math.max(Math.abs(dx), Math.abs(dy));
+          if (rr < SLOT_RING_MIN || rr > SLOT_RING_MAX) continue;
+          const x = cx + dx, y = cy + dy;
+          if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+          candidates.push({ x, y });
         }
       }
     }
 
-    for (let i = 0; i < slotCells.length; i++) {
-      for (let j = i + 1; j < slotCells.length; j++) {
-        const a = slotCells[i], b = slotCells[j];
-        const d = Math.hypot(a.x - b.x, a.y - b.y);
-        if (d < 120 || d > 260) continue;
-        const mx = (a.x + b.x) / 2;
-        const my = (a.y + b.y) / 2;
-        const cx = Math.floor(mx / TILE);
-        const cy = Math.floor(my / TILE);
-        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-          const xx = cx + dx, yy = cy + dy;
-          if (xx < 0 || yy < 0 || xx >= cols || yy >= rows) continue;
-          candidates.push({ x: xx, y: yy });
-        }
-      }
+    // shuffle
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = (Math.random() * (i + 1)) | 0;
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
     }
 
-    function tryPlaceFromCandidates(kind, maxCount) {
+    const betweenBush = Math.floor(BETWEEN_MAX * BETWEEN_BUSH_RATIO);
+    const betweenRock = BETWEEN_MAX - betweenBush;
+
+    function placeFromCandidates(kind, maxCount) {
       let placed = 0;
-      const tries = 650;
-      for (let t = 0; t < tries && placed < maxCount; t++) {
-        const c = candidates[Math.floor(Math.random() * candidates.length)];
-        if (!c) break;
-        const x = c.x, y = c.y;
-
+      for (let i = 0; i < candidates.length && placed < maxCount; i++) {
+        const { x, y } = candidates[i];
         if (!footprintFree(x, y, 1)) continue;
 
         const wx = (x + 0.5) * TILE;
@@ -263,18 +276,13 @@ export function createRenderer({ canvas, ctx, state, assets }) {
       }
     }
 
-    const betweenBush = Math.floor(BETWEEN_MAX * BETWEEN_BUSH_RATIO);
-    const betweenRock = BETWEEN_MAX - betweenBush;
-
-    tryPlaceFromCandidates("bush", betweenBush);
-    tryPlaceFromCandidates("rock", betweenRock);
+    placeFromCandidates("bush", betweenBush);
+    placeFromCandidates("rock", betweenRock);
 
     state._props = props;
   }
 
-  // -------------------------
-  // Background draw
-  // -------------------------
+  // ---------- Background draw ----------
   function drawGrass(ctx2) {
     const cols = Math.ceil(state.w / TILE);
     const rows = Math.ceil(state.h / TILE);
@@ -316,59 +324,6 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     ctx2.restore();
   }
 
-  function drawGatesToBackground(ctx2) {
-    const pts = state.path;
-    if (!pts || pts.length < 2) return;
-
-    const start = pts[0];
-    const startDir = dirFromTo(pts[0], pts[1]);
-
-    const end = pts[pts.length - 1];
-    const endDir = dirFromTo(pts[pts.length - 2], pts[pts.length - 1]);
-
-    // Robust key lookup (dein Loader kann snake_case machen)
-    const startImg = getPropImg(
-      "startGate", "start_gate", "start_gate.png", "start_gate.webp", "start_gate.jpg"
-    );
-    const endImg = getPropImg(
-      "endGate", "end_gate", "end_gate.png", "end_gate.webp", "end_gate.jpg"
-    );
-
-    // Start gate (leicht hinter dem ersten Punkt, damit es “aus der Höhle” kommt)
-    if (startImg) {
-      ctx2.save();
-      setCrisp(ctx2);
-
-      const ox = start.x - startDir.nx * 22;
-      const oy = start.y - startDir.ny * 22;
-
-      ctx2.translate(ox, oy);
-      ctx2.drawImage(startImg, -START_GATE_W/2, -START_GATE_H/2, START_GATE_W, START_GATE_H);
-      ctx2.restore();
-    }
-
-    // End gate (leicht vor den letzten Punkt)
-    if (endImg) {
-      ctx2.save();
-      setCrisp(ctx2);
-
-      const ox = end.x + endDir.nx * 18;
-      const oy = end.y + endDir.ny * 18;
-
-      ctx2.translate(ox, oy);
-      ctx2.drawImage(endImg, -END_GATE_W/2, -END_GATE_H/2, END_GATE_W, END_GATE_H);
-      ctx2.restore();
-    }
-
-    // Cache for FX
-    state._gate = {
-      start: { x: start.x, y: start.y, dx: startDir.nx, dy: startDir.ny },
-      end:   { x: end.x,   y: end.y,   dx: endDir.nx,   dy: endDir.ny },
-      hasStart: !!startImg,
-      hasEnd: !!endImg
-    };
-  }
-
   function drawProps(ctx2) {
     for (const p of (state._props || [])) {
       const img = assets?.props?.[p.kind];
@@ -379,11 +334,11 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         ctx2.fillStyle = "black";
         ctx2.beginPath();
         ctx2.ellipse(
-          p.x + p.w*0.55,
-          p.y + p.h*0.82,
-          p.w*0.34,
-          p.h*0.16,
-          0, 0, Math.PI*2
+          p.x + p.w * 0.55,
+          p.y + p.h * 0.82,
+          p.w * 0.34,
+          p.h * 0.16,
+          0, 0, Math.PI * 2
         );
         ctx2.fill();
         ctx2.restore();
@@ -399,6 +354,42 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     }
   }
 
+  function drawGatesToBackground(ctx2) {
+    const startImg = assets?.props?.startGate;
+    const endImg   = assets?.props?.endGate;
+
+    const s = getStartAnchor();
+    const e = getEndAnchor();
+
+    // Start gate (in background)
+    if (startImg) {
+      const x = clamp(s.x - START_GATE_W * 0.55, 0, state.w - START_GATE_W);
+      const y = clamp(s.y - START_GATE_H * 0.55, 0, state.h - START_GATE_H);
+      setCrisp(ctx2);
+      ctx2.drawImage(startImg, x, y, START_GATE_W, START_GATE_H);
+
+      // anchor for fog (coming out of the opening)
+      state._startGateAnchor = { x: x + START_GATE_W * 0.70, y: y + START_GATE_H * 0.58, dir: s.dir };
+    } else {
+      state._startGateAnchor = { x: s.x, y: s.y, dir: s.dir };
+    }
+
+    // End gate (in background)
+    if (endImg) {
+      const x = clamp(e.x - END_GATE_W * 0.55, 0, state.w - END_GATE_W);
+      const y = clamp(e.y - END_GATE_H * 0.60, 0, state.h - END_GATE_H);
+      setCrisp(ctx2);
+      ctx2.drawImage(endImg, x, y, END_GATE_W, END_GATE_H);
+
+      state._endGateAnchor = { x: x + END_GATE_W * 0.52, y: y + END_GATE_H * 0.58 };
+    } else {
+      state._endGateAnchor = { x: e.x, y: e.y };
+    }
+
+    // flags for FX
+    state._gateFlags = { hasStart: !!startImg, hasEnd: !!endImg };
+  }
+
   function buildBackground() {
     bg.width = Math.ceil(state.w);
     bg.height = Math.ceil(state.h);
@@ -409,20 +400,106 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     drawGrass(bgCtx);
     buildSmoothPath();
     drawSmoothRoad(bgCtx);
-    drawGatesToBackground(bgCtx);
+    drawGatesToBackground(bgCtx); // IMPORTANT: before props, so props can overlap if needed
     drawProps(bgCtx);
   }
 
   function rebuild() {
-    if (!state._caveFx) state._caveFx = { particles: [], acc: 0, lastNow: null };
     buildSmoothPath();
     buildProps();
     buildBackground();
+
+    // reset fog
+    fog = [];
+    lastTs = performance.now();
   }
 
-  // -------------------------
-  // Foreground draw
-  // -------------------------
+  // ---------- Foreground (fog + glow) ----------
+  function spawnFog(dt) {
+    if (!FOG.enabled) return;
+    if (!state._gateFlags?.hasStart) return;
+
+    const a = state._startGateAnchor || getStartAnchor();
+    const want = FOG.spawnRate * dt;
+    let n = want;
+
+    while (n > 0) {
+      if (fog.length >= FOG.max) break;
+      if (Math.random() < n) {
+        const ang = Math.random() * Math.PI * 2;
+        const r = Math.random() * FOG.spread;
+        const x = a.x + Math.cos(ang) * r;
+        const y = a.y + Math.sin(ang) * r;
+
+        const life = FOG.lifeMin + Math.random() * (FOG.lifeMax - FOG.lifeMin);
+        const size = FOG.sizeMin + Math.random() * (FOG.sizeMax - FOG.sizeMin);
+
+        fog.push({
+          x, y,
+          vx: (Math.random() - 0.5) * FOG.drift + (a.dir?.x || 1) * FOG.push,
+          vy: (Math.random() - 0.2) * 6 - FOG.rise + (a.dir?.y || 0) * 6,
+          life,
+          maxLife: life,
+          size,
+          a: FOG.alpha + Math.random() * 0.10
+        });
+      }
+      n -= 1;
+    }
+  }
+
+  function updateFog(dt) {
+    for (let i = fog.length - 1; i >= 0; i--) {
+      const p = fog[i];
+      p.life -= dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= (1 - dt * 0.8);
+      p.vy *= (1 - dt * 0.3);
+      if (p.life <= 0) fog.splice(i, 1);
+    }
+  }
+
+  function drawFog() {
+    if (!FOG.enabled) return;
+    if (!state._gateFlags?.hasStart) return;
+
+    for (const p of fog) {
+      const t = Math.max(0, Math.min(1, p.life / p.maxLife));
+      ctx.globalAlpha = p.a * t;
+      ctx.fillStyle = "rgba(226,232,240,1)";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawEndGlow(now) {
+    if (!GLOW.enabled) return;
+    if (!state._gateFlags?.hasEnd) return;
+
+    const g = state._endGateAnchor;
+    if (!g) return;
+
+    const pulse = 0.65 + 0.35 * Math.sin(now * 0.004);
+    const r = GLOW.radius * (0.92 + 0.18 * pulse);
+
+    const grad = ctx.createRadialGradient(g.x, g.y, 6, g.x, g.y, r);
+    grad.addColorStop(0, `rgba(167,139,250,${GLOW.alpha})`);
+    grad.addColorStop(0.55, `rgba(34,211,238,${GLOW.alpha * 0.35})`);
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ---------- Existing draws ----------
   function drawBackground() {
     setCrisp(ctx);
     ctx.drawImage(bg, 0, 0);
@@ -454,114 +531,22 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     }
   }
 
-  // Start cave particles
-  function updateAndDrawCaveParticles(now) {
-    if (!state._gate?.hasStart) return;
-
-    if (!state._caveFx) state._caveFx = { particles: [], acc: 0, lastNow: null };
-    const fx = state._caveFx;
-
-    if (fx.lastNow == null) fx.lastNow = now;
-    const dt = Math.min((now - fx.lastNow) / 1000, 0.05);
-    fx.lastNow = now;
-
-    const gate = state._gate.start;
-
-    fx.acc += dt * CAVE_PARTICLE_RATE;
-    const emitCount = Math.floor(fx.acc);
-    fx.acc -= emitCount;
-
-    for (let i = 0; i < emitCount; i++) {
-      if (fx.particles.length >= CAVE_PARTICLE_MAX) break;
-
-      const life = CAVE_PARTICLE_LIFE[0] + Math.random() * (CAVE_PARTICLE_LIFE[1] - CAVE_PARTICLE_LIFE[0]);
-      const spd  = CAVE_PARTICLE_SPEED[0] + Math.random() * (CAVE_PARTICLE_SPEED[1] - CAVE_PARTICLE_SPEED[0]);
-
-      const sx = gate.x - gate.dx * 12 + (Math.random() - 0.5) * CAVE_PARTICLE_SPREAD;
-      const sy = gate.y - gate.dy * 12 + (Math.random() - 0.5) * CAVE_PARTICLE_SPREAD;
-
-      const sideX = -gate.dy;
-      const sideY = gate.dx;
-      const lateral = (Math.random() - 0.5) * 0.55;
-
-      fx.particles.push({
-        x: sx, y: sy,
-        vx: (gate.dx + sideX * lateral) * spd,
-        vy: (gate.dy + sideY * lateral) * spd,
-        life, maxLife: life,
-        r: 1.6 + Math.random() * 1.8
-      });
-    }
-
-    ctx.save();
-    setCrisp(ctx);
-    for (let i = fx.particles.length - 1; i >= 0; i--) {
-      const p = fx.particles[i];
-      p.life -= dt;
-      if (p.life <= 0) { fx.particles.splice(i, 1); continue; }
-
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-
-      const a = Math.max(0, p.life / p.maxLife);
-      ctx.globalAlpha = 0.08 + a * 0.20;
-      ctx.fillStyle = "rgba(226,232,240,1)";
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
-
-  // End gate glow aura (over background)
-  function drawEndGlow(now) {
-    if (!state._gate?.hasEnd) return;
-
-    const g = state._gate.end;
-    const pulse = 0.65 + 0.35 * Math.sin(now * 0.004);
-    const radius = END_GLOW_RADIUS * (0.9 + 0.2 * pulse);
-
-    const gx = g.x + g.dx * 18;
-    const gy = g.y + g.dy * 18;
-
-    ctx.save();
-    const grad = ctx.createRadialGradient(gx, gy, 6, gx, gy, radius);
-    grad.addColorStop(0, `rgba(34,211,238,${END_GLOW_ALPHA * 0.55})`);
-    grad.addColorStop(0.45, `rgba(167,139,250,${END_GLOW_ALPHA * 0.28})`);
-    grad.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(gx, gy, radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
   function drawEnemies(now) {
     for (const e of state.enemies) {
       const img = assets?.enemies?.[e.type];
-      const isSlowed = e.slowEnd > now;
-
       const w = Math.max(24, e.size * 2.6);
       const h = w;
 
       if (img) {
         setCrisp(ctx);
-        ctx.drawImage(img, e.x - w/2, e.y - h/2, w, h);
+        ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
       } else {
-        const color = isSlowed ? "#a78bfa" : (e.isBoss ? "#f43f5e" : (e.type === "fast" ? "#22d3ee" : "#fb7185"));
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = color;
-        ctx.fillStyle = color;
-        if (e.shape === "circle") {
-          ctx.beginPath(); ctx.arc(e.x, e.y, e.size, 0, Math.PI*2); ctx.fill();
-        } else {
-          ctx.beginPath(); ctx.roundRect(e.x - e.size, e.y - e.size, e.size*2, e.size*2, 4); ctx.fill();
-        }
-        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#fb7185";
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      // HP bar (nur enemies)
       const hpPct = Math.max(0, e.hp / e.maxHp);
       ctx.fillStyle = "rgba(0,0,0,0.45)";
       ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32, 4);
@@ -573,37 +558,12 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   function drawTowers() {
     for (const t of state.towers) {
       const img = assets?.towers?.[t.id];
-
       const w = 96, h = 120;
 
       if (img) {
         setCrisp(ctx);
         ctx.drawImage(img, t.x - w/2, t.y - h/2, w, h);
-      } else {
-        ctx.save();
-        ctx.translate(t.x, t.y);
-        ctx.fillStyle = "#0f172a";
-        ctx.strokeStyle = t.color;
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.roundRect(-16, -16, 32, 32, 8);
-        ctx.fill(); ctx.stroke();
-        ctx.fillStyle = t.color;
-        ctx.font = "bold 18px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(t.icon, 0, 6);
-        ctx.restore();
       }
-
-      // Level pips
-      ctx.save();
-      ctx.translate(t.x, t.y);
-      ctx.fillStyle = "rgba(226,232,240,0.8)";
-      for (let i = 0; i < Math.min(t.level, 10); i++) {
-        ctx.beginPath();
-        ctx.arc(-14 + (i * 3.3), 18, 1.2, 0, Math.PI*2);
-        ctx.fill();
-      }
-      ctx.restore();
     }
   }
 
@@ -611,7 +571,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     for (const p of state.projectiles) {
       ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
+      ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -628,7 +588,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   function drawRange() {
     if (!state.activeTower) return;
     ctx.beginPath();
-    ctx.arc(state.activeTower.x, state.activeTower.y, state.activeTower.range, 0, Math.PI*2);
+    ctx.arc(state.activeTower.x, state.activeTower.y, state.activeTower.range, 0, Math.PI * 2);
     ctx.fillStyle = "rgba(255,255,255,0.03)";
     ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.setLineDash([6, 6]);
@@ -638,13 +598,20 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   }
 
   function drawFrame() {
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - lastTs) / 1000);
+    lastTs = now;
+
+    spawnFog(dt);
+    updateFog(dt);
+
     ctx.clearRect(0, 0, state.w, state.h);
 
     drawBackground();
 
-    const now = performance.now();
+    // FX overlays (below enemies is fine; looks good)
     drawEndGlow(now);
-    updateAndDrawCaveParticles(now);
+    drawFog();
 
     drawSlots();
     drawEnemies(now);
