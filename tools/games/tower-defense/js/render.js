@@ -104,7 +104,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     if (pts.length < 2) return { x: 0, y: 0 };
     // Start kann offscreen liegen; wir ziehen es leicht ins Bild
     const p0 = pts[0], p1 = pts[1];
-    const x = clamp(p0.x + 16, 20, state.w - 20);
+    const x = clamp(p0.x + 48, 20, state.w - 20);
     const y = clamp(p0.y, 20, state.h - 20);
 
     // Richtung (für Fog-Drift grob)
@@ -121,7 +121,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const pm = pts[pts.length - 2];
 
     // End kann offscreen liegen; wir ziehen es leicht ins Bild
-    const x = clamp(pn.x - 22, 30, state.w - 30);
+    const x = clamp(pn.x - 2, 30, state.w - 30);
     const y = clamp(pn.y, 30, state.h - 30);
 
     const dx = pn.x - pm.x;
