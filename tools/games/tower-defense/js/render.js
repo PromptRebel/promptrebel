@@ -306,7 +306,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
         ctx2.drawImage(img, gx, gy, TILE + 1, TILE + 1);
       } else {
         ctx2.fillStyle = ((x + y) & 1) ? "rgba(2,6,23,0.92)" : "rgba(2,6,23,0.86)";
-        ctx2.fillRect(gx, gy, TILE + 3, TILE + 3);
+        ctx2.fillRect(gx, gy, TILE + 30, TILE + 30);
       }
     }
   }
