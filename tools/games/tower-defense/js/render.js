@@ -374,7 +374,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
     // Start gate (in background)
     if (startImg) {
-      const x = clamp(s.x - START_GATE_W * 0.55, 0, state.w - START_GATE_W);
+      const x = clamp(s.x - START_GATE_W * 0.55, -START_GATE_W * 0.40, state.w - START_GATE_W);
       const y = clamp(s.y - START_GATE_H * 0.55, 0, state.h - START_GATE_H);
       setCrisp(ctx2);
       ctx2.drawImage(startImg, x, y, START_GATE_W, START_GATE_H);
