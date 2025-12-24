@@ -284,22 +284,33 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
   // ---------- Background draw ----------
   function drawGrass(ctx2) {
-    const cols = Math.ceil(state.w / TILE);
-    const rows = Math.ceil(state.h / TILE);
+  const cols = Math.ceil(state.w / TILE);
+  const rows = Math.ceil(state.h / TILE);
 
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const gx = x * TILE, gy = y * TILE;
-        if (assets?.tiles?.grass) {
-          setCrisp(ctx2);
-          ctx2.drawImage(assets.tiles.grass, gx, gy, TILE, TILE);
-        } else {
-          ctx2.fillStyle = ((x + y) & 1) ? "rgba(2,6,23,0.92)" : "rgba(2,6,23,0.86)";
-          ctx2.fillRect(gx, gy, TILE, TILE);
-        }
+  // 1) Base-fill: verhindert sichtbare "Lücken", falls Tile Transparenz hat
+  ctx2.save();
+  ctx2.fillStyle = "rgba(8, 20, 16, 1)"; // dunkles Grün als Untergrund
+  ctx2.fillRect(0, 0, state.w, state.h);
+  ctx2.restore();
+
+  // 2) Tiles zeichnen – mit minimaler Überlappung gegen 1px-Seams
+  const img = assets?.tiles?.grass;
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const gx = Math.round(x * TILE);
+      const gy = Math.round(y * TILE);
+
+      if (img) {
+        setCrisp(ctx2);
+        // +1 Pixel Überlappung (rechts/unten), damit keine Hairline-Gaps entstehen
+        ctx2.drawImage(img, gx, gy, TILE + 1, TILE + 1);
+      } else {
+        ctx2.fillStyle = ((x + y) & 1) ? "rgba(2,6,23,0.92)" : "rgba(2,6,23,0.86)";
+        ctx2.fillRect(gx, gy, TILE + 1, TILE + 1);
       }
     }
   }
+}
 
   function drawSmoothRoad(ctx2) {
     const path = state._smoothPath || buildSmoothPath();
