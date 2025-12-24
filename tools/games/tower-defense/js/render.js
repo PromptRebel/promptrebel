@@ -33,9 +33,9 @@ export function createRenderer({ canvas, ctx, state, assets }) {
 
   // Gate size
   const START_GATE_W = 96;
-  const START_GATE_H = 96;
+  const START_GATE_H = 112;
   const END_GATE_W   = 110;
-  const END_GATE_H   = 110;
+  const END_GATE_H   = 124;
 
   // Start fog particles
   const FOG = {
