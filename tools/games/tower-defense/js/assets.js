@@ -14,7 +14,7 @@ function loadImage(url) {
 export async function loadAssets() {
   const manifest = {
     tiles: {
-      grass: "assets/tiles/grass.jpg",
+      grass: "assets/tiles/grass.png",
       pathStraight: "assets/tiles/path_straight.png",
       pathCorner: "assets/tiles/path_corner.png",
       pathEnd: "assets/tiles/path_end.png",
