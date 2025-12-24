@@ -121,7 +121,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const pm = pts[pts.length - 2];
 
     // End kann offscreen liegen; wir ziehen es leicht ins Bild
-    const x = clamp(pn.x - 2, 30, state.w - 30);
+    const x = clamp(pn.x + 36, 0, state.w - 30);
     const y = clamp(pn.y, 30, state.h - 30);
 
     const dx = pn.x - pm.x;
