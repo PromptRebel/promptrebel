@@ -4,59 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>Cyber Defense · Tower Tactics</title>
+
+  <!-- Tailwind (optional, du nutzt es bereits) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    :root{
-      --bg:#020617;
-      --panel:rgba(15,23,42,.9);
-      --stroke:rgba(148,163,184,.2);
-      --cyan:#22d3ee;
-      --pink:#ec4899;
-      --violet:#8b5cf6;
-      --emerald:#10b981;
-      --rose:#f43f5e;
-    }
-    body{
-      background:var(--bg);
-      color:#e2e8f0;
-      overflow:hidden;
-      touch-action:none;
-      -webkit-tap-highlight-color:transparent;
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-    .mesh-bg{position:fixed; inset:0; z-index:-1;
-      background-image:
-        radial-gradient(circle at 20% 30%, rgba(34,211,238,.12), transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(236,72,153,.10), transparent 40%);
-    }
-    .mesh-grid{position:fixed; inset:0; z-index:-1;
-      background-image: linear-gradient(var(--stroke) 1px, transparent 1px), linear-gradient(90deg, var(--stroke) 1px, transparent 1px);
-      background-size:40px 40px;
-      opacity:.10;
-    }
-    canvas{touch-action:none; cursor:crosshair;}
-    .glass{
-      background:var(--panel);
-      backdrop-filter:blur(16px);
-      border:1px solid var(--stroke);
-      box-shadow:0 8px 32px rgba(0,0,0,.4);
-    }
-    .btn-action{transition:all .2s cubic-bezier(.4,0,.2,1);}
-    .btn-action:active{transform:scale(.95);}
-    .btn-action:disabled{opacity:.4; cursor:not-allowed; filter:grayscale(1);}
-
-    .shake{animation:shake .4s cubic-bezier(.36,.07,.19,.97) both;}
-    @keyframes shake{
-      10%,90%{transform:translate3d(-1px,0,0);}
-      20%,80%{transform:translate3d(2px,0,0);}
-      30%,50%,70%{transform:translate3d(-4px,0,0);}
-      40%,60%{transform:translate3d(4px,0,0);}
-    }
-
-    .no-scrollbar::-webkit-scrollbar{display:none;}
-    .no-scrollbar{-ms-overflow-style:none; scrollbar-width:none;}
-  </style>
+  <!-- Deine Styles als Datei -->
+  <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body class="flex flex-col h-screen p-2 md:p-4 space-y-3">
@@ -134,20 +87,101 @@
           <div id="selTip" class="text-[10px] text-slate-400">Tap a free node to deploy</div>
         </div>
       </div>
-      <!-- WICHTIG: ID ergänzt (damit game.js nicht crasht) -->
-      <button id="btnCancelSel" class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2 rounded-xl text-xs font-bold pointer-events-auto">
+
+      <button id="btnCancelSel"
+        onclick="window.cancelSelection?.()"
+        class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2 rounded-xl text-xs font-bold pointer-events-auto">
         Cancel
       </button>
     </div>
 
-    <!-- Overlay -->
+    <!-- ===== Wave Report Overlay (NEU) ===== -->
+    <div id="reportOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[120] flex items-center justify-center p-4">
+      <div class="glass rounded-3xl w-full max-w-2xl p-5 md:p-6 flex flex-col gap-4">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-xl md:text-2xl font-black text-white">Wave Report</h2>
+            <div class="text-slate-400 text-sm mt-1">
+              Wave <span id="repWave" class="text-cyan-300 font-bold">—</span>
+              <span class="mx-2 text-slate-600">•</span>
+              Duration <span id="repDuration" class="text-slate-200 font-semibold">—</span>
+            </div>
+          </div>
+
+          <button id="btnCloseReport"
+            onclick="window.__closeReport?.() || document.getElementById('reportOverlay')?.classList.add('hidden')"
+            class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-2xl">
+            Close
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="glass-soft rounded-2xl p-3">
+            <div class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-2">Economy</div>
+            <div class="rep-row"><span>Gold Income (Kills)</span><span id="repGoldKills" class="rep-val">—</span></div>
+            <div class="rep-row"><span>Gold Income (Wave Bonus)</span><span id="repGoldBonus" class="rep-val">—</span></div>
+            <div class="rep-row"><span>Gold Spent</span><span id="repGoldSpent" class="rep-val">—</span></div>
+            <div class="rep-row rep-row-strong"><span>Net</span><span id="repGoldNet" class="rep-val">—</span></div>
+          </div>
+
+          <div class="glass-soft rounded-2xl p-3">
+            <div class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-2">Outcome</div>
+            <div class="rep-row"><span>Leaks (HP Loss)</span><span id="repLeaks" class="rep-val">—</span></div>
+            <div class="rep-row"><span>Boss Time To Kill</span><span id="repBossTTK" class="rep-val">—</span></div>
+            <div class="rep-row"><span>Total Kills</span><span id="repTotalKills" class="rep-val">—</span></div>
+            <div class="rep-row rep-row-strong"><span>Total Damage</span><span id="repTotalDmg" class="rep-val">—</span></div>
+          </div>
+        </div>
+
+        <div class="glass-soft rounded-2xl p-3">
+          <div class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-2">By Tower Type</div>
+
+          <div class="rep-table-wrap">
+            <table class="rep-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Damage</th>
+                  <th>Kills</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="rep-type rep-type-archer">Archer</td>
+                  <td id="repDmgArcher">—</td>
+                  <td id="repKillsArcher">—</td>
+                </tr>
+                <tr>
+                  <td class="rep-type rep-type-cannon">Cannon</td>
+                  <td id="repDmgCannon">—</td>
+                  <td id="repKillsCannon">—</td>
+                </tr>
+                <tr>
+                  <td class="rep-type rep-type-mage">Mage</td>
+                  <td id="repDmgMage">—</td>
+                  <td id="repKillsMage">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="text-[11px] text-slate-500 mt-2">
+            Tip: Screenshot machen → du hast pro Wave eine stabile Vergleichs-Basis fürs Balancing.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Overlay -->
     <div id="overlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-6">
       <div id="overlayContent" class="glass rounded-3xl w-full max-w-md p-6 flex flex-col gap-4">
         <h2 id="overlayTitle" class="text-2xl font-black text-white text-center">Defeat</h2>
         <div id="overlayText" class="text-center text-slate-400 text-sm">System compromised.</div>
         <div id="leaderboardList" class="flex flex-col gap-2 max-h-60 overflow-y-auto pr-2 no-scrollbar"></div>
-        <!-- WICHTIG: ID ergänzt -->
-        <button id="btnCloseOverlay" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-2xl transition-colors">
+
+        <button id="btnCloseOverlay"
+          onclick="window.closeOverlay?.()"
+          class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-2xl transition-colors">
           Return
         </button>
       </div>
@@ -161,11 +195,13 @@
       <span class="font-bold text-[10px] uppercase tracking-wider">Archer</span>
       <span class="text-xs text-cyan-400 font-black">20🪙</span>
     </button>
+
     <button data-buy="cannon" class="btn-buy bg-slate-900/40 border border-slate-700/50 hover:border-pink-500/50 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
       <span class="text-2xl">💣</span>
       <span class="font-bold text-[10px] uppercase tracking-wider">Cannon</span>
       <span class="text-xs text-pink-400 font-black">45🪙</span>
     </button>
+
     <button data-buy="mage" class="btn-buy bg-slate-900/40 border border-slate-700/50 hover:border-violet-500/50 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
       <span class="text-2xl">✨</span>
       <span class="font-bold text-[10px] uppercase tracking-wider">Mage</span>
