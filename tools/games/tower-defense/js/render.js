@@ -142,8 +142,8 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     const dir = dirFromTo(pm, pn);
 
     // “push into view”: move slightly to the right/down but clamp to canvas
-    const x = clamp(pn.x + 100, 0, state.w - 80);
-    const y = clamp(pn.y, +80, 0, state.h - 10);
+    const x = clamp(pn.x + 200, 0, state.w - 80);
+    const y = clamp(pn.y, + 180, 0, state.h - 10);
 
     return { x, y, dir };
   }
@@ -375,8 +375,8 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
 
     // Start gate (in background)
     if (startImg) {
-      const x = clamp(s.x - START_GATE_W * 0.55, -START_GATE_W * 0.40, state.w - START_GATE_W);
-      const y = clamp(s.y - START_GATE_H * 0.75, -START_GATE_H * 0.6, state.h - START_GATE_H);
+      const x = clamp(s.x - START_GATE_W * 0.75, -START_GATE_W * 0.40, state.w - START_GATE_W);
+      const y = clamp(s.y - START_GATE_H * 0.55, -START_GATE_H * 0.6, state.h - START_GATE_H);
       setCrisp(ctx2);
       ctx2.drawImage(startImg, x, y, START_GATE_W, START_GATE_H);
 
