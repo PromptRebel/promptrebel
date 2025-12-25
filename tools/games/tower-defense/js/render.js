@@ -389,7 +389,7 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     // End gate (in background)
     if (endImg) {
       const x = clamp(e.x - END_GATE_W * 0.55, 0, state.w - END_GATE_W);
-      const y = clamp(s.y - END_GATE_H * 0.55, -END_GATE_H * 0.6, state.h - END_GATE_H);
+      const y = clamp(e.y - END_GATE_H * 0.55, -END_GATE_H * 0.6, state.h - END_GATE_H);
       setCrisp(ctx2);
       ctx2.drawImage(endImg, x, y, END_GATE_W, END_GATE_H);
 
