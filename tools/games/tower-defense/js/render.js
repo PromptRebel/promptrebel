@@ -126,7 +126,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const dir = dirFromTo(p0, p1);
 
     // “pull into view”: put start gate near left side if path starts offscreen
-    const x = clamp(p0.x - 205, - 70, state.w - 70);
+    const x = clamp(p0.x - 205, - 80, state.w - 80);
     // deutlich höher
 const y = clamp(p0.y + 20, 70, state.h - 70);
 
@@ -142,8 +142,8 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     const dir = dirFromTo(pm, pn);
 
     // “push into view”: move slightly to the right/down but clamp to canvas
-    const x = clamp(pn.x + 250, 0, state.w - 10);
-    const y = clamp(pn.y, + 100, 0, state.h - 10);
+    const x = clamp(pn.x + 350, 0, state.w - 10);
+    const y = clamp(pn.y, - 100, -70, state.h - 70);
 
     return { x, y, dir };
   }
