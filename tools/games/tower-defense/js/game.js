@@ -7,7 +7,6 @@ export async function startGame() {
   if (!canvas) throw new Error("Canvas #canvas fehlt in index.html");
 
   const ctx = canvas.getContext("2d");
-  // Pixelart: niemals glätten
   ctx.imageSmoothingEnabled = false;
 
   const stage = document.getElementById("gameStage");
@@ -18,24 +17,45 @@ export async function startGame() {
   // --- GAME CONSTANTS ---
   const MAX_LEVEL = 10;
 
+  // Referenzgröße: darauf sind Range/AoE "balanciert".
+  // (Kannst du an deinen Lieblings-Desktop anpassen.)
+  const REF_W = 900;
+  const REF_H = 600;
+
   const TOWER_DATA = {
-    archer: { id:'archer', name:'Archer', icon:'🏹', color:'#22d3ee', cost:20, range:170, fireRate:650, damage:14, projSpeed:12, aoe:0, upgradeBase:24, mult:{ damage:1.35, range:1.08, fireRate:0.90, aoe:1.00, projSpeed:1.03 } },
-    cannon: { id:'cannon', name:'Cannon', icon:'💣', color:'#ec4899', cost:45, range:125, fireRate:1100, damage:38, projSpeed:8, aoe:60, upgradeBase:55, mult:{ damage:1.40, range:1.06, fireRate:0.92, aoe:1.10, projSpeed:1.03 } },
-    mage:   { id:'mage',   name:'Mage',   icon:'✨', color:'#8b5cf6', cost:40, range:145, fireRate:900,  damage:24, projSpeed:10, aoe:35, slow:0.55, slowDur:1400, upgradeBase:45, mult:{ damage:1.38, range:1.07, fireRate:0.92, aoe:1.12, projSpeed:1.03 } }
+    archer: {
+      id: "archer", name: "Archer", icon: "🏹", color: "#22d3ee",
+      cost: 20, range: 170, fireRate: 650, damage: 14, projSpeed: 12, aoe: 0,
+      upgradeBase: 24,
+      mult: { damage: 1.35, range: 1.08, fireRate: 0.90, aoe: 1.00, projSpeed: 1.03 }
+    },
+    cannon: {
+      id: "cannon", name: "Cannon", icon: "💣", color: "#ec4899",
+      cost: 45, range: 125, fireRate: 1100, damage: 38, projSpeed: 8, aoe: 60,
+      upgradeBase: 55,
+      mult: { damage: 1.40, range: 1.06, fireRate: 0.92, aoe: 1.10, projSpeed: 1.03 }
+    },
+    mage: {
+      id: "mage", name: "Mage", icon: "✨", color: "#8b5cf6",
+      cost: 40, range: 145, fireRate: 900, damage: 24, projSpeed: 10, aoe: 35,
+      slow: 0.55, slowDur: 1400,
+      upgradeBase: 45,
+      mult: { damage: 1.38, range: 1.07, fireRate: 0.92, aoe: 1.12, projSpeed: 1.03 }
+    }
   };
 
   const ENEMY = {
-    fast: { shape:'circle', baseHp:30,  baseSpeed:2.1, size:10 },
-    tank: { shape:'square', baseHp:75,  baseSpeed:1.0, size:12 },
-    boss: { shape:'square', baseHp:600, baseSpeed:0.7, size:25, isBoss:true }
+    fast: { shape: "circle", baseHp: 30, baseSpeed: 2.1, size: 10 },
+    tank: { shape: "square", baseHp: 75, baseSpeed: 1.0, size: 12 },
+    boss: { shape: "square", baseHp: 600, baseSpeed: 0.7, size: 25, isBoss: true }
   };
 
-  // --- ECONOMY (dein Wunsch) ---
+  // --- ECONOMY ---
   const GOLD_PER_KILL = 5;
-  const GOLD_KILL_GROWTH = 1.05;   // +5% pro Wave
-  const BOSS_GOLD = 200;           // fix
-  const WAVE_BONUS_BASE = 20;      // Wave 1 = 20
-  const WAVE_BONUS_GROWTH = 1.05;  // +5% pro Wave
+  const GOLD_KILL_GROWTH = 1.05;
+  const BOSS_GOLD = 200;
+  const WAVE_BONUS_BASE = 20;
+  const WAVE_BONUS_GROWTH = 1.05;
 
   // --- WAVE SPAWN RULES ---
   const WAVE_COUNT_BASE = 10;
@@ -48,6 +68,10 @@ export async function startGame() {
 
   const state = {
     w: 0, h: 0, dpr: 1,
+
+    // Range-Scaling
+    rangeScale: 1,
+
     hp: 10, gold: 120, wave: 0,
 
     waveActive: false,
@@ -70,10 +94,19 @@ export async function startGame() {
     slots: [],
     autoStart: false,
 
-    spawn: { mainLeft:0, extraLeft:0, nextAt:0, interval:0, extraInterval:0 }
+    spawn: { mainLeft: 0, extraLeft: 0, nextAt: 0, interval: 0, extraInterval: 0 }
   };
 
   const renderer = createRenderer({ canvas, ctx, state, assets });
+
+  function applyRangeScaleToExistingTowers() {
+    for (const t of state.towers) {
+      // baseRange/baseAoe sind die "Designwerte"
+      t.range = t.baseRange * state.rangeScale;
+      if (t.baseAoe != null) t.aoe = t.baseAoe * state.rangeScale;
+    }
+    if (state.activeTower) refreshCtx(state.activeTower);
+  }
 
   function resize() {
     const rect = stage.getBoundingClientRect();
@@ -86,30 +119,38 @@ export async function startGame() {
     canvas.style.width = rect.width + "px";
     canvas.style.height = rect.height + "px";
     ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
-
     ctx.imageSmoothingEnabled = false;
 
+    // Range-Skalierung (einheitliche Schwierigkeit)
+    // min(), damit sehr breite Screens nicht "zu viel" Vorteil bekommen.
+    // clamp verhindert extreme Werte.
+    const raw = Math.min(state.w / REF_W, state.h / REF_H);
+    state.rangeScale = Math.max(0.80, Math.min(1.60, raw));
+
     setupLevel(state.w, state.h);
+    applyRangeScaleToExistingTowers();
     renderer.rebuild?.();
   }
 
   function setupLevel(w, h) {
     state.path = [
-      {x:-60, y:h*0.15}, {x:w*0.2, y:h*0.15}, {x:w*0.5, y:h*0.20}, {x:w*0.8, y:h*0.25},
-      {x:w*0.8, y:h*0.40}, {x:w*0.4, y:h*0.45}, {x:w*0.15,y:h*0.50}, {x:w*0.15,y:h*0.65},
-      {x:w*0.5, y:h*0.70}, {x:w*0.85,y:h*0.75}, {x:w*0.85,y:h*0.90}, {x:w*1.2, y:h*0.92}
+      { x: -60, y: h * 0.15 }, { x: w * 0.2, y: h * 0.15 }, { x: w * 0.5, y: h * 0.20 }, { x: w * 0.8, y: h * 0.25 },
+      { x: w * 0.8, y: h * 0.40 }, { x: w * 0.4, y: h * 0.45 }, { x: w * 0.15, y: h * 0.50 }, { x: w * 0.15, y: h * 0.65 },
+      { x: w * 0.5, y: h * 0.70 }, { x: w * 0.85, y: h * 0.75 }, { x: w * 0.85, y: h * 0.90 }, { x: w * 1.2, y: h * 0.92 }
     ];
 
     const rawSlots = [
-      {x:w*0.35, y:h*0.08}, {x:w*0.65, y:h*0.12}, {x:w*0.55, y:h*0.30}, {x:w*0.92, y:h*0.32},
-      {x:w*0.35, y:h*0.35}, {x:w*0.10, y:h*0.40}, {x:w*0.45, y:h*0.55}, {x:w*0.25, y:h*0.75},
-      {x:w*0.65, y:h*0.60}, {x:w*0.95, y:h*0.80}, {x:w*0.50, y:h*0.82}, {x:w*0.15, y:h*0.92}
+      { x: w * 0.35, y: h * 0.08 }, { x: w * 0.65, y: h * 0.12 }, { x: w * 0.55, y: h * 0.30 }, { x: w * 0.92, y: h * 0.32 },
+      { x: w * 0.35, y: h * 0.35 }, { x: w * 0.10, y: h * 0.40 }, { x: w * 0.45, y: h * 0.55 }, { x: w * 0.25, y: h * 0.75 },
+      { x: w * 0.65, y: h * 0.60 }, { x: w * 0.95, y: h * 0.80 }, { x: w * 0.50, y: h * 0.82 }, { x: w * 0.15, y: h * 0.92 }
     ];
 
     const newSlots = rawSlots.map((s, i) => {
       const existing = state.slots[i]?.occupied;
-      const slot = {...s, occupied: existing || null, idx:i};
-      if (existing) { existing.x = s.x; existing.y = s.y; existing.slot = slot; }
+      const slot = { ...s, occupied: existing || null, idx: i };
+      if (existing) {
+        existing.x = s.x; existing.y = s.y; existing.slot = slot;
+      }
       return slot;
     });
     state.slots = newSlots;
@@ -119,7 +160,9 @@ export async function startGame() {
     const base = ENEMY[type];
     const hpScale = Math.pow(1.12, state.wave - 1);
     const hp = Math.round(base.baseHp * hpScale);
-    const reward = base.isBoss ? BOSS_GOLD : Math.floor(GOLD_PER_KILL * Math.pow(GOLD_KILL_GROWTH, state.wave - 1));
+    const reward = base.isBoss
+      ? BOSS_GOLD
+      : Math.floor(GOLD_PER_KILL * Math.pow(GOLD_KILL_GROWTH, state.wave - 1));
 
     state.enemies.push({
       type, shape: base.shape,
@@ -293,8 +336,8 @@ export async function startGame() {
         if (inRange.length > 0) {
           const target =
             t.targetPriority === "Strongest"
-              ? inRange.reduce((a,b) => (b.hp > a.hp ? b : a))
-              : inRange.reduce((a,b) => (b.traveled > a.traveled ? b : a));
+              ? inRange.reduce((a, b) => (b.hp > a.hp ? b : a))
+              : inRange.reduce((a, b) => (b.traveled > a.traveled ? b : a));
 
           const d = Math.hypot(target.x - t.x, target.y - t.y) || 0.001;
           state.projectiles.push({
@@ -407,7 +450,7 @@ export async function startGame() {
       state.activeTower = tower;
       if (ctxMenu) {
         ctxMenu.style.left = `${Math.max(10, Math.min(x - 88, rect.width - 180))}px`;
-        ctxMenu.style.top  = `${Math.max(10, Math.min(y - 140, rect.height - 180))}px`;
+        ctxMenu.style.top = `${Math.max(10, Math.min(y - 140, rect.height - 180))}px`;
         ctxMenu.classList.remove("hidden");
       }
       refreshCtx(tower);
@@ -419,7 +462,24 @@ export async function startGame() {
       if (slot) {
         const base = TOWER_DATA[state.selectedType];
         if (state.gold >= base.cost) {
-          const unit = { ...base, x: slot.x, y: slot.y, level: 1, cooldown: 0, slot, spent: base.cost, targetPriority: "First" };
+          const unit = {
+            ...base,
+            x: slot.x, y: slot.y,
+            level: 1,
+            cooldown: 0,
+            slot,
+            spent: base.cost,
+            targetPriority: "First",
+
+            // WICHTIG: Designwerte speichern
+            baseRange: base.range,
+            baseAoe: base.aoe ?? 0,
+
+            // ...und daraus die skalierten Live-Werte ableiten
+            range: base.range * state.rangeScale,
+            aoe: (base.aoe ?? 0) * state.rangeScale
+          };
+
           state.towers.push(unit);
           slot.occupied = unit;
           state.gold -= base.cost;
@@ -440,7 +500,7 @@ export async function startGame() {
       const data = TOWER_DATA[state.selectedType];
       const selIcon = document.getElementById("selIcon");
       const selName = document.getElementById("selName");
-      if (selIcon) selIcon.innerText = data.icon; // UI only
+      if (selIcon) selIcon.innerText = data.icon;
       if (selName) selName.innerText = data.name;
       document.getElementById("selectionBar")?.classList.remove("translate-y-24");
       ctxMenu?.classList.add("hidden");
@@ -465,9 +525,17 @@ export async function startGame() {
 
     const m = t.mult;
     t.damage *= m.damage;
-    t.range *= m.range;
+
+    // WICHTIG: baseRange/baseAoe upgraden, dann neu skalieren
+    t.baseRange *= m.range;
+    t.range = t.baseRange * state.rangeScale;
+
+    if (t.baseAoe != null && t.baseAoe > 0) {
+      t.baseAoe *= m.aoe;
+      t.aoe = t.baseAoe * state.rangeScale;
+    }
+
     t.fireRate *= m.fireRate;
-    if (t.aoe > 0) t.aoe *= m.aoe;
     t.level++;
 
     updateUI();
@@ -501,9 +569,7 @@ export async function startGame() {
     if (btnSpeed) btnSpeed.innerText = `${state.speed}x`;
   });
 
-  // Overlay schließen (falls vorhanden)
   window.closeOverlay = () => document.getElementById("overlay")?.classList.add("hidden");
-  // Cancel Selection (falls du noch inline onclick hast)
   window.cancelSelection = cancelSelection;
 
   // ===== LOOP =====
