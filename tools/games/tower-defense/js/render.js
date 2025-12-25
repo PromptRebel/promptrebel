@@ -568,16 +568,53 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
   }
 
   function drawTowers() {
-    for (const t of state.towers) {
-      const img = assets?.towers?.[t.id];
-      const w = 96, h = 120;
+  for (const t of state.towers) {
+    const img = assets?.towers?.[t.id];
+    const w = 96, h = 120;
 
-      if (img) {
-        setCrisp(ctx);
-        ctx.drawImage(img, t.x - w/2, t.y - h/2, w, h);
-      }
+    if (img) {
+      setCrisp(ctx);
+      ctx.drawImage(img, t.x - w/2, t.y - h/2, w, h);
     }
+
+    // ---- Level Stars ----
+    drawTowerStars(t);
   }
+}
+
+function drawTowerStars(t) {
+  const lvl = t.level || 1;
+
+  const gold = Math.min(5, Math.max(0, lvl));
+  const purple = Math.min(5, Math.max(0, lvl - 5));
+
+  // Position: unter dem Turm (anpassen, falls es optisch höher/tiefer soll)
+  const baseY = t.y + 54; // probier 50..62
+  const spacing = 10;
+  const startX = t.x - (spacing * 2); // 5 Sterne zentriert
+
+  // simple Stern als Text (schnell & ok). Später kannst du ein Sprite nehmen.
+  ctx.save();
+  ctx.font = "12px system-ui";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  for (let i = 0; i < 5; i++) {
+    const x = startX + i * spacing;
+    // erst gold auffüllen (1..5), danach lila (6..10)
+    const isGold = i < gold;
+    const isPurple = i < purple;
+
+    // Farbe: lila überschreibt gold, wenn beide „voll“
+    let fill = "rgba(148,163,184,0.25)";         // leer (grau)
+    if (isGold) fill = "rgba(234,179,8,0.95)";   // gold
+    if (isPurple) fill = "rgba(167,139,250,0.95)"; // lila
+
+    ctx.fillStyle = fill;
+    ctx.fillText("★", x, baseY);
+  }
+  ctx.restore();
+}
 
   function drawProjectiles() {
     for (const p of state.projectiles) {
