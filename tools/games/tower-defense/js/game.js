@@ -17,36 +17,20 @@ export async function startGame() {
   // --- GAME CONSTANTS ---
   const MAX_LEVEL = 10;
 
-  // Referenzgröße: darauf sind Range/AoE "balanciert".
+  // Referenzgröße: darauf sind Range/AoE balanciert
   const REF_W = 900;
   const REF_H = 600;
 
   const TOWER_DATA = {
-    archer: {
-      id: "archer", name: "Archer", icon: "🏹", color: "#22d3ee",
-      cost: 20, range: 170, fireRate: 650, damage: 14, projSpeed: 12, aoe: 0,
-      upgradeBase: 24,
-      mult: { damage: 1.35, range: 1.08, fireRate: 0.90, aoe: 1.00, projSpeed: 1.03 }
-    },
-    cannon: {
-      id: "cannon", name: "Cannon", icon: "💣", color: "#ec4899",
-      cost: 45, range: 125, fireRate: 1100, damage: 38, projSpeed: 8, aoe: 60,
-      upgradeBase: 55,
-      mult: { damage: 1.40, range: 1.06, fireRate: 0.92, aoe: 1.10, projSpeed: 1.03 }
-    },
-    mage: {
-      id: "mage", name: "Mage", icon: "✨", color: "#8b5cf6",
-      cost: 40, range: 145, fireRate: 900, damage: 24, projSpeed: 10, aoe: 35,
-      slow: 0.55, slowDur: 1400,
-      upgradeBase: 45,
-      mult: { damage: 1.38, range: 1.07, fireRate: 0.92, aoe: 1.12, projSpeed: 1.03 }
-    }
+    archer: { id:'archer', name:'Archer', icon:'🏹', color:'#22d3ee', cost:20, range:170, fireRate:650, damage:14, projSpeed:12, aoe:0, upgradeBase:24, mult:{ damage:1.35, range:1.08, fireRate:0.90, aoe:1.00, projSpeed:1.03 } },
+    cannon: { id:'cannon', name:'Cannon', icon:'💣', color:'#ec4899', cost:45, range:125, fireRate:1100, damage:38, projSpeed:8, aoe:60, upgradeBase:55, mult:{ damage:1.40, range:1.06, fireRate:0.92, aoe:1.10, projSpeed:1.03 } },
+    mage:   { id:'mage',   name:'Mage',   icon:'✨', color:'#8b5cf6', cost:40, range:145, fireRate:900,  damage:24, projSpeed:10, aoe:35, slow:0.55, slowDur:1400, upgradeBase:45, mult:{ damage:1.38, range:1.07, fireRate:0.92, aoe:1.12, projSpeed:1.03 } }
   };
 
   const ENEMY = {
-    fast: { shape: "circle", baseHp: 30, baseSpeed: 2.1, size: 10 },
-    tank: { shape: "square", baseHp: 75, baseSpeed: 1.0, size: 12 },
-    boss: { shape: "square", baseHp: 600, baseSpeed: 0.7, size: 25, isBoss: true }
+    fast: { shape:'circle', baseHp:30,  baseSpeed:2.1, size:10 },
+    tank: { shape:'square', baseHp:75,  baseSpeed:1.0, size:12 },
+    boss: { shape:'square', baseHp:600, baseSpeed:0.7, size:25, isBoss:true }
   };
 
   // --- ECONOMY ---
@@ -67,11 +51,10 @@ export async function startGame() {
 
   const state = {
     w: 0, h: 0, dpr: 1,
-
-    // Range-Scaling
     rangeScale: 1,
 
     hp: 10, gold: 120, wave: 0,
+    paused: false,
 
     waveActive: false,
     waveTotal: 0,
@@ -93,142 +76,180 @@ export async function startGame() {
     slots: [],
     autoStart: false,
 
-    // Sell-confirm
     sellArmedTower: null,
     sellArmedUntil: 0,
 
-    // Report / Pause
-    paused: false,
-    reportOpen: false,
-    waveStats: null,
+    spawn: { mainLeft:0, extraLeft:0, nextAt:0, interval:0, extraInterval:0 },
 
-    spawn: { mainLeft: 0, extraLeft: 0, nextAt: 0, interval: 0, extraInterval: 0 }
+    // --- REPORT METRICS (pro Wave) ---
+    report: null
   };
 
   const renderer = createRenderer({ canvas, ctx, state, assets });
 
-  // ---------------- REPORT OVERLAY (UI) ----------------
-  function ensureReportOverlay() {
-    if (document.getElementById("reportOverlay")) return;
+  // ---------------- REPORT UI (creates if missing) ----------------
+  const reportUI = ensureReportUI();
 
-    const overlay = document.createElement("div");
-    overlay.id = "reportOverlay";
-    overlay.className = "hidden fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4";
-    overlay.innerHTML = `
-      <div class="glass rounded-3xl w-full max-w-lg p-5 flex flex-col gap-3">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <div class="text-xs uppercase tracking-widest text-slate-500 font-bold">Wave Report</div>
-            <div id="reportTitle" class="text-xl font-black text-white">Wave</div>
+  function ensureReportUI() {
+    // Wenn du bereits Report-HTML eingebaut hast, nutze dessen IDs.
+    // Falls nicht vorhanden, bauen wir es zur Sicherheit dynamisch nach.
+    let overlay = document.getElementById("reportOverlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "reportOverlay";
+      overlay.className = "hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[120] flex items-center justify-center p-4";
+      overlay.innerHTML = `
+        <div id="reportCard" class="glass rounded-3xl w-full max-w-2xl p-4 md:p-6 flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Wave Report</div>
+              <div id="reportWave" class="text-xl font-black text-white">Wave —</div>
+            </div>
+            <button id="btnCloseReport" class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-2xl">Close</button>
           </div>
-          <button id="btnReportCloseTop" class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-3 py-2 rounded-2xl">
-            Close
-          </button>
+          <div id="reportBody" class="rounded-2xl border border-slate-700/40 bg-slate-900/30 p-3"></div>
         </div>
+      `;
+      // Wichtig: damit es über dem Canvas ist
+      stage?.appendChild(overlay);
+    }
 
-        <div class="grid grid-cols-2 gap-2">
-          <div class="glass rounded-2xl p-3">
-            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Leaks</div>
-            <div id="reportLeaks" class="text-lg font-black text-rose-300">0</div>
-          </div>
-          <div class="glass rounded-2xl p-3">
-            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Boss Time To Kill</div>
-            <div id="reportBossTTK" class="text-lg font-black text-cyan-300">—</div>
-          </div>
-        </div>
+    const body = overlay.querySelector("#reportBody");
+    // SCROLLBAR FIX (iOS)
+    body.style.maxHeight = "65vh";
+    body.style.overflowY = "auto";
+    body.style.webkitOverflowScrolling = "touch";
+    body.style.pointerEvents = "auto";
 
-        <div class="glass rounded-2xl p-3">
-          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Gold</div>
-          <div id="reportGold" class="text-sm text-slate-300"></div>
-        </div>
+    const btn = overlay.querySelector("#btnCloseReport");
+    btn?.addEventListener("click", () => closeReport());
 
-        <div class="grid grid-cols-2 gap-2">
-          <div class="glass rounded-2xl p-3">
-            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Total Damage</div>
-            <div id="reportDamage" class="text-sm text-slate-300 whitespace-pre-line"></div>
-          </div>
-          <div class="glass rounded-2xl p-3">
-            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Kills</div>
-            <div id="reportKills" class="text-sm text-slate-300 whitespace-pre-line"></div>
-          </div>
-        </div>
-
-        <button id="btnReportClose" class="btn-action w-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 font-black py-3 rounded-2xl">
-          Continue
-        </button>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const close = () => closeWaveReport();
-    document.getElementById("btnReportClose")?.addEventListener("click", close);
-    document.getElementById("btnReportCloseTop")?.addEventListener("click", close);
+    return {
+      overlay,
+      waveEl: overlay.querySelector("#reportWave"),
+      body,
+      closeBtn: btn
+    };
   }
 
-  function fmtNum(n) {
-    if (n == null) return "—";
-    const x = Math.round(n);
-    return x.toString();
-  }
-
-  function renderWaveReport(stats) {
-    ensureReportOverlay();
-    const overlay = document.getElementById("reportOverlay");
-    if (!overlay) return;
-
-    const title = document.getElementById("reportTitle");
-    const leaks = document.getElementById("reportLeaks");
-    const ttk = document.getElementById("reportBossTTK");
-    const gold = document.getElementById("reportGold");
-    const dmg = document.getElementById("reportDamage");
-    const kills = document.getElementById("reportKills");
-
-    if (title) title.innerText = `Wave ${stats.wave}`;
-    if (leaks) leaks.innerText = `${stats.leaks}`;
-
-    if (ttk) {
-      if (!stats.isBossWave) ttk.innerText = "—";
-      else if (stats.bossTTKMs == null) ttk.innerText = "∞ / failed";
-      else ttk.innerText = `${(stats.bossTTKMs / 1000).toFixed(2)}s`;
-    }
-
-    if (gold) {
-      const income = stats.goldFromKills + stats.waveBonus;
-      gold.innerText =
-        `Income: ${fmtNum(income)} (kills ${fmtNum(stats.goldFromKills)} + bonus ${fmtNum(stats.waveBonus)})\n` +
-        `Spent:  ${fmtNum(stats.goldSpent)} (buy+upgrades)\n` +
-        `Net:    ${fmtNum(income - stats.goldSpent)}`;
-    }
-
-    const order = ["archer", "cannon", "mage"];
-    if (dmg) {
-      dmg.innerText = order.map(k => `${TOWER_DATA[k].name}: ${fmtNum(stats.damageByType[k] || 0)}`).join("\n");
-    }
-    if (kills) {
-      kills.innerText = order.map(k => `${TOWER_DATA[k].name}: ${fmtNum(stats.killsByType[k] || 0)}`).join("\n");
-    }
-
-    overlay.classList.remove("hidden");
-    state.reportOpen = true;
+  function openReport() {
     state.paused = true;
+    reportUI.overlay.classList.remove("hidden");
   }
 
-  function closeWaveReport() {
-    const overlay = document.getElementById("reportOverlay");
-    overlay?.classList.add("hidden");
-    state.reportOpen = false;
+  function closeReport() {
+    reportUI.overlay.classList.add("hidden");
     state.paused = false;
 
-    // Sell-confirm zurücksetzen (UI safety)
-    resetSellConfirm();
-
-    // Auto-start nach Report (optional)
+    // AutoStart: nach Close ggf. nächste Wave starten
     if (state.autoStart && !state.waveActive && state.hp > 0) {
       setTimeout(() => { if (!state.waveActive && !state.paused) spawnWave(); }, 200);
     }
   }
 
-  // ---------------- RANGE SCALING ----------------
+  function resetReportForWave() {
+    state.report = {
+      wave: state.wave,
+      goldIncomeKills: 0,
+      goldIncomeWaveBonus: 0,
+      goldSpent: 0,
+      leaksHpLoss: 0,
+      totalKills: 0,
+      totalDamage: 0,
+
+      damageByType: { archer: 0, cannon: 0, mage: 0 },
+      killsByType:  { archer: 0, cannon: 0, mage: 0 },
+
+      bossSpawnAt: null,
+      bossKilledAt: null
+    };
+  }
+
+  function renderReport() {
+    const r = state.report;
+    if (!r) return;
+
+    const bossTTK =
+      (r.bossSpawnAt && r.bossKilledAt)
+        ? `${((r.bossKilledAt - r.bossSpawnAt) / 1000).toFixed(2)}s`
+        : "—";
+
+    const net = (r.goldIncomeKills + r.goldIncomeWaveBonus) - r.goldSpent;
+
+    const rows = [
+      ["Gold Income (Kills)", r.goldIncomeKills],
+      ["Gold Income (Wave Bonus)", r.goldIncomeWaveBonus],
+      ["Gold Spent", r.goldSpent],
+      ["Net", net],
+    ];
+
+    const byType = [
+      ["Archer", Math.round(r.damageByType.archer), r.killsByType.archer],
+      ["Cannon", Math.round(r.damageByType.cannon), r.killsByType.cannon],
+      ["Mage",   Math.round(r.damageByType.mage),   r.killsByType.mage],
+    ];
+
+    reportUI.waveEl.textContent = `Wave ${r.wave}`;
+    reportUI.body.innerHTML = `
+      <div class="grid gap-3">
+        <div class="glass rounded-2xl p-3">
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Economy</div>
+          <div class="divide-y divide-slate-700/40">
+            ${rows.map(([k,v]) => `
+              <div class="flex items-center justify-between py-2">
+                <div class="text-slate-300 font-semibold">${k}</div>
+                <div class="text-slate-100 font-black">${v === "—" ? "—" : Math.floor(v)}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-3">
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Outcome</div>
+          <div class="divide-y divide-slate-700/40">
+            <div class="flex items-center justify-between py-2">
+              <div class="text-slate-300 font-semibold">Leaks (HP Loss)</div>
+              <div class="text-slate-100 font-black">${r.leaksHpLoss || 0}</div>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <div class="text-slate-300 font-semibold">Boss Time To Kill</div>
+              <div class="text-slate-100 font-black">${bossTTK}</div>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <div class="text-slate-300 font-semibold">Total Kills</div>
+              <div class="text-slate-100 font-black">${r.totalKills}</div>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <div class="text-slate-300 font-semibold">Total Damage</div>
+              <div class="text-slate-100 font-black">${Math.round(r.totalDamage)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-3">
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">By Tower Type</div>
+          <div class="rounded-xl overflow-hidden border border-slate-700/40">
+            <div class="grid grid-cols-3 bg-slate-900/40 text-slate-400 text-xs font-black">
+              <div class="p-2">Type</div>
+              <div class="p-2 text-right">Damage</div>
+              <div class="p-2 text-right">Kills</div>
+            </div>
+            ${byType.map(([t,d,k]) => `
+              <div class="grid grid-cols-3 border-t border-slate-700/30 text-sm">
+                <div class="p-2 text-slate-200 font-bold">${t}</div>
+                <div class="p-2 text-right text-slate-100 font-black">${d}</div>
+                <div class="p-2 text-right text-slate-100 font-black">${k}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+    `;
+
+    openReport();
+  }
+
+  // ---------------- Range Scaling ----------------
   function applyRangeScaleToExistingTowers() {
     for (const t of state.towers) {
       t.range = t.baseRange * state.rangeScale;
@@ -258,70 +279,37 @@ export async function startGame() {
     renderer.rebuild?.();
   }
 
+  // ---------------- Level Setup ----------------
   function setupLevel(w, h) {
     state.path = [
-      { x: -60, y: h * 0.15 }, { x: w * 0.2, y: h * 0.15 }, { x: w * 0.5, y: h * 0.20 }, { x: w * 0.8, y: h * 0.25 },
-      { x: w * 0.8, y: h * 0.40 }, { x: w * 0.4, y: h * 0.45 }, { x: w * 0.15, y: h * 0.50 }, { x: w * 0.15, y: h * 0.65 },
-      { x: w * 0.5, y: h * 0.70 }, { x: w * 0.85, y: h * 0.75 }, { x: w * 0.85, y: h * 0.90 }, { x: w * 1.2, y: h * 0.92 }
+      {x:-60, y:h*0.15}, {x:w*0.2, y:h*0.15}, {x:w*0.5, y:h*0.20}, {x:w*0.8, y:h*0.25},
+      {x:w*0.8, y:h*0.40}, {x:w*0.4, y:h*0.45}, {x:w*0.15,y:h*0.50}, {x:w*0.15,y:h*0.65},
+      {x:w*0.5, y:h*0.70}, {x:w*0.85,y:h*0.75}, {x:w*0.85,y:h*0.90}, {x:w*1.2, y:h*0.92}
     ];
 
     const rawSlots = [
-      { x: w * 0.35, y: h * 0.08 }, { x: w * 0.65, y: h * 0.12 }, { x: w * 0.55, y: h * 0.30 }, { x: w * 0.92, y: h * 0.32 },
-      { x: w * 0.35, y: h * 0.35 }, { x: w * 0.10, y: h * 0.40 }, { x: w * 0.45, y: h * 0.55 }, { x: w * 0.25, y: h * 0.75 },
-      { x: w * 0.65, y: h * 0.60 }, { x: w * 0.95, y: h * 0.80 }, { x: w * 0.50, y: h * 0.82 }, { x: w * 0.15, y: h * 0.92 }
+      {x:w*0.35, y:h*0.08}, {x:w*0.65, y:h*0.12}, {x:w*0.55, y:h*0.30}, {x:w*0.92, y:h*0.32},
+      {x:w*0.35, y:h*0.35}, {x:w*0.10, y:h*0.40}, {x:w*0.45, y:h*0.55}, {x:w*0.25, y:h*0.75},
+      {x:w*0.65, y:h*0.60}, {x:w*0.95, y:h*0.80}, {x:w*0.50, y:h*0.82}, {x:w*0.15, y:h*0.92}
     ];
 
     const newSlots = rawSlots.map((s, i) => {
       const existing = state.slots[i]?.occupied;
-      const slot = { ...s, occupied: existing || null, idx: i };
+      const slot = {...s, occupied: existing || null, idx:i};
       if (existing) { existing.x = s.x; existing.y = s.y; existing.slot = slot; }
       return slot;
     });
     state.slots = newSlots;
   }
 
-  // ---------------- WAVE STATS ----------------
-  function newWaveStats(wave, isBossWave) {
-    return {
-      wave,
-      isBossWave,
-      hpStart: state.hp,
-      hpEnd: state.hp,
-      leaks: 0,
-
-      damageByType: { archer: 0, cannon: 0, mage: 0 },
-      killsByType: { archer: 0, cannon: 0, mage: 0 },
-
-      goldFromKills: 0,
-      waveBonus: 0,
-      goldSpent: 0,
-
-      // boss TTK: first boss in wave (good enough for now)
-      bossSpawnAt: null,
-      bossDeadAt: null,
-      bossTTKMs: null
-    };
-  }
-
-  function recordGoldSpent(amount) {
-    if (state.waveStats) state.waveStats.goldSpent += Math.max(0, amount || 0);
-  }
-
-  // ---------------- ENEMIES / WAVES ----------------
+  // ---------------- Spawning ----------------
   function spawnEnemy(type) {
     const base = ENEMY[type];
     const hpScale = Math.pow(1.12, state.wave - 1);
     const hp = Math.round(base.baseHp * hpScale);
-    const reward = base.isBoss
-      ? BOSS_GOLD
-      : Math.floor(GOLD_PER_KILL * Math.pow(GOLD_KILL_GROWTH, state.wave - 1));
+    const reward = base.isBoss ? BOSS_GOLD : Math.floor(GOLD_PER_KILL * Math.pow(GOLD_KILL_GROWTH, state.wave - 1));
 
-    const now = performance.now();
-    if (base.isBoss && state.waveStats && state.waveStats.bossSpawnAt == null) {
-      state.waveStats.bossSpawnAt = now;
-    }
-
-    state.enemies.push({
+    const enemy = {
       type, shape: base.shape,
       x: state.path[0].x, y: state.path[0].y,
       targetIdx: 1,
@@ -333,7 +321,13 @@ export async function startGame() {
       slowFactor: 1, slowEnd: 0,
       traveled: 0,
       dead: false
-    });
+    };
+
+    if (enemy.isBoss && state.report && !state.report.bossSpawnAt) {
+      state.report.bossSpawnAt = performance.now();
+    }
+
+    state.enemies.push(enemy);
   }
 
   function computeWaveCounts() {
@@ -351,17 +345,15 @@ export async function startGame() {
 
   function spawnWave() {
     if (state.waveActive || state.paused) return;
-
     state.wave++;
     state.waveActive = true;
     state.waveSpawned = 0;
     state.waveKilled = 0;
 
+    resetReportForWave();
+
     const { isBossWave, baseCount, extra } = computeWaveCounts();
     state.waveTotal = baseCount + extra;
-
-    // init wave stats
-    state.waveStats = newWaveStats(state.wave, isBossWave);
 
     const baseInterval = (isBossWave ? 1400 : 600) / state.speed;
     const extraInterval = Math.max(140, baseInterval * EXTRA_SPAWN_MULT);
@@ -375,6 +367,7 @@ export async function startGame() {
     updateUI();
   }
 
+  // ---------------- FX ----------------
   function explode(x, y, color, count) {
     for (let i = 0; i < count; i++) {
       state.particles.push({
@@ -387,38 +380,39 @@ export async function startGame() {
     }
   }
 
+  // ---------------- Combat / Metrics ----------------
   function processImpact(p) {
     const now = performance.now();
-
     const hits = p.aoe > 0
       ? state.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) <= p.aoe)
       : state.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) <= 20).slice(0, 1);
 
     hits.forEach(e => {
-      const hpBefore = e.hp;
+      const before = e.hp;
       e.hp -= p.damage;
+      const dealt = Math.max(0, Math.min(before, p.damage));
 
-      // damage attribution (clamped to remaining hp)
-      const dealt = Math.max(0, Math.min(hpBefore, p.damage));
-      if (state.waveStats && p.sourceType) {
-        state.waveStats.damageByType[p.sourceType] = (state.waveStats.damageByType[p.sourceType] || 0) + dealt;
+      // Metrics: Damage attribution
+      if (state.report) {
+        state.report.totalDamage += dealt;
+        if (state.report.damageByType[p.srcType] != null) state.report.damageByType[p.srcType] += dealt;
       }
 
       if (p.slow) { e.slowFactor = p.slow; e.slowEnd = now + p.slowDur; }
 
       if (e.hp <= 0 && !e.dead) {
         e.dead = true;
+
+        // Gold from kills (separat)
         state.gold += e.reward;
         state.waveKilled++;
 
-        // stats: gold + kill credit
-        if (state.waveStats) {
-          state.waveStats.goldFromKills += e.reward;
-          if (p.sourceType) state.waveStats.killsByType[p.sourceType] = (state.waveStats.killsByType[p.sourceType] || 0) + 1;
-          if (e.isBoss && state.waveStats.bossDeadAt == null) {
-            state.waveStats.bossDeadAt = now;
-            if (state.waveStats.bossSpawnAt != null) state.waveStats.bossTTKMs = state.waveStats.bossDeadAt - state.waveStats.bossSpawnAt;
-          }
+        if (state.report) {
+          state.report.goldIncomeKills += e.reward;
+          state.report.totalKills += 1;
+          if (state.report.killsByType[p.srcType] != null) state.report.killsByType[p.srcType] += 1;
+
+          if (e.isBoss && !state.report.bossKilledAt) state.report.bossKilledAt = performance.now();
         }
 
         explode(e.x, e.y, e.isBoss ? "#f43f5e" : p.color, e.isBoss ? 40 : 15);
@@ -432,38 +426,25 @@ export async function startGame() {
     checkWaveEnd();
   }
 
-  function finishWaveAndShowReport() {
-    const stats = state.waveStats;
-    if (!stats) return;
-
-    // leaks
-    stats.hpEnd = state.hp;
-    stats.leaks = Math.max(0, stats.hpStart - stats.hpEnd);
-
-    // wave bonus
-    const bonus = Math.round(WAVE_BONUS_BASE * Math.pow(WAVE_BONUS_GROWTH, state.wave - 1));
-    stats.waveBonus = bonus;
-    state.gold += bonus;
-
-    // boss TTK: if boss wave but boss never died
-    if (stats.isBossWave && stats.bossSpawnAt != null && stats.bossDeadAt == null) {
-      stats.bossTTKMs = null; // show ∞ / failed
-    }
-
-    updateUI();
-    renderWaveReport(stats);
-  }
-
   function checkWaveEnd() {
-    if (!state.waveActive) return;
-
-    if (state.enemies.length === 0 && state.spawn.mainLeft <= 0 && state.spawn.extraLeft <= 0) {
+    if (state.waveActive && state.enemies.length === 0 && state.spawn.mainLeft <= 0 && state.spawn.extraLeft <= 0) {
       state.waveActive = false;
-      finishWaveAndShowReport();
+
+      const waveBonus = Math.round(WAVE_BONUS_BASE * Math.pow(WAVE_BONUS_GROWTH, state.wave - 1));
+      state.gold += waveBonus;
+
+      if (state.report) {
+        state.report.goldIncomeWaveBonus += waveBonus;
+      }
+
+      updateUI();
+
+      // Report anzeigen (pausiert das Spiel)
+      renderReport();
     }
   }
 
-  // ---------------- UPDATE LOOP ----------------
+  // ---------------- Main Update Loop ----------------
   function update(dt) {
     if (state.hp <= 0) return;
     if (state.paused) return;
@@ -514,7 +495,10 @@ export async function startGame() {
       if (dist < 5) {
         e.targetIdx++;
         if (e.targetIdx >= state.path.length) {
-          state.hp -= e.isBoss ? 5 : 1;
+          const loss = e.isBoss ? 5 : 1;
+          state.hp -= loss;
+
+          if (state.report) state.report.leaksHpLoss += loss;
 
           stage?.classList.add("shake");
           setTimeout(() => stage?.classList.remove("shake"), 400);
@@ -541,11 +525,10 @@ export async function startGame() {
         if (inRange.length > 0) {
           const target =
             t.targetPriority === "Strongest"
-              ? inRange.reduce((a, b) => (b.hp > a.hp ? b : a))
-              : inRange.reduce((a, b) => (b.traveled > a.traveled ? b : a));
+              ? inRange.reduce((a,b) => (b.hp > a.hp ? b : a))
+              : inRange.reduce((a,b) => (b.traveled > a.traveled ? b : a));
 
           const d = Math.hypot(target.x - t.x, target.y - t.y) || 0.001;
-
           state.projectiles.push({
             x: t.x, y: t.y,
             vx: ((target.x - t.x) / d) * t.projSpeed,
@@ -555,11 +538,8 @@ export async function startGame() {
             color: t.color,
             slow: t.slow,
             slowDur: t.slowDur,
-
-            // attribution
-            sourceType: t.id
+            srcType: t.id // für Report-Attribution
           });
-
           t.cooldown = t.fireRate;
         }
       }
@@ -581,7 +561,7 @@ export async function startGame() {
     }
   }
 
-  // ---------------- UI / MENUS ----------------
+  // ---------------- UI ----------------
   function updateUI() {
     const hpEl = document.getElementById("hp");
     const goldEl = document.getElementById("gold");
@@ -593,7 +573,6 @@ export async function startGame() {
     if (goldEl) goldEl.innerText = Math.floor(state.gold);
     if (waveEl) waveEl.innerText = state.wave;
     if (btnStart) btnStart.disabled = state.waveActive || state.paused;
-
     if (progEl) progEl.innerText = state.waveActive ? `${state.waveKilled}/${state.waveTotal}` : (state.paused ? "Report" : "Secure");
 
     document.querySelectorAll("[data-buy]").forEach(btn => {
@@ -607,7 +586,6 @@ export async function startGame() {
 
   function handleGameOver() {
     state.hp = 0;
-    state.paused = true;
     const overlay = document.getElementById("overlay");
     const overlayText = document.getElementById("overlayText");
     if (overlayText) overlayText.innerText = `Your firewall collapsed at Wave ${state.wave}.`;
@@ -619,19 +597,23 @@ export async function startGame() {
     state.gold = 120;
     state.wave = 0;
     state.waveActive = false;
+    state.paused = false;
+
     state.enemies = [];
     state.towers = [];
     state.projectiles = [];
     state.particles = [];
     state.slots.forEach(s => (s.occupied = null));
+
     state.spawn.mainLeft = 0;
     state.spawn.extraLeft = 0;
 
-    state.paused = false;
-    state.reportOpen = false;
-    state.waveStats = null;
-
     resetSellConfirm();
+    state.report = null;
+
+    // close report overlay if open
+    reportUI.overlay.classList.add("hidden");
+
     updateUI();
   }
 
@@ -653,6 +635,7 @@ export async function startGame() {
     const sellValue = document.getElementById("sellValue");
     const btnUpgrade = document.getElementById("btnUpgrade");
 
+    // Sell confirm UI
     const btnSell = document.getElementById("btnSell");
     const now = performance.now();
     const armed = (state.sellArmedTower === t && now <= state.sellArmedUntil);
@@ -683,7 +666,7 @@ export async function startGame() {
       state.activeTower = tower;
       if (ctxMenu) {
         ctxMenu.style.left = `${Math.max(10, Math.min(x - 88, rect.width - 180))}px`;
-        ctxMenu.style.top = `${Math.max(10, Math.min(y - 140, rect.height - 180))}px`;
+        ctxMenu.style.top  = `${Math.max(10, Math.min(y - 140, rect.height - 180))}px`;
         ctxMenu.classList.remove("hidden");
       }
       refreshCtx(tower);
@@ -708,7 +691,7 @@ export async function startGame() {
             baseRange: base.range,
             baseAoe: base.aoe ?? 0,
 
-            // Live skaliert
+            // skaliert
             range: base.range * state.rangeScale,
             aoe: (base.aoe ?? 0) * state.rangeScale
           };
@@ -717,7 +700,7 @@ export async function startGame() {
           slot.occupied = unit;
           state.gold -= base.cost;
 
-          recordGoldSpent(base.cost);
+          if (state.report) state.report.goldSpent += base.cost;
 
           cancelSelection();
           updateUI();
@@ -749,29 +732,23 @@ export async function startGame() {
     });
   });
 
-  document.getElementById("btnCancelSel")?.addEventListener("click", () => {
-    cancelSelection();
-  });
-
   document.getElementById("btnTarget")?.addEventListener("click", () => {
-    if (state.paused) return;
-    if (!state.activeTower) return;
+    if (!state.activeTower || state.paused) return;
     state.activeTower.targetPriority = state.activeTower.targetPriority === "First" ? "Strongest" : "First";
     refreshCtx(state.activeTower);
   });
 
   document.getElementById("btnUpgrade")?.addEventListener("click", () => {
-    if (state.paused) return;
-
     const t = state.activeTower;
-    if (!t || t.level >= MAX_LEVEL) return;
+    if (!t || t.level >= MAX_LEVEL || state.paused) return;
 
     const cost = Math.ceil(t.upgradeBase * Math.pow(1.55, t.level - 1));
     if (state.gold < cost) return;
 
     state.gold -= cost;
     t.spent += cost;
-    recordGoldSpent(cost);
+
+    if (state.report) state.report.goldSpent += cost;
 
     const m = t.mult;
     t.damage *= m.damage;
@@ -792,21 +769,21 @@ export async function startGame() {
   });
 
   document.getElementById("btnSell")?.addEventListener("click", () => {
-    if (state.paused) return;
-
     const t = state.activeTower;
-    if (!t) return;
+    if (!t || state.paused) return;
 
     const now = performance.now();
     const armed = (state.sellArmedTower === t && now <= state.sellArmedUntil);
 
+    // 1. Klick: scharf schalten
     if (!armed) {
       state.sellArmedTower = t;
-      state.sellArmedUntil = now + 1600;
+      state.sellArmedUntil = now + 1600; // 1.6s Zeit zum Bestätigen
       refreshCtx(t);
       return;
     }
 
+    // 2. Klick: verkaufen
     state.gold += Math.floor(t.spent * 0.6);
     t.slot.occupied = null;
     state.towers = state.towers.filter(x => x !== t);
@@ -823,12 +800,11 @@ export async function startGame() {
   });
 
   document.getElementById("btnAuto")?.addEventListener("click", () => {
-    if (state.paused) return;
-
     state.autoStart = !state.autoStart;
     const btnAuto = document.getElementById("btnAuto");
     if (btnAuto) btnAuto.innerText = state.autoStart ? "Auto: On" : "Auto: Off";
-    if (state.autoStart && !state.waveActive) spawnWave();
+
+    if (state.autoStart && !state.waveActive && !state.paused) spawnWave();
   });
 
   document.getElementById("btnRestart")?.addEventListener("click", resetGame);
@@ -839,24 +815,54 @@ export async function startGame() {
     if (btnSpeed) btnSpeed.innerText = `${state.speed}x`;
   });
 
-  document.getElementById("btnCloseOverlay")?.addEventListener("click", () => {
-    document.getElementById("overlay")?.classList.add("hidden");
-    state.paused = false;
-    updateUI();
+  // optional: Cancel-Button (falls vorhanden)
+  document.getElementById("btnCancelSel")?.addEventListener("click", () => {
+    cancelSelection();
   });
 
-  // optional: expose for tests / automation
+  window.closeOverlay = () => document.getElementById("overlay")?.classList.add("hidden");
+  window.cancelSelection = cancelSelection;
+
+  // ---------------- TEST HOOKS ----------------
   window.gameState = state;
   window.__spawnWave = spawnWave;
+  window.__placeTowerAt = (type, x, y) => {
+    const slot = state.slots.find(s => !s.occupied && Math.hypot(s.x - x, s.y - y) < 30);
+    if (!slot) return false;
+    const base = TOWER_DATA[type];
+    if (!base) return false;
+    if (state.gold < base.cost) return false;
+
+    const unit = {
+      ...base,
+      x: slot.x, y: slot.y,
+      level: 1,
+      cooldown: 0,
+      slot,
+      spent: base.cost,
+      targetPriority: "First",
+      baseRange: base.range,
+      baseAoe: base.aoe ?? 0,
+      range: base.range * state.rangeScale,
+      aoe: (base.aoe ?? 0) * state.rangeScale
+    };
+
+    state.towers.push(unit);
+    slot.occupied = unit;
+    state.gold -= base.cost;
+
+    if (state.report) state.report.goldSpent += base.cost;
+
+    updateUI();
+    return true;
+  };
 
   // ---------------- LOOP ----------------
   function loop(now) {
     const dt = Math.min((now - state.lastFrame) / 1000, 0.1) * state.speed;
     state.lastFrame = now;
-
     update(dt);
     renderer.drawFrame?.();
-
     requestAnimationFrame(loop);
   }
 
