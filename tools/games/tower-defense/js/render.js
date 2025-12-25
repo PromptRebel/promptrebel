@@ -143,7 +143,7 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
 
     // “push into view”: move slightly to the right/down but clamp to canvas
     const x = clamp(pn.x + 350, 0, state.w - 10);
-    const y = clamp(pn.y, + 100, -70, state.h - 70);
+    const y = clamp(pn.y, - 200, 0, state.h - 70);
 
     return { x, y, dir };
   }
