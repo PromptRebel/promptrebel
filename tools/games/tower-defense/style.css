@@ -1,0 +1,130 @@
+:root{
+  --bg:#020617;
+  --panel:rgba(15,23,42,.9);
+  --stroke:rgba(148,163,184,.2);
+  --cyan:#22d3ee;
+  --pink:#ec4899;
+  --violet:#8b5cf6;
+  --emerald:#10b981;
+  --rose:#f43f5e;
+}
+
+body{
+  background:var(--bg);
+  color:#e2e8f0;
+  overflow:hidden;
+  touch-action:none;
+  -webkit-tap-highlight-color:transparent;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.mesh-bg{
+  position:fixed; inset:0; z-index:-1;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(34,211,238,.12), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(236,72,153,.10), transparent 40%);
+}
+
+.mesh-grid{
+  position:fixed; inset:0; z-index:-1;
+  background-image:
+    linear-gradient(var(--stroke) 1px, transparent 1px),
+    linear-gradient(90deg, var(--stroke) 1px, transparent 1px);
+  background-size:40px 40px;
+  opacity:.10;
+}
+
+canvas{
+  touch-action:none;
+  cursor:crosshair;
+}
+
+.glass{
+  background:var(--panel);
+  backdrop-filter:blur(16px);
+  border:1px solid var(--stroke);
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+
+/* leicht „weicher“ Block im Report */
+.glass-soft{
+  background:rgba(2,6,23,.55);
+  border:1px solid rgba(148,163,184,.12);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.15);
+}
+
+.btn-action{
+  transition:all .2s cubic-bezier(.4,0,.2,1);
+}
+.btn-action:active{
+  transform:scale(.95);
+}
+.btn-action:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+  filter:grayscale(1);
+}
+
+.shake{animation:shake .4s cubic-bezier(.36,.07,.19,.97) both;}
+@keyframes shake{
+  10%,90%{transform:translate3d(-1px,0,0);}
+  20%,80%{transform:translate3d(2px,0,0);}
+  30%,50%,70%{transform:translate3d(-4px,0,0);}
+  40%,60%{transform:translate3d(4px,0,0);}
+}
+
+.no-scrollbar::-webkit-scrollbar{display:none;}
+.no-scrollbar{-ms-overflow-style:none; scrollbar-width:none;}
+
+/* ===== Report UI helpers ===== */
+.rep-row{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  padding:6px 0;
+  border-bottom:1px solid rgba(148,163,184,.10);
+  font-size:13px;
+  color:rgba(226,232,240,.86);
+}
+.rep-row:last-child{border-bottom:none;}
+.rep-row-strong{
+  font-weight:800;
+  color:rgba(226,232,240,1);
+}
+.rep-val{
+  font-variant-numeric: tabular-nums;
+  color:rgba(226,232,240,.95);
+}
+
+.rep-table-wrap{
+  overflow:auto;
+  border-radius:14px;
+  border:1px solid rgba(148,163,184,.10);
+}
+
+.rep-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+.rep-table thead th{
+  text-align:left;
+  padding:10px 12px;
+  background:rgba(2,6,23,.55);
+  color:rgba(148,163,184,.95);
+  font-weight:800;
+  letter-spacing:.02em;
+}
+.rep-table tbody td{
+  padding:10px 12px;
+  border-top:1px solid rgba(148,163,184,.10);
+  color:rgba(226,232,240,.90);
+  font-variant-numeric: tabular-nums;
+}
+
+.rep-type{
+  font-weight:900;
+}
+.rep-type-archer{ color: rgba(34,211,238,.95); }
+.rep-type-cannon{ color: rgba(236,72,153,.95); }
+.rep-type-mage{ color: rgba(167,139,250,.95); }
