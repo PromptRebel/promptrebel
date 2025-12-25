@@ -126,7 +126,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const dir = dirFromTo(p0, p1);
 
     // “pull into view”: put start gate near left side if path starts offscreen
-    const x = clamp(p0.x - 205, - 60, state.w - 70);
+    const x = clamp(p0.x - 205, - 70, state.w - 70);
     // deutlich höher
 const y = clamp(p0.y + 20, 70, state.h - 70);
 
@@ -375,8 +375,8 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
 
     // Start gate (in background)
     if (startImg) {
-      const x = clamp(s.x - START_GATE_W * 0.65, -START_GATE_W * 0.40, state.w - START_GATE_W);
-      const y = clamp(s.y - START_GATE_H * 0.65, -START_GATE_H * 0.6, state.h - START_GATE_H);
+      const x = clamp(s.x - START_GATE_W * 0.55, -START_GATE_W * 0.40, state.w - START_GATE_W);
+      const y = clamp(s.y - START_GATE_H * 0.75, -START_GATE_H * 0.6, state.h - START_GATE_H);
       setCrisp(ctx2);
       ctx2.drawImage(startImg, x, y, START_GATE_W, START_GATE_H);
 
