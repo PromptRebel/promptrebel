@@ -18,7 +18,6 @@ export async function startGame() {
   const MAX_LEVEL = 10;
 
   // Referenzgröße: darauf sind Range/AoE "balanciert".
-  // (Kannst du an deinen Lieblings-Desktop anpassen.)
   const REF_W = 900;
   const REF_H = 600;
 
@@ -94,6 +93,10 @@ export async function startGame() {
     slots: [],
     autoStart: false,
 
+    // Sell-Confirm
+    sellArmedTower: null,
+    sellArmedUntil: 0,
+
     spawn: { mainLeft: 0, extraLeft: 0, nextAt: 0, interval: 0, extraInterval: 0 }
   };
 
@@ -101,7 +104,6 @@ export async function startGame() {
 
   function applyRangeScaleToExistingTowers() {
     for (const t of state.towers) {
-      // baseRange/baseAoe sind die "Designwerte"
       t.range = t.baseRange * state.rangeScale;
       if (t.baseAoe != null) t.aoe = t.baseAoe * state.rangeScale;
     }
@@ -121,9 +123,6 @@ export async function startGame() {
     ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
     ctx.imageSmoothingEnabled = false;
 
-    // Range-Skalierung (einheitliche Schwierigkeit)
-    // min(), damit sehr breite Screens nicht "zu viel" Vorteil bekommen.
-    // clamp verhindert extreme Werte.
     const raw = Math.min(state.w / REF_W, state.h / REF_H);
     state.rangeScale = Math.max(0.80, Math.min(1.60, raw));
 
@@ -148,9 +147,7 @@ export async function startGame() {
     const newSlots = rawSlots.map((s, i) => {
       const existing = state.slots[i]?.occupied;
       const slot = { ...s, occupied: existing || null, idx: i };
-      if (existing) {
-        existing.x = s.x; existing.y = s.y; existing.slot = slot;
-      }
+      if (existing) { existing.x = s.x; existing.y = s.y; existing.slot = slot; }
       return slot;
     });
     state.slots = newSlots;
@@ -413,7 +410,15 @@ export async function startGame() {
     state.slots.forEach(s => (s.occupied = null));
     state.spawn.mainLeft = 0;
     state.spawn.extraLeft = 0;
+    resetSellConfirm();
     updateUI();
+  }
+
+  function resetSellConfirm() {
+    state.sellArmedTower = null;
+    state.sellArmedUntil = 0;
+    const btnSell = document.getElementById("btnSell");
+    if (btnSell) btnSell.innerText = "Sell";
   }
 
   function refreshCtx(t) {
@@ -426,6 +431,12 @@ export async function startGame() {
     const upgradeCost = document.getElementById("upgradeCost");
     const sellValue = document.getElementById("sellValue");
     const btnUpgrade = document.getElementById("btnUpgrade");
+
+    // Sell confirm UI
+    const btnSell = document.getElementById("btnSell");
+    const now = performance.now();
+    const armed = (state.sellArmedTower === t && now <= state.sellArmedUntil);
+    if (btnSell) btnSell.innerText = armed ? "Confirm" : "Sell";
 
     if (targetMode) targetMode.innerText = t.targetPriority;
     if (upgradeLabel) upgradeLabel.innerText = canUp ? `Lvl ${nextLvl}` : "Maxed";
@@ -457,6 +468,9 @@ export async function startGame() {
       return;
     }
 
+    // Klick ins Leere: Menü zu + Sell-Confirm resetten
+    resetSellConfirm();
+
     if (state.selectedType) {
       const slot = state.slots.find(s => !s.occupied && Math.hypot(s.x - x, s.y - y) < 30);
       if (slot) {
@@ -471,11 +485,11 @@ export async function startGame() {
             spent: base.cost,
             targetPriority: "First",
 
-            // WICHTIG: Designwerte speichern
+            // Designwerte speichern
             baseRange: base.range,
             baseAoe: base.aoe ?? 0,
 
-            // ...und daraus die skalierten Live-Werte ableiten
+            // skalierten Live-Werte
             range: base.range * state.rangeScale,
             aoe: (base.aoe ?? 0) * state.rangeScale
           };
@@ -505,6 +519,7 @@ export async function startGame() {
       document.getElementById("selectionBar")?.classList.remove("translate-y-24");
       ctxMenu?.classList.add("hidden");
       state.activeTower = null;
+      resetSellConfirm();
     });
   });
 
@@ -526,7 +541,7 @@ export async function startGame() {
     const m = t.mult;
     t.damage *= m.damage;
 
-    // WICHTIG: baseRange/baseAoe upgraden, dann neu skalieren
+    // baseRange/baseAoe upgraden, dann neu skalieren
     t.baseRange *= m.range;
     t.range = t.baseRange * state.rangeScale;
 
@@ -538,26 +553,47 @@ export async function startGame() {
     t.fireRate *= m.fireRate;
     t.level++;
 
+    resetSellConfirm();
     updateUI();
   });
 
+  // Sell mit Sicherheitsabfrage (2-Klick innerhalb Zeitfenster)
   document.getElementById("btnSell")?.addEventListener("click", () => {
     const t = state.activeTower;
     if (!t) return;
+
+    const now = performance.now();
+    const armed = (state.sellArmedTower === t && now <= state.sellArmedUntil);
+
+    // 1. Klick: scharf schalten
+    if (!armed) {
+      state.sellArmedTower = t;
+      state.sellArmedUntil = now + 1600; // 1.6s
+      refreshCtx(t);
+      return;
+    }
+
+    // 2. Klick: wirklich verkaufen
     state.gold += Math.floor(t.spent * 0.6);
     t.slot.occupied = null;
     state.towers = state.towers.filter(x => x !== t);
+
+    resetSellConfirm();
     ctxMenu?.classList.add("hidden");
     state.activeTower = null;
     updateUI();
   });
 
-  document.getElementById("btnStart")?.addEventListener("click", spawnWave);
+  document.getElementById("btnStart")?.addEventListener("click", () => {
+    resetSellConfirm();
+    spawnWave();
+  });
 
   document.getElementById("btnAuto")?.addEventListener("click", () => {
     state.autoStart = !state.autoStart;
     const btnAuto = document.getElementById("btnAuto");
     if (btnAuto) btnAuto.innerText = state.autoStart ? "Auto: On" : "Auto: Off";
+    resetSellConfirm();
     if (state.autoStart && !state.waveActive) spawnWave();
   });
 
