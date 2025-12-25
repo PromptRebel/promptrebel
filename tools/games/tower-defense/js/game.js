@@ -93,15 +93,142 @@ export async function startGame() {
     slots: [],
     autoStart: false,
 
-    // Sell-Confirm
+    // Sell-confirm
     sellArmedTower: null,
     sellArmedUntil: 0,
+
+    // Report / Pause
+    paused: false,
+    reportOpen: false,
+    waveStats: null,
 
     spawn: { mainLeft: 0, extraLeft: 0, nextAt: 0, interval: 0, extraInterval: 0 }
   };
 
   const renderer = createRenderer({ canvas, ctx, state, assets });
 
+  // ---------------- REPORT OVERLAY (UI) ----------------
+  function ensureReportOverlay() {
+    if (document.getElementById("reportOverlay")) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "reportOverlay";
+    overlay.className = "hidden fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4";
+    overlay.innerHTML = `
+      <div class="glass rounded-3xl w-full max-w-lg p-5 flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="text-xs uppercase tracking-widest text-slate-500 font-bold">Wave Report</div>
+            <div id="reportTitle" class="text-xl font-black text-white">Wave</div>
+          </div>
+          <button id="btnReportCloseTop" class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-3 py-2 rounded-2xl">
+            Close
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="glass rounded-2xl p-3">
+            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Leaks</div>
+            <div id="reportLeaks" class="text-lg font-black text-rose-300">0</div>
+          </div>
+          <div class="glass rounded-2xl p-3">
+            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Boss Time To Kill</div>
+            <div id="reportBossTTK" class="text-lg font-black text-cyan-300">—</div>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-3">
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Gold</div>
+          <div id="reportGold" class="text-sm text-slate-300"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="glass rounded-2xl p-3">
+            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Total Damage</div>
+            <div id="reportDamage" class="text-sm text-slate-300 whitespace-pre-line"></div>
+          </div>
+          <div class="glass rounded-2xl p-3">
+            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Kills</div>
+            <div id="reportKills" class="text-sm text-slate-300 whitespace-pre-line"></div>
+          </div>
+        </div>
+
+        <button id="btnReportClose" class="btn-action w-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 font-black py-3 rounded-2xl">
+          Continue
+        </button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => closeWaveReport();
+    document.getElementById("btnReportClose")?.addEventListener("click", close);
+    document.getElementById("btnReportCloseTop")?.addEventListener("click", close);
+  }
+
+  function fmtNum(n) {
+    if (n == null) return "—";
+    const x = Math.round(n);
+    return x.toString();
+  }
+
+  function renderWaveReport(stats) {
+    ensureReportOverlay();
+    const overlay = document.getElementById("reportOverlay");
+    if (!overlay) return;
+
+    const title = document.getElementById("reportTitle");
+    const leaks = document.getElementById("reportLeaks");
+    const ttk = document.getElementById("reportBossTTK");
+    const gold = document.getElementById("reportGold");
+    const dmg = document.getElementById("reportDamage");
+    const kills = document.getElementById("reportKills");
+
+    if (title) title.innerText = `Wave ${stats.wave}`;
+    if (leaks) leaks.innerText = `${stats.leaks}`;
+
+    if (ttk) {
+      if (!stats.isBossWave) ttk.innerText = "—";
+      else if (stats.bossTTKMs == null) ttk.innerText = "∞ / failed";
+      else ttk.innerText = `${(stats.bossTTKMs / 1000).toFixed(2)}s`;
+    }
+
+    if (gold) {
+      const income = stats.goldFromKills + stats.waveBonus;
+      gold.innerText =
+        `Income: ${fmtNum(income)} (kills ${fmtNum(stats.goldFromKills)} + bonus ${fmtNum(stats.waveBonus)})\n` +
+        `Spent:  ${fmtNum(stats.goldSpent)} (buy+upgrades)\n` +
+        `Net:    ${fmtNum(income - stats.goldSpent)}`;
+    }
+
+    const order = ["archer", "cannon", "mage"];
+    if (dmg) {
+      dmg.innerText = order.map(k => `${TOWER_DATA[k].name}: ${fmtNum(stats.damageByType[k] || 0)}`).join("\n");
+    }
+    if (kills) {
+      kills.innerText = order.map(k => `${TOWER_DATA[k].name}: ${fmtNum(stats.killsByType[k] || 0)}`).join("\n");
+    }
+
+    overlay.classList.remove("hidden");
+    state.reportOpen = true;
+    state.paused = true;
+  }
+
+  function closeWaveReport() {
+    const overlay = document.getElementById("reportOverlay");
+    overlay?.classList.add("hidden");
+    state.reportOpen = false;
+    state.paused = false;
+
+    // Sell-confirm zurücksetzen (UI safety)
+    resetSellConfirm();
+
+    // Auto-start nach Report (optional)
+    if (state.autoStart && !state.waveActive && state.hp > 0) {
+      setTimeout(() => { if (!state.waveActive && !state.paused) spawnWave(); }, 200);
+    }
+  }
+
+  // ---------------- RANGE SCALING ----------------
   function applyRangeScaleToExistingTowers() {
     for (const t of state.towers) {
       t.range = t.baseRange * state.rangeScale;
@@ -153,6 +280,34 @@ export async function startGame() {
     state.slots = newSlots;
   }
 
+  // ---------------- WAVE STATS ----------------
+  function newWaveStats(wave, isBossWave) {
+    return {
+      wave,
+      isBossWave,
+      hpStart: state.hp,
+      hpEnd: state.hp,
+      leaks: 0,
+
+      damageByType: { archer: 0, cannon: 0, mage: 0 },
+      killsByType: { archer: 0, cannon: 0, mage: 0 },
+
+      goldFromKills: 0,
+      waveBonus: 0,
+      goldSpent: 0,
+
+      // boss TTK: first boss in wave (good enough for now)
+      bossSpawnAt: null,
+      bossDeadAt: null,
+      bossTTKMs: null
+    };
+  }
+
+  function recordGoldSpent(amount) {
+    if (state.waveStats) state.waveStats.goldSpent += Math.max(0, amount || 0);
+  }
+
+  // ---------------- ENEMIES / WAVES ----------------
   function spawnEnemy(type) {
     const base = ENEMY[type];
     const hpScale = Math.pow(1.12, state.wave - 1);
@@ -160,6 +315,11 @@ export async function startGame() {
     const reward = base.isBoss
       ? BOSS_GOLD
       : Math.floor(GOLD_PER_KILL * Math.pow(GOLD_KILL_GROWTH, state.wave - 1));
+
+    const now = performance.now();
+    if (base.isBoss && state.waveStats && state.waveStats.bossSpawnAt == null) {
+      state.waveStats.bossSpawnAt = now;
+    }
 
     state.enemies.push({
       type, shape: base.shape,
@@ -190,7 +350,8 @@ export async function startGame() {
   }
 
   function spawnWave() {
-    if (state.waveActive) return;
+    if (state.waveActive || state.paused) return;
+
     state.wave++;
     state.waveActive = true;
     state.waveSpawned = 0;
@@ -198,6 +359,9 @@ export async function startGame() {
 
     const { isBossWave, baseCount, extra } = computeWaveCounts();
     state.waveTotal = baseCount + extra;
+
+    // init wave stats
+    state.waveStats = newWaveStats(state.wave, isBossWave);
 
     const baseInterval = (isBossWave ? 1400 : 600) / state.speed;
     const extraInterval = Math.max(140, baseInterval * EXTRA_SPAWN_MULT);
@@ -225,17 +389,38 @@ export async function startGame() {
 
   function processImpact(p) {
     const now = performance.now();
+
     const hits = p.aoe > 0
       ? state.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) <= p.aoe)
       : state.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) <= 20).slice(0, 1);
 
     hits.forEach(e => {
+      const hpBefore = e.hp;
       e.hp -= p.damage;
+
+      // damage attribution (clamped to remaining hp)
+      const dealt = Math.max(0, Math.min(hpBefore, p.damage));
+      if (state.waveStats && p.sourceType) {
+        state.waveStats.damageByType[p.sourceType] = (state.waveStats.damageByType[p.sourceType] || 0) + dealt;
+      }
+
       if (p.slow) { e.slowFactor = p.slow; e.slowEnd = now + p.slowDur; }
+
       if (e.hp <= 0 && !e.dead) {
         e.dead = true;
         state.gold += e.reward;
         state.waveKilled++;
+
+        // stats: gold + kill credit
+        if (state.waveStats) {
+          state.waveStats.goldFromKills += e.reward;
+          if (p.sourceType) state.waveStats.killsByType[p.sourceType] = (state.waveStats.killsByType[p.sourceType] || 0) + 1;
+          if (e.isBoss && state.waveStats.bossDeadAt == null) {
+            state.waveStats.bossDeadAt = now;
+            if (state.waveStats.bossSpawnAt != null) state.waveStats.bossTTKMs = state.waveStats.bossDeadAt - state.waveStats.bossSpawnAt;
+          }
+        }
+
         explode(e.x, e.y, e.isBoss ? "#f43f5e" : p.color, e.isBoss ? 40 : 15);
       }
     });
@@ -247,20 +432,41 @@ export async function startGame() {
     checkWaveEnd();
   }
 
-  function checkWaveEnd() {
-    if (state.waveActive && state.enemies.length === 0 && state.spawn.mainLeft <= 0 && state.spawn.extraLeft <= 0) {
-      state.waveActive = false;
-      state.gold += Math.round(WAVE_BONUS_BASE * Math.pow(WAVE_BONUS_GROWTH, state.wave - 1));
-      updateUI();
+  function finishWaveAndShowReport() {
+    const stats = state.waveStats;
+    if (!stats) return;
 
-      if (state.autoStart && state.hp > 0) {
-        setTimeout(() => { if (!state.waveActive) spawnWave(); }, 800);
-      }
+    // leaks
+    stats.hpEnd = state.hp;
+    stats.leaks = Math.max(0, stats.hpStart - stats.hpEnd);
+
+    // wave bonus
+    const bonus = Math.round(WAVE_BONUS_BASE * Math.pow(WAVE_BONUS_GROWTH, state.wave - 1));
+    stats.waveBonus = bonus;
+    state.gold += bonus;
+
+    // boss TTK: if boss wave but boss never died
+    if (stats.isBossWave && stats.bossSpawnAt != null && stats.bossDeadAt == null) {
+      stats.bossTTKMs = null; // show ∞ / failed
+    }
+
+    updateUI();
+    renderWaveReport(stats);
+  }
+
+  function checkWaveEnd() {
+    if (!state.waveActive) return;
+
+    if (state.enemies.length === 0 && state.spawn.mainLeft <= 0 && state.spawn.extraLeft <= 0) {
+      state.waveActive = false;
+      finishWaveAndShowReport();
     }
   }
 
+  // ---------------- UPDATE LOOP ----------------
   function update(dt) {
     if (state.hp <= 0) return;
+    if (state.paused) return;
 
     // Spawn driver
     if (state.waveActive) {
@@ -309,8 +515,10 @@ export async function startGame() {
         e.targetIdx++;
         if (e.targetIdx >= state.path.length) {
           state.hp -= e.isBoss ? 5 : 1;
+
           stage?.classList.add("shake");
           setTimeout(() => stage?.classList.remove("shake"), 400);
+
           state.enemies.splice(i, 1);
           updateUI();
           checkWaveEnd();
@@ -337,6 +545,7 @@ export async function startGame() {
               : inRange.reduce((a, b) => (b.traveled > a.traveled ? b : a));
 
           const d = Math.hypot(target.x - t.x, target.y - t.y) || 0.001;
+
           state.projectiles.push({
             x: t.x, y: t.y,
             vx: ((target.x - t.x) / d) * t.projSpeed,
@@ -345,8 +554,12 @@ export async function startGame() {
             aoe: t.aoe,
             color: t.color,
             slow: t.slow,
-            slowDur: t.slowDur
+            slowDur: t.slowDur,
+
+            // attribution
+            sourceType: t.id
           });
+
           t.cooldown = t.fireRate;
         }
       }
@@ -368,6 +581,7 @@ export async function startGame() {
     }
   }
 
+  // ---------------- UI / MENUS ----------------
   function updateUI() {
     const hpEl = document.getElementById("hp");
     const goldEl = document.getElementById("gold");
@@ -378,12 +592,13 @@ export async function startGame() {
     if (hpEl) hpEl.innerText = state.hp;
     if (goldEl) goldEl.innerText = Math.floor(state.gold);
     if (waveEl) waveEl.innerText = state.wave;
-    if (btnStart) btnStart.disabled = state.waveActive;
-    if (progEl) progEl.innerText = state.waveActive ? `${state.waveKilled}/${state.waveTotal}` : "Secure";
+    if (btnStart) btnStart.disabled = state.waveActive || state.paused;
+
+    if (progEl) progEl.innerText = state.waveActive ? `${state.waveKilled}/${state.waveTotal}` : (state.paused ? "Report" : "Secure");
 
     document.querySelectorAll("[data-buy]").forEach(btn => {
       const type = btn.dataset.buy;
-      btn.disabled = state.gold < TOWER_DATA[type].cost;
+      btn.disabled = state.gold < TOWER_DATA[type].cost || state.paused;
     });
 
     if (state.activeTower) refreshCtx(state.activeTower);
@@ -392,6 +607,7 @@ export async function startGame() {
 
   function handleGameOver() {
     state.hp = 0;
+    state.paused = true;
     const overlay = document.getElementById("overlay");
     const overlayText = document.getElementById("overlayText");
     if (overlayText) overlayText.innerText = `Your firewall collapsed at Wave ${state.wave}.`;
@@ -410,6 +626,11 @@ export async function startGame() {
     state.slots.forEach(s => (s.occupied = null));
     state.spawn.mainLeft = 0;
     state.spawn.extraLeft = 0;
+
+    state.paused = false;
+    state.reportOpen = false;
+    state.waveStats = null;
+
     resetSellConfirm();
     updateUI();
   }
@@ -432,7 +653,6 @@ export async function startGame() {
     const sellValue = document.getElementById("sellValue");
     const btnUpgrade = document.getElementById("btnUpgrade");
 
-    // Sell confirm UI
     const btnSell = document.getElementById("btnSell");
     const now = performance.now();
     const armed = (state.sellArmedTower === t && now <= state.sellArmedUntil);
@@ -442,7 +662,7 @@ export async function startGame() {
     if (upgradeLabel) upgradeLabel.innerText = canUp ? `Lvl ${nextLvl}` : "Maxed";
     if (upgradeCost) upgradeCost.innerText = canUp ? `${cost}🪙` : "—";
     if (sellValue) sellValue.innerText = `${Math.floor(t.spent * 0.6)}🪙`;
-    if (btnUpgrade) btnUpgrade.disabled = !canUp || state.gold < cost;
+    if (btnUpgrade) btnUpgrade.disabled = !canUp || state.gold < cost || state.paused;
   }
 
   function cancelSelection() {
@@ -450,8 +670,10 @@ export async function startGame() {
     document.getElementById("selectionBar")?.classList.add("translate-y-24");
   }
 
-  // ====== EVENTS ======
+  // ---------------- EVENTS ----------------
   canvas.addEventListener("pointerdown", (e) => {
+    if (state.paused) return;
+
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -467,9 +689,6 @@ export async function startGame() {
       refreshCtx(tower);
       return;
     }
-
-    // Klick ins Leere: Menü zu + Sell-Confirm resetten
-    resetSellConfirm();
 
     if (state.selectedType) {
       const slot = state.slots.find(s => !s.occupied && Math.hypot(s.x - x, s.y - y) < 30);
@@ -489,7 +708,7 @@ export async function startGame() {
             baseRange: base.range,
             baseAoe: base.aoe ?? 0,
 
-            // skalierten Live-Werte
+            // Live skaliert
             range: base.range * state.rangeScale,
             aoe: (base.aoe ?? 0) * state.rangeScale
           };
@@ -497,6 +716,9 @@ export async function startGame() {
           state.towers.push(unit);
           slot.occupied = unit;
           state.gold -= base.cost;
+
+          recordGoldSpent(base.cost);
+
           cancelSelection();
           updateUI();
           return;
@@ -506,16 +728,20 @@ export async function startGame() {
 
     ctxMenu?.classList.add("hidden");
     state.activeTower = null;
+    resetSellConfirm();
   });
 
   document.querySelectorAll("[data-buy]").forEach(btn => {
     btn.addEventListener("click", () => {
+      if (state.paused) return;
+
       state.selectedType = btn.dataset.buy;
       const data = TOWER_DATA[state.selectedType];
       const selIcon = document.getElementById("selIcon");
       const selName = document.getElementById("selName");
       if (selIcon) selIcon.innerText = data.icon;
       if (selName) selName.innerText = data.name;
+
       document.getElementById("selectionBar")?.classList.remove("translate-y-24");
       ctxMenu?.classList.add("hidden");
       state.activeTower = null;
@@ -523,20 +749,29 @@ export async function startGame() {
     });
   });
 
+  document.getElementById("btnCancelSel")?.addEventListener("click", () => {
+    cancelSelection();
+  });
+
   document.getElementById("btnTarget")?.addEventListener("click", () => {
+    if (state.paused) return;
     if (!state.activeTower) return;
     state.activeTower.targetPriority = state.activeTower.targetPriority === "First" ? "Strongest" : "First";
     refreshCtx(state.activeTower);
   });
 
   document.getElementById("btnUpgrade")?.addEventListener("click", () => {
+    if (state.paused) return;
+
     const t = state.activeTower;
     if (!t || t.level >= MAX_LEVEL) return;
+
     const cost = Math.ceil(t.upgradeBase * Math.pow(1.55, t.level - 1));
     if (state.gold < cost) return;
 
     state.gold -= cost;
     t.spent += cost;
+    recordGoldSpent(cost);
 
     const m = t.mult;
     t.damage *= m.damage;
@@ -553,27 +788,25 @@ export async function startGame() {
     t.fireRate *= m.fireRate;
     t.level++;
 
-    resetSellConfirm();
     updateUI();
   });
 
-  // Sell mit Sicherheitsabfrage (2-Klick innerhalb Zeitfenster)
   document.getElementById("btnSell")?.addEventListener("click", () => {
+    if (state.paused) return;
+
     const t = state.activeTower;
     if (!t) return;
 
     const now = performance.now();
     const armed = (state.sellArmedTower === t && now <= state.sellArmedUntil);
 
-    // 1. Klick: scharf schalten
     if (!armed) {
       state.sellArmedTower = t;
-      state.sellArmedUntil = now + 1600; // 1.6s
+      state.sellArmedUntil = now + 1600;
       refreshCtx(t);
       return;
     }
 
-    // 2. Klick: wirklich verkaufen
     state.gold += Math.floor(t.spent * 0.6);
     t.slot.occupied = null;
     state.towers = state.towers.filter(x => x !== t);
@@ -585,15 +818,16 @@ export async function startGame() {
   });
 
   document.getElementById("btnStart")?.addEventListener("click", () => {
-    resetSellConfirm();
+    if (state.paused) return;
     spawnWave();
   });
 
   document.getElementById("btnAuto")?.addEventListener("click", () => {
+    if (state.paused) return;
+
     state.autoStart = !state.autoStart;
     const btnAuto = document.getElementById("btnAuto");
     if (btnAuto) btnAuto.innerText = state.autoStart ? "Auto: On" : "Auto: Off";
-    resetSellConfirm();
     if (state.autoStart && !state.waveActive) spawnWave();
   });
 
@@ -605,15 +839,24 @@ export async function startGame() {
     if (btnSpeed) btnSpeed.innerText = `${state.speed}x`;
   });
 
-  window.closeOverlay = () => document.getElementById("overlay")?.classList.add("hidden");
-  window.cancelSelection = cancelSelection;
+  document.getElementById("btnCloseOverlay")?.addEventListener("click", () => {
+    document.getElementById("overlay")?.classList.add("hidden");
+    state.paused = false;
+    updateUI();
+  });
 
-  // ===== LOOP =====
+  // optional: expose for tests / automation
+  window.gameState = state;
+  window.__spawnWave = spawnWave;
+
+  // ---------------- LOOP ----------------
   function loop(now) {
     const dt = Math.min((now - state.lastFrame) / 1000, 0.1) * state.speed;
     state.lastFrame = now;
+
     update(dt);
     renderer.drawFrame?.();
+
     requestAnimationFrame(loop);
   }
 
