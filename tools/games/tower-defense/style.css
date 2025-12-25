@@ -128,3 +128,6 @@ canvas{
 .rep-type-archer{ color: rgba(34,211,238,.95); }
 .rep-type-cannon{ color: rgba(236,72,153,.95); }
 .rep-type-mage{ color: rgba(167,139,250,.95); }
+
+/* Fallback, falls Tailwind-Utilities mal nicht greifen */
+.hidden { display: none !important; }
