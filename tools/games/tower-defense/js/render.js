@@ -589,7 +589,7 @@ function drawTowerStars(t) {
   const purple = Math.min(5, Math.max(0, lvl - 5));
 
   // Position: unter dem Turm (anpassen, falls es optisch höher/tiefer soll)
-  const baseY = t.y + 4; // probier 50..62
+  const baseY = t.y + 14; // probier 50..62
   const spacing = 10;
   const startX = t.x - (spacing * 2); // 5 Sterne zentriert
 
