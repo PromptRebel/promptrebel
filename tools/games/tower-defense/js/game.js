@@ -51,13 +51,13 @@ export async function startGame() {
   // --- BOSS ARMOR RULES ---
   const BOSS_ARMOR_CANNON_MAGE_MULT = 0.20; // solange Armor > 0
   const BOSS_ARMOR_ARCHER_MULT = 1.00;
-  const BOSS_ARMOR_START_AT_BOSS_INDEX = 4; // Boss 1-3 ohne Armor, ab Boss 4 (Wave 20) mit Armor
+  const BOSS_ARMOR_START_AT_BOSS_INDEX = 3; // Boss 1-3 ohne Armor, ab Boss 4 (Wave 20) mit Armor
 
   // Armor/HP Scaling: bewusst moderat, damit “Endless” nicht bei Boss hard-capped
   const BOSS_HP_SCALE = 1.10;       // pro Boss-Wave Schritt (bossIndex)
   const BOSS_ARMOR_SCALE = 1.14;    // Armor etwas stärker
   const BOSS_HP_BASE_MULT = 0.70;   // Boss base hp runter, weil Armor dazu kommt
-  const BOSS_ARMOR_BASE = 420;      // Basis-Armor (wird skaliert)
+  const BOSS_ARMOR_BASE = 520;      // Basis-Armor (wird skaliert)
 
   // =========================
   // TOWERS (mit deinen Updates)
@@ -417,9 +417,10 @@ if (isBoss) {
       reward,
       isBoss,
 
-      // Boss armor
+           // Boss armor
       armorHp,
       armorMax,
+      maxArmorHp: armorMax,   // <-- HINZUFÜGEN (Alias für render.js)
       broken: false,
 
       // Status effects
