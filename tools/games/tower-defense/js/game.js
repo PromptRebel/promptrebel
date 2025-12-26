@@ -24,7 +24,7 @@ export async function startGame() {
   const REF_H = 600;
 
   // --- ECONOMY ---
-  const GOLD_PER_KILL = 5;
+  const GOLD_PER_KILL = 4;
   const GOLD_KILL_GROWTH = 1.05;   // erst ab Wave 20 aktiv
   const BOSS_GOLD = 200;
 
@@ -66,7 +66,7 @@ export async function startGame() {
   const TOWER_DATA = {
     archer: {
       id: "archer", name: "Archer", icon: "🏹", color: "#22d3ee",
-      cost: 20,
+      cost: 30,
       range: Math.round(170 * 1.10),                 // +10%
       fireRate: Math.round(650 / 2),                 // 2× schneller
       damage: 14 * 0.75,                             // -25%
@@ -78,7 +78,7 @@ export async function startGame() {
 
     cannon: {
       id: "cannon", name: "Cannon", icon: "💣", color: "#ec4899",
-      cost: 45,
+      cost: 50,
       range: 125,
       fireRate: 1100,
       damage: 38 * 1.08,                             // +8%
@@ -128,7 +128,7 @@ export async function startGame() {
     rangeScale: 1,
 
     hp: 10,
-    gold: 120,
+    gold: 100,
     wave: 0,
 
     waveActive: false,
