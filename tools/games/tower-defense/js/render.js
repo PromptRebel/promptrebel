@@ -544,28 +544,119 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
   }
 
   function drawEnemies(now) {
-    for (const e of state.enemies) {
-      const img = assets?.enemies?.[e.type];
-      const w = Math.max(24, e.size * 2.6);
-      const h = w;
+  for (const e of state.enemies) {
+    const img = assets?.enemies?.[e.type];
+    const w = Math.max(24, e.size * 2.6);
+    const h = w;
 
-      if (img) {
-        setCrisp(ctx);
-        ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
+    // ---------- DRAW BODY ----------
+    if (img) {
+      // falls du später ein summoner-sprite hast, nimmt er das hier automatisch
+      setCrisp(ctx);
+      ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
+    } else {
+      // Fallback Shapes
+      if (e.shape === "square") {
+        ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
+        ctx.fillRect(e.x - e.size, e.y - e.size, e.size * 2, e.size * 2);
+      } else if (e.shape === "triangle") {
+        // SUMMONER: echtes Dreieck
+        const r = e.size * 1.35;
+        ctx.fillStyle = "rgba(250,204,21,0.95)"; // gelb
+        ctx.beginPath();
+        ctx.moveTo(e.x, e.y - r);
+        ctx.lineTo(e.x - r * 0.92, e.y + r * 0.78);
+        ctx.lineTo(e.x + r * 0.92, e.y + r * 0.78);
+        ctx.closePath();
+        ctx.fill();
+
+        // kleiner Outline-Glow
+        ctx.strokeStyle = "rgba(250,204,21,0.35)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
       } else {
-        ctx.fillStyle = "#fb7185";
+        // circle default
+        ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
 
-      const hpPct = Math.max(0, e.hp / e.maxHp);
+    // ---------- BOSS ARMOR SHIELD (Bubble) ----------
+    // Erwartet: e.armorHp, e.maxArmorHp (von game.js gesetzt)
+    if (e.isBoss && e.maxArmorHp > 0) {
+      const armor = Math.max(0, e.armorHp || 0);
+      const pct = armor / e.maxArmorHp;
+      const broken = (armor <= 0);
+
+      const R = Math.max(22, e.size * 1.9); // Shield Radius
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+
+      if (!broken) {
+        // sichtbare Bubble
+        ctx.strokeStyle = `rgba(34,211,238,${0.22 + 0.35 * pct})`;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, R, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // inner glow
+        ctx.strokeStyle = `rgba(167,139,250,${0.10 + 0.22 * pct})`;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, R - 3, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        // BROKEN: nur ein schwacher "crack ring" (dezent)
+        ctx.strokeStyle = "rgba(148,163,184,0.25)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 6]);
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, R, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.restore();
+
+      // optionales "BROKEN" Tag (kannst du drin lassen oder rausnehmen)
+      if (broken) {
+        ctx.save();
+        ctx.font = "10px system-ui";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "rgba(226,232,240,0.85)";
+        ctx.fillText("BROKEN", e.x, e.y - R - 10);
+        ctx.restore();
+      }
+    }
+
+    // ---------- HP / ARMOR BARS ----------
+    const hpPct = Math.max(0, e.hp / e.maxHp);
+
+    // HP bar base
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+    ctx.fillRect(e.x - 16, e.y - (h / 2) - 10, 32, 4);
+
+    ctx.fillStyle = hpPct > 0.5 ? "#10b981" : (hpPct > 0.2 ? "#f59e0b" : "#ef4444");
+    ctx.fillRect(e.x - 16, e.y - (h / 2) - 10, 32 * hpPct, 4);
+
+    // Armor bar (nur wenn vorhanden)
+    if (e.maxArmorHp > 0) {
+      const armor = Math.max(0, e.armorHp || 0);
+      const aPct = armor / e.maxArmorHp;
+
       ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32, 4);
-      ctx.fillStyle = hpPct > 0.5 ? "#10b981" : (hpPct > 0.2 ? "#f59e0b" : "#ef4444");
-      ctx.fillRect(e.x - 16, e.y - (h/2) - 10, 32 * hpPct, 4);
+      ctx.fillRect(e.x - 16, e.y - (h / 2) - 16, 32, 3);
+
+      // cyan shield bar
+      ctx.fillStyle = `rgba(34,211,238,${armor > 0 ? 0.95 : 0.25})`;
+      ctx.fillRect(e.x - 16, e.y - (h / 2) - 16, 32 * aPct, 3);
     }
   }
+}
 
   function drawTowers() {
   for (const t of state.towers) {
