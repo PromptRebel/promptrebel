@@ -57,7 +57,7 @@ export async function startGame() {
   const BOSS_HP_SCALE = 1.10;       // pro Boss-Wave Schritt (bossIndex)
   const BOSS_ARMOR_SCALE = 1.14;    // Armor etwas stärker
   const BOSS_HP_BASE_MULT = 0.70;   // Boss base hp runter, weil Armor dazu kommt
-  const BOSS_ARMOR_BASE = 520;      // Basis-Armor (wird skaliert)
+  const BOSS_ARMOR_BASE = 7520;      // Basis-Armor (wird skaliert)
 
   // =========================
   // TOWERS (mit deinen Updates)
