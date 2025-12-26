@@ -51,6 +51,7 @@ export async function startGame() {
   // --- BOSS ARMOR RULES ---
   const BOSS_ARMOR_CANNON_MAGE_MULT = 0.20; // solange Armor > 0
   const BOSS_ARMOR_ARCHER_MULT = 1.00;
+  const BOSS_ARMOR_START_AT_BOSS_INDEX = 4; // Boss 1-3 ohne Armor, ab Boss 4 (Wave 20) mit Armor
 
   // Armor/HP Scaling: bewusst moderat, damit “Endless” nicht bei Boss hard-capped
   const BOSS_HP_SCALE = 1.10;       // pro Boss-Wave Schritt (bossIndex)
@@ -386,14 +387,22 @@ export async function startGame() {
     let armorMax = 0;
 
     const isBoss = !!base.isBoss;
-    if (isBoss) {
-      const bossIndex = Math.max(1, Math.floor(state.wave / 5));
-      hp = Math.round(base.baseHp * BOSS_HP_BASE_MULT * Math.pow(BOSS_HP_SCALE, bossIndex - 1));
-      armorMax = Math.round(BOSS_ARMOR_BASE * Math.pow(BOSS_ARMOR_SCALE, bossIndex - 1));
-      armorHp = armorMax;
-    } else {
-      hp = Math.round(base.baseHp * hpScale);
-    }
+if (isBoss) {
+  const bossIndex = Math.max(1, Math.floor(state.wave / 5));
+
+  hp = Math.round(base.baseHp * BOSS_HP_BASE_MULT * Math.pow(BOSS_HP_SCALE, bossIndex - 1));
+
+  // Armor erst ab bestimmtem Boss aktivieren
+  if (bossIndex >= BOSS_ARMOR_START_AT_BOSS_INDEX) {
+    armorMax = Math.round(BOSS_ARMOR_BASE * Math.pow(BOSS_ARMOR_SCALE, bossIndex - 1));
+    armorHp = armorMax;
+  } else {
+    armorMax = 0;
+    armorHp = 0;
+  }
+} else {
+  hp = Math.round(base.baseHp * hpScale);
+}
 
     const reward = isBoss ? BOSS_GOLD : killGoldForWave(state.wave);
 
