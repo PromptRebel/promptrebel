@@ -98,10 +98,10 @@ canvas{
 
 .rep-table-wrap{
   overflow:auto;
+  max-height: 220px; /* <- das macht die Scrollbar zuverlässig */
   border-radius:14px;
   border:1px solid rgba(148,163,184,.10);
 }
-
 .rep-table{
   width:100%;
   border-collapse:collapse;
