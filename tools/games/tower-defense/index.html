@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>Cyber Defense · Tower Tactics</title>
 
-  <!-- Tailwind (optional, du nutzt es bereits) -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Deine Styles als Datei -->
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -26,7 +23,7 @@
 
       <div class="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-700/50">
         <span class="text-amber-400">🪙</span>
-        <span id="gold" class="font-bold text-sm md:text-base">120</span>
+        <span id="gold" class="font-bold text-sm md:text-base">100</span>
       </div>
 
       <div class="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-700/50">
@@ -89,13 +86,12 @@
       </div>
 
       <button id="btnCancelSel"
-        onclick="window.cancelSelection?.()"
         class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2 rounded-xl text-xs font-bold pointer-events-auto">
         Cancel
       </button>
     </div>
 
-    <!-- ===== Wave Report Overlay (NEU) ===== -->
+    <!-- ===== Wave Report Overlay ===== -->
     <div id="reportOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[120] flex items-center justify-center p-4">
       <div class="glass rounded-3xl w-full max-w-2xl p-5 md:p-6 flex flex-col gap-4">
         <div class="flex items-start justify-between gap-3">
@@ -108,11 +104,17 @@
             </div>
           </div>
 
-          <button id="btnCloseReport"
-            onclick="window.__closeReport?.() || document.getElementById('reportOverlay')?.classList.add('hidden')"
-            class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-2xl">
-            Close
-          </button>
+          <div class="flex items-center gap-2">
+            <button id="btnCopyReport"
+              class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-2xl">
+              Copy JSON
+            </button>
+
+            <button id="btnCloseReport"
+              class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-2xl">
+              Close
+            </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -180,7 +182,6 @@
         <div id="leaderboardList" class="flex flex-col gap-2 max-h-60 overflow-y-auto pr-2 no-scrollbar"></div>
 
         <button id="btnCloseOverlay"
-          onclick="window.closeOverlay?.()"
           class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-2xl transition-colors">
           Return
         </button>
@@ -193,13 +194,13 @@
     <button data-buy="archer" class="btn-buy bg-slate-900/40 border border-slate-700/50 hover:border-cyan-500/50 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
       <span class="text-2xl">🏹</span>
       <span class="font-bold text-[10px] uppercase tracking-wider">Archer</span>
-      <span class="text-xs text-cyan-400 font-black">20🪙</span>
+      <span class="text-xs text-cyan-400 font-black">30🪙</span>
     </button>
 
     <button data-buy="cannon" class="btn-buy bg-slate-900/40 border border-slate-700/50 hover:border-pink-500/50 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
       <span class="text-2xl">💣</span>
       <span class="font-bold text-[10px] uppercase tracking-wider">Cannon</span>
-      <span class="text-xs text-pink-400 font-black">45🪙</span>
+      <span class="text-xs text-pink-400 font-black">50🪙</span>
     </button>
 
     <button data-buy="mage" class="btn-buy bg-slate-900/40 border border-slate-700/50 hover:border-violet-500/50 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
@@ -211,5 +212,13 @@
 
   <!-- Start -->
   <script type="module" src="./js/main.js"></script>
+
+  <!-- Kleine Brücke für Buttons ohne inline-onclick -->
+  <script>
+    // Cancel Selection button
+    document.getElementById("btnCancelSel")?.addEventListener("click", () => window.cancelSelection?.());
+    // Close overlay button
+    document.getElementById("btnCloseOverlay")?.addEventListener("click", () => window.closeOverlay?.());
+  </script>
 </body>
 </html>
