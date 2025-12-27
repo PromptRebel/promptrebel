@@ -123,44 +123,44 @@ export async function startGame() {
   // =========================
   // STATE
   // =========================
-  const state = {
-    w: 0, h: 0, dpr: 1,
-    rangeScale: 1,
+ const state = {
+  w: 0, h: 0, dpr: 1,
+  rangeScale: 1,
 
-    hp: 10,
-    gold: 100,
-    wave: 0,
+  hp: 10,
+  gold: 100,
+  wave: 0,
 
-    waveActive: false,
-    waveTotal: 0,
-    waveSpawned: 0,
-    waveKilled: 0,
+  waveActive: false,
+  waveTotal: 0,
+  waveSpawned: 0,
+  waveKilled: 0,
 
-    enemies: [],
-    towers: [],
-    projectiles: [],
-    particles: [],
+  enemies: [],
+  towers: [],
+  projectiles: [],
+  particles: [],
 
-    selectedType: null,
-    activeTower: null,
+  selectedType: null,
+  activeTower: null,
 
-    speed: 1,
-    lastFrame: 0,
+  speed: 1,
+  lastFrame: 0,
 
-    path: [],
-    slots: [],
-    autoStart: false,
+  path: [],
+  slots: [],
+  autoStart: false,
 
-    sellArmedTower: null,
-    sellArmedUntil: 0,
+  sellArmedTower: null,
+  sellArmedUntil: 0,
 
-    // Report / Wave stats
-    reportOpen: false,
-    waveStats: null,
+  // Report / Wave stats
+  reportOpen: false,
+  waveStats: null,
+  _lastReportText: "",
 
-    spawn: { mainLeft: 0, extraLeft: 0, nextAt: 0, interval: 0, extraInterval: 0 }
-  };
-
+  spawn: { mainLeft: 0, extraLeft: 0, nextAt: 0, interval: 0, extraInterval: 0 }
+};
   const renderer = createRenderer({ canvas, ctx, state, assets });
 
   // =========================
@@ -230,67 +230,101 @@ export async function startGame() {
       state.waveStats.killsByType[sourceType] += 1;
     }
   }
+function buildReportText(stats) {
+  // kompakt, gut für Chat / Debug
+  const o = {
+    wave: stats.wave,
+    duration_s: +(stats.durationMs / 1000).toFixed(2),
 
-  function openReportOverlay() {
-    const stats = state.waveStats;
-    if (!stats) return;
+    gold: {
+      start: stats.goldStart,
+      kills: stats.goldKills,
+      bonus: stats.goldBonus,
+      spent: stats.goldSpent,
+      net: (stats.goldKills + stats.goldBonus - stats.goldSpent)
+    },
 
-    stats.durationMs = performance.now() - stats.startAt;
+    leaks: stats.leaks,
 
-    // Boss armor end
-    if (stats.bossWave && stats.bossArmorEnd == null) {
-      // wenn Boss nicht gespawnt hat oder nicht gefunden wurde, bleibt es —
+    damage: {
+      total: Math.round(stats.totalDamage),
+      archer: Math.round(stats.damageByType.archer),
+      cannon: Math.round(stats.damageByType.cannon),
+      mage: Math.round(stats.damageByType.mage)
+    },
+
+    kills: {
+      total: stats.totalKills,
+      archer: stats.killsByType.archer,
+      cannon: stats.killsByType.cannon,
+      mage: stats.killsByType.mage
+    },
+
+    boss: stats.bossWave ? {
+      spawnAt_ms: stats.bossSpawnAt ? Math.round(stats.bossSpawnAt) : null,
+      ttk_s: stats.bossTTKms ? +(stats.bossTTKms / 1000).toFixed(3) : null,
+      armorStart: stats.bossArmorStart,
+      armorEnd: stats.bossArmorEnd,
+      broken: stats.bossBroken
+    } : null,
+
+    summoner: {
+      spawned: stats.summonerSpawned,
+      summonedFast: stats.summonedFast
     }
+  };
 
-    // DOM schreiben (alles optional: wenn IDs nicht existieren → kein Crash)
-    const setText = (id, v) => {
-      const el = document.getElementById(id);
-      if (el) el.innerText = v;
-    };
+  return "```json\n" + JSON.stringify(o, null, 2) + "\n```";
+}
 
-    setText("repWave", String(stats.wave));
-    setText("repDuration", `${(stats.durationMs / 1000).toFixed(1)}s`);
-
-    setText("repGoldKills", `${stats.goldKills}`);
-    setText("repGoldBonus", `${stats.goldBonus}`);
-    setText("repGoldSpent", `${stats.goldSpent}`);
-    setText("repGoldNet", `${stats.goldKills + stats.goldBonus - stats.goldSpent}`);
-
-    setText("repLeaks", `${stats.leaks}`);
-    setText("repBossTTK", stats.bossTTKms ? `${(stats.bossTTKms / 1000).toFixed(2)}s` : "—");
-    setText("repTotalKills", `${stats.totalKills}`);
-    setText("repTotalDmg", `${Math.round(stats.totalDamage)}`);
-
-    setText("repDmgArcher", `${Math.round(stats.damageByType.archer)}`);
-    setText("repDmgCannon", `${Math.round(stats.damageByType.cannon)}`);
-    setText("repDmgMage", `${Math.round(stats.damageByType.mage)}`);
-
-    setText("repKillsArcher", `${stats.killsByType.archer}`);
-    setText("repKillsCannon", `${stats.killsByType.cannon}`);
-    setText("repKillsMage", `${stats.killsByType.mage}`);
-
-    // zusätzliche Felder (falls du sie später ins HTML ergänzt)
-    setText("repBossArmorStart", stats.bossArmorStart != null ? `${stats.bossArmorStart}` : "—");
-    setText("repBossArmorEnd", stats.bossArmorEnd != null ? `${stats.bossArmorEnd}` : "—");
-    setText("repBossBroken", stats.bossBroken != null ? (stats.bossBroken ? "Yes" : "No") : "—");
-    setText("repSummoners", `${stats.summonerSpawned}`);
-    setText("repSummonedFast", `${stats.summonedFast}`);
-
-    document.getElementById("reportOverlay")?.classList.remove("hidden");
-    state.reportOpen = true;
+async function copyTextToClipboard(text) {
+  // Standard Clipboard API
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return true;
   }
+
+  // Fallback (falls Clipboard API geblockt ist)
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  const ok = document.execCommand("copy");
+  document.body.removeChild(ta);
+  return ok;
+}
+  function openReportOverlay() {
+  const stats = state.waveStats;
+  if (!stats) return;
+
+  stats.durationMs = performance.now() - stats.startAt;
+
+  // Boss armor end: bleibt wie bisher "best effort"
+  if (stats.bossWave && stats.bossArmorEnd == null) {
+    // kein Boss gespawnt / nicht erfasst -> lassen wir es bei null
+  }
+
+  // Reporttext vorbereiten (für Copy-Button)
+  state._lastReportText = buildReportText(stats);
+
+  document.getElementById("reportOverlay")?.classList.remove("hidden");
+  state.reportOpen = true;
+}
 
   function closeReportOverlay() {
-    document.getElementById("reportOverlay")?.classList.add("hidden");
-    state.reportOpen = false;
+  document.getElementById("reportOverlay")?.classList.add("hidden");
+  state.reportOpen = false;
 
-    // wenn Auto an ist, Wave danach starten
-    if (state.autoStart && state.hp > 0 && !state.waveActive) {
-      setTimeout(() => { if (!state.waveActive && !state.reportOpen) spawnWave(); }, 250);
-    }
+  // wenn Auto an ist, Wave danach starten
+  if (state.autoStart && state.hp > 0 && !state.waveActive) {
+    setTimeout(() => {
+      if (!state.waveActive && !state.reportOpen) spawnWave();
+    }, 250);
   }
-
-  window.__closeReport = closeReportOverlay;
+}
 
   function resetSellConfirm() {
     state.sellArmedTower = null;
@@ -676,6 +710,7 @@ if (isBoss) {
     state.spawn.extraLeft = 0;
 
     state.waveStats = null;
+    state._lastReportText = "";
     state.reportOpen = false;
     document.getElementById("reportOverlay")?.classList.add("hidden");
 
@@ -1090,6 +1125,23 @@ if (isBoss) {
 
   // Report Close Button (falls du lieber Listener statt onclick willst)
   document.getElementById("btnCloseReport")?.addEventListener("click", closeReportOverlay);
+  document.getElementById("btnCopyReport")?.addEventListener("click", async () => {
+  if (!state.waveStats) return;
+
+  // Sicherheit: falls Overlay offen ist, ist durationMs evtl. noch frisch aktualisieren
+  state.waveStats.durationMs = performance.now() - state.waveStats.startAt;
+  state._lastReportText = buildReportText(state.waveStats);
+
+  const ok = await copyTextToClipboard(state._lastReportText);
+
+  // optionales Mini-Feedback am Button (kein UI-Overkill)
+  const btn = document.getElementById("btnCopyReport");
+  if (btn) {
+    const old = btn.innerText;
+    btn.innerText = ok ? "✅ Kopiert!" : "Copy (blocked)";
+    setTimeout(() => (btn.innerText = old), 1200);
+  }
+});
 
   // =========================
   // LOOP
