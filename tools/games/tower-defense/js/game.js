@@ -57,7 +57,7 @@ export async function startGame() {
   const BOSS_HP_SCALE = 1.10;       // pro Boss-Wave Schritt (bossIndex)
   const BOSS_ARMOR_SCALE = 1.14;    // Armor etwas stärker
   const BOSS_HP_BASE_MULT = 0.70;   // Boss base hp runter, weil Armor dazu kommt
-  const BOSS_ARMOR_BASE = 7520;      // Basis-Armor (wird skaliert)
+  const BOSS_ARMOR_BASE = 1420;      // Basis-Armor (wird skaliert)
 
   // =========================
   // TOWERS (mit deinen Updates)
@@ -117,7 +117,7 @@ export async function startGame() {
       summonEvery: 2000,        // ms
       summonCount: 5
     },
-    boss: { shape: "square", baseHp: 600, baseSpeed: 0.7, size: 25, isBoss: true }
+    boss: { shape: "square", baseHp: 800, baseSpeed: 0.7, size: 25, isBoss: true }
   };
 
   // =========================
