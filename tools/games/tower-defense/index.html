@@ -90,90 +90,27 @@
         Cancel
       </button>
     </div>
+<!-- ===== Wave Report Overlay (MINIMAL) ===== -->
+<div id="reportOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[120] flex items-center justify-center p-4">
+  <div class="glass rounded-3xl w-full max-w-md p-5 md:p-6">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="text-lg md:text-xl font-black text-white">Wave Report</h2>
 
-    <!-- ===== Wave Report Overlay ===== -->
-    <div id="reportOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[120] flex items-center justify-center p-4">
-      <div class="glass rounded-3xl w-full max-w-2xl p-5 md:p-6 flex flex-col gap-4">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <h2 class="text-xl md:text-2xl font-black text-white">Wave Report</h2>
-            <div class="text-slate-400 text-sm mt-1">
-              Wave <span id="repWave" class="text-cyan-300 font-bold">—</span>
-              <span class="mx-2 text-slate-600">•</span>
-              Duration <span id="repDuration" class="text-slate-200 font-semibold">—</span>
-            </div>
-          </div>
+      <div class="flex items-center gap-2">
+        <button id="btnCopyReport"
+          class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-2xl">
+          Copy JSON
+        </button>
 
-          <div class="flex items-center gap-2">
-            <button id="btnCopyReport"
-              class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-2xl">
-              Copy JSON
-            </button>
-
-            <button id="btnCloseReport"
-              class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-2xl">
-              Close
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="glass-soft rounded-2xl p-3">
-            <div class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-2">Economy</div>
-            <div class="rep-row"><span>Gold Income (Kills)</span><span id="repGoldKills" class="rep-val">—</span></div>
-            <div class="rep-row"><span>Gold Income (Wave Bonus)</span><span id="repGoldBonus" class="rep-val">—</span></div>
-            <div class="rep-row"><span>Gold Spent</span><span id="repGoldSpent" class="rep-val">—</span></div>
-            <div class="rep-row rep-row-strong"><span>Net</span><span id="repGoldNet" class="rep-val">—</span></div>
-          </div>
-
-          <div class="glass-soft rounded-2xl p-3">
-            <div class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-2">Outcome</div>
-            <div class="rep-row"><span>Leaks (HP Loss)</span><span id="repLeaks" class="rep-val">—</span></div>
-            <div class="rep-row"><span>Boss Time To Kill</span><span id="repBossTTK" class="rep-val">—</span></div>
-            <div class="rep-row"><span>Total Kills</span><span id="repTotalKills" class="rep-val">—</span></div>
-            <div class="rep-row rep-row-strong"><span>Total Damage</span><span id="repTotalDmg" class="rep-val">—</span></div>
-          </div>
-        </div>
-
-        <div class="glass-soft rounded-2xl p-3">
-          <div class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-2">By Tower Type</div>
-
-          <div class="rep-table-wrap">
-            <table class="rep-table">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Damage</th>
-                  <th>Kills</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="rep-type rep-type-archer">Archer</td>
-                  <td id="repDmgArcher">—</td>
-                  <td id="repKillsArcher">—</td>
-                </tr>
-                <tr>
-                  <td class="rep-type rep-type-cannon">Cannon</td>
-                  <td id="repDmgCannon">—</td>
-                  <td id="repKillsCannon">—</td>
-                </tr>
-                <tr>
-                  <td class="rep-type rep-type-mage">Mage</td>
-                  <td id="repDmgMage">—</td>
-                  <td id="repKillsMage">—</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="text-[11px] text-slate-500 mt-2">
-            Tip: Screenshot machen → du hast pro Wave eine stabile Vergleichs-Basis fürs Balancing.
-          </div>
-        </div>
+        <button id="btnCloseReport"
+          class="btn-action bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-2xl">
+          Close
+        </button>
       </div>
     </div>
-
+  </div>
+</div>
+   
     <!-- Game Over Overlay -->
     <div id="overlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-6">
       <div id="overlayContent" class="glass rounded-3xl w-full max-w-md p-6 flex flex-col gap-4">
