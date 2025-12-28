@@ -86,10 +86,10 @@ export async function startGame() {
       cost: 50,
       range: 125,
       fireRate: 1100,
-      damage: 38 * 1.08, // +8%
+      damage: 43, 
       projSpeed: 8,
-      aoe: 0, // AOE entfernt
-      upgradeBase: 55,
+      aoe: 0,
+      upgradeBase: 50,
       mult: { damage: 1.4, range: 1.06, fireRate: 0.92, aoe: 1.0, projSpeed: 1.03 },
     },
 
