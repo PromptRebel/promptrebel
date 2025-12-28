@@ -555,32 +555,53 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
       setCrisp(ctx);
       ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
     } else {
-      // Fallback Shapes
-      if (e.shape === "square") {
-        ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
-        ctx.fillRect(e.x - e.size, e.y - e.size, e.size * 2, e.size * 2);
-      } else if (e.shape === "triangle") {
-        // SUMMONER: echtes Dreieck
-        const r = e.size * 1.35;
-        ctx.fillStyle = "rgba(250,204,21,0.95)"; // gelb
-        ctx.beginPath();
-        ctx.moveTo(e.x, e.y - r);
-        ctx.lineTo(e.x - r * 0.92, e.y + r * 0.78);
-        ctx.lineTo(e.x + r * 0.92, e.y + r * 0.78);
-        ctx.closePath();
-        ctx.fill();
+     // Fallback Shapes
+if (e.shape === "square") {
+  ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
+  ctx.fillRect(e.x - e.size, e.y - e.size, e.size * 2, e.size * 2);
 
-        // kleiner Outline-Glow
-        ctx.strokeStyle = "rgba(250,204,21,0.35)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      } else {
-        // circle default
-        ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
+} else if (e.shape === "triangle") {
+  // SUMMONER: echtes Dreieck
+  const r = e.size * 1.35;
+  ctx.fillStyle = "rgba(250,204,21,0.95)";
+  ctx.beginPath();
+  ctx.moveTo(e.x, e.y - r);
+  ctx.lineTo(e.x - r * 0.92, e.y + r * 0.78);
+  ctx.lineTo(e.x + r * 0.92, e.y + r * 0.78);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(250,204,21,0.35)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+} else if (e.shape === "hex") {
+  // MINION: braunes 6-Eck
+  const r = e.size * 1.35;
+  ctx.fillStyle = "rgba(161,98,7,0.95)";
+
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const ang = (Math.PI / 3) * i - Math.PI / 6;
+    const px = e.x + Math.cos(ang) * r;
+    const py = e.y + Math.sin(ang) * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(251,191,36,0.35)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+} else {
+  // circle default
+  ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
+  ctx.beginPath();
+  ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
+  ctx.fill();
+}
     }
 
     // ---------- BOSS ARMOR SHIELD (Bubble) ----------
