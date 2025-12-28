@@ -125,6 +125,15 @@ export async function startGame() {
       summonEvery: 2000,
       summonCount: 5,
     },
+    // ✅ NEU: Minion (kleiner, langsamer, weniger HP)
+  minion: {
+    shape: "hex",          // für 6-Ecke (Render-Patch siehe unten)
+    baseHp: 18,            // ~60% von fast(30) bevor Scaling greift
+    baseSpeed: 1.7,        // ~20% langsamer als fast(2.1)
+    size: 8,
+    slowImmune: false
+  },
+
     boss: { shape: "square", baseHp: 800, baseSpeed: 0.7, size: 25, isBoss: true },
   };
 
@@ -976,8 +985,9 @@ export async function startGame() {
         e.nextSummonAt = now + cfg.summonEvery;
 
         for (let k = 0; k < cfg.summonCount; k++) {
-          const child = makeEnemy("fast", e.x, e.y, e.targetIdx, e.traveled);
+          const child = makeEnemy("minion", e.x, e.y, e.targetIdx, e.traveled);
           state.enemies.push(child);
+
           if (state.waveStats) state.waveStats.summonedFast += 1;
         }
       }
