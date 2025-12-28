@@ -25,11 +25,11 @@ export async function startGame() {
 
   // --- ECONOMY ---
   const GOLD_PER_KILL = 4;
-  const GOLD_KILL_GROWTH = 1.05;   // erst ab Wave 20 aktiv
+  const GOLD_KILL_GROWTH = 1.05; // erst ab Wave 20 aktiv
   const BOSS_GOLD = 200;
 
   const WAVE_BONUS_BASE = 20;
-  const WAVE_BONUS_GROWTH = 1.05;  // erst ab Wave 20 aktiv
+  const WAVE_BONUS_GROWTH = 1.05; // erst ab Wave 20 aktiv
 
   // --- WAVES ---
   const WAVE_COUNT_BASE = 10;
@@ -38,7 +38,7 @@ export async function startGame() {
 
   const EXTRA_FROM_WAVE = 30;
   const EXTRA_MAX = 20;
-  const EXTRA_SPAWN_MULT = 0.60;
+  const EXTRA_SPAWN_MULT = 0.6;
 
   // --- STATUS EFFECTS ---
   const WEAKEN_MULT = 1.08;
@@ -49,58 +49,66 @@ export async function startGame() {
   const BURN_MAXHP_PCT = 0.03;
 
   // --- BOSS ARMOR RULES ---
-  const BOSS_ARMOR_CANNON_MAGE_MULT = 0.20; // solange Armor > 0
-  const BOSS_ARMOR_ARCHER_MULT = 1.00;
+  const BOSS_ARMOR_CANNON_MAGE_MULT = 0.2; // solange Armor > 0
+  const BOSS_ARMOR_ARCHER_MULT = 1.0;
   const BOSS_ARMOR_START_AT_BOSS_INDEX = 4; // Boss 1-3 ohne Armor, ab Boss 4 (Wave 20) mit Armor
 
-  // Armor/HP Scaling: bewusst moderat, damit “Endless” nicht bei Boss hard-capped
-  const BOSS_HP_SCALE = 1.10;       // pro Boss-Wave Schritt (bossIndex)
-  const BOSS_ARMOR_SCALE = 1.14;    // Armor etwas stärker
-  const BOSS_HP_BASE_MULT = 0.70;   // Boss base hp runter, weil Armor dazu kommt
-  const BOSS_ARMOR_BASE = 1420;      // Basis-Armor (wird skaliert)
+  // Armor/HP Scaling
+  const BOSS_HP_SCALE = 1.1; // pro BossIndex
+  const BOSS_ARMOR_SCALE = 1.14;
+  const BOSS_HP_BASE_MULT = 0.7;
+  const BOSS_ARMOR_BASE = 1420; // Basis-Armor (wird skaliert)
 
   // =========================
-  // TOWERS (mit deinen Updates)
+  // TOWERS
   // =========================
-  // Hinweis: fireRate ist ms zwischen Schüssen. "2x schneller" = halbieren.
   const TOWER_DATA = {
     archer: {
-      id: "archer", name: "Archer", icon: "🏹", color: "#22d3ee",
+      id: "archer",
+      name: "Archer",
+      icon: "🏹",
+      color: "#22d3ee",
       cost: 30,
-      range: Math.round(170 * 1.10),                 // +10%
-      fireRate: Math.round(650 / 2),                 // 2× schneller
-      damage: 14 * 0.75,                             // -25%
+      range: Math.round(170 * 1.1), // +10%
+      fireRate: Math.round(650 / 2), // 2× schneller
+      damage: 14 * 0.75, // -25%
       projSpeed: 12,
       aoe: 0,
       upgradeBase: 24,
-      mult: { damage: 1.35, range: 1.08, fireRate: 0.90, aoe: 1.00, projSpeed: 1.03 }
+      mult: { damage: 1.35, range: 1.08, fireRate: 0.9, aoe: 1.0, projSpeed: 1.03 },
     },
 
     cannon: {
-      id: "cannon", name: "Cannon", icon: "💣", color: "#ec4899",
+      id: "cannon",
+      name: "Cannon",
+      icon: "💣",
+      color: "#ec4899",
       cost: 50,
       range: 125,
       fireRate: 1100,
-      damage: 38 * 1.08,                             // +8%
+      damage: 38 * 1.08, // +8%
       projSpeed: 8,
-      aoe: 0,                                        // AOE entfernt
+      aoe: 0, // AOE entfernt
       upgradeBase: 55,
-      mult: { damage: 1.40, range: 1.06, fireRate: 0.92, aoe: 1.00, projSpeed: 1.03 }
+      mult: { damage: 1.4, range: 1.06, fireRate: 0.92, aoe: 1.0, projSpeed: 1.03 },
     },
 
     mage: {
-      id: "mage", name: "Mage", icon: "✨", color: "#8b5cf6",
+      id: "mage",
+      name: "Mage",
+      icon: "✨",
+      color: "#8b5cf6",
       cost: 40,
-      range: 145 * 0.95,                             // -5%
+      range: 145 * 0.95, // -5%
       fireRate: 900,
-      damage: 24 * 0.85,                             // -15%
+      damage: 24 * 0.85, // -15%
       projSpeed: 10,
       aoe: 35,
       slow: 0.55,
       slowDur: 1400,
       upgradeBase: 45,
-      mult: { damage: 1.38, range: 1.07, fireRate: 0.92, aoe: 1.12, projSpeed: 1.03 }
-    }
+      mult: { damage: 1.38, range: 1.07, fireRate: 0.92, aoe: 1.12, projSpeed: 1.03 },
+    },
   };
 
   // =========================
@@ -111,61 +119,127 @@ export async function startGame() {
     tank: { shape: "square", baseHp: 75, baseSpeed: 1.0, size: 12 },
     summoner: {
       shape: "triangle",
-      baseHp: 92,               // > tank
-      baseSpeed: 1.0,           // ~tank
+      baseHp: 92,
+      baseSpeed: 1.0,
       size: 13,
-      summonEvery: 2000,        // ms
-      summonCount: 5
+      summonEvery: 2000,
+      summonCount: 5,
     },
-    boss: { shape: "square", baseHp: 800, baseSpeed: 0.7, size: 25, isBoss: true }
+    boss: { shape: "square", baseHp: 800, baseSpeed: 0.7, size: 25, isBoss: true },
   };
 
   // =========================
   // STATE
   // =========================
- const state = {
-  w: 0, h: 0, dpr: 1,
-  rangeScale: 1,
+  const state = {
+    w: 0,
+    h: 0,
+    dpr: 1,
+    rangeScale: 1,
 
-  hp: 10,
-  gold: 100,
-  wave: 0,
+    hp: 10,
+    gold: 100,
+    wave: 0,
 
-  waveActive: false,
-  waveTotal: 0,
-  waveSpawned: 0,
-  waveKilled: 0,
+    waveActive: false,
+    waveTotal: 0,
+    waveSpawned: 0,
+    waveKilled: 0,
 
-  enemies: [],
-  towers: [],
-  projectiles: [],
-  particles: [],
+    enemies: [],
+    towers: [],
+    projectiles: [],
+    particles: [],
 
-  selectedType: null,
-  activeTower: null,
+    selectedType: null,
+    activeTower: null,
 
-  speed: 1,
-  lastFrame: 0,
+    speed: 1,
+    lastFrame: 0,
 
-  path: [],
-  slots: [],
-  autoStart: false,
+    path: [],
+    slots: [],
+    autoStart: false,
 
-  sellArmedTower: null,
-  sellArmedUntil: 0,
+    sellArmedTower: null,
+    sellArmedUntil: 0,
 
-  // Report / Wave stats
-  reportOpen: false,
-  waveStats: null,
-  _lastReportText: "",
+    // Report / Wave stats
+    reportOpen: false,
+    waveStats: null,
+    _lastReportText: "",
 
-  spawn: { mainLeft: 0, extraLeft: 0, nextAt: 0, interval: 0, extraInterval: 0 }
-};
+    spawn: { mainLeft: 0, extraLeft: 0, nextAt: 0, interval: 0, extraInterval: 0 },
+  };
+
+  // simple unique id generator for towers
+  let _towerUid = 0;
+  const nextTowerUid = () => ++_towerUid;
+
   const renderer = createRenderer({ canvas, ctx, state, assets });
 
   // =========================
   // HELPERS: REPORT / UI
   // =========================
+  function towerExport(t) {
+    return {
+      uid: t.uid,
+      type: t.id,
+      name: t.name,
+      level: t.level,
+      slotIdx: t.slot?.idx ?? null,
+      x: Math.round(t.x),
+      y: Math.round(t.y),
+      damage: +t.damage.toFixed(3),
+      range: +t.range.toFixed(3),
+      fireRate_ms: +t.fireRate.toFixed(3),
+      aoe: +t.aoe.toFixed(3),
+      spent: Math.floor(t.spent || 0),
+      target: t.targetPriority,
+    };
+  }
+
+  function ensureTowerStats(towerUid, towerType) {
+    if (!state.waveStats) return null;
+    if (!state.waveStats.towersById[towerUid]) {
+      state.waveStats.towersById[towerUid] = {
+        uid: towerUid,
+        type: towerType,
+        damage: 0,
+        kills: { fast: 0, tank: 0, summoner: 0, boss: 0 },
+      };
+    }
+    return state.waveStats.towersById[towerUid];
+  }
+
+  function classifyEnemyForStats(e) {
+    return e.isBoss ? "boss" : e.type; // fast/tank/summoner/boss
+  }
+
+  function computeEnemySpawnStatsForWave(wave) {
+    const hpScale = Math.pow(1.12, wave - 1);
+    const bossIndex = Math.max(1, Math.floor(wave / 5));
+
+    const fastHp = Math.round(ENEMY.fast.baseHp * hpScale);
+    const tankHp = Math.round(ENEMY.tank.baseHp * hpScale);
+    const summonerHp = Math.round(ENEMY.summoner.baseHp * hpScale);
+
+    const bossHp = Math.round(ENEMY.boss.baseHp * BOSS_HP_BASE_MULT * Math.pow(BOSS_HP_SCALE, bossIndex - 1));
+    const bossArmor =
+      bossIndex >= BOSS_ARMOR_START_AT_BOSS_INDEX
+        ? Math.round(BOSS_ARMOR_BASE * Math.pow(BOSS_ARMOR_SCALE, bossIndex - 1))
+        : 0;
+
+    return {
+      wave,
+      hpScale: +hpScale.toFixed(6),
+      fast: { hp: fastHp },
+      tank: { hp: tankHp },
+      summoner: { hp: summonerHp, summonEvery_ms: ENEMY.summoner.summonEvery, summonCount: ENEMY.summoner.summonCount },
+      boss: { hp: bossHp, armor: bossArmor, bossIndex },
+    };
+  }
+
   function startWaveStats() {
     state.waveStats = {
       wave: state.wave,
@@ -185,7 +259,7 @@ export async function startGame() {
       totalDamage: 0,
       totalKills: 0,
 
-      bossWave: (state.wave % 5 === 0),
+      bossWave: state.wave % 5 === 0,
       bossSpawnAt: null,
       bossKilledAt: null,
       bossTTKms: null,
@@ -195,8 +269,31 @@ export async function startGame() {
       bossBroken: null,
 
       summonerSpawned: 0,
-      summonedFast: 0
+      summonedFast: 0,
+
+      // NEW: per-wave spawn baseline for balance checks
+      enemySpawn: computeEnemySpawnStatsForWave(state.wave),
+
+      // NEW: events & per-tower stats
+      events: {
+        placed: [],
+        upgraded: [],
+        sold: [],
+      },
+
+      // NEW: snapshot of towers at wave start / end
+      towersStart: state.towers.map(towerExport),
+      towersEnd: [],
+
+      // NEW: per tower damage/kills
+      towersById: {},
+
+      // optional: per enemy type kills totals (besides per-tower)
+      killsByEnemyType: { fast: 0, tank: 0, summoner: 0, boss: 0 },
     };
+
+    // init per-tower entries for existing towers
+    for (const t of state.towers) ensureTowerStats(t.uid, t.id);
   }
 
   function pushGoldSpent(amount) {
@@ -223,6 +320,13 @@ export async function startGame() {
     }
   }
 
+  function pushDamageTower(towerUid, towerType, amount) {
+    if (!state.waveStats) return;
+    const a = Math.max(0, amount || 0);
+    const rec = ensureTowerStats(towerUid, towerType);
+    if (rec) rec.damage += a;
+  }
+
   function pushKill(sourceType) {
     if (!state.waveStats) return;
     state.waveStats.totalKills += 1;
@@ -230,101 +334,128 @@ export async function startGame() {
       state.waveStats.killsByType[sourceType] += 1;
     }
   }
-function buildReportText(stats) {
-  // kompakt, gut für Chat / Debug
-  const o = {
-    wave: stats.wave,
-    duration_s: +(stats.durationMs / 1000).toFixed(2),
 
-    gold: {
-      start: stats.goldStart,
-      kills: stats.goldKills,
-      bonus: stats.goldBonus,
-      spent: stats.goldSpent,
-      net: (stats.goldKills + stats.goldBonus - stats.goldSpent)
-    },
+  function pushKillTower(towerUid, towerType, enemyKind) {
+    if (!state.waveStats) return;
+    const rec = ensureTowerStats(towerUid, towerType);
+    if (rec && rec.kills[enemyKind] != null) rec.kills[enemyKind] += 1;
 
-    leaks: stats.leaks,
-
-    damage: {
-      total: Math.round(stats.totalDamage),
-      archer: Math.round(stats.damageByType.archer),
-      cannon: Math.round(stats.damageByType.cannon),
-      mage: Math.round(stats.damageByType.mage)
-    },
-
-    kills: {
-      total: stats.totalKills,
-      archer: stats.killsByType.archer,
-      cannon: stats.killsByType.cannon,
-      mage: stats.killsByType.mage
-    },
-
-    boss: stats.bossWave ? {
-      spawnAt_ms: stats.bossSpawnAt ? Math.round(stats.bossSpawnAt) : null,
-      ttk_s: stats.bossTTKms ? +(stats.bossTTKms / 1000).toFixed(3) : null,
-      armorStart: stats.bossArmorStart,
-      armorEnd: stats.bossArmorEnd,
-      broken: stats.bossBroken
-    } : null,
-
-    summoner: {
-      spawned: stats.summonerSpawned,
-      summonedFast: stats.summonedFast
+    if (state.waveStats.killsByEnemyType[enemyKind] != null) {
+      state.waveStats.killsByEnemyType[enemyKind] += 1;
     }
-  };
-
-  return "```json\n" + JSON.stringify(o, null, 2) + "\n```";
-}
-
-async function copyTextToClipboard(text) {
-  // Standard Clipboard API
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return true;
   }
 
-  // Fallback (falls Clipboard API geblockt ist)
-  const ta = document.createElement("textarea");
-  ta.value = text;
-  ta.setAttribute("readonly", "");
-  ta.style.position = "fixed";
-  ta.style.left = "-9999px";
-  document.body.appendChild(ta);
-  ta.select();
-  const ok = document.execCommand("copy");
-  document.body.removeChild(ta);
-  return ok;
-}
+  function buildReportText(stats) {
+    // IMPORTANT: Overlay zeigt keine Daten mehr – aber JSON enthält alles.
+    const o = {
+      wave: stats.wave,
+      duration_s: +(stats.durationMs / 1000).toFixed(2),
+
+      gold: {
+        start: stats.goldStart,
+        kills: stats.goldKills,
+        bonus: stats.goldBonus,
+        spent: stats.goldSpent,
+        net: stats.goldKills + stats.goldBonus - stats.goldSpent,
+      },
+
+      leaks: stats.leaks,
+
+      enemy_spawn: stats.enemySpawn, // NEW
+
+      damage: {
+        total: Math.round(stats.totalDamage),
+        archer: Math.round(stats.damageByType.archer),
+        cannon: Math.round(stats.damageByType.cannon),
+        mage: Math.round(stats.damageByType.mage),
+      },
+
+      kills: {
+        total: stats.totalKills,
+        archer: stats.killsByType.archer,
+        cannon: stats.killsByType.cannon,
+        mage: stats.killsByType.mage,
+      },
+
+      kills_by_enemy: stats.killsByEnemyType, // NEW
+
+      boss: stats.bossWave
+        ? {
+            spawnAt_ms: stats.bossSpawnAt ? Math.round(stats.bossSpawnAt) : null,
+            ttk_s: stats.bossTTKms ? +(stats.bossTTKms / 1000).toFixed(3) : null,
+            armorStart: stats.bossArmorStart,
+            armorEnd: stats.bossArmorEnd,
+            broken: stats.bossBroken,
+          }
+        : null,
+
+      summoner: {
+        spawned: stats.summonerSpawned,
+        summonedFast: stats.summonedFast,
+      },
+
+      // NEW: what happened this wave
+      events: stats.events,
+
+      // NEW: tower snapshots
+      towers_start: stats.towersStart,
+      towers_end: stats.towersEnd,
+
+      // NEW: per-tower performance
+      tower_perf: Object.values(stats.towersById).map((t) => ({
+        uid: t.uid,
+        type: t.type,
+        damage: Math.round(t.damage),
+        kills: t.kills,
+      })),
+    };
+
+    return "```json\n" + JSON.stringify(o, null, 2) + "\n```";
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  }
+
   function openReportOverlay() {
-  const stats = state.waveStats;
-  if (!stats) return;
+    const stats = state.waveStats;
+    if (!stats) return;
 
-  stats.durationMs = performance.now() - stats.startAt;
+    stats.durationMs = performance.now() - stats.startAt;
 
-  // Boss armor end: bleibt wie bisher "best effort"
-  if (stats.bossWave && stats.bossArmorEnd == null) {
-    // kein Boss gespawnt / nicht erfasst -> lassen wir es bei null
+    // snapshot towers at wave end
+    stats.towersEnd = state.towers.map(towerExport);
+
+    // Reporttext vorbereiten (für Copy-Button)
+    state._lastReportText = buildReportText(stats);
+
+    document.getElementById("reportOverlay")?.classList.remove("hidden");
+    state.reportOpen = true;
   }
-
-  // Reporttext vorbereiten (für Copy-Button)
-  state._lastReportText = buildReportText(stats);
-
-  document.getElementById("reportOverlay")?.classList.remove("hidden");
-  state.reportOpen = true;
-}
 
   function closeReportOverlay() {
-  document.getElementById("reportOverlay")?.classList.add("hidden");
-  state.reportOpen = false;
+    document.getElementById("reportOverlay")?.classList.add("hidden");
+    state.reportOpen = false;
 
-  // wenn Auto an ist, Wave danach starten
-  if (state.autoStart && state.hp > 0 && !state.waveActive) {
-    setTimeout(() => {
-      if (!state.waveActive && !state.reportOpen) spawnWave();
-    }, 250);
+    if (state.autoStart && state.hp > 0 && !state.waveActive) {
+      setTimeout(() => {
+        if (!state.waveActive && !state.reportOpen) spawnWave();
+      }, 250);
+    }
   }
-}
 
   function resetSellConfirm() {
     state.sellArmedTower = null;
@@ -358,7 +489,7 @@ async function copyTextToClipboard(text) {
     ctx.imageSmoothingEnabled = false;
 
     const raw = Math.min(state.w / REF_W, state.h / REF_H);
-    state.rangeScale = Math.max(0.80, Math.min(1.60, raw));
+    state.rangeScale = Math.max(0.8, Math.min(1.6, raw));
 
     setupLevel(state.w, state.h);
     applyRangeScaleToExistingTowers();
@@ -370,21 +501,43 @@ async function copyTextToClipboard(text) {
   // =========================
   function setupLevel(w, h) {
     state.path = [
-      { x: -60, y: h * 0.15 }, { x: w * 0.2, y: h * 0.15 }, { x: w * 0.5, y: h * 0.20 }, { x: w * 0.8, y: h * 0.25 },
-      { x: w * 0.8, y: h * 0.40 }, { x: w * 0.4, y: h * 0.45 }, { x: w * 0.15, y: h * 0.50 }, { x: w * 0.15, y: h * 0.65 },
-      { x: w * 0.5, y: h * 0.70 }, { x: w * 0.85, y: h * 0.75 }, { x: w * 0.85, y: h * 0.90 }, { x: w * 1.2, y: h * 0.92 }
+      { x: -60, y: h * 0.15 },
+      { x: w * 0.2, y: h * 0.15 },
+      { x: w * 0.5, y: h * 0.2 },
+      { x: w * 0.8, y: h * 0.25 },
+      { x: w * 0.8, y: h * 0.4 },
+      { x: w * 0.4, y: h * 0.45 },
+      { x: w * 0.15, y: h * 0.5 },
+      { x: w * 0.15, y: h * 0.65 },
+      { x: w * 0.5, y: h * 0.7 },
+      { x: w * 0.85, y: h * 0.75 },
+      { x: w * 0.85, y: h * 0.9 },
+      { x: w * 1.2, y: h * 0.92 },
     ];
 
     const rawSlots = [
-      { x: w * 0.35, y: h * 0.08 }, { x: w * 0.65, y: h * 0.12 }, { x: w * 0.55, y: h * 0.30 }, { x: w * 0.92, y: h * 0.32 },
-      { x: w * 0.35, y: h * 0.35 }, { x: w * 0.10, y: h * 0.40 }, { x: w * 0.45, y: h * 0.55 }, { x: w * 0.25, y: h * 0.75 },
-      { x: w * 0.65, y: h * 0.60 }, { x: w * 0.95, y: h * 0.80 }, { x: w * 0.50, y: h * 0.82 }, { x: w * 0.15, y: h * 0.92 }
+      { x: w * 0.35, y: h * 0.08 },
+      { x: w * 0.65, y: h * 0.12 },
+      { x: w * 0.55, y: h * 0.3 },
+      { x: w * 0.92, y: h * 0.32 },
+      { x: w * 0.35, y: h * 0.35 },
+      { x: w * 0.1, y: h * 0.4 },
+      { x: w * 0.45, y: h * 0.55 },
+      { x: w * 0.25, y: h * 0.75 },
+      { x: w * 0.65, y: h * 0.6 },
+      { x: w * 0.95, y: h * 0.8 },
+      { x: w * 0.5, y: h * 0.82 },
+      { x: w * 0.15, y: h * 0.92 },
     ];
 
     const newSlots = rawSlots.map((s, i) => {
       const existing = state.slots[i]?.occupied;
       const slot = { ...s, occupied: existing || null, idx: i };
-      if (existing) { existing.x = s.x; existing.y = s.y; existing.slot = slot; }
+      if (existing) {
+        existing.x = s.x;
+        existing.y = s.y;
+        existing.slot = slot;
+      }
       return slot;
     });
     state.slots = newSlots;
@@ -411,68 +564,60 @@ async function copyTextToClipboard(text) {
   function makeEnemy(type, x, y, targetIdx = 1, traveled = 0) {
     const base = ENEMY[type];
 
-    // HP Scaling
-    // - Normal enemies: wie vorher (leicht)
-    // - Boss: eigene Skalierung pro BossIndex (nicht über wave-1 exponent, sonst ab 60 unspielbar)
     let hp = base.baseHp;
-    let hpScale = Math.pow(1.12, state.wave - 1);
+    const hpScale = Math.pow(1.12, state.wave - 1);
 
     let armorHp = 0;
     let armorMax = 0;
 
     const isBoss = !!base.isBoss;
-if (isBoss) {
-  const bossIndex = Math.max(1, Math.floor(state.wave / 5));
+    if (isBoss) {
+      const bossIndex = Math.max(1, Math.floor(state.wave / 5));
+      hp = Math.round(base.baseHp * BOSS_HP_BASE_MULT * Math.pow(BOSS_HP_SCALE, bossIndex - 1));
 
-  hp = Math.round(base.baseHp * BOSS_HP_BASE_MULT * Math.pow(BOSS_HP_SCALE, bossIndex - 1));
-
-  // Armor erst ab bestimmtem Boss aktivieren
-  if (bossIndex >= BOSS_ARMOR_START_AT_BOSS_INDEX) {
-    armorMax = Math.round(BOSS_ARMOR_BASE * Math.pow(BOSS_ARMOR_SCALE, bossIndex - 1));
-    armorHp = armorMax;
-  } else {
-    armorMax = 0;
-    armorHp = 0;
-  }
-} else {
-  hp = Math.round(base.baseHp * hpScale);
-}
+      if (bossIndex >= BOSS_ARMOR_START_AT_BOSS_INDEX) {
+        armorMax = Math.round(BOSS_ARMOR_BASE * Math.pow(BOSS_ARMOR_SCALE, bossIndex - 1));
+        armorHp = armorMax;
+      }
+    } else {
+      hp = Math.round(base.baseHp * hpScale);
+    }
 
     const reward = isBoss ? BOSS_GOLD : killGoldForWave(state.wave);
 
-    const e = {
+    return {
       type,
       shape: base.shape,
-      x, y,
+      x,
+      y,
       targetIdx,
-      hp, maxHp: hp,
+      hp,
+      maxHp: hp,
       speed: base.baseSpeed,
       size: base.size,
       reward,
       isBoss,
 
-           // Boss armor
+      // Boss armor
       armorHp,
       armorMax,
-      maxArmorHp: armorMax,   // <-- HINZUFÜGEN (Alias für render.js)
+      maxArmorHp: armorMax, // Alias für render.js
       broken: false,
 
       // Status effects
       slowFactor: 1,
       slowEnd: 0,
 
-      weakenEnd: 0,       // damage taken increased
-      burnEnd: 0,         // dot active until
-      burnDps: 0,         // hp per second
+      weakenEnd: 0,
+      burnEnd: 0,
+      burnDps: 0,
 
       // Summoner
-      nextSummonAt: base.summonEvery ? (performance.now() + base.summonEvery) : 0,
+      nextSummonAt: base.summonEvery ? performance.now() + base.summonEvery : 0,
 
       traveled,
-      dead: false
+      dead: false,
     };
-
-    return e;
   }
 
   function spawnEnemy(type) {
@@ -488,10 +633,8 @@ if (isBoss) {
   }
 
   function computeWaveCounts() {
-    const isBossWave = (state.wave % 5 === 0);
-    const baseCount = isBossWave
-      ? 1
-      : Math.min(WAVE_COUNT_MAX, Math.ceil(WAVE_COUNT_BASE * Math.pow(WAVE_COUNT_GROWTH, state.wave - 1)));
+    const isBossWave = state.wave % 5 === 0;
+    const baseCount = isBossWave ? 1 : Math.min(WAVE_COUNT_MAX, Math.ceil(WAVE_COUNT_BASE * Math.pow(WAVE_COUNT_GROWTH, state.wave - 1)));
 
     let extra = 0;
     if (!isBossWave && state.wave >= EXTRA_FROM_WAVE) {
@@ -501,9 +644,8 @@ if (isBoss) {
   }
 
   function pickNonBossEnemyType() {
-    // Summoner ab Wave 15 gelegentlich
     if (state.wave >= 15 && Math.random() < 0.12) return "summoner";
-    return Math.random() < 0.30 ? "tank" : "fast";
+    return Math.random() < 0.3 ? "tank" : "fast";
   }
 
   function spawnWave() {
@@ -537,11 +679,12 @@ if (isBoss) {
   function explode(x, y, color, count) {
     for (let i = 0; i < count; i++) {
       state.particles.push({
-        x, y,
+        x,
+        y,
         vx: (Math.random() - 0.5) * 10,
         vy: (Math.random() - 0.5) * 10,
         life: 0.4 + Math.random() * 0.4,
-        color
+        color,
       });
     }
   }
@@ -556,18 +699,15 @@ if (isBoss) {
   }
 
   function applyWeakenIfAny(e, now) {
-    // Weaken: +8% dmg taken, refreshable, not stackable
     e.weakenEnd = now + WEAKEN_DUR_MS;
   }
 
   function applyBurnIfAny(e, now) {
-    // Burn: 3% max hp over 3s (refresh)
     e.burnEnd = now + BURN_DUR_MS;
     e.burnDps = (e.maxHp * BURN_MAXHP_PCT) / (BURN_DUR_MS / 1000);
   }
 
   function effectiveIncomingDamage(e, raw, now) {
-    // Weaken increases damage taken (+8%)
     const weakened = e.weakenEnd > now;
     const mult = weakened ? WEAKEN_MULT : 1;
     return raw * mult;
@@ -576,9 +716,10 @@ if (isBoss) {
   function processImpact(p) {
     const now = performance.now();
 
-    const hits = p.aoe > 0
-      ? state.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) <= p.aoe)
-      : state.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) <= 20).slice(0, 1);
+    const hits =
+      p.aoe > 0
+        ? state.enemies.filter((e) => Math.hypot(e.x - p.x, e.y - p.y) <= p.aoe)
+        : state.enemies.filter((e) => Math.hypot(e.x - p.x, e.y - p.y) <= 20).slice(0, 1);
 
     for (const e of hits) {
       let dmg = p.damage;
@@ -591,7 +732,6 @@ if (isBoss) {
       // Weaken affects damage taken
       dmg = effectiveIncomingDamage(e, dmg, now);
 
-      // Apply to Armor first if Boss has Armor
       let applied = 0;
 
       if (e.isBoss && e.armorHp > 0) {
@@ -613,27 +753,20 @@ if (isBoss) {
         applied += dmg;
       }
 
-      // Record damage (wir zählen Armor-Damage mit, sonst wirkt Boss “unsterblich” in den Zahlen)
+      // Record damage (type + per tower)
       pushDamage(p.sourceType, applied);
+      if (p.towerUid != null) pushDamageTower(p.towerUid, p.sourceType, applied);
 
-      // Status Effects:
-      // Slow: fast ist immun
+      // Status Effects
       if (p.slow && !ENEMY[e.type]?.slowImmune) {
         e.slowFactor = p.slow;
         e.slowEnd = now + p.slowDur;
       }
 
-      // Weaken: Mage ab Level 6
-      if (p.applyWeaken) {
-        applyWeakenIfAny(e, now);
-      }
+      if (p.applyWeaken) applyWeakenIfAny(e, now);
+      if (p.applyBurn) applyBurnIfAny(e, now);
 
-      // Burn: Mage ab Level 10
-      if (p.applyBurn) {
-        applyBurnIfAny(e, now);
-      }
-
-      // Kill check (Boss: HP kann erst sinken, wenn Armor weg ist – außer Archer/Mage/Cannon können danach normal)
+      // Kill check (direct hit)
       if (!e.dead && e.hp <= 0) {
         e.dead = true;
 
@@ -646,18 +779,19 @@ if (isBoss) {
 
         pushKill(p.sourceType);
 
+        const kind = classifyEnemyForStats(e);
+        if (p.towerUid != null) pushKillTower(p.towerUid, p.sourceType, kind);
+
         if (e.isBoss && state.waveStats) {
           state.waveStats.bossKilledAt = now;
-          if (state.waveStats.bossSpawnAt) {
-            state.waveStats.bossTTKms = now - state.waveStats.bossSpawnAt;
-          }
+          if (state.waveStats.bossSpawnAt) state.waveStats.bossTTKms = now - state.waveStats.bossSpawnAt;
           state.waveStats.bossArmorEnd = e.armorHp;
-          if (state.waveStats.bossBroken == null) state.waveStats.bossBroken = (e.armorHp <= 0);
+          if (state.waveStats.bossBroken == null) state.waveStats.bossBroken = e.armorHp <= 0;
         }
       }
     }
 
-    state.enemies = state.enemies.filter(e => !e.dead);
+    state.enemies = state.enemies.filter((e) => !e.dead);
 
     explode(p.x, p.y, p.color, p.aoe > 0 ? 12 : 5);
 
@@ -677,8 +811,6 @@ if (isBoss) {
       pushGoldWaveBonus(bonus);
 
       updateUI();
-
-      // Report nach jeder Wave öffnen
       openReportOverlay();
     }
   }
@@ -704,7 +836,7 @@ if (isBoss) {
     state.towers = [];
     state.projectiles = [];
     state.particles = [];
-    state.slots.forEach(s => (s.occupied = null));
+    state.slots.forEach((s) => (s.occupied = null));
 
     state.spawn.mainLeft = 0;
     state.spawn.extraLeft = 0;
@@ -734,7 +866,7 @@ if (isBoss) {
 
     const btnSell = document.getElementById("btnSell");
     const now = performance.now();
-    const armed = (state.sellArmedTower === t && now <= state.sellArmedUntil);
+    const armed = state.sellArmedTower === t && now <= state.sellArmedUntil;
     if (btnSell) btnSell.innerText = armed ? "Confirm" : "Sell";
 
     if (targetMode) targetMode.innerText = t.targetPriority;
@@ -755,9 +887,9 @@ if (isBoss) {
     if (goldEl) goldEl.innerText = Math.floor(state.gold);
     if (waveEl) waveEl.innerText = state.wave;
     if (btnStart) btnStart.disabled = state.waveActive || state.reportOpen;
-    if (progEl) progEl.innerText = state.waveActive ? `${state.waveKilled}/${state.waveTotal}` : (state.reportOpen ? "Report" : "Secure");
+    if (progEl) progEl.innerText = state.waveActive ? `${state.waveKilled}/${state.waveTotal}` : state.reportOpen ? "Report" : "Secure";
 
-    document.querySelectorAll("[data-buy]").forEach(btn => {
+    document.querySelectorAll("[data-buy]").forEach((btn) => {
       const type = btn.dataset.buy;
       btn.disabled = state.gold < TOWER_DATA[type].cost || state.reportOpen;
     });
@@ -776,30 +908,30 @@ if (isBoss) {
   // =========================
   function update(dt) {
     if (state.hp <= 0) return;
-    if (state.reportOpen) return; // pausieren, solange Report offen
+    if (state.reportOpen) return;
 
     // Spawn driver
     if (state.waveActive) {
       const now = performance.now();
       if (now >= state.spawn.nextAt) {
-        const isBossWave = (state.wave % 5 === 0);
+        const isBossWave = state.wave % 5 === 0;
 
         if (isBossWave && state.spawn.mainLeft > 0) {
           spawnEnemy("boss");
           state.spawn.mainLeft--;
           state.waveSpawned++;
-          state.spawn.nextAt = now + (state.spawn.interval / state.speed);
+          state.spawn.nextAt = now + state.spawn.interval / state.speed;
         } else {
           if (state.spawn.mainLeft > 0) {
             spawnEnemy(pickNonBossEnemyType());
             state.spawn.mainLeft--;
             state.waveSpawned++;
-            state.spawn.nextAt = now + (state.spawn.interval / state.speed);
+            state.spawn.nextAt = now + state.spawn.interval / state.speed;
           } else if (state.spawn.extraLeft > 0) {
             spawnEnemy(pickNonBossEnemyType());
             state.spawn.extraLeft--;
             state.waveSpawned++;
-            state.spawn.nextAt = now + (state.spawn.extraInterval / state.speed);
+            state.spawn.nextAt = now + state.spawn.extraInterval / state.speed;
           }
         }
         updateUI();
@@ -807,8 +939,10 @@ if (isBoss) {
     }
 
     // Particles
-    state.particles = state.particles.filter(p => {
-      p.x += p.vx * dt * 60; p.y += p.vy * dt * 60; p.life -= dt;
+    state.particles = state.particles.filter((p) => {
+      p.x += p.vx * dt * 60;
+      p.y += p.vy * dt * 60;
+      p.life -= dt;
       return p.life > 0;
     });
 
@@ -817,17 +951,18 @@ if (isBoss) {
     // Status ticking (Burn DOT)
     for (const e of state.enemies) {
       if (e.burnEnd > now) {
-        const dmg = e.burnDps * dt; // hp per second * seconds
+        const dmg = e.burnDps * dt;
+
         if (e.isBoss && e.armorHp > 0) {
-          // Burn geht auf HP (nicht Armor) – aber solange Armor an ist, bleibt HP geschützt.
-          // Wir lassen Burn trotzdem "laufen", aber HP sinkt effektiv erst wenn armor weg ist:
-          // => hier bewusst: Burn wirkt nur auf HP, wenn armor==0.
           if (e.armorHp <= 0) e.hp -= dmg;
         } else {
           e.hp -= dmg;
         }
-        // Burn zählt als Mage-Damage (weil Mage ihn appliziert)
+
+        // Burn zählt als Mage-Damage
         pushDamage("mage", dmg);
+        // per tower for burn? (wir kennen den applizierenden Tower nicht sicher ohne extra bookkeeping)
+        // => bewusst weggelassen, damit es nicht "falsch exakt" wird.
       }
     }
 
@@ -857,14 +992,17 @@ if (isBoss) {
         state.waveKilled++;
         explode(e.x, e.y, e.isBoss ? "#f43f5e" : "#94a3b8", e.isBoss ? 40 : 12);
 
-        // Burn-Kill zählt als Mage-Kill
+        // Burn-Kill zählt als Mage-Kill (global)
         pushKill("mage");
+        const kind = classifyEnemyForStats(e);
+        // per-tower burn-kill: absichtlich nicht zugeordnet (ohne sauberes "which mage applied burn" tracking)
+        if (state.waveStats && state.waveStats.killsByEnemyType[kind] != null) state.waveStats.killsByEnemyType[kind] += 1;
 
         if (e.isBoss && state.waveStats) {
           state.waveStats.bossKilledAt = now;
           if (state.waveStats.bossSpawnAt) state.waveStats.bossTTKms = now - state.waveStats.bossSpawnAt;
           state.waveStats.bossArmorEnd = e.armorHp;
-          if (state.waveStats.bossBroken == null) state.waveStats.bossBroken = (e.armorHp <= 0);
+          if (state.waveStats.bossBroken == null) state.waveStats.bossBroken = e.armorHp <= 0;
         }
 
         continue;
@@ -878,7 +1016,6 @@ if (isBoss) {
       if (dist < 5) {
         e.targetIdx++;
         if (e.targetIdx >= state.path.length) {
-          // leak
           const leak = e.isBoss ? 5 : 1;
           state.hp -= leak;
           if (state.waveStats) state.waveStats.leaks += leak;
@@ -893,7 +1030,7 @@ if (isBoss) {
         }
       }
 
-      const slow = (e.slowEnd > now) ? e.slowFactor : 1;
+      const slow = e.slowEnd > now ? e.slowFactor : 1;
       const step = e.speed * slow * dt * 60;
 
       e.x += (dx / dist) * step;
@@ -901,15 +1038,15 @@ if (isBoss) {
       e.traveled += step;
     }
 
-    // Cleanup dead enemies (falls burn kill etc.)
-    state.enemies = state.enemies.filter(e => !e.dead);
+    // Cleanup dead enemies
+    state.enemies = state.enemies.filter((e) => !e.dead);
 
     // Towers fire
     for (const t of state.towers) {
       t.cooldown -= dt * 1000;
       if (t.cooldown > 0) continue;
 
-      const inRange = state.enemies.filter(e => Math.hypot(e.x - t.x, e.y - t.y) <= t.range);
+      const inRange = state.enemies.filter((e) => Math.hypot(e.x - t.x, e.y - t.y) <= t.range);
       if (inRange.length === 0) continue;
 
       const target =
@@ -919,14 +1056,15 @@ if (isBoss) {
 
       const d = Math.hypot(target.x - t.x, target.y - t.y) || 0.001;
 
-      const isMage = (t.id === "mage");
-      const isArcher = (t.id === "archer");
+      const isMage = t.id === "mage";
+      const isArcher = t.id === "archer";
 
       const applyWeaken = isMage && t.level >= 6;
       const applyBurn = isMage && t.level >= 10;
 
       state.projectiles.push({
-        x: t.x, y: t.y,
+        x: t.x,
+        y: t.y,
         vx: ((target.x - t.x) / d) * t.projSpeed,
         vy: ((target.y - t.y) / d) * t.projSpeed,
 
@@ -937,12 +1075,13 @@ if (isBoss) {
         slow: t.slow,
         slowDur: t.slowDur,
 
-        sourceType: t.id,                 // archer/cannon/mage
+        sourceType: t.id, // archer/cannon/mage
+        towerUid: t.uid, // NEW: identify shooter
         applyWeaken,
         applyBurn,
 
-        // Archer Armor Break ab Level 5 (Rule)
-        canBreakArmor: isArcher && t.level >= 5
+        // Archer Armor Break ab Level 5 (Rule) – aktuell ungenutzt, bleibt drin
+        canBreakArmor: isArcher && t.level >= 5,
       });
 
       t.cooldown = t.fireRate;
@@ -954,7 +1093,7 @@ if (isBoss) {
       p.x += p.vx * dt * 60;
       p.y += p.vy * dt * 60;
 
-      const hit = state.enemies.find(e => Math.hypot(e.x - p.x, e.y - p.y) < e.size + 5);
+      const hit = state.enemies.find((e) => Math.hypot(e.x - p.x, e.y - p.y) < e.size + 5);
       if (hit) {
         processImpact(p);
         state.projectiles.splice(i, 1);
@@ -974,7 +1113,7 @@ if (isBoss) {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const tower = state.towers.find(t => Math.hypot(t.x - x, t.y - y) < 25);
+    const tower = state.towers.find((t) => Math.hypot(t.x - x, t.y - y) < 25);
     if (tower) {
       state.activeTower = tower;
       if (ctxMenu) {
@@ -987,13 +1126,18 @@ if (isBoss) {
     }
 
     if (state.selectedType) {
-      const slot = state.slots.find(s => !s.occupied && Math.hypot(s.x - x, s.y - y) < 30);
+      const slot = state.slots.find((s) => !s.occupied && Math.hypot(s.x - x, s.y - y) < 30);
       if (slot) {
         const base = TOWER_DATA[state.selectedType];
         if (state.gold >= base.cost) {
+          const uid = nextTowerUid();
+
           const unit = {
             ...base,
-            x: slot.x, y: slot.y,
+            uid,
+
+            x: slot.x,
+            y: slot.y,
             level: 1,
             cooldown: 0,
             slot,
@@ -1006,13 +1150,28 @@ if (isBoss) {
 
             // skaliert
             range: base.range * state.rangeScale,
-            aoe: (base.aoe ?? 0) * state.rangeScale
+            aoe: (base.aoe ?? 0) * state.rangeScale,
           };
 
           state.towers.push(unit);
           slot.occupied = unit;
           state.gold -= base.cost;
           pushGoldSpent(base.cost);
+
+          // NEW: report event
+          if (state.waveStats && state.waveActive) {
+            state.waveStats.events.placed.push({
+              at_ms: Math.round(performance.now()),
+              uid: unit.uid,
+              type: unit.id,
+              level: unit.level,
+              slotIdx: slot.idx,
+              x: Math.round(unit.x),
+              y: Math.round(unit.y),
+              cost: base.cost,
+            });
+            ensureTowerStats(unit.uid, unit.id);
+          }
 
           cancelSelection();
           updateUI();
@@ -1026,7 +1185,7 @@ if (isBoss) {
     resetSellConfirm();
   });
 
-  document.querySelectorAll("[data-buy]").forEach(btn => {
+  document.querySelectorAll("[data-buy]").forEach((btn) => {
     btn.addEventListener("click", () => {
       if (state.reportOpen) return;
 
@@ -1056,6 +1215,8 @@ if (isBoss) {
     const cost = Math.ceil(t.upgradeBase * Math.pow(1.55, t.level - 1));
     if (state.gold < cost) return;
 
+    const oldLevel = t.level;
+
     state.gold -= cost;
     t.spent += cost;
     pushGoldSpent(cost);
@@ -1075,6 +1236,26 @@ if (isBoss) {
     t.fireRate *= m.fireRate;
     t.level++;
 
+    // NEW: report event
+    if (state.waveStats && state.waveActive) {
+      state.waveStats.events.upgraded.push({
+        at_ms: Math.round(performance.now()),
+        uid: t.uid,
+        type: t.id,
+        fromLevel: oldLevel,
+        toLevel: t.level,
+        cost,
+        slotIdx: t.slot?.idx ?? null,
+        x: Math.round(t.x),
+        y: Math.round(t.y),
+        newDamage: +t.damage.toFixed(3),
+        newRange: +t.range.toFixed(3),
+        newFireRate_ms: +t.fireRate.toFixed(3),
+        newAoe: +t.aoe.toFixed(3),
+      });
+      ensureTowerStats(t.uid, t.id);
+    }
+
     updateUI();
   });
 
@@ -1083,7 +1264,7 @@ if (isBoss) {
     if (!t) return;
 
     const now = performance.now();
-    const armed = (state.sellArmedTower === t && now <= state.sellArmedUntil);
+    const armed = state.sellArmedTower === t && now <= state.sellArmedUntil;
 
     if (!armed) {
       state.sellArmedTower = t;
@@ -1092,9 +1273,26 @@ if (isBoss) {
       return;
     }
 
-    state.gold += Math.floor(t.spent * 0.6);
+    const refund = Math.floor(t.spent * 0.6);
+    state.gold += refund;
+
+    // NEW: report event
+    if (state.waveStats && state.waveActive) {
+      state.waveStats.events.sold.push({
+        at_ms: Math.round(performance.now()),
+        uid: t.uid,
+        type: t.id,
+        level: t.level,
+        slotIdx: t.slot?.idx ?? null,
+        x: Math.round(t.x),
+        y: Math.round(t.y),
+        refund,
+        spent: Math.floor(t.spent || 0),
+      });
+    }
+
     t.slot.occupied = null;
-    state.towers = state.towers.filter(x => x !== t);
+    state.towers = state.towers.filter((x) => x !== t);
 
     resetSellConfirm();
     ctxMenu?.classList.add("hidden");
@@ -1114,7 +1312,7 @@ if (isBoss) {
   document.getElementById("btnRestart")?.addEventListener("click", resetGame);
 
   document.getElementById("btnSpeed")?.addEventListener("click", () => {
-    state.speed = state.speed === 1 ? 2 : (state.speed === 2 ? 4 : 1);
+    state.speed = state.speed === 1 ? 2 : state.speed === 2 ? 4 : 1;
     const btnSpeed = document.getElementById("btnSpeed");
     if (btnSpeed) btnSpeed.innerText = `${state.speed}x`;
   });
@@ -1123,25 +1321,26 @@ if (isBoss) {
   window.closeOverlay = () => document.getElementById("overlay")?.classList.add("hidden");
   window.cancelSelection = cancelSelection;
 
-  // Report Close Button (falls du lieber Listener statt onclick willst)
+  // Report buttons
   document.getElementById("btnCloseReport")?.addEventListener("click", closeReportOverlay);
+
   document.getElementById("btnCopyReport")?.addEventListener("click", async () => {
-  if (!state.waveStats) return;
+    if (!state.waveStats) return;
 
-  // Sicherheit: falls Overlay offen ist, ist durationMs evtl. noch frisch aktualisieren
-  state.waveStats.durationMs = performance.now() - state.waveStats.startAt;
-  state._lastReportText = buildReportText(state.waveStats);
+    state.waveStats.durationMs = performance.now() - state.waveStats.startAt;
+    // ensure towers_end is up-to-date even if you copy before close/open refresh edge cases
+    state.waveStats.towersEnd = state.towers.map(towerExport);
 
-  const ok = await copyTextToClipboard(state._lastReportText);
+    state._lastReportText = buildReportText(state.waveStats);
+    const ok = await copyTextToClipboard(state._lastReportText);
 
-  // optionales Mini-Feedback am Button (kein UI-Overkill)
-  const btn = document.getElementById("btnCopyReport");
-  if (btn) {
-    const old = btn.innerText;
-    btn.innerText = ok ? "✅ Kopiert!" : "Copy (blocked)";
-    setTimeout(() => (btn.innerText = old), 1200);
-  }
-});
+    const btn = document.getElementById("btnCopyReport");
+    if (btn) {
+      const old = btn.innerText;
+      btn.innerText = ok ? "✅ Kopiert!" : "Copy (blocked)";
+      setTimeout(() => (btn.innerText = old), 1200);
+    }
+  });
 
   // =========================
   // LOOP
