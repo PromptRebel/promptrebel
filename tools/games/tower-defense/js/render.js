@@ -70,6 +70,40 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   let fog = [];
   let lastTs = performance.now();
 
+  function drawOverdriveBadge(now) {
+  const until = state.effects?.overdriveUntil || 0;
+  if (until <= now) return;
+
+  const tLeft = Math.max(0, (until - now) / 1000); // Sekunden Rest
+  const pulse = 0.6 + 0.4 * Math.sin(now * 0.01);
+
+  const x = state.w - 22;
+  const y = 22;
+
+  ctx.save();
+  ctx.globalAlpha = 0.55 + 0.35 * pulse;
+
+  // kleiner dunkler Hintergrund
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.beginPath();
+  ctx.roundRect(x - 18, y - 14, 36, 28, 10);
+  ctx.fill();
+
+  // Blitz
+  ctx.font = "16px system-ui";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(251,191,36,1)";
+  ctx.fillText("⚡", x, y);
+
+  // Restzeit mini (optional)
+  ctx.font = "10px system-ui";
+  ctx.fillStyle = "rgba(226,232,240,0.9)";
+  ctx.fillText(tLeft.toFixed(1), x, y + 14);
+
+  ctx.restore();
+};
+
   // ---------- Geometry helpers ----------
   function distPointToSegment(px, py, ax, ay, bx, by) {
     const abx = bx - ax, aby = by - ay;
@@ -543,6 +577,9 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     }
   }
 
+  drawBackground();
+drawOverdriveBadge(now);
+  
   function drawEnemies(now) {
   for (const e of state.enemies) {
     const img = assets?.enemies?.[e.type];
