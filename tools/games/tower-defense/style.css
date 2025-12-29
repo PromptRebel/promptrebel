@@ -129,5 +129,50 @@ canvas{
 .rep-type-cannon{ color: rgba(236,72,153,.95); }
 .rep-type-mage{ color: rgba(167,139,250,.95); }
 
+.hidden { display: none; }
+
+.overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+}
+.overlayCard{
+  background: rgba(15,23,42,0.92);
+  border: 1px solid rgba(148,163,184,0.25);
+  border-radius: 16px;
+  padding: 14px;
+  min-width: 220px;
+}
+.overlayTitle{
+  font: 600 14px system-ui;
+  color: rgba(226,232,240,0.9);
+  margin-bottom: 10px;
+}
+.spellBtn{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(34,211,238,0.25);
+  background: rgba(2,6,23,0.45);
+  color: rgba(226,232,240,0.92);
+  cursor: pointer;
+}
+.spellCost{
+  float: right;
+  opacity: 0.85;
+}
+.overlayClose{
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(148,163,184,0.25);
+  background: rgba(2,6,23,0.35);
+  color: rgba(226,232,240,0.75);
+  cursor: pointer;
+}
 /* Fallback, falls Tailwind-Utilities mal nicht greifen */
 .hidden { display: none !important; }
