@@ -586,23 +586,30 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     const w = Math.max(24, e.size * 2.6);
     const h = w;
 
-    // ✅ FAST: animiertes Spritesheet (4 Frames x 4 Dirs)
-    if (e.type === "fast" && img) {
-      const frame = e.frame ?? 0;
-      const dir = e.dir ?? 0;
+   // ✅ FAST: nur Spritesheet, wenn es wirklich eins ist
+if (e.type === "fast" && img) {
+  const frame = (e.frame ?? 0) % 4;
+  const dir   = (e.dir ?? 0) % 4;
 
-      const fx = frame * FRAME;
-      const fy = dir * FRAME;
+  const sheetOk = img.width >= FRAME * 4 && img.height >= FRAME * 4;
 
-      setCrisp(ctx);
-      ctx.drawImage(
-        img,
-        fx, fy, FRAME, FRAME,
-        e.x - FRAME / 2,
-        e.y - FRAME / 2,
-        FRAME, FRAME
-      );
+  if (sheetOk) {
+    const fx = frame * FRAME;
+    const fy = dir * FRAME;
 
+    setCrisp(ctx);
+    ctx.drawImage(
+      img,
+      fx, fy, FRAME, FRAME,
+      e.x - FRAME / 2,
+      e.y - FRAME / 2,
+      FRAME, FRAME
+    );
+  } else {
+    // fallback: fast ist nur ein normales PNG
+    setCrisp(ctx);
+    ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
+  }
     } else if (img) {
       // ✅ alle anderen Enemies: normales Sprite (Single Image)
       setCrisp(ctx);
