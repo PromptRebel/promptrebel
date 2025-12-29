@@ -1362,9 +1362,12 @@ export async function startGame({ canvas, assets }) {
 
   // Public API for main.js (Variant A / clean)
   return {
-    castSpell(name) {
-      if (name === "overdrive") return castOverdrive();
-      return false;
-    },
-  };
+  castSpell(name) {
+    if (name === "overdrive") return castOverdrive();
+    return false;
+  },
+  getGold() {
+    return Math.floor(state.gold);
+  }
+};
 }
