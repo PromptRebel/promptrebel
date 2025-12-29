@@ -1,35 +1,38 @@
 // js/game.js
-import { loadAssets } from "./assets.js";
 import { createRenderer } from "./render.js";
 
-export async function startGame() {
-  const canvas = document.getElementById("canvas");
-  if (!canvas) throw new Error("Canvas #canvas fehlt in index.html");
+/**
+ * startGame is called from main.js like:
+ *   const game = await startGame({ canvas, assets });
+ */
+export async function startGame({ canvas, assets }) {
+  if (!canvas) throw new Error("canvas missing");
 
   const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D context missing");
   ctx.imageSmoothingEnabled = false;
 
   const stage = document.getElementById("gameStage");
-  const ctxMenu = document.getElementById("ctxMenu");
+  if (!stage) throw new Error("#gameStage missing in DOM");
 
-  const assets = await loadAssets();
+  const ctxMenu = document.getElementById("ctxMenu");
 
   // =========================
   // GAME CONSTANTS / BALANCE
   // =========================
   const MAX_LEVEL = 10;
 
-  // Referenzgröße für Range-Scaling
+  // Reference size for range scaling
   const REF_W = 900;
   const REF_H = 600;
 
   // --- ECONOMY ---
   const GOLD_PER_KILL = 4;
-  const GOLD_KILL_GROWTH = 1.05; // erst ab Wave 20 aktiv
+  const GOLD_KILL_GROWTH = 1.05; // active from wave 20
   const BOSS_GOLD = 200;
 
   const WAVE_BONUS_BASE = 20;
-  const WAVE_BONUS_GROWTH = 1.05; // erst ab Wave 20 aktiv
+  const WAVE_BONUS_GROWTH = 1.05; // active from wave 20
 
   // --- WAVES ---
   const WAVE_COUNT_BASE = 10;
@@ -49,15 +52,15 @@ export async function startGame() {
   const BURN_MAXHP_PCT = 0.03;
 
   // --- BOSS ARMOR RULES ---
-  const BOSS_ARMOR_CANNON_MAGE_MULT = 0.2; // solange Armor > 0
+  const BOSS_ARMOR_CANNON_MAGE_MULT = 0.2; // while armor > 0
   const BOSS_ARMOR_ARCHER_MULT = 1.0;
-  const BOSS_ARMOR_START_AT_BOSS_INDEX = 4; // Boss 1-3 ohne Armor, ab Boss 4 (Wave 20) mit Armor
+  const BOSS_ARMOR_START_AT_BOSS_INDEX = 4; // boss 1-3 no armor, boss 4+ (wave 20+) has armor
 
   // Armor/HP Scaling
-  const BOSS_HP_SCALE = 1.1; // pro BossIndex
+  const BOSS_HP_SCALE = 1.1; // per bossIndex
   const BOSS_ARMOR_SCALE = 1.14;
   const BOSS_HP_BASE_MULT = 0.7;
-  const BOSS_ARMOR_BASE = 1420; // Basis-Armor (wird skaliert)
+  const BOSS_ARMOR_BASE = 1420;
 
   // =========================
   // TOWERS
@@ -70,7 +73,7 @@ export async function startGame() {
       color: "#22d3ee",
       cost: 30,
       range: Math.round(170 * 1.1), // +10%
-      fireRate: Math.round(650 / 2), // 2× schneller
+      fireRate: Math.round(650 / 2), // 2× faster
       damage: 14 * 0.75, // -25%
       projSpeed: 12,
       aoe: 0,
@@ -86,7 +89,7 @@ export async function startGame() {
       cost: 50,
       range: 125,
       fireRate: 1100,
-      damage: 43, 
+      damage: 43,
       projSpeed: 8,
       aoe: 0,
       upgradeBase: 50,
@@ -125,15 +128,13 @@ export async function startGame() {
       summonEvery: 2000,
       summonCount: 5,
     },
-    // ✅ NEU: Minion (kleiner, langsamer, weniger HP)
-  minion: {
-    shape: "hex",          // für 6-Ecke (Render-Patch siehe unten)
-    baseHp: 18,            // ~60% von fast(30) bevor Scaling greift
-    baseSpeed: 1.7,        // ~20% langsamer als fast(2.1)
-    size: 8,
-    slowImmune: false
-  },
-
+    minion: {
+      shape: "hex",
+      baseHp: 18,
+      baseSpeed: 1.7,
+      size: 8,
+      slowImmune: false,
+    },
     boss: { shape: "square", baseHp: 800, baseSpeed: 0.7, size: 25, isBoss: true },
   };
 
@@ -173,6 +174,10 @@ export async function startGame() {
     sellArmedTower: null,
     sellArmedUntil: 0,
 
+    effects: {
+      overdriveUntil: 0,
+    },
+
     // Report / Wave stats
     reportOpen: false,
     waveStats: null,
@@ -186,6 +191,24 @@ export async function startGame() {
   const nextTowerUid = () => ++_towerUid;
 
   const renderer = createRenderer({ canvas, ctx, state, assets });
+
+  // =========================
+  // SPELLS
+  // =========================
+  function castOverdrive() {
+    const now = performance.now();
+    const COST = 500;
+    const DUR_MS = 8000;
+
+    if (state.reportOpen || state.hp <= 0) return false;
+    if (state.gold < COST) return false;
+
+    state.gold -= COST;
+    state.effects.overdriveUntil = now + DUR_MS;
+
+    updateUI();
+    return true;
+  }
 
   // =========================
   // HELPERS: REPORT / UI
@@ -222,7 +245,7 @@ export async function startGame() {
   }
 
   function classifyEnemyForStats(e) {
-    return e.isBoss ? "boss" : e.type; // fast/tank/summoner/boss
+    return e.isBoss ? "boss" : e.type;
   }
 
   function computeEnemySpawnStatsForWave(wave) {
@@ -280,28 +303,17 @@ export async function startGame() {
       summonerSpawned: 0,
       summonedFast: 0,
 
-      // NEW: per-wave spawn baseline for balance checks
       enemySpawn: computeEnemySpawnStatsForWave(state.wave),
 
-      // NEW: events & per-tower stats
-      events: {
-        placed: [],
-        upgraded: [],
-        sold: [],
-      },
+      events: { placed: [], upgraded: [], sold: [] },
 
-      // NEW: snapshot of towers at wave start / end
       towersStart: state.towers.map(towerExport),
       towersEnd: [],
 
-      // NEW: per tower damage/kills
       towersById: {},
-
-      // optional: per enemy type kills totals (besides per-tower)
       killsByEnemyType: { fast: 0, tank: 0, summoner: 0, boss: 0 },
     };
 
-    // init per-tower entries for existing towers
     for (const t of state.towers) ensureTowerStats(t.uid, t.id);
   }
 
@@ -324,9 +336,7 @@ export async function startGame() {
     if (!state.waveStats) return;
     const a = Math.max(0, amount || 0);
     state.waveStats.totalDamage += a;
-    if (state.waveStats.damageByType[sourceType] != null) {
-      state.waveStats.damageByType[sourceType] += a;
-    }
+    if (state.waveStats.damageByType[sourceType] != null) state.waveStats.damageByType[sourceType] += a;
   }
 
   function pushDamageTower(towerUid, towerType, amount) {
@@ -339,23 +349,17 @@ export async function startGame() {
   function pushKill(sourceType) {
     if (!state.waveStats) return;
     state.waveStats.totalKills += 1;
-    if (state.waveStats.killsByType[sourceType] != null) {
-      state.waveStats.killsByType[sourceType] += 1;
-    }
+    if (state.waveStats.killsByType[sourceType] != null) state.waveStats.killsByType[sourceType] += 1;
   }
 
   function pushKillTower(towerUid, towerType, enemyKind) {
     if (!state.waveStats) return;
     const rec = ensureTowerStats(towerUid, towerType);
     if (rec && rec.kills[enemyKind] != null) rec.kills[enemyKind] += 1;
-
-    if (state.waveStats.killsByEnemyType[enemyKind] != null) {
-      state.waveStats.killsByEnemyType[enemyKind] += 1;
-    }
+    if (state.waveStats.killsByEnemyType[enemyKind] != null) state.waveStats.killsByEnemyType[enemyKind] += 1;
   }
 
   function buildReportText(stats) {
-    // IMPORTANT: Overlay zeigt keine Daten mehr – aber JSON enthält alles.
     const o = {
       wave: stats.wave,
       duration_s: +(stats.durationMs / 1000).toFixed(2),
@@ -369,8 +373,7 @@ export async function startGame() {
       },
 
       leaks: stats.leaks,
-
-      enemy_spawn: stats.enemySpawn, // NEW
+      enemy_spawn: stats.enemySpawn,
 
       damage: {
         total: Math.round(stats.totalDamage),
@@ -386,7 +389,7 @@ export async function startGame() {
         mage: stats.killsByType.mage,
       },
 
-      kills_by_enemy: stats.killsByEnemyType, // NEW
+      kills_by_enemy: stats.killsByEnemyType,
 
       boss: stats.bossWave
         ? {
@@ -403,14 +406,10 @@ export async function startGame() {
         summonedFast: stats.summonedFast,
       },
 
-      // NEW: what happened this wave
       events: stats.events,
-
-      // NEW: tower snapshots
       towers_start: stats.towersStart,
       towers_end: stats.towersEnd,
 
-      // NEW: per-tower performance
       tower_perf: Object.values(stats.towersById).map((t) => ({
         uid: t.uid,
         type: t.type,
@@ -444,11 +443,7 @@ export async function startGame() {
     if (!stats) return;
 
     stats.durationMs = performance.now() - stats.startAt;
-
-    // snapshot towers at wave end
     stats.towersEnd = state.towers.map(towerExport);
-
-    // Reporttext vorbereiten (für Copy-Button)
     state._lastReportText = buildReportText(stats);
 
     document.getElementById("reportOverlay")?.classList.remove("hidden");
@@ -549,11 +544,12 @@ export async function startGame() {
       }
       return slot;
     });
+
     state.slots = newSlots;
   }
 
   // =========================
-  // ECONOMY CURVE (Wave<20 flach)
+  // ECONOMY CURVE
   // =========================
   function killGoldForWave(wave) {
     if (wave < 20) return GOLD_PER_KILL;
@@ -580,6 +576,7 @@ export async function startGame() {
     let armorMax = 0;
 
     const isBoss = !!base.isBoss;
+
     if (isBoss) {
       const bossIndex = Math.max(1, Math.floor(state.wave / 5));
       hp = Math.round(base.baseHp * BOSS_HP_BASE_MULT * Math.pow(BOSS_HP_SCALE, bossIndex - 1));
@@ -610,7 +607,7 @@ export async function startGame() {
       // Boss armor
       armorHp,
       armorMax,
-      maxArmorHp: armorMax, // Alias für render.js
+      maxArmorHp: armorMax, // alias for render.js
       broken: false,
 
       // Status effects
@@ -733,7 +730,7 @@ export async function startGame() {
     for (const e of hits) {
       let dmg = p.damage;
 
-      // Boss Armor Rules
+      // Boss armor rules
       if (e.isBoss && e.armorHp > 0) {
         dmg *= damageMultiplierVsBossArmor(p.sourceType);
       }
@@ -766,7 +763,7 @@ export async function startGame() {
       pushDamage(p.sourceType, applied);
       if (p.towerUid != null) pushDamageTower(p.towerUid, p.sourceType, applied);
 
-      // Status Effects
+      // Status effects
       if (p.slow && !ENEMY[e.type]?.slowImmune) {
         e.slowFactor = p.slow;
         e.slowEnd = now + p.slowDur;
@@ -775,7 +772,7 @@ export async function startGame() {
       if (p.applyWeaken) applyWeakenIfAny(e, now);
       if (p.applyBurn) applyBurnIfAny(e, now);
 
-      // Kill check (direct hit)
+      // Kill check
       if (!e.dead && e.hp <= 0) {
         e.dead = true;
 
@@ -968,10 +965,7 @@ export async function startGame() {
           e.hp -= dmg;
         }
 
-        // Burn zählt als Mage-Damage
         pushDamage("mage", dmg);
-        // per tower for burn? (wir kennen den applizierenden Tower nicht sicher ohne extra bookkeeping)
-        // => bewusst weggelassen, damit es nicht "falsch exakt" wird.
       }
     }
 
@@ -987,7 +981,6 @@ export async function startGame() {
         for (let k = 0; k < cfg.summonCount; k++) {
           const child = makeEnemy("minion", e.x, e.y, e.targetIdx, e.traveled);
           state.enemies.push(child);
-
           if (state.waveStats) state.waveStats.summonedFast += 1;
         }
       }
@@ -1002,10 +995,8 @@ export async function startGame() {
         state.waveKilled++;
         explode(e.x, e.y, e.isBoss ? "#f43f5e" : "#94a3b8", e.isBoss ? 40 : 12);
 
-        // Burn-Kill zählt als Mage-Kill (global)
         pushKill("mage");
         const kind = classifyEnemyForStats(e);
-        // per-tower burn-kill: absichtlich nicht zugeordnet (ohne sauberes "which mage applied burn" tracking)
         if (state.waveStats && state.waveStats.killsByEnemyType[kind] != null) state.waveStats.killsByEnemyType[kind] += 1;
 
         if (e.isBoss && state.waveStats) {
@@ -1014,7 +1005,6 @@ export async function startGame() {
           state.waveStats.bossArmorEnd = e.armorHp;
           if (state.waveStats.bossBroken == null) state.waveStats.bossBroken = e.armorHp <= 0;
         }
-
         continue;
       }
 
@@ -1030,8 +1020,8 @@ export async function startGame() {
           state.hp -= leak;
           if (state.waveStats) state.waveStats.leaks += leak;
 
-          stage?.classList.add("shake");
-          setTimeout(() => stage?.classList.remove("shake"), 400);
+          stage.classList.add("shake");
+          setTimeout(() => stage.classList.remove("shake"), 400);
 
           state.enemies.splice(i, 1);
           updateUI();
@@ -1050,6 +1040,11 @@ export async function startGame() {
 
     // Cleanup dead enemies
     state.enemies = state.enemies.filter((e) => !e.dead);
+
+    // ---- Overdrive multiplier (affects tower fire rate + projectile speed)
+    const overdriveOn = state.effects.overdriveUntil > now;
+    const OD_FIRE_MULT = 0.55; // lower = faster shots (cooldown set to fireRate)
+    const OD_PROJ_MULT = 1.35;
 
     // Towers fire
     for (const t of state.towers) {
@@ -1072,11 +1067,13 @@ export async function startGame() {
       const applyWeaken = isMage && t.level >= 6;
       const applyBurn = isMage && t.level >= 10;
 
+      const projSpeed = t.projSpeed * (overdriveOn ? OD_PROJ_MULT : 1);
+
       state.projectiles.push({
         x: t.x,
         y: t.y,
-        vx: ((target.x - t.x) / d) * t.projSpeed,
-        vy: ((target.y - t.y) / d) * t.projSpeed,
+        vx: ((target.x - t.x) / d) * projSpeed,
+        vy: ((target.y - t.y) / d) * projSpeed,
 
         damage: t.damage,
         aoe: t.aoe,
@@ -1085,16 +1082,16 @@ export async function startGame() {
         slow: t.slow,
         slowDur: t.slowDur,
 
-        sourceType: t.id, // archer/cannon/mage
-        towerUid: t.uid, // NEW: identify shooter
+        sourceType: t.id,
+        towerUid: t.uid,
         applyWeaken,
         applyBurn,
 
-        // Archer Armor Break ab Level 5 (Rule) – aktuell ungenutzt, bleibt drin
         canBreakArmor: isArcher && t.level >= 5,
       });
 
-      t.cooldown = t.fireRate;
+      // cooldown reset (fireRate)
+      t.cooldown = t.fireRate * (overdriveOn ? OD_FIRE_MULT : 1);
     }
 
     // Projectiles move & collide
@@ -1154,11 +1151,9 @@ export async function startGame() {
             spent: base.cost,
             targetPriority: "First",
 
-            // Designwerte
             baseRange: base.range,
             baseAoe: base.aoe ?? 0,
 
-            // skaliert
             range: base.range * state.rangeScale,
             aoe: (base.aoe ?? 0) * state.rangeScale,
           };
@@ -1168,7 +1163,6 @@ export async function startGame() {
           state.gold -= base.cost;
           pushGoldSpent(base.cost);
 
-          // NEW: report event
           if (state.waveStats && state.waveActive) {
             state.waveStats.events.placed.push({
               at_ms: Math.round(performance.now()),
@@ -1201,10 +1195,12 @@ export async function startGame() {
 
       state.selectedType = btn.dataset.buy;
       const data = TOWER_DATA[state.selectedType];
+
       const selIcon = document.getElementById("selIcon");
       const selName = document.getElementById("selName");
       if (selIcon) selIcon.innerText = data.icon;
       if (selName) selName.innerText = data.name;
+
       document.getElementById("selectionBar")?.classList.remove("translate-y-24");
       ctxMenu?.classList.add("hidden");
       state.activeTower = null;
@@ -1234,7 +1230,6 @@ export async function startGame() {
     const m = t.mult;
     t.damage *= m.damage;
 
-    // BaseRange/BaseAoe upgraden, dann skalieren
     t.baseRange *= m.range;
     t.range = t.baseRange * state.rangeScale;
 
@@ -1246,7 +1241,6 @@ export async function startGame() {
     t.fireRate *= m.fireRate;
     t.level++;
 
-    // NEW: report event
     if (state.waveStats && state.waveActive) {
       state.waveStats.events.upgraded.push({
         at_ms: Math.round(performance.now()),
@@ -1286,7 +1280,6 @@ export async function startGame() {
     const refund = Math.floor(t.spent * 0.6);
     state.gold += refund;
 
-    // NEW: report event
     if (state.waveStats && state.waveActive) {
       state.waveStats.events.sold.push({
         at_ms: Math.round(performance.now()),
@@ -1338,7 +1331,6 @@ export async function startGame() {
     if (!state.waveStats) return;
 
     state.waveStats.durationMs = performance.now() - state.waveStats.startAt;
-    // ensure towers_end is up-to-date even if you copy before close/open refresh edge cases
     state.waveStats.towersEnd = state.towers.map(towerExport);
 
     state._lastReportText = buildReportText(state.waveStats);
@@ -1367,4 +1359,12 @@ export async function startGame() {
   resize();
   updateUI();
   requestAnimationFrame(loop);
+
+  // Public API for main.js (Variant A / clean)
+  return {
+    castSpell(name) {
+      if (name === "overdrive") return castOverdrive();
+      return false;
+    },
+  };
 }
