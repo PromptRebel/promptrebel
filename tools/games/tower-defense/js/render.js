@@ -1,15 +1,13 @@
 // js/render.js
 // Smooth path + props + start/end gates (with fog + glow)
-// Works with assets.js keys:
-//   assets.props.startGate  -> "assets/props/start_gate.png"
-//   assets.props.endGate    -> "assets/props/end_gate.png"
+// + Enemy spritesheets for ALL enemies via e.sprite (frameW/H, cols, rows, fps, useDir, scale)
 
 export function createRenderer({ canvas, ctx, state, assets }) {
   const TILE = 32;
   const PATH_W = 28;
 
   // ---- Deco tuning (reduziert!) ----
-  const DENSITY = 0.75; // <— weniger als vorher
+  const DENSITY = 0.75;
   const PROP_SHADOW_ALPHA = 0.10;
 
   // Trees (2x2/3x3), no 1x1 trees
@@ -22,10 +20,10 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   const CHEST_FACTOR     = 0.002 * DENSITY;
 
   // “Between slots” props (very few)
-  const BETWEEN_MAX = 8;               // absolute cap
-  const BETWEEN_BUSH_RATIO = 0.55;     // rest rocks
-  const SLOT_PAD_CORE = 1;             // tiles blocked around slot
-  const SLOT_RING_MIN = 2;             // place near slot but not on it
+  const BETWEEN_MAX = 8;
+  const BETWEEN_BUSH_RATIO = 0.55;
+  const SLOT_PAD_CORE = 1;
+  const SLOT_RING_MIN = 2;
   const SLOT_RING_MAX = 3;
 
   // Path clearance
@@ -40,12 +38,12 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   // Start fog particles
   const FOG = {
     enabled: true,
-    spawnRate: 26,     // per second
+    spawnRate: 26,
     max: 140,
-    spread: 18,        // spawn radius
+    spread: 18,
     drift: 18,
-    push: 12,          // push along path dir
-    rise: 20,          // slight upward
+    push: 12,
+    rise: 20,
     alpha: 0.10,
     sizeMin: 1.0,
     sizeMax: 2.4,
@@ -71,38 +69,38 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   let lastTs = performance.now();
 
   function drawOverdriveBadge(now) {
-  const until = state.effects?.overdriveUntil || 0;
-  if (until <= now) return;
+    const until = state.effects?.overdriveUntil || 0;
+    if (until <= now) return;
 
-  const tLeft = Math.max(0, (until - now) / 1000); // Sekunden Rest
-  const pulse = 0.6 + 0.4 * Math.sin(now * 0.01);
+    const tLeft = Math.max(0, (until - now) / 1000);
+    const pulse = 0.6 + 0.4 * Math.sin(now * 0.01);
 
-  const x = state.w - 22;
-  const y = 22;
+    const x = state.w - 22;
+    const y = 22;
 
-  ctx.save();
-  ctx.globalAlpha = 0.55 + 0.35 * pulse;
+    ctx.save();
+    ctx.globalAlpha = 0.55 + 0.35 * pulse;
 
-  // kleiner dunkler Hintergrund
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
-  ctx.beginPath();
-  ctx.roundRect(x - 18, y - 14, 36, 28, 10);
-  ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - 18, y - 14, 36, 28, 10);
+    else {
+      ctx.rect(x - 18, y - 14, 36, 28);
+    }
+    ctx.fill();
 
-  // Blitz
-  ctx.font = "16px system-ui";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "rgba(251,191,36,1)";
-  ctx.fillText("⚡", x, y);
+    ctx.font = "16px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(251,191,36,1)";
+    ctx.fillText("⚡", x, y);
 
-  // Restzeit mini (optional)
-  ctx.font = "10px system-ui";
-  ctx.fillStyle = "rgba(226,232,240,0.9)";
-  ctx.fillText(tLeft.toFixed(1), x, y + 14);
+    ctx.font = "10px system-ui";
+    ctx.fillStyle = "rgba(226,232,240,0.9)";
+    ctx.fillText(tLeft.toFixed(1), x, y + 14);
 
-  ctx.restore();
-}
+    ctx.restore();
+  }
 
   // ---------- Geometry helpers ----------
   function distPointToSegment(px, py, ax, ay, bx, by) {
@@ -159,11 +157,8 @@ export function createRenderer({ canvas, ctx, state, assets }) {
     const p0 = pts[0], p1 = pts[1];
     const dir = dirFromTo(p0, p1);
 
-    // “pull into view”: put start gate near left side if path starts offscreen
-    const x = clamp(p0.x - 205, - 80, state.w - 80);
-    // deutlich höher
-const y = clamp(p0.y + 20, 70, state.h - 70);
-
+    const x = clamp(p0.x - 205, -80, state.w - 80);
+    const y = clamp(p0.y + 20, 70, state.h - 70);
     return { x, y, dir };
   }
 
@@ -175,10 +170,8 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     const pm = pts[pts.length - 2];
     const dir = dirFromTo(pm, pn);
 
-    // “push into view”: move slightly to the right/down but clamp to canvas
     const x = clamp(pn.x + 750, 0, state.w - 80);
     const y = clamp(pn.y + 650, 0, state.h - 10);
-
     return { x, y, dir };
   }
 
@@ -222,7 +215,7 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     function footprintFree(x, y, sizeTiles) {
       for (let yy = 0; yy < sizeTiles; yy++) {
         for (let xx = 0; xx < sizeTiles; xx++) {
-          if (blocked.has(`${x+xx},${y+yy}`)) return false;
+          if (blocked.has(`${x + xx},${y + yy}`)) return false;
         }
       }
       return true;
@@ -230,7 +223,7 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
 
     function reserve(x, y, sizeTiles) {
       for (let yy = 0; yy < sizeTiles; yy++) {
-        for (let xx = 0; xx < sizeTiles; xx++) blocked.add(`${x+xx},${y+yy}`);
+        for (let xx = 0; xx < sizeTiles; xx++) blocked.add(`${x + xx},${y + yy}`);
       }
     }
 
@@ -248,20 +241,19 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
         if (!farFromPath(x, y, sizeTiles)) continue;
 
         reserve(x, y, sizeTiles);
-        props.push({ kind, x: x*TILE, y: y*TILE, w: TILE*sizeTiles, h: TILE*sizeTiles });
+        props.push({ kind, x: x * TILE, y: y * TILE, w: TILE * sizeTiles, h: TILE * sizeTiles });
         return true;
       }
       return false;
     }
 
-    // base counts
     const total = cols * rows;
 
     const chestCount = Math.max(1, Math.floor(total * CHEST_FACTOR));
     for (let i = 0; i < chestCount; i++) tryPlace("chest", 900, 1);
 
     const tree3Count = Math.min(10, Math.floor(total * TREE3_FACTOR));
-    const tree2Count = Math.min(8,  Math.floor(total * TREE2_FACTOR));
+    const tree2Count = Math.min(8, Math.floor(total * TREE2_FACTOR));
     for (let i = 0; i < tree3Count; i++) tryPlace("tree", 1600, 3);
     for (let i = 0; i < tree2Count; i++) tryPlace("tree", 1200, 2);
 
@@ -306,7 +298,7 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
         if (distToPolyline(wx, wy, state.path) < PATH_CLEARANCE) continue;
 
         reserve(x, y, 1);
-        props.push({ kind, x: x*TILE, y: y*TILE, w: TILE, h: TILE });
+        props.push({ kind, x: x * TILE, y: y * TILE, w: TILE, h: TILE });
         placed++;
       }
     }
@@ -319,33 +311,31 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
 
   // ---------- Background draw ----------
   function drawGrass(ctx2) {
-  const cols = Math.ceil(state.w / TILE);
-  const rows = Math.ceil(state.h / TILE);
+    const cols = Math.ceil(state.w / TILE);
+    const rows = Math.ceil(state.h / TILE);
 
-  // 1) Base-fill: verhindert sichtbare "Lücken", falls Tile Transparenz hat
-  ctx2.save();
-  ctx2.fillStyle = "rgba(8, 20, 16, 1)"; // dunkles Grün als Untergrund
-  ctx2.fillRect(0, 0, state.w, state.h);
-  ctx2.restore();
+    // Base-fill gegen Transparenz/Seams
+    ctx2.save();
+    ctx2.fillStyle = "rgba(8, 20, 16, 1)";
+    ctx2.fillRect(0, 0, state.w, state.h);
+    ctx2.restore();
 
-  // 2) Tiles zeichnen – mit minimaler Überlappung gegen 1px-Seams
-  const img = assets?.tiles?.grass;
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      const gx = Math.round(x * TILE);
-      const gy = Math.round(y * TILE);
+    const img = assets?.tiles?.grass;
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const gx = Math.round(x * TILE);
+        const gy = Math.round(y * TILE);
 
-      if (img) {
-        setCrisp(ctx2);
-        // +1 Pixel Überlappung (rechts/unten), damit keine Hairline-Gaps entstehen
-        ctx2.drawImage(img, gx, gy, TILE + 1, TILE + 1);
-      } else {
-        ctx2.fillStyle = ((x + y) & 1) ? "rgba(2,6,23,0.92)" : "rgba(2,6,23,0.86)";
-        ctx2.fillRect(gx, gy, TILE + 30, TILE + 30);
+        if (img) {
+          setCrisp(ctx2);
+          ctx2.drawImage(img, gx, gy, TILE + 1, TILE + 1);
+        } else {
+          ctx2.fillStyle = ((x + y) & 1) ? "rgba(2,6,23,0.92)" : "rgba(2,6,23,0.86)";
+          ctx2.fillRect(gx, gy, TILE + 1, TILE + 1);
+        }
       }
     }
   }
-}
 
   function drawSmoothRoad(ctx2) {
     const path = state._smoothPath || buildSmoothPath();
@@ -407,32 +397,26 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     const s = getStartAnchor();
     const e = getEndAnchor();
 
-    // Start gate (in background)
     if (startImg) {
       const x = clamp(s.x - START_GATE_W * 0.95, -START_GATE_W * 0.40, state.w - START_GATE_W);
       const y = clamp(s.y - START_GATE_H * 0.55, -START_GATE_H * 0.6, state.h - START_GATE_H);
       setCrisp(ctx2);
       ctx2.drawImage(startImg, x, y, START_GATE_W, START_GATE_H);
-
-      // anchor for fog (coming out of the opening)
       state._startGateAnchor = { x: x + START_GATE_W * 0.70, y: y + START_GATE_H * 0.58, dir: s.dir };
     } else {
       state._startGateAnchor = { x: s.x, y: s.y, dir: s.dir };
     }
 
-    // End gate (in background)
     if (endImg) {
       const x = clamp(e.x - END_GATE_W * 0.10, 0, state.w - END_GATE_W);
       const y = clamp(e.y - END_GATE_H * 0.10, -END_GATE_H * 0.6, state.h - END_GATE_H);
       setCrisp(ctx2);
       ctx2.drawImage(endImg, x, y, END_GATE_W, END_GATE_H);
-
       state._endGateAnchor = { x: x + END_GATE_W * 0.52, y: y + END_GATE_H * 0.58 };
     } else {
       state._endGateAnchor = { x: e.x, y: e.y };
     }
 
-    // flags for FX
     state._gateFlags = { hasStart: !!startImg, hasEnd: !!endImg };
   }
 
@@ -446,7 +430,7 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     drawGrass(bgCtx);
     buildSmoothPath();
     drawSmoothRoad(bgCtx);
-    drawGatesToBackground(bgCtx); // IMPORTANT: before props, so props can overlap if needed
+    drawGatesToBackground(bgCtx);
     drawProps(bgCtx);
   }
 
@@ -455,7 +439,6 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     buildProps();
     buildBackground();
 
-    // reset fog
     fog = [];
     lastTs = performance.now();
   }
@@ -570,219 +553,208 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
       }
 
       ctx.beginPath();
-      ctx.roundRect(s.x - 20, s.y - 20, 40, 40, 10);
+      if (ctx.roundRect) ctx.roundRect(s.x - 20, s.y - 20, 40, 40, 10);
+      else ctx.rect(s.x - 20, s.y - 20, 40, 40);
       ctx.fill();
       ctx.stroke();
       ctx.restore();
     }
   }
 
-  
+  // ========= ENEMY DRAWING (spritesheet support) =========
+  function drawEnemySprite(e, img) {
+    const s = e.sprite;
+    if (!s) return false;
+
+    const fw = s.frameW || 32;
+    const fh = s.frameH || 32;
+
+    // Falls cols/rows nicht gesetzt sind: aus Bildgröße ableiten
+    const cols = s.cols || Math.max(1, Math.floor(img.width / fw));
+    const rows = s.rows || Math.max(1, Math.floor(img.height / fh));
+
+    const frame = (e.frame ?? 0) % cols;
+
+    // dirRow nur wenn useDir=true, sonst 0
+    let dirRow = 0;
+    if (s.useDir) {
+      // 0=down,1=left,2=right,3=up
+      dirRow = (e.dir ?? 0) % rows;
+    }
+
+    const sx = frame * fw;
+    const sy = dirRow * fh;
+
+    const scale = s.scale || 1;
+
+    // Zielgröße: optional scale, sonst grob über enemy.size
+    const base = Math.max(24, (e.size || 10) * 2.6);
+    const dw = Math.round(base * scale);
+    const dh = dw;
+
+    setCrisp(ctx);
+    ctx.drawImage(img, sx, sy, fw, fh, e.x - dw / 2, e.y - dh / 2, dw, dh);
+    return true;
+  }
+
   function drawEnemies(now) {
-  const FRAME = 32;
+    for (const e of state.enemies) {
+      const img = assets?.enemies?.[e.type];
 
-  for (const e of state.enemies) {
-  const img = assets?.enemies?.[e.type];
-  const w = Math.max(24, e.size * 2.6);
-  const h = w;
-
-  // ✅ FAST: animiertes Spritesheet (Frames x Dirs) – Dirs werden aus Bildhöhe erkannt
-  if (e.type === "fast" && img) {
-    const frame = e.frame ?? 0;
-    const dir = e.dir ?? 0;
-
-    const cols = Math.max(1, Math.floor(img.width / FRAME));   // z.B. 4
-    const rows = Math.max(1, Math.floor(img.height / FRAME));  // z.B. 1 bei deinem Sheet
-
-    const fx = (frame % cols) * FRAME;
-    const fy = (dir % rows) * FRAME; // rows=1 -> immer 0
-
-    setCrisp(ctx);
-    ctx.drawImage(
-      img,
-      fx, fy, FRAME, FRAME,
-      e.x - FRAME / 2,
-      e.y - FRAME / 2,
-      FRAME, FRAME
-    );
-
-  } else if (img) {
-    // ✅ alle anderen Enemies: normales Sprite (Single Image)
-    setCrisp(ctx);
-    ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
-
-  } else {
-    // ✅ Fallback Shapes
-    if (e.shape === "square") {
-      ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
-      ctx.fillRect(e.x - e.size, e.y - e.size, e.size * 2, e.size * 2);
-
-    } else if (e.shape === "triangle") {
-      const r = e.size * 1.35;
-      ctx.fillStyle = "rgba(250,204,21,0.95)";
-      ctx.beginPath();
-      ctx.moveTo(e.x, e.y - r);
-      ctx.lineTo(e.x - r * 0.92, e.y + r * 0.78);
-      ctx.lineTo(e.x + r * 0.92, e.y + r * 0.78);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(250,204,21,0.35)";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-    } else if (e.shape === "hex") {
-      const r = e.size * 1.35;
-      ctx.fillStyle = "rgba(161,98,7,0.95)";
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const ang = (Math.PI / 3) * i - Math.PI / 6;
-        const px = e.x + Math.cos(ang) * r;
-        const py = e.y + Math.sin(ang) * r;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+      // 1) Spritesheet, wenn konfiguriert
+      if (img && e.sprite) {
+        drawEnemySprite(e, img);
       }
-      ctx.closePath();
-      ctx.fill();
+      // 2) Single PNG
+      else if (img) {
+        const w = Math.max(24, e.size * 2.6);
+        const h = w;
+        setCrisp(ctx);
+        ctx.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
+      }
+      // 3) Fallback Shapes
+      else {
+        if (e.shape === "square") {
+          ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
+          ctx.fillRect(e.x - e.size, e.y - e.size, e.size * 2, e.size * 2);
+        } else if (e.shape === "triangle") {
+          const r = e.size * 1.35;
+          ctx.fillStyle = "rgba(250,204,21,0.95)";
+          ctx.beginPath();
+          ctx.moveTo(e.x, e.y - r);
+          ctx.lineTo(e.x - r * 0.92, e.y + r * 0.78);
+          ctx.lineTo(e.x + r * 0.92, e.y + r * 0.78);
+          ctx.closePath();
+          ctx.fill();
 
-      ctx.strokeStyle = "rgba(251,191,36,0.35)";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+          ctx.strokeStyle = "rgba(250,204,21,0.35)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        } else if (e.shape === "hex") {
+          const r = e.size * 1.35;
+          ctx.fillStyle = "rgba(161,98,7,0.95)";
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const ang = (Math.PI / 3) * i - Math.PI / 6;
+            const px = e.x + Math.cos(ang) * r;
+            const py = e.y + Math.sin(ang) * r;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
 
-    } else {
-      ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // ... ab hier kommt bei dir dann wie gehabt: Boss-Shield, Bars etc.
-
-
-    // ---------- BOSS ARMOR SHIELD (Bubble) ----------
-    // Erwartet: e.armorHp, e.maxArmorHp (von game.js gesetzt)
-    if (e.isBoss && e.maxArmorHp > 0) {
-      const armor = Math.max(0, e.armorHp || 0);
-      const pct = armor / e.maxArmorHp;
-      const broken = (armor <= 0);
-
-      const R = Math.max(22, e.size * 1.9); // Shield Radius
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-
-      if (!broken) {
-        // sichtbare Bubble
-        ctx.strokeStyle = `rgba(34,211,238,${0.22 + 0.35 * pct})`;
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, R, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // inner glow
-        ctx.strokeStyle = `rgba(167,139,250,${0.10 + 0.22 * pct})`;
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, R - 3, 0, Math.PI * 2);
-        ctx.stroke();
-      } else {
-        // BROKEN: nur ein schwacher "crack ring" (dezent)
-        ctx.strokeStyle = "rgba(148,163,184,0.25)";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 6]);
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, R, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
+          ctx.strokeStyle = "rgba(251,191,36,0.35)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
-      ctx.restore();
+      // ---------- BOSS ARMOR SHIELD (Bubble) ----------
+      if (e.isBoss && e.maxArmorHp > 0) {
+        const armor = Math.max(0, e.armorHp || 0);
+        const pct = armor / e.maxArmorHp;
+        const broken = armor <= 0;
 
-      // optionales "BROKEN" Tag (kannst du drin lassen oder rausnehmen)
-      if (broken) {
+        const R = Math.max(22, e.size * 1.9);
         ctx.save();
-        ctx.font = "10px system-ui";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "rgba(226,232,240,0.85)";
-        ctx.fillText("BROKEN", e.x, e.y - R - 10);
+        ctx.globalCompositeOperation = "lighter";
+
+        if (!broken) {
+          ctx.strokeStyle = `rgba(34,211,238,${0.22 + 0.35 * pct})`;
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, R, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.strokeStyle = `rgba(167,139,250,${0.10 + 0.22 * pct})`;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, R - 3, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = "rgba(148,163,184,0.25)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 6]);
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, R, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
         ctx.restore();
       }
-    }
 
-    // ---------- HP / ARMOR BARS ----------
-    const hpPct = Math.max(0, e.hp / e.maxHp);
-
-    // HP bar base
-    ctx.fillStyle = "rgba(0,0,0,0.45)";
-    ctx.fillRect(e.x - 16, e.y - (h / 2) - 10, 32, 4);
-
-    ctx.fillStyle = hpPct > 0.5 ? "#10b981" : (hpPct > 0.2 ? "#f59e0b" : "#ef4444");
-    ctx.fillRect(e.x - 16, e.y - (h / 2) - 10, 32 * hpPct, 4);
-
-    // Armor bar (nur wenn vorhanden)
-    if (e.maxArmorHp > 0) {
-      const armor = Math.max(0, e.armorHp || 0);
-      const aPct = armor / e.maxArmorHp;
+      // ---------- HP / ARMOR BARS ----------
+      // Bars "oben" über dem Enemy: an Größe orientiert, nicht an Sprite-Höhe
+      const barTop = e.y - Math.max(16, e.size * 2.0) - 10;
+      const hpPct = Math.max(0, e.hp / e.maxHp);
 
       ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.fillRect(e.x - 16, e.y - (h / 2) - 16, 32, 3);
+      ctx.fillRect(e.x - 16, barTop, 32, 4);
 
-      // cyan shield bar
-      ctx.fillStyle = `rgba(34,211,238,${armor > 0 ? 0.95 : 0.25})`;
-      ctx.fillRect(e.x - 16, e.y - (h / 2) - 16, 32 * aPct, 3);
+      ctx.fillStyle = hpPct > 0.5 ? "#10b981" : (hpPct > 0.2 ? "#f59e0b" : "#ef4444");
+      ctx.fillRect(e.x - 16, barTop, 32 * hpPct, 4);
+
+      if (e.maxArmorHp > 0) {
+        const armor = Math.max(0, e.armorHp || 0);
+        const aPct = armor / e.maxArmorHp;
+
+        ctx.fillStyle = "rgba(0,0,0,0.45)";
+        ctx.fillRect(e.x - 16, barTop - 6, 32, 3);
+
+        ctx.fillStyle = `rgba(34,211,238,${armor > 0 ? 0.95 : 0.25})`;
+        ctx.fillRect(e.x - 16, barTop - 6, 32 * aPct, 3);
+      }
     }
   }
-}
 
   function drawTowers() {
-  for (const t of state.towers) {
-    const img = assets?.towers?.[t.id];
-    const w = 96, h = 120;
+    for (const t of state.towers) {
+      const img = assets?.towers?.[t.id];
+      const w = 96, h = 120;
 
-    if (img) {
-      setCrisp(ctx);
-      ctx.drawImage(img, t.x - w/2, t.y - h/2, w, h);
+      if (img) {
+        setCrisp(ctx);
+        ctx.drawImage(img, t.x - w / 2, t.y - h / 2, w, h);
+      }
+      drawTowerStars(t);
     }
-
-    // ---- Level Stars ----
-    drawTowerStars(t);
   }
-}
 
-function drawTowerStars(t) {
-  const lvl = t.level || 1;
+  function drawTowerStars(t) {
+    const lvl = t.level || 1;
+    const gold = Math.min(5, Math.max(0, lvl));
+    const purple = Math.min(5, Math.max(0, lvl - 5));
 
-  const gold = Math.min(5, Math.max(0, lvl));
-  const purple = Math.min(5, Math.max(0, lvl - 5));
+    const baseY = t.y + 14;
+    const spacing = 10;
+    const startX = t.x - (spacing * 2);
 
-  // Position: unter dem Turm (anpassen, falls es optisch höher/tiefer soll)
-  const baseY = t.y + 14; // probier 50..62
-  const spacing = 10;
-  const startX = t.x - (spacing * 2); // 5 Sterne zentriert
+    ctx.save();
+    ctx.font = "12px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
-  // simple Stern als Text (schnell & ok). Später kannst du ein Sprite nehmen.
-  ctx.save();
-  ctx.font = "12px system-ui";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+    for (let i = 0; i < 5; i++) {
+      const x = startX + i * spacing;
+      const isGold = i < gold;
+      const isPurple = i < purple;
 
-  for (let i = 0; i < 5; i++) {
-    const x = startX + i * spacing;
-    // erst gold auffüllen (1..5), danach lila (6..10)
-    const isGold = i < gold;
-    const isPurple = i < purple;
+      let fill = "rgba(148,163,184,0.25)";
+      if (isGold) fill = "rgba(234,179,8,0.95)";
+      if (isPurple) fill = "rgba(167,139,250,0.95)";
 
-    // Farbe: lila überschreibt gold, wenn beide „voll“
-    let fill = "rgba(148,163,184,0.25)";         // leer (grau)
-    if (isGold) fill = "rgba(234,179,8,0.95)";   // gold
-    if (isPurple) fill = "rgba(167,139,250,0.95)"; // lila
-
-    ctx.fillStyle = fill;
-    ctx.fillText("★", x, baseY);
+      ctx.fillStyle = fill;
+      ctx.fillText("★", x, baseY);
+    }
+    ctx.restore();
   }
-  ctx.restore();
-}
 
   function drawProjectiles() {
     for (const p of state.projectiles) {
@@ -825,9 +797,7 @@ function drawTowerStars(t) {
     ctx.clearRect(0, 0, state.w, state.h);
     drawBackground();
     drawOverdriveBadge(now);
-    
 
-    // FX overlays (below enemies is fine; looks good)
     drawEndGlow(now);
     drawFog();
 
