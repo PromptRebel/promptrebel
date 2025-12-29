@@ -621,6 +621,11 @@ export async function startGame({ canvas, assets }) {
       // Summoner
       nextSummonAt: base.summonEvery ? performance.now() + base.summonEvery : 0,
 
+      // --- sprite animation state ---
+frame: 0,          // 0..3
+frameTimer: 0,     // seconds
+dir: 2,            // 0=down,1=left,2=right,3=up (start right)
+
       traveled,
       dead: false,
     };
@@ -1009,9 +1014,27 @@ export async function startGame({ canvas, assets }) {
       }
 
       const target = state.path[e.targetIdx];
-      const dx = target.x - e.x;
-      const dy = target.y - e.y;
-      const dist = Math.hypot(dx, dy) || 0.001;
+const dx = target.x - e.x;
+const dy = target.y - e.y;
+const dist = Math.hypot(dx, dy) || 0.001;
+
+// 🔽 HIER rein (nur fast)
+if (e.type === "fast") {
+  // Richtung bestimmen
+  if (Math.abs(dx) > Math.abs(dy)) {
+    e.dir = dx > 0 ? 2 : 1;   // right / left
+  } else {
+    e.dir = dy > 0 ? 0 : 3;   // down / up
+  }
+
+  // Animation (4 Frames) – safe init
+  e.frameTimer = (e.frameTimer ?? 0) + dt;
+  if (e.frameTimer > 0.12) {
+    e.frame = ((e.frame ?? 0) + 1) % 4;
+    e.frameTimer = 0;
+    }
+  }
+
 
       if (dist < 5) {
         e.targetIdx++;
