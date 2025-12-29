@@ -164,6 +164,14 @@ canvas{
   float: right;
   opacity: 0.85;
 }
+
+.spell-btn.can-buy {
+  background: #16a34a;        /* grün */
+  color: #ecfdf5;
+  border-color: #22c55e;
+  opacity: 1;
+  cursor: pointer;
+}
 .overlayClose{
   margin-top: 10px;
   width: 100%;
