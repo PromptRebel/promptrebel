@@ -117,9 +117,26 @@ export async function startGame({ canvas, assets }) {
   // =========================
   // ENEMIES
   // =========================
+  // sprite: frameW/H, cols, rows, fps, useDir
+  // useDir=false -> immer erste Reihe (rows=1 reicht)
   const ENEMY = {
-    fast: { shape: "circle", baseHp: 30, baseSpeed: 2.1, size: 10, slowImmune: true },
-    tank: { shape: "square", baseHp: 75, baseSpeed: 1.0, size: 12 },
+    fast: {
+      shape: "circle",
+      baseHp: 30,
+      baseSpeed: 2.1,
+      size: 10,
+      slowImmune: true,
+      sprite: { frameW: 32, frameH: 32, cols: 4, rows: 1, fps: 8, useDir: false, scale: 1 },
+    },
+
+    tank: {
+      shape: "square",
+      baseHp: 75,
+      baseSpeed: 1.0,
+      size: 12,
+      sprite: { frameW: 32, frameH: 32, cols: 4, rows: 1, fps: 6, useDir: false, scale: 1 },
+    },
+
     summoner: {
       shape: "triangle",
       baseHp: 92,
@@ -127,15 +144,28 @@ export async function startGame({ canvas, assets }) {
       size: 13,
       summonEvery: 2000,
       summonCount: 5,
+      sprite: { frameW: 32, frameH: 32, cols: 4, rows: 1, fps: 6, useDir: false, scale: 1 },
     },
+
     minion: {
       shape: "hex",
       baseHp: 18,
       baseSpeed: 1.7,
       size: 8,
       slowImmune: false,
+      sprite: { frameW: 32, frameH: 32, cols: 4, rows: 1, fps: 10, useDir: false, scale: 1 },
     },
-    boss: { shape: "square", baseHp: 800, baseSpeed: 0.7, size: 25, isBoss: true },
+
+    boss: {
+      shape: "square",
+      baseHp: 800,
+      baseSpeed: 0.7,
+      size: 25,
+      isBoss: true,
+      // Wenn dein boss.png 32er ist: frameW/H 32 lassen.
+      // Wenn du später 64er Boss-Sheet machst: frameW/H 64 und scale ggf. 1 setzen.
+      sprite: { frameW: 32, frameH: 32, cols: 4, rows: 1, fps: 5, useDir: false, scale: 1 },
+    },
   };
 
   // =========================
@@ -621,10 +651,11 @@ export async function startGame({ canvas, assets }) {
       // Summoner
       nextSummonAt: base.summonEvery ? performance.now() + base.summonEvery : 0,
 
-      // --- sprite animation state ---
-frame: 0,          // 0..3
-frameTimer: 0,     // seconds
-dir: 2,            // 0=down,1=left,2=right,3=up (start right)
+      // ---- sprite settings + animation state ----
+      sprite: base.sprite || null,
+      frame: 0,
+      frameTimer: 0,
+      dir: 2, // 0=down,1=left,2=right,3=up (Default right)
 
       traveled,
       dead: false,
@@ -1014,27 +1045,26 @@ dir: 2,            // 0=down,1=left,2=right,3=up (start right)
       }
 
       const target = state.path[e.targetIdx];
-const dx = target.x - e.x;
-const dy = target.y - e.y;
-const dist = Math.hypot(dx, dy) || 0.001;
+      const dx = target.x - e.x;
+      const dy = target.y - e.y;
+      const dist = Math.hypot(dx, dy) || 0.001;
 
-// 🔽 HIER rein (nur fast)
-if (e.type === "fast") {
-  // Richtung bestimmen
-  if (Math.abs(dx) > Math.abs(dy)) {
-    e.dir = dx > 0 ? 2 : 1;   // right / left
-  } else {
-    e.dir = dy > 0 ? 0 : 3;   // down / up
-  }
+      // ✅ Richtung + Animation: für ALLE Enemies mit sprite
+      if (e.sprite) {
+        // Richtung bestimmen (optional später für useDir)
+        if (Math.abs(dx) > Math.abs(dy)) e.dir = dx > 0 ? 2 : 1; // right/left
+        else e.dir = dy > 0 ? 0 : 3; // down/up
 
-  // Animation (4 Frames) – safe init
-  e.frameTimer = (e.frameTimer ?? 0) + dt;
-  if (e.frameTimer > 0.12) {
-    e.frame = ((e.frame ?? 0) + 1) % 4;
-    e.frameTimer = 0;
-    }
-  }
+        const fps = e.sprite.fps || 8;
+        const spf = 1 / fps; // seconds per frame
+        e.frameTimer = (e.frameTimer ?? 0) + dt;
 
+        while (e.frameTimer >= spf) {
+          const cols = e.sprite.cols || 1;
+          e.frame = ((e.frame ?? 0) + 1) % cols;
+          e.frameTimer -= spf;
+        }
+      }
 
       if (dist < 5) {
         e.targetIdx++;
@@ -1077,12 +1107,12 @@ if (e.type === "fast") {
       const inRange = state.enemies.filter((e) => Math.hypot(e.x - t.x, e.y - t.y) <= t.range);
       if (inRange.length === 0) continue;
 
-      const target =
+      const targetEnemy =
         t.targetPriority === "Strongest"
           ? inRange.reduce((a, b) => (b.hp > a.hp ? b : a))
           : inRange.reduce((a, b) => (b.traveled > a.traveled ? b : a));
 
-      const d = Math.hypot(target.x - t.x, target.y - t.y) || 0.001;
+      const d = Math.hypot(targetEnemy.x - t.x, targetEnemy.y - t.y) || 0.001;
 
       const isMage = t.id === "mage";
       const isArcher = t.id === "archer";
@@ -1095,8 +1125,8 @@ if (e.type === "fast") {
       state.projectiles.push({
         x: t.x,
         y: t.y,
-        vx: ((target.x - t.x) / d) * projSpeed,
-        vy: ((target.y - t.y) / d) * projSpeed,
+        vx: ((targetEnemy.x - t.x) / d) * projSpeed,
+        vy: ((targetEnemy.y - t.y) / d) * projSpeed,
 
         damage: t.damage,
         aoe: t.aoe,
@@ -1385,12 +1415,12 @@ if (e.type === "fast") {
 
   // Public API for main.js (Variant A / clean)
   return {
-  castSpell(name) {
-    if (name === "overdrive") return castOverdrive();
-    return false;
-  },
-  getGold() {
-    return Math.floor(state.gold);
-  }
-};
+    castSpell(name) {
+      if (name === "overdrive") return castOverdrive();
+      return false;
+    },
+    getGold() {
+      return Math.floor(state.gold);
+    },
+  };
 }
