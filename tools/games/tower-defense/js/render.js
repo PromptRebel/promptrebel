@@ -631,12 +631,24 @@ if (e.shape === "square") {
   ctx.stroke();
 
 } else {
-  // circle default
-  ctx.fillStyle = e.isBoss ? "rgba(244,63,94,0.95)" : "rgba(251,113,133,0.95)";
-  ctx.beginPath();
-  ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
-  ctx.fill();
-}
+ // sprite animated (32x32, 4 frames)
+const FRAME = 32;
+
+// sichere Defaults, falls noch nicht gesetzt
+const frame = e.frame ?? 0;
+const dir = e.dir ?? 0;
+
+const fx = frame * FRAME;
+const fy = dir * FRAME;
+
+ctx.imageSmoothingEnabled = false;
+ctx.drawImage(
+  img,
+  fx, fy, FRAME, FRAME,
+  e.x - FRAME / 2,
+  e.y - FRAME / 2,
+  FRAME, FRAME
+);
     }
 
     // ---------- BOSS ARMOR SHIELD (Bubble) ----------
