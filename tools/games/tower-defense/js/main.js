@@ -11,10 +11,22 @@ import { startGame } from "./game.js";
   // WICHTIG: game-API speichern!
   const game = await startGame({ canvas, assets });
 
+  setInterval(syncSpellButton, 120);
+
   const btnSpells = document.getElementById("btnSpells");
   const overlay = document.getElementById("spellsOverlay");
   const closeSpells = document.getElementById("closeSpells");
   const spellOverdrive = document.getElementById("spellOverdrive");
+const SPELL_COST = 500;
+
+function syncSpellButton() {
+  if (!game) return;
+
+  const canBuy = game.getGold() >= SPELL_COST;
+
+  spellOverdrive.disabled = !canBuy;
+  spellOverdrive.classList.toggle("can-buy", canBuy);
+}
 
   if (!btnSpells || !overlay || !closeSpells || !spellOverdrive) {
     console.warn("Spell UI elements missing in DOM");
@@ -30,8 +42,11 @@ import { startGame } from "./game.js";
   });
 
   spellOverdrive.addEventListener("click", () => {
-    // Variante B: sauber über Game-API:
-    game.castSpell("overdrive");
-    overlay.classList.add("hidden");
-  });
+  if (!game) return;
+
+  const ok = game.castSpell("overdrive");
+  if (!ok) return; // z.B. Gold inzwischen weg
+
+  overlay.classList.add("hidden");
+});
 })();
