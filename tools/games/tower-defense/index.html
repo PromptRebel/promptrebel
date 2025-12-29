@@ -47,7 +47,22 @@
       </button>
 
       <button id="btnSpeed" class="btn-action bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 rounded-full text-xs font-bold">1x</button>
-      <button id="btnLeaderboard" class="btn-action bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 rounded-full text-xs font-bold">🏆</button>
+      <!-- vorher: trophy button -->
+<!-- <button id="btnTrophy">🏆</button> -->
+
+<button id="btnSpells" class="hudBtn" title="Zauber">🪄</button>
+
+<div id="spellsOverlay" class="overlay hidden">
+  <div class="overlayCard">
+    <div class="overlayTitle">Zauber</div>
+
+    <button id="spellOverdrive" class="spellBtn">
+      ⚡ Overdrive <span class="spellCost">500</span>
+    </button>
+
+    <button id="closeSpells" class="overlayClose">Schließen</button>
+  </div>
+</div>
     </div>
   </header>
 
