@@ -586,25 +586,21 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     const w = Math.max(24, e.size * 2.6);
     const h = w;
 
-   // ✅ FAST: nur Spritesheet, wenn es wirklich eins ist
+   // ✅ FAST: animiertes Spritesheet (4 Frames nebeneinander, 1 Reihe)
 if (e.type === "fast" && img) {
-  const frame = (e.frame ?? 0) % 4;
-  const dir   = (e.dir ?? 0) % 4;
+  const cols = 4;                       // 4 Frames nebeneinander
+  const frameW = Math.floor(img.width / cols);
+  const frameH = img.height;            // 1 Reihe -> volle Höhe
 
-  const sheetOk = img.width >= FRAME * 4 && img.height >= FRAME * 4;
+  const frame = (e.frame ?? 0) % cols;
+  const fx = frame * frameW;
 
-  if (sheetOk) {
-    const fx = frame * FRAME;
-    const fy = dir * FRAME;
-
-    setCrisp(ctx);
-    ctx.drawImage(
-      img,
-      fx, fy, FRAME, FRAME,
-      e.x - FRAME / 2,
-      e.y - FRAME / 2,
-      FRAME, FRAME
-    );
+  setCrisp(ctx);
+  ctx.drawImage(
+    img,
+    fx, 0, frameW, frameH,              // source crop (immer y=0!)
+    e.x - w / 2, e.y - h / 2, w, h       // Zielgröße wie gewohnt
+  );
   } else {
     // fallback: fast ist nur ein normales PNG
     setCrisp(ctx);
