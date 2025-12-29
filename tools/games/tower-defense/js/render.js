@@ -102,7 +102,7 @@ export function createRenderer({ canvas, ctx, state, assets }) {
   ctx.fillText(tLeft.toFixed(1), x, y + 14);
 
   ctx.restore();
-};
+}
 
   // ---------- Geometry helpers ----------
   function distPointToSegment(px, py, ax, ay, bx, by) {
@@ -577,8 +577,6 @@ const y = clamp(p0.y + 20, 70, state.h - 70);
     }
   }
 
-  drawBackground();
-drawOverdriveBadge(now);
   
   function drawEnemies(now) {
   for (const e of state.enemies) {
@@ -804,8 +802,9 @@ function drawTowerStars(t) {
     updateFog(dt);
 
     ctx.clearRect(0, 0, state.w, state.h);
-
     drawBackground();
+    drawOverdriveBadge(now);
+    
 
     // FX overlays (below enemies is fine; looks good)
     drawEndGlow(now);
