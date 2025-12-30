@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>PromptRebel – Tools · Towerdefens</title>
+  <title>PromptRebel – Tools · Games</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -258,6 +258,30 @@
       100%{ opacity:0.15; }
     }
 
+    /* --- Cover image block --- */
+    .category-cover{
+      width: 100%;
+      height: 132px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.18);
+      background: rgba(2,6,23,0.35);
+      overflow: hidden;
+      margin-bottom: 12px;
+      box-shadow: 0 12px 30px rgba(2,6,23,0.6);
+    }
+    .category-cover img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      display:block;
+      transform: scale(1.02);
+      transition: transform 0.18s ease;
+    }
+    .category-card:hover .category-cover img{
+      transform: scale(1.06);
+    }
+
     .category-card-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
     .category-icon{ font-size:20px; }
     .category-tag{ font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:#cbd5e1; }
@@ -363,23 +387,22 @@
       <div class="hero-layout">
         <div>
           <div class="category-label">Tools</div>
-          <h1 class="hero-title">Agents</h1>
+          <h1 class="hero-title">Games</h1>
 
           <div class="hero-breadcrumbs">
-            <span><a href="../index.html">Home</a> · Tools · Agents</span>
+            <span><a href="../index.html">Home</a> · Tools · Games</span>
           </div>
 
           <p class="hero-text-main">
-            Drei einsatzbereite Agenten als Templates: kopierbar, anpassbar, teilbar.
+            Kleine Browser-Games – kostenlos, nachbaubar, PromptRebel-Style.
           </p>
           <p class="hero-text-sub">
-            Hier findest du die “Core Agents”, die bei PromptRebel wirklich genutzt werden.
-            Jeder Agent hat eine eigene Detailseite (Prompt + Setup + Use-Cases).
+            Fokus: spielbar im Browser (auch mobil). Kein App-Store-Ziel, sondern „was ist möglich“ – mit KI als Partner.
           </p>
 
           <div class="hero-pills">
-            <a href="#agents" class="hero-pill">
-              <span class="label">Agenten ansehen</span>
+            <a href="#games" class="hero-pill">
+              <span class="label">Games ansehen</span>
               <span class="arrow">↘</span>
             </a>
             <a href="../tools.html" class="hero-pill">
@@ -389,96 +412,105 @@
           </div>
 
           <p class="hero-note">
-            Hinweis: Beim Klick auf einen Agent-Link zu ChatGPT verlässt du PromptRebel. (Details kommen auf den Agent-Detailseiten.)
+            Hinweis: Alle Games laufen im Browser. Wenn du Assets/Code kopierst: CC BY-NC-SA 4.0 beachten.
           </p>
         </div>
 
         <!-- Terminal -->
         <aside class="panel-glass">
           <div class="panel-header">
-            <span class="icon">🧠</span>
-            <span>NOW LOADING · AGENT INDEX</span>
+            <span class="icon">🎮</span>
+            <span>NOW LOADING · GAME INDEX</span>
           </div>
           <div class="terminal">
-promptrebel:tools$ ls agents/
+promptrebel:tools$ ls games/
 
-> tutor/       # KI-Tutor (Onboarding / Lernen)
-> biohacking/  # Biohacking Coach (Tracking / Routinen)
-> architect/   # Ideen → grobe Architektur (M365/Power Platform)
+> tower-defense/  # TD Alpha (Sprites + Waves + Boss)
+> duck-legend/    # Duck Legend (soon/playable)
+> wastewizard/    # Waste Wizard (tools game)
 
-<span class="dim"># wähle eine Kachel für Details…</span>
+<span class="dim"># wähle eine Kachel zum Spielen…</span>
           </div>
         </aside>
       </div>
     </section>
 
     <!-- GRID -->
-    <section class="section" id="agents" aria-labelledby="agents-title">
-      <h2 class="section-title" id="agents-title">Agenten</h2>
+    <section class="section" id="games" aria-labelledby="games-title">
+      <h2 class="section-title" id="games-title">Games</h2>
       <p class="section-subtitle">
-        Einstieg über drei “Core”-Rollen. Jede Kachel führt zur Detailseite (Prompt, Anleitung, Beispiele).
+        Drei kleine Experimente. Direkt spielen – ohne Installation.
       </p>
 
       <div class="category-grid">
-        <!-- 1) Tutor -->
+        <!-- 1) Tower Defense -->
         <a href="games/tower-defense/index.html" class="category-card"
+           style="--accent: rgba(168,85,247,0.95);"
+           role="region" aria-labelledby="card-td-title">
+          <div class="category-cover">
+            <img src="games/cover/tower-defense.png" alt="Tower Defense – Cover" loading="lazy">
+          </div>
+
+          <div class="category-card-top">
+            <div class="category-icon">🛡️</div>
+            <div class="category-tag">TOWER DEFENSE</div>
+          </div>
+          <h3 class="category-title" id="card-td-title">Tower Defense</h3>
+          <p class="category-text">
+            Pixel-Style TD: Waves, Upgrades, Bosses – komplett im Browser spielbar.
+          </p>
+          <div class="category-meta">
+            <span class="category-chip">Browser · Mobile · Free</span>
+            <div class="category-links">
+              <span class="category-link">Play →</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- 2) Duck Legend -->
+        <a href="games/duck-legend/index.html" class="category-card"
            style="--accent: rgba(34,211,238,0.95);"
-           role="region" aria-labelledby="card-tutor-title">
-          <div class="category-card-top">
-            <div class="category-icon">🎓</div>
-            <div class="category-tag">KI-TUTOR</div>
+           role="region" aria-labelledby="card-duck-title">
+          <div class="category-cover">
+            <img src="games/cover/duck-legend.png" alt="Duck Legend – Cover" loading="lazy">
           </div>
-          <h3 class="category-title" id="card-tutor-title">Tutor</h3>
+
+          <div class="category-card-top">
+            <div class="category-icon">🦆</div>
+            <div class="category-tag">DUCK LEGEND</div>
+          </div>
+          <h3 class="category-title" id="card-duck-title">Duck Legend</h3>
           <p class="category-text">
-            Onboarding & Lernen: Schritt-für-Schritt Erklärungen, Übungen, kleine Checks.
-            Ideal für Praktikanten/Neueinsteiger oder Selbstlern-Workflows.
+            Kleines, schnelles Browser-Game-Experiment – easy to play, hard to master (soon).
           </p>
           <div class="category-meta">
-            <span class="category-chip">Training · Struktur · Praxis</span>
+            <span class="category-chip">Browser · Free</span>
             <div class="category-links">
-              <span class="category-link">Details →</span>
+              <span class="category-link">Play →</span>
             </div>
           </div>
         </a>
 
-        <!-- 2) Biohacking -->
-        <a href="biohacking.html" class="category-card"
+        <!-- 3) Waste Wizard -->
+        <a href="games/wastewizard/index.html" class="category-card"
            style="--accent: rgba(236,72,153,0.95);"
-           role="region" aria-labelledby="card-bio-title">
-          <div class="category-card-top">
-            <div class="category-icon">🧬</div>
-            <div class="category-tag">BIOHACKING</div>
+           role="region" aria-labelledby="card-ww-title">
+          <div class="category-cover">
+            <img src="games/cover/wastewizard.png" alt="Waste Wizard – Cover" loading="lazy">
           </div>
-          <h3 class="category-title" id="card-bio-title">Biohacking Coach</h3>
-          <p class="category-text">
-            Routinen, Schlaf, Training, Tracking: ein Coach-Setup, das Daten “lesbar” macht
-            und daraus alltagstaugliche Anpassungen ableitet (ohne medizinische Versprechen).
-          </p>
-          <div class="category-meta">
-            <span class="category-chip">Habits · Analyse · Klartext</span>
-            <div class="category-links">
-              <span class="category-link">Details →</span>
-            </div>
-          </div>
-        </a>
 
-        <!-- 3) Architect -->
-        <a href="architect.html" class="category-card"
-           style="--accent: rgba(190,24,93,0.95);"
-           role="region" aria-labelledby="card-arch-title">
           <div class="category-card-top">
-            <div class="category-icon">🏗️</div>
-            <div class="category-tag">ARCHITECT</div>
+            <div class="category-icon">🗑️</div>
+            <div class="category-tag">WASTE WIZARD</div>
           </div>
-          <h3 class="category-title" id="card-arch-title">Idea Architect</h3>
+          <h3 class="category-title" id="card-ww-title">Waste Wizard</h3>
           <p class="category-text">
-            Ideen → grobe Umsetzungs-Skizze: Bausteine, Aufwand, Abhängigkeiten.
-            Fokus: M365/Power Platform (SharePoint/Lists/Power Automate/Power Apps) – anpassbar.
+            Training-Game / Fun-Prototyp – spielerisch, schnell, mit PromptRebel-Vibe.
           </p>
           <div class="category-meta">
-            <span class="category-chip">Skizze · Scope · Aufwand</span>
+            <span class="category-chip">Browser · Free</span>
             <div class="category-links">
-              <span class="category-link">Details →</span>
+              <span class="category-link">Play →</span>
             </div>
           </div>
         </a>
@@ -493,7 +525,7 @@ promptrebel:tools$ ls agents/
         <span>·</span>
         <a href="#">Privacy</a>
       </div>
-      <div>current build: <span id="buildVersion" class="build-highlight">v0.2.tools-agents</span> – agents index</div>
+      <div>current build: <span id="buildVersion" class="build-highlight">v0.3.tools-games</span> – games index</div>
     </footer>
   </main>
 
@@ -531,7 +563,7 @@ promptrebel:tools$ ls agents/
     // Footer version click
     const buildVersionEl = document.getElementById("buildVersion");
     buildVersionEl.addEventListener("click", () => {
-      const versions = ["v0.2.tools-agents","v0.3.tools-agents","v0.6.9.tools-agents","v1.0.tools-agents","v∞.tools-agents"];
+      const versions = ["v0.3.tools-games","v0.4.tools-games","v0.6.9.tools-games","v1.0.tools-games","v∞.tools-games"];
       let i = 0;
       const int = setInterval(() => {
         buildVersionEl.textContent = versions[i++ % versions.length];
