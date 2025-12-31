@@ -568,9 +568,8 @@
       </a>
       <nav class="nav-links" aria-label="Hauptnavigation">
         <a href="../index.html#projects" class="nav-link">Projects</a>
-        <a href="../music/index.html" class="nav-link">Music</a>
-        <a href="../video/index.html" class="nav-link">Video</a>
-        <a href="./index.html" class="nav-link nav-link-active">Visuals</a>
+        <a href="../music/index.html" class="nav-link">About</a>
+        <a href="../video/index.html" class="nav-link">Lab Notes</a>
       </nav>
     </div>
   </header>
@@ -658,22 +657,36 @@ Constraints:
             aria-expanded="false"
           >
             <span class="prompt-toggle-icon">🧾</span>
-            <span>Prompt &amp; Details – Neon Portrait</span>
+            <span>Prompt</span>
             <span class="prompt-toggle-arrow">▾</span>
           </button>
 
           <div class="prompt-body">
             <button class="prompt-copy-inside" type="button">Copy</button>
             <pre class="prompt-code">
-Ultra-detailed cyberpunk portrait of a person bathed in violet and cyan neon light.
+Ultra-detailed 8K cinematic action scene, hyper-realistic, photoreal render, ultra-sharp textures.  
 
-Camera: 85mm portrait lens, shallow depth of field, f/1.4.
-Lighting: split lighting with strong neon reflections in the eyes.
-Background: abstract futuristic city, bokeh neon signs, soft haze.
+The dog from the reference photo floats weightlessly in outer space, wearing a sleek astronaut suit.  
+Reproduce its natural fur colors, markings, and body features exactly as in the reference photo.  
+The helmet visor is transparent, showing the dog’s face clearly and naturally.  
+No distortion, no cartoon style – realistic proportions.  
 
-Style: photographic realism with subtle film grain and microcontrast.
-Skin texture realistic, pores and tiny imperfections visible – no plastic look.
-Eyes sharp and reflective, catching the neon colors like glass.</pre>
+– Camera angle: Low-angle wide shot, as if captured from just below.  
+– Pose: The dog is mid-motion, one paw reaching forward as if exploring, the body slightly rotated.  
+– The astronaut suit appears high-tech and realistic, but tailored for a dog’s anatomy.  
+– Replace human-like hands and feet with realistic dog paws fitted into the suit.  
+– The suit is white with subtle futuristic details, no extra logos or text.  
+
+Background: A large space station and the Earth with glowing atmosphere visible behind the dog, surrounded by countless stars and deep space.  
+Lighting: Strong cinematic contrast – bright sunlight highlights the helmet and suit, soft reflections on the visor, dramatic shadows against the void of space.  
+
+Visual style: Epic sci-fi realism, IMAX movie poster aesthetic.  
+
+Constraints:  
+– The dog’s face must remain natural and recognizable from the reference photo.  
+– Only the dog as astronaut is the focus, no other characters.  
+– Space station and Earth are secondary elements in the background.  
+– Reflection and lighting must feel physically accurate.</pre>
           </div>
         </section>
       </article>
@@ -700,25 +713,48 @@ Eyes sharp and reflective, catching the neon colors like glass.</pre>
             aria-expanded="false"
           >
             <span class="prompt-toggle-icon">🧾</span>
-            <span>Prompt &amp; Details – Synth Character</span>
+            <span>Prompt</span>
             <span class="prompt-toggle-arrow">▾</span>
           </button>
 
           <div class="prompt-body">
             <button class="prompt-copy-inside" type="button">Copy</button>
             <pre class="prompt-code">
-Full-body character concept of a futuristic synth being.
+Ultra-detailed 8K cinematic fantasy artwork, photorealistic.
 
-Pose: relaxed, slightly sideways, confident stance.
-Clothing: minimal tech-wear, matte black with subtle neon trims (violet & cyan).
-Background: clean studio backdrop with soft gradient from deep navy to black.
+Main focus:
+– The dog from the reference photo lifts one front paw directly toward the camera.
+– Perspective: paw is very close to the camera, appearing large and detailed, while the rest of the body fades into the background with cinematic depth of field.
+– Underside of the paw sharp and anatomically correct:
+• Four toe pads + one large central pad, no extra claws or duplicates.
+• Fur edges visible around the pads, natural texture preserved.
 
-Material details:
-– Skin: semi-organic, subtle circuitry patterns under the surface, faintly glowing.
-– Eyes: holographic HUD reflections, calm and focused.
-– Accessories: no weapons, only minimal tech jewelry or implants.
+Cosmic effect:
+– Pads glow with golden-blue starlight veins, like energy flowing inside.
+– Inside the pads swirl faint galaxies, nebulae, and tiny constellations.
+– A faint cosmic aura in the shape of a pawprint radiates outward, softly transparent.
 
-Look & Feel: calm, intelligent, slightly mysterious – not aggressive.</pre>
+Energy & transformation:
+– From the glowing paw rise trails of energy:
+• Some turn into glowing butterflies fluttering around the paw.
+• Others burst into sparks, fading into stars that scatter across the night sky.
+– Subtle reflection of cosmic light in the dog’s fur around the paw.
+
+Background (epic but secondary):
+– A vast night sky with swirling auroras and faint constellations.
+– Mystical forest silhouettes at the bottom, stones with faint glowing cracks.
+– Hidden tiny animals (a squirrel or bird) watching in awe from the background.
+– Entire background softly blurred, so the paw remains the dominant sharp element.
+
+Lighting & style:
+– Paw is the absolute focal point: brightest, sharpest detail.
+– Golden glow from the pads contrasts with cool bluish shimmer radiating outward.
+– Atmosphere: mythical, epic, intimate – as if the paw itself is the gateway to the universe.
+
+Constraints:
+– Paw must remain realistic and anatomically correct (4 toe pads, 1 main pad).
+– Only one paw lifted, no duplicates.
+– Background supports but never distracts.</pre>
           </div>
         </section>
       </article>
@@ -731,7 +767,7 @@ Look & Feel: calm, intelligent, slightly mysterious – not aggressive.</pre>
           <span>·</span>
           <a href="../privacy.html">Privacy</a>
         </div>
-        <div>current build: <span id="buildVersion" class="build-highlight">v0.1.portraits</span> – portraits &amp; characters</div>
+        <div>current build: <span id="buildVersion" class="build-highlight">v0.1.petverse</span></div>
       </footer>
     </section>
   </main>
@@ -774,11 +810,11 @@ Look & Feel: calm, intelligent, slightly mysterious – not aggressive.</pre>
     const buildVersionEl = document.getElementById("buildVersion");
     buildVersionEl.addEventListener("click", () => {
       const versions = [
-        "v0.1.portraits",
-        "v0.2.portraits",
-        "v0.5.portraits",
-        "v0.9.portraits",
-        "v∞.portraits"
+        "v0.1.petverse",
+        "v0.2.petverse",
+        "v0.5.petverse",
+        "v0.9.petverse",
+        "v∞.petverse"
       ];
       let i = 0;
       const int = setInterval(() => {
