@@ -105,7 +105,58 @@
       transition: transform 0.1s linear;
       z-index: 30;
     }
+/* --- Variants / Swipe Gallery (Card 8) --- */
+.art-image-frame.has-variants{ cursor: default; } /* kein zoom-in */
+.art-main.swipe-target{
+  cursor: grab;
+  touch-action: pan-y; /* vertikales Scrollen bleibt */
+}
 
+.variants-row{
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.variants-row::-webkit-scrollbar{ height: 6px; }
+.variants-row::-webkit-scrollbar-thumb{
+  background: rgba(148,163,184,0.55);
+  border-radius: 999px;
+}
+
+.variant-thumb{
+  flex: 0 0 auto;
+  width: 86px;
+  height: 64px;
+  border-radius: 14px;
+  border: 1px solid rgba(148,163,184,0.35);
+  overflow: hidden;
+  background: rgba(2,6,23,0.6);
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+}
+.variant-thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display:block;
+}
+.variant-thumb.active{
+  border-color: rgba(34,211,238,0.9);
+  box-shadow: 0 0 16px rgba(56,189,248,0.55);
+}
+
+.variant-hint{
+  margin-top: 10px;
+  font-size: 12px;
+  color: #9ca3af;
+  user-select: none;
+}
+    
     /* --- Skip-Link --- */
     .skip-link {
       position: absolute;
@@ -990,6 +1041,48 @@ Constraints:
           </div>
         </section>
       </article>
+      <!-- ART CARD 8 – Swipe Variants (sauber: Swipe + Thumbs, Lightbox nur per Tap aufs Bild) -->
+<article class="art-card" aria-label="Portraits &amp; Characters – Samurai Variants">
+  <div class="art-image-frame has-variants" data-full="../assets/visuals/portraits/samurai_a.png">
+    <div class="art-image-inner">
+      <img
+        id="pet8Hero"
+        src="../assets/visuals/portraits/samurai_a.png"
+        data-variants="../assets/visuals/portraits/samurai_a.png,../assets/visuals/portraits/samurai_b.png,../assets/visuals/portraits/samurai_c.png"
+        alt="Hund als Samurai – Varianten"
+        class="art-main swipe-target lightbox-target"
+        loading="lazy"
+      />
+    </div>
+  </div>
+
+  <div class="variant-hint">Swipe ↔ oder tippe eine Variante an</div>
+
+  <div class="variants-row" aria-label="Varianten-Auswahl">
+    <button class="variant-thumb active" type="button" data-src="../assets/visuals/portraits/samurai_a.png" aria-label="Variante A">
+      <img src="../assets/visuals/portraits/samurai_a.png" alt="">
+    </button>
+    <button class="variant-thumb" type="button" data-src="../assets/visuals/portraits/samurai_b.png" aria-label="Variante B">
+      <img src="../assets/visuals/portraits/samurai_b.png" alt="">
+    </button>
+    <button class="variant-thumb" type="button" data-src="../assets/visuals/portraits/samurai_c.png" aria-label="Variante C">
+      <img src="../assets/visuals/portraits/samurai_c.png" alt="">
+    </button>
+  </div>
+
+  <section class="prompt-card">
+    <button class="prompt-toggle" type="button" aria-expanded="false">
+      <span class="prompt-toggle-icon">🧾</span>
+      <span>Prompt</span>
+      <span class="prompt-toggle-arrow">▾</span>
+    </button>
+
+    <div class="prompt-body">
+      <button class="prompt-copy-inside" type="button">Copy</button>
+      <pre class="prompt-code">[DEIN PROMPT HIER …]</pre>
+    </div>
+  </section>
+</article>
       <!-- FOOTER -->
       <footer>
         <div>© PromptRebel | CC BY-NC-SA 4.0</div>
@@ -1117,6 +1210,122 @@ Constraints:
     });
 
     lightboxClose.addEventListener("click", closeLightbox);
+
+    // --- Lightbox: zusätzliches Öffnen über .lightbox-target (für Card 8) ---
+document.querySelectorAll(".lightbox-target").forEach((img) => {
+  img.addEventListener("click", (e) => {
+    // falls ein Swipe gerade stattgefunden hat (siehe Swipe-Code unten), wird gekillt
+    if (img.dataset.blockClick === "1") return;
+
+    const frame = img.closest(".art-card")?.querySelector(".art-image-frame");
+    const fullSrc = frame?.dataset.full || img.src;
+    const alt = img.alt || "";
+
+    lightboxImg.src = fullSrc;
+    lightboxImg.alt = alt;
+    openLightbox();
+  });
+});
+    
+    // --- Swipe Variants (für alle Bilder mit data-variants) ---
+(function(){
+  function initSwipeVariants(heroImg){
+    const variants = (heroImg.dataset.variants || "")
+      .split(",").map(s => s.trim()).filter(Boolean);
+    if(variants.length < 2) return;
+
+    let index = Math.max(0, variants.indexOf(heroImg.getAttribute("src")));
+    const card = heroImg.closest(".art-card");
+    const thumbs = card ? Array.from(card.querySelectorAll(".variant-thumb")) : [];
+
+    function setActiveThumb(src){
+      thumbs.forEach(btn => btn.classList.toggle("active", btn.dataset.src === src));
+    }
+
+    function show(i){
+      index = (i + variants.length) % variants.length;
+      const src = variants[index];
+      heroImg.src = src;
+
+      // Frame dataset.full synchron halten (für Lightbox)
+      const frame = heroImg.closest(".art-image-frame");
+      if(frame) frame.dataset.full = src;
+
+      setActiveThumb(src);
+    }
+
+    // Thumbnails click (ohne Lightbox)
+    thumbs.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const src = btn.dataset.src;
+        const i = variants.indexOf(src);
+        if(i >= 0) show(i);
+      });
+    });
+
+    // Swipe (Touch)
+    let startX = 0, startY = 0, touching = false;
+    let swiped = false;
+
+    heroImg.addEventListener("touchstart", (e) => {
+      if(!e.touches || e.touches.length !== 1) return;
+      touching = true;
+      swiped = false;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive:true });
+
+    heroImg.addEventListener("touchmove", (e) => {
+      if(!touching || !e.touches || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+
+      // sobald klar horizontal: als Swipe markieren
+      if(Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy)) {
+        swiped = true;
+        // blockiere Click-Öffnen der Lightbox nach Swipe
+        heroImg.dataset.blockClick = "1";
+        setTimeout(() => { heroImg.dataset.blockClick = "0"; }, 350);
+      }
+    }, { passive:true });
+
+    heroImg.addEventListener("touchend", (e) => {
+      if(!touching) return;
+      touching = false;
+
+      const t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+      if(!t) return;
+
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+
+      if(!swiped) return;                 // war nur Tap → Lightbox darf öffnen
+      if(Math.abs(dx) < 40) return;       // zu kurz
+      if(Math.abs(dx) < Math.abs(dy)) return;
+
+      if(dx < 0) show(index + 1);
+      else show(index - 1);
+    }, { passive:true });
+
+    // Pfeiltasten (optional)
+    heroImg.setAttribute("tabindex", "0");
+    heroImg.addEventListener("keydown", (e) => {
+      if(e.key === "ArrowRight") show(index + 1);
+      if(e.key === "ArrowLeft") show(index - 1);
+    });
+
+    show(index); // initial sync
+  }
+
+  document.querySelectorAll("img[data-variants]").forEach(initSwipeVariants);
+
+  // extra safety: thumbs sollen nie nach oben "klicken"
+  document.querySelectorAll(".variant-thumb").forEach(btn=>{
+    btn.addEventListener("click", (e)=> e.stopPropagation());
+  });
+})();
 
     // Close on backdrop click
     lightbox.addEventListener("click", (e) => {
