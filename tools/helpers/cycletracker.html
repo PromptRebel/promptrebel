@@ -220,7 +220,7 @@
     }
     .cover{
       width:100%;
-      aspect-ratio: 1 / 1; /* Album-Style: square */
+      aspect-ratio: 1 / 1;
       object-fit: cover;
       object-position: center;
       display:block;
@@ -331,7 +331,7 @@
           </div>
 
           <p class="hero-text-main">
-            Offline Browser-Fahrradcomputer: Speed, Distanz, Zeit & Höhenmeter – ohne Account, ohne Cloud. Speichert Bikes & Fahrten lokal im Browser.
+            Offline Browser-Fahrradcomputer: Speed, Distanz, Zeit &amp; Höhenmeter – ohne Account, ohne Cloud. Speichert Bikes &amp; Fahrten lokal im Browser.
           </p>
           <p class="hero-text-sub">
             Fokus: schnell starten, sauber loggen, später problemlos als kleine Website oder PWA hostbar.
@@ -362,7 +362,7 @@
     <!-- DETAILS -->
     <section class="section" aria-labelledby="details-title">
       <h2 class="section-title" id="details-title">Was das Ding kann</h2>
-      <p class="section-subtitle">Kurz & konkret – und dann direkt bauen/benutzen.</p>
+      <p class="section-subtitle">Kurz &amp; konkret – und dann direkt bauen/benutzen.</p>
 
       <div class="card">
         <div style="display:grid;gap:8px;font-size:13px;color:#d1d5db;">
@@ -377,7 +377,7 @@
 
     <!-- CODE -->
     <section class="section" aria-labelledby="code-title">
-      <h2 class="section-title" id="code-title">Code (HTML – copy & run)</h2>
+      <h2 class="section-title" id="code-title">Code (HTML – copy &amp; run)</h2>
       <p class="section-subtitle">
         Voller Source-Code als Single-File.
       </p>
@@ -396,18 +396,9 @@
     </footer>
   </main>
 
-  <script>
-    // Scroll progress
-    window.addEventListener("scroll", () => {
-      const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - window.innerHeight;
-      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
-      document.documentElement.style.setProperty("--scroll", ratio.toString());
-    });
-
-    // Config
-    const HELPER_URL = "./cycletrackerfile.html"; // <- Pfad zur laufenden App
-    const HELPER_SOURCE_CODE = `<!DOCTYPE html>
+  <!-- Lösung B: Source-Code liegt NICHT im JS-String, sondern in einem hidden textarea -->
+  <textarea id="helperSource" style="display:none;">
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -782,7 +773,6 @@
   </div>
 </div>
 
-<!-- Einstellungen / Bikes -->
 <div id="settingsOverlay" class="overlay">
   <div class="panel">
     <h2>Fahrräder &amp; Einstellungen</h2>
@@ -857,7 +847,6 @@
   </div>
 </div>
 
-<!-- Fahrt speichern / Notiz -->
 <div id="saveOverlay" class="overlay">
   <div class="panel">
     <h2>Fahrt speichern</h2>
@@ -892,7 +881,6 @@
 (function () {
   "use strict";
 
-  // ----- DOM -----
   const speedValueEl = document.getElementById("speedValue");
   const speedSourceLabelEl = document.getElementById("speedSourceLabel");
   const distValueEl = document.getElementById("distValue");
@@ -931,7 +919,6 @@
   const btnSaveWithoutNote = document.getElementById("btnSaveWithoutNote");
   const btnSaveWithNote = document.getElementById("btnSaveWithNote");
 
-  // ----- State -----
   const STORAGE_KEY = "cycleTrackerMini3_bikes_v1";
   const SETTINGS_KEY = "cycleTrackerMini3_settings_v1";
 
@@ -946,22 +933,16 @@
   let lastUpdateTime = null;
   let lastPosition = null;
 
-  let currentRide = null; // {distanceM, ascentM, timeS, points:[]}
-  let ridePendingForSave = null; // wird in Dialog übernommen
+  let currentRide = null;
+  let ridePendingForSave = null;
 
-  // ----- Helpers -----
-  function formatKm(meters) {
-    return (meters / 1000).toFixed(2);
-  }
+  function formatKm(meters) { return (meters / 1000).toFixed(2); }
   function formatTime(seconds) {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
   }
-  function formatTimeHours(seconds) {
-    const h = seconds / 3600;
-    return h.toFixed(2);
-  }
+  function formatTimeHours(seconds) { return (seconds / 3600).toFixed(2); }
   function haversine(lat1, lon1, lat2, lon2) {
     const R = 6371000;
     const toRad = Math.PI / 180;
@@ -969,12 +950,9 @@
     const dLon = (lon2 - lon1) * toRad;
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * toRad) *
-        Math.cos(lat2 * toRad) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+      Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   }
 
   function setStatus(text, type) {
@@ -985,21 +963,18 @@
     else statusTextEl.classList.add("status-warn");
   }
 
-  // ----- Storage -----
   function loadSettings() {
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
-      if (!raw) return;
-      const s = JSON.parse(raw);
-      if (typeof s.autoPauseEnabled === "boolean") {
-        autoPauseEnabled = s.autoPauseEnabled;
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (typeof s.autoPauseEnabled === "boolean") autoPauseEnabled = s.autoPauseEnabled;
       }
-    } catch (e) { /* ignore */ }
+    } catch(e){}
     chkAutoPause.checked = autoPauseEnabled;
   }
   function saveSettings() {
-    const s = { autoPauseEnabled };
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ autoPauseEnabled }));
   }
 
   function loadBikes() {
@@ -1010,7 +985,7 @@
       if (!Array.isArray(parsed.bikes)) throw new Error("invalid");
       bikes = parsed.bikes;
       activeBikeId = parsed.activeBikeId || (bikes[0] && bikes[0].id) || null;
-    } catch (e) {
+    } catch(e){
       bikes = [];
       activeBikeId = null;
     }
@@ -1035,17 +1010,13 @@
       saveBikes();
     }
   }
-
   function saveBikes() {
-    const payload = { bikes, activeBikeId };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ bikes, activeBikeId }));
   }
-
   function getActiveBike() {
     return bikes.find(b => b.id === activeBikeId) || null;
   }
 
-  // ----- UI: Bikes & Statistik -----
   function refreshBikeSelect() {
     bikeSelectEl.innerHTML = "";
     bikes.forEach(b => {
@@ -1055,9 +1026,9 @@
       bikeSelectEl.appendChild(opt);
     });
     bikeSelectEl.value = activeBikeId;
+
     const active = getActiveBike();
-    activeBikeLabelEl.textContent =
-      "Aktives Fahrrad: " + (active ? (active.name || "(unbenannt)") : "–");
+    activeBikeLabelEl.textContent = "Aktives Fahrrad: " + (active ? (active.name || "(unbenannt)") : "–");
     if (active) {
       bikeNameEl.value = active.name || "";
       bikeBrandEl.value = active.brand || "";
@@ -1070,6 +1041,7 @@
     const bike = getActiveBike();
     if (!bike) return;
     const s = bike.stats;
+
     statTotalDistEl.textContent = formatKm(s.totalDistanceM) + " km";
     statTotalTimeEl.textContent = formatTimeHours(s.totalTimeS) + " h";
     statTotalAscentEl.textContent = s.totalAscentM.toFixed(0) + " m";
@@ -1093,21 +1065,13 @@
       const distKm = formatKm(r.distanceM);
       const timeStr = formatTime(r.timeS);
       const avg = (r.distanceM / 1000) / (r.timeS / 3600 || 1);
-      div.textContent =
-        date + " – " + distKm + " km, " + timeStr + ", Ø " +
-        avg.toFixed(1) + " km/h";
+      div.textContent = date + " – " + distKm + " km, " + timeStr + ", Ø " + avg.toFixed(1) + " km/h";
       ridesListEl.appendChild(div);
     });
   }
 
-  // ----- Tracking -----
   function resetCurrentRide() {
-    currentRide = {
-      distanceM: 0,
-      ascentM: 0,
-      timeS: 0,
-      lastAltitude: null
-    };
+    currentRide = { distanceM: 0, ascentM: 0, timeS: 0, lastAltitude: null };
     lastPosition = null;
     lastUpdateTime = null;
     speedValueEl.textContent = "0.0";
@@ -1126,19 +1090,14 @@
       timeValueEl.textContent = formatTime(currentRide.timeS);
     }, 1000);
   }
-
   function stopTimer() {
-    if (timerId) {
-      clearInterval(timerId);
-      timerId = null;
-    }
+    if (timerId) { clearInterval(timerId); timerId = null; }
   }
 
   function onGeoSuccess(pos) {
     const coords = pos.coords;
     const now = Date.now();
 
-    // Geschwindigkeit
     let speedKmh = 0;
     let source = "";
     if (typeof coords.speed === "number" && !isNaN(coords.speed)) {
@@ -1148,43 +1107,28 @@
 
     if (lastPosition) {
       const dt = (now - lastUpdateTime) / 1000;
-      const d = haversine(
-        lastPosition.latitude,
-        lastPosition.longitude,
-        coords.latitude,
-        coords.longitude
-      );
+      const d = haversine(lastPosition.latitude, lastPosition.longitude, coords.latitude, coords.longitude);
       if (dt > 0) {
-        const v = d / dt;
-        const vKmh = v * 3.6;
+        const vKmh = (d / dt) * 3.6;
         if (!speedKmh || vKmh < speedKmh - 3) {
           speedKmh = vKmh;
           source = "aus Distanz";
         }
       }
-
-      // Sprünge filtern
-      if (speedKmh > 60) {
-        // unrealistischer Sprung, ignorieren
-      } else if (currentRide && tracking) {
+      if (speedKmh <= 60 && currentRide && tracking) {
         currentRide.distanceM += d;
         distValueEl.textContent = formatKm(currentRide.distanceM);
       }
     }
 
-    // Höhenmeter
     if (currentRide && typeof coords.altitude === "number") {
       const alt = coords.altitude;
-      if (currentRide.lastAltitude == null) {
-        currentRide.lastAltitude = alt;
-      } else {
+      if (currentRide.lastAltitude == null) currentRide.lastAltitude = alt;
+      else {
         const diff = alt - currentRide.lastAltitude;
         if (diff > 1.5) {
-          currentRide.distanceM && (currentRide.ascentM = currentRide.ascentM || 0);
           currentRide.ascentM += diff;
-          ascentValueEl.textContent = Math.round(
-            currentRide.ascentM || 0
-          ).toString();
+          ascentValueEl.textContent = Math.round(currentRide.ascentM).toString();
         }
         currentRide.lastAltitude = alt;
       }
@@ -1200,21 +1144,12 @@
 
   function onGeoError(err) {
     console.warn("Geo error", err);
-    if (err.code === 1) {
-      setStatus(
-        "Standortzugriff verweigert. Bitte im Browser erlauben.",
-        "error"
-      );
-    } else {
-      setStatus("Standort nicht verfügbar.", "error");
-    }
+    if (err.code === 1) setStatus("Standortzugriff verweigert. Bitte im Browser erlauben.", "error");
+    else setStatus("Standort nicht verfügbar.", "error");
   }
 
   function startTracking() {
-    if (!navigator.geolocation) {
-      setStatus("Geolocation wird nicht unterstützt.", "error");
-      return;
-    }
+    if (!navigator.geolocation) { setStatus("Geolocation wird nicht unterstützt.", "error"); return; }
     if (!currentRide) resetCurrentRide();
 
     tracking = true;
@@ -1223,9 +1158,7 @@
     btnSaveRide.disabled = true;
     setStatus("Läuft. Gute Fahrt!", "ok");
 
-    if (watchId != null) {
-      navigator.geolocation.clearWatch(watchId);
-    }
+    if (watchId != null) navigator.geolocation.clearWatch(watchId);
     lastPosition = null;
     lastUpdateTime = null;
 
@@ -1242,29 +1175,19 @@
     tracking = false;
     btnStart.disabled = false;
     btnPause.disabled = true;
-    if (auto) {
-      setStatus(
-        "Automatisch pausiert (App im Hintergrund). Zum Fortsetzen „Start“ drücken.",
-        "warn"
-      );
-    } else {
-      setStatus("Pausiert. Zum Fortsetzen „Start“ drücken.", "warn");
-    }
-    // Fahrt ist noch aktiv -> Speichern möglich
-    if (currentRide && currentRide.distanceM > 0) {
-      btnSaveRide.disabled = false;
-    }
+    setStatus(
+      auto
+        ? "Automatisch pausiert (App im Hintergrund). Zum Fortsetzen „Start“ drücken."
+        : "Pausiert. Zum Fortsetzen „Start“ drücken.",
+      "warn"
+    );
+    if (currentRide && currentRide.distanceM > 0) btnSaveRide.disabled = false;
   }
 
   function hardReset() {
-    if (tracking && !confirm("Es läuft noch eine Fahrt. Wirklich alles zurücksetzen?")) {
-      return;
-    }
+    if (tracking && !confirm("Es läuft noch eine Fahrt. Wirklich alles zurücksetzen?")) return;
     tracking = false;
-    if (watchId != null) {
-      navigator.geolocation.clearWatch(watchId);
-      watchId = null;
-    }
+    if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
     stopTimer();
     resetCurrentRide();
     btnStart.disabled = false;
@@ -1273,28 +1196,18 @@
     setStatus("Bereit. Standortzugriff muss erlaubt sein.", "warn");
   }
 
-  // ----- Fahrt speichern / Notiz -----
   function openSaveDialog() {
     if (!currentRide || currentRide.distanceM <= 0) {
-      // alert("Es gibt keine Fahrtdaten zum Speichern. Bitte zuerst fahren.");
       setStatus("Es gibt keine Fahrtdaten zum Speichern. Bitte zuerst fahren.", "error");
       return;
     }
-    // Kopie in pending-Objekt
-    ridePendingForSave = {
-      distanceM: currentRide.distanceM,
-      ascentM: currentRide.ascentM || 0,
-      timeS: currentRide.timeS
-    };
+    ridePendingForSave = { distanceM: currentRide.distanceM, ascentM: currentRide.ascentM || 0, timeS: currentRide.timeS };
     noteTextEl.value = "";
     surfaceTextEl.value = "";
     ratingSelectEl.value = "";
     saveOverlay.classList.add("show");
   }
-
-  function closeSaveDialog() {
-    saveOverlay.classList.remove("show");
-  }
+  function closeSaveDialog() { saveOverlay.classList.remove("show"); }
 
   function persistRide(extra) {
     const bike = getActiveBike();
@@ -1317,6 +1230,7 @@
     stats.totalTimeS += r.timeS;
     stats.rideCount += 1;
     if (r.distanceM > stats.longestRideM) stats.longestRideM = r.distanceM;
+
     const avgKmh = (r.distanceM / 1000) / (r.timeS / 3600 || 1);
     if (avgKmh > stats.bestAvgSpeedKmh) stats.bestAvgSpeedKmh = avgKmh;
 
@@ -1329,29 +1243,12 @@
     setStatus("Fahrt gespeichert.", "ok");
   }
 
-  // ----- Events -----
-  btnStart.addEventListener("click", () => {
-    startTracking();
-  });
-
-  btnPause.addEventListener("click", () => {
-    pauseTracking(false);
-  });
-
-  btnReset.addEventListener("click", () => {
-    // Custom modal instead of confirm()
-    const result = window.confirm("Es läuft noch eine Fahrt. Wirklich alles zurücksetzen?");
-    if (tracking && !result) {
-      return;
-    }
-    hardReset();
-  });
+  btnStart.addEventListener("click", startTracking);
+  btnPause.addEventListener("click", () => pauseTracking(false));
+  btnReset.addEventListener("click", hardReset);
 
   btnSaveRide.addEventListener("click", () => {
-    // Speichern nur, wenn gerade NICHT getrackt wird
-    if (tracking) {
-      pauseTracking(false);
-    }
+    if (tracking) pauseTracking(false);
     openSaveDialog();
   });
 
@@ -1359,7 +1256,6 @@
     settingsOverlay.classList.add("show");
     refreshStatsUI();
   });
-
   btnCloseSettings.addEventListener("click", () => {
     settingsOverlay.classList.remove("show");
   });
@@ -1372,7 +1268,6 @@
   bikeSelectEl.addEventListener("change", () => {
     const newId = bikeSelectEl.value;
     if (tracking) {
-      // Custom modal instead of alert()
       setStatus("Bitte zuerst die aktuelle Fahrt stoppen/pausieren.", "error");
       bikeSelectEl.value = activeBikeId;
       return;
@@ -1393,38 +1288,28 @@
     setStatus("Bike-Daten gespeichert.", "ok");
   });
 
-  // Save dialog buttons
   btnSaveWithoutNote.addEventListener("click", () => {
-    if (!ridePendingForSave) {
-      closeSaveDialog();
-      return;
-    }
+    if (!ridePendingForSave) { closeSaveDialog(); return; }
     persistRide({ note: "", surface: "", rating: "" });
     closeSaveDialog();
     hardReset();
   });
 
   btnSaveWithNote.addEventListener("click", () => {
-    if (!ridePendingForSave) {
-      closeSaveDialog();
-      return;
-    }
-    const note = noteTextEl.value.trim();
-    const surface = surfaceTextEl.value.trim();
-    const rating = ratingSelectEl.value;
-    persistRide({ note, surface, rating });
+    if (!ridePendingForSave) { closeSaveDialog(); return; }
+    persistRide({
+      note: noteTextEl.value.trim(),
+      surface: surfaceTextEl.value.trim(),
+      rating: ratingSelectEl.value
+    });
     closeSaveDialog();
     hardReset();
   });
 
-  // Auto-Pause bei Hintergrund
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden && tracking && autoPauseEnabled) {
-      pauseTracking(true);
-    }
+    if (document.hidden && tracking && autoPauseEnabled) pauseTracking(true);
   });
 
-  // Init-Funktion, die alles startet
   function init() {
     loadSettings();
     loadBikes();
@@ -1433,16 +1318,29 @@
     setStatus("Bereit. Standortzugriff muss erlaubt sein.", "warn");
   }
 
-  // Warten, bis das DOM vollständig geladen ist
-  document.addEventListener("DOMContentLoaded", init);
+  init(); // Script steht am Ende -> DOM ist da
 })();
 </script>
 </body>
 </html>
+  </textarea>
 
-`;
+  <script>
+    // Scroll progress
+    window.addEventListener("scroll", () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+      document.documentElement.style.setProperty("--scroll", ratio.toString());
+    });
 
-    // Render (prevents HTML parsing)
+    // Config: Passe nur diese URL an (Pfad zur laufenden App-Datei)
+    const HELPER_URL = "./cycletrackerfile.html"; // z.B. "./app.html" oder "../helpers/cycletracker/app.html"
+
+    // Lösung B: Source-Code aus textarea lesen (keine Script-Parsing-Probleme mehr!)
+    const HELPER_SOURCE_CODE = document.getElementById("helperSource").value.trim();
+
+    // Render in Codebox
     document.getElementById("codeBox").textContent = HELPER_SOURCE_CODE;
 
     async function copyToClipboard(text) {
@@ -1480,10 +1378,10 @@
     // Copy code
     const btnCopyCode = document.getElementById("btnCopyCode");
     btnCopyCode.addEventListener("click", async () => {
-      try{
+      try {
         await copyToClipboard(HELPER_SOURCE_CODE);
         flashButton(btnCopyCode);
-      }catch(e){
+      } catch (e) {
         console.error(e);
         flashButton(btnCopyCode, "⚠️ Copy failed");
       }
