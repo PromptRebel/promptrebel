@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>CycleTracker Mini 3.4</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #18243a 0, #05070c 55%, #020308 100%);
+      color: #f8f9fb;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      padding: 16px 16px 24px;
+      border-radius: 24px;
+      background: rgba(3, 7, 18, 0.9);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(12px);
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 6px;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    .active-bike {
+      text-align: center;
+      font-size: 13px;
+      color: #cbd5f5;
+      margin-bottom: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #1f2937 0, #020617 65%);
+      border-radius: 18px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.7);
+    }
+
+    .card-label {
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+
+    .card-value {
+      font-size: 30px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .card-unit {
+      font-size: 13px;
+      color: #e5e7eb;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    .controls-main {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .controls-main button {
+      flex: 1;
+      height: 46px;
+      border-radius: 999px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #34d399, #0ea5e9);
+      color: #031016;
+    }
+
+    .btn-pause {
+      background: #4b5563;
+      color: #e5e7eb;
+    }
+
+    .btn-save {
+      background: #10b981;
+      color: #022c22;
+      height: 40px;
+      border-radius: 999px;
+      border: none;
+      padding: 0 18px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .btn-reset {
+      background: linear-gradient(135deg, #fb7185, #f97316);
+      color: #111827;
+      height: 40px;
+      border-radius: 999px;
+      border: none;
+      padding: 0 18px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .controls-secondary {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(.99);
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+
+    .status-text {
+      text-align: center;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .status-ok { color: #22c55e; }
+    .status-warn { color: #facc15; }
+    .status-error { color: #f97373; }
+
+    .footnote {
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+
+    .settings-link {
+      margin-top: 10px;
+      font-size: 13px;
+      text-align: center;
+      color: #38bdf8;
+    }
+    .settings-link button {
+      background: none;
+      border: none;
+      color: inherit;
+      font: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .settings-link span.icon {
+      font-size: 15px;
+    }
+
+    /* Modal Overlay generisch */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      z-index: 40;
+    }
+    .overlay.show { display: flex; }
+
+    .panel {
+      background: #020617;
+      border-radius: 22px;
+      padding: 18px 18px 16px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.8);
+    }
+    .panel h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .panel p {
+      font-size: 13px;
+      color: #d1d5db;
+      margin-bottom: 6px;
+    }
+    .panel small {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .panel-section {
+      margin-top: 10px;
+      margin-bottom: 6px;
+      border-top: 1px solid #111827;
+      padding-top: 8px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 3px;
+      color: #e5e7eb;
+    }
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #111827;
+      background: #020617;
+      padding: 8px 9px;
+      color: #e5e7eb;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    .panel-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-small {
+      border-radius: 999px;
+      border: none;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .btn-ghost {
+      background: #111827;
+      color: #e5e7eb;
+    }
+    .btn-primary {
+      background: #0ea5e9;
+      color: #022c22;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .stats-box {
+      background: #020617;
+      border-radius: 12px;
+      padding: 6px 8px;
+      border: 1px solid #0b1120;
+    }
+    .stats-label {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 2px;
+    }
+    .stats-value {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .rides-list {
+      max-height: 140px;
+      overflow-y: auto;
+      margin-top: 4px;
+      border-radius: 10px;
+      border: 1px solid #0b1120;
+      padding: 6px 8px;
+      background: #020617;
+      font-size: 12px;
+    }
+    .ride-item {
+      padding: 2px 0;
+      border-bottom: 1px solid #020617;
+    }
+    .ride-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="title">CycleTracker Mini 3.4</div>
+  <div class="subtitle">Browser-Fahrradcomputer – komplett offline im Browser</div>
+  <div id="activeBikeLabel" class="active-bike">Aktives Fahrrad: –</div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-label">Geschwindigkeit</div>
+      <div id="speedValue" class="card-value">0.0</div>
+      <div class="card-unit">km/h</div>
+      <div class="card-sub" id="speedSourceLabel">–</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Distanz</div>
+      <div id="distValue" class="card-value">0.00</div>
+      <div class="card-unit">km</div>
+      <div class="card-sub" id="distSub">aktuelle Fahrt</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Höhenmeter ↑</div>
+      <div id="ascentValue" class="card-value">0</div>
+      <div class="card-unit">nur positive Anstiege</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Zeit</div>
+      <div id="timeValue" class="card-value">00:00</div>
+      <div class="card-unit">Laufzeit dieser Fahrt</div>
+    </div>
+  </div>
+
+  <div class="controls-main">
+    <button id="btnStart" class="btn-start">Start</button>
+    <button id="btnPause" class="btn-pause" disabled>Pause</button>
+  </div>
+
+  <div class="controls-secondary">
+    <button id="btnSaveRide" class="btn-save" disabled>Fahrt speichern</button>
+    <button id="btnReset" class="btn-reset">Reset</button>
+  </div>
+
+  <div id="statusText" class="status-text status-warn">
+    Bereit. Standortzugriff muss erlaubt sein.
+  </div>
+
+  <div class="footnote">
+    Hinweis: Funktioniert nur, wenn dein Browser Standortzugriff erlaubt.<br/>
+    Für einen echten Fahrradcomputer später am besten als kleine Website oder PWA hosten.
+  </div>
+
+  <div class="settings-link">
+    <button id="btnOpenSettings">
+      <span class="icon">⚙️</span>
+      <span>Einstellungen / Bikes &amp; Statistik</span>
+    </button>
+  </div>
+</div>
+
+<!-- Einstellungen / Bikes -->
+<div id="settingsOverlay" class="overlay">
+  <div class="panel">
+    <h2>Fahrräder &amp; Einstellungen</h2>
+    <p>Verwalte deine Bikes, Statistik und Auto-Pause.</p>
+
+    <div class="panel-section">
+      <label for="bikeSelect">Aktives Fahrrad auswählen</label>
+      <select id="bikeSelect"></select>
+      <small>Beim Wechsel darf keine Fahrt laufen.</small>
+    </div>
+
+    <div class="panel-section">
+      <p style="margin-bottom:4px;"><strong>Bike anlegen / bearbeiten</strong></p>
+      <label for="bikeName">Name</label>
+      <input type="text" id="bikeName" placeholder="z. B. Alltagsrad" />
+      <label for="bikeBrand">Hersteller (optional)</label>
+      <input type="text" id="bikeBrand" placeholder="z. B. Cube, Canyon…" />
+      <label for="bikeType">Typ / Art (frei)</label>
+      <input type="text" id="bikeType" placeholder="z. B. Citybike, MTB, Gravel…" />
+      <div class="panel-buttons" style="margin-top:4px; justify-content:flex-start;">
+        <button id="btnSaveBikeMeta" class="btn-small btn-primary">Bike speichern</button>
+      </div>
+      <small>Die Daten werden lokal im Browser (localStorage) gespeichert.</small>
+    </div>
+
+    <div class="panel-section">
+      <p style="margin-bottom:4px;"><strong>Statistik (aktuelles Bike)</strong></p>
+      <div class="stats-grid">
+        <div class="stats-box">
+          <div class="stats-label">Gesamt-Distanz</div>
+          <div id="statTotalDist" class="stats-value">0.00 km</div>
+        </div>
+        <div class="stats-box">
+          <div class="stats-label">Gesamt-Zeit</div>
+          <div id="statTotalTime" class="stats-value">00:00 h</div>
+        </div>
+        <div class="stats-box">
+          <div class="stats-label">Gesamt-Höhenmeter</div>
+          <div id="statTotalAscent" class="stats-value">0 m</div>
+        </div>
+        <div class="stats-box">
+          <div class="stats-label">Anzahl Fahrten</div>
+          <div id="statRideCount" class="stats-value">0</div>
+        </div>
+        <div class="stats-box">
+          <div class="stats-label">Längste Fahrt</div>
+          <div id="statLongestRide" class="stats-value">0.00 km</div>
+        </div>
+        <div class="stats-box">
+          <div class="stats-label">Beste Ø-Geschwindigkeit</div>
+          <div id="statBestAvg" class="stats-value">0.0 km/h</div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;font-size:12px;color:#9ca3af;">Letzte Fahrten</div>
+      <div id="ridesList" class="rides-list">
+        <div style="color:#6b7280;">Noch keine Fahrten gespeichert.</div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <p style="margin-bottom:4px;"><strong>Verhalten</strong></p>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;">
+        <input type="checkbox" id="chkAutoPause" style="width:auto;"/>
+        Auto-Pause, wenn App in den Hintergrund geht (empfohlen)
+      </label>
+    </div>
+
+    <div class="panel-buttons">
+      <button id="btnCloseSettings" class="btn-small btn-ghost">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Fahrt speichern / Notiz -->
+<div id="saveOverlay" class="overlay">
+  <div class="panel">
+    <h2>Fahrt speichern</h2>
+    <p>Optional kannst du dieser Fahrt eine Notiz geben.</p>
+
+    <label for="noteText">Notiz / Stimmung</label>
+    <textarea id="noteText"
+      placeholder="z. B. Feierabendrunde, leicht windig, hat Spaß gemacht."></textarea>
+
+    <label for="surfaceText">Untergrund</label>
+    <input id="surfaceText" type="text"
+      placeholder="z. B. Asphalt, Schotter, Waldweg" />
+
+    <label for="ratingSelect">Bewertung</label>
+    <select id="ratingSelect">
+      <option value="">Keine Bewertung</option>
+      <option value="1">★☆☆☆☆ – zäh</option>
+      <option value="2">★★☆☆☆ – ok</option>
+      <option value="3">★★★☆☆ – solide</option>
+      <option value="4">★★★★☆ – gut</option>
+      <option value="5">★★★★★ – mega!</option>
+    </select>
+
+    <div class="panel-buttons">
+      <button id="btnSaveWithoutNote" class="btn-small btn-ghost">Ohne Notiz speichern</button>
+      <button id="btnSaveWithNote" class="btn-small btn-primary">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ----- DOM -----
+  const speedValueEl = document.getElementById("speedValue");
+  const speedSourceLabelEl = document.getElementById("speedSourceLabel");
+  const distValueEl = document.getElementById("distValue");
+  const ascentValueEl = document.getElementById("ascentValue");
+  const timeValueEl = document.getElementById("timeValue");
+  const statusTextEl = document.getElementById("statusText");
+  const activeBikeLabelEl = document.getElementById("activeBikeLabel");
+
+  const btnStart = document.getElementById("btnStart");
+  const btnPause = document.getElementById("btnPause");
+  const btnReset = document.getElementById("btnReset");
+  const btnSaveRide = document.getElementById("btnSaveRide");
+
+  const settingsOverlay = document.getElementById("settingsOverlay");
+  const btnOpenSettings = document.getElementById("btnOpenSettings");
+  const btnCloseSettings = document.getElementById("btnCloseSettings");
+  const bikeSelectEl = document.getElementById("bikeSelect");
+  const bikeNameEl = document.getElementById("bikeName");
+  const bikeBrandEl = document.getElementById("bikeBrand");
+  const bikeTypeEl = document.getElementById("bikeType");
+  const btnSaveBikeMeta = document.getElementById("btnSaveBikeMeta");
+  const chkAutoPause = document.getElementById("chkAutoPause");
+
+  const statTotalDistEl = document.getElementById("statTotalDist");
+  const statTotalTimeEl = document.getElementById("statTotalTime");
+  const statTotalAscentEl = document.getElementById("statTotalAscent");
+  const statRideCountEl = document.getElementById("statRideCount");
+  const statLongestRideEl = document.getElementById("statLongestRide");
+  const statBestAvgEl = document.getElementById("statBestAvg");
+  const ridesListEl = document.getElementById("ridesList");
+
+  const saveOverlay = document.getElementById("saveOverlay");
+  const noteTextEl = document.getElementById("noteText");
+  const surfaceTextEl = document.getElementById("surfaceText");
+  const ratingSelectEl = document.getElementById("ratingSelect");
+  const btnSaveWithoutNote = document.getElementById("btnSaveWithoutNote");
+  const btnSaveWithNote = document.getElementById("btnSaveWithNote");
+
+  // ----- State -----
+  const STORAGE_KEY = "cycleTrackerMini3_bikes_v1";
+  const SETTINGS_KEY = "cycleTrackerMini3_settings_v1";
+
+  let bikes = [];
+  let activeBikeId = null;
+
+  let watchId = null;
+  let tracking = false;
+  let autoPauseEnabled = true;
+
+  let timerId = null;
+  let lastUpdateTime = null;
+  let lastPosition = null;
+
+  let currentRide = null; // {distanceM, ascentM, timeS, points:[]}
+  let ridePendingForSave = null; // wird in Dialog übernommen
+
+  // ----- Helpers -----
+  function formatKm(meters) {
+    return (meters / 1000).toFixed(2);
+  }
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+  function formatTimeHours(seconds) {
+    const h = seconds / 3600;
+    return h.toFixed(2);
+  }
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const toRad = Math.PI / 180;
+    const dLat = (lat2 - lat1) * toRad;
+    const dLon = (lon2 - lon1) * toRad;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * toRad) *
+        Math.cos(lat2 * toRad) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function setStatus(text, type) {
+    statusTextEl.textContent = text;
+    statusTextEl.classList.remove("status-ok", "status-warn", "status-error");
+    if (type === "ok") statusTextEl.classList.add("status-ok");
+    else if (type === "error") statusTextEl.classList.add("status-error");
+    else statusTextEl.classList.add("status-warn");
+  }
+
+  // ----- Storage -----
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (typeof s.autoPauseEnabled === "boolean") {
+        autoPauseEnabled = s.autoPauseEnabled;
+      }
+    } catch (e) { /* ignore */ }
+    chkAutoPause.checked = autoPauseEnabled;
+  }
+  function saveSettings() {
+    const s = { autoPauseEnabled };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  }
+
+  function loadBikes() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) throw new Error("no data");
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed.bikes)) throw new Error("invalid");
+      bikes = parsed.bikes;
+      activeBikeId = parsed.activeBikeId || (bikes[0] && bikes[0].id) || null;
+    } catch (e) {
+      bikes = [];
+      activeBikeId = null;
+    }
+    if (!bikes.length) {
+      const id = "bike-" + Date.now();
+      bikes.push({
+        id,
+        name: "Mein erstes Fahrrad",
+        brand: "",
+        type: "",
+        stats: {
+          totalDistanceM: 0,
+          totalAscentM: 0,
+          totalTimeS: 0,
+          rideCount: 0,
+          longestRideM: 0,
+          bestAvgSpeedKmh: 0
+        },
+        rides: []
+      });
+      activeBikeId = id;
+      saveBikes();
+    }
+  }
+
+  function saveBikes() {
+    const payload = { bikes, activeBikeId };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }
+
+  function getActiveBike() {
+    return bikes.find(b => b.id === activeBikeId) || null;
+  }
+
+  // ----- UI: Bikes & Statistik -----
+  function refreshBikeSelect() {
+    bikeSelectEl.innerHTML = "";
+    bikes.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b.id;
+      opt.textContent = b.name || "(unbenannt)";
+      bikeSelectEl.appendChild(opt);
+    });
+    bikeSelectEl.value = activeBikeId;
+    const active = getActiveBike();
+    activeBikeLabelEl.textContent =
+      "Aktives Fahrrad: " + (active ? (active.name || "(unbenannt)") : "–");
+    if (active) {
+      bikeNameEl.value = active.name || "";
+      bikeBrandEl.value = active.brand || "";
+      bikeTypeEl.value = active.type || "";
+    }
+    refreshStatsUI();
+  }
+
+  function refreshStatsUI() {
+    const bike = getActiveBike();
+    if (!bike) return;
+    const s = bike.stats;
+    statTotalDistEl.textContent = formatKm(s.totalDistanceM) + " km";
+    statTotalTimeEl.textContent = formatTimeHours(s.totalTimeS) + " h";
+    statTotalAscentEl.textContent = s.totalAscentM.toFixed(0) + " m";
+    statRideCountEl.textContent = String(s.rideCount);
+    statLongestRideEl.textContent = formatKm(s.longestRideM) + " km";
+    statBestAvgEl.textContent = s.bestAvgSpeedKmh.toFixed(1) + " km/h";
+
+    ridesListEl.innerHTML = "";
+    if (!bike.rides.length) {
+      const div = document.createElement("div");
+      div.style.color = "#6b7280";
+      div.textContent = "Noch keine Fahrten gespeichert.";
+      ridesListEl.appendChild(div);
+      return;
+    }
+    const last = bike.rides.slice(-10).reverse();
+    last.forEach(r => {
+      const div = document.createElement("div");
+      div.className = "ride-item";
+      const date = new Date(r.dateIso).toLocaleString();
+      const distKm = formatKm(r.distanceM);
+      const timeStr = formatTime(r.timeS);
+      const avg = (r.distanceM / 1000) / (r.timeS / 3600 || 1);
+      div.textContent =
+        date + " – " + distKm + " km, " + timeStr + ", Ø " +
+        avg.toFixed(1) + " km/h";
+      ridesListEl.appendChild(div);
+    });
+  }
+
+  // ----- Tracking -----
+  function resetCurrentRide() {
+    currentRide = {
+      distanceM: 0,
+      ascentM: 0,
+      timeS: 0,
+      lastAltitude: null
+    };
+    lastPosition = null;
+    lastUpdateTime = null;
+    speedValueEl.textContent = "0.0";
+    distValueEl.textContent = "0.00";
+    ascentValueEl.textContent = "0";
+    timeValueEl.textContent = "00:00";
+    speedSourceLabelEl.textContent = "–";
+    btnSaveRide.disabled = true;
+  }
+
+  function startTimer() {
+    if (timerId) return;
+    timerId = setInterval(() => {
+      if (!tracking || !currentRide) return;
+      currentRide.timeS += 1;
+      timeValueEl.textContent = formatTime(currentRide.timeS);
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function onGeoSuccess(pos) {
+    const coords = pos.coords;
+    const now = Date.now();
+
+    // Geschwindigkeit
+    let speedKmh = 0;
+    let source = "";
+    if (typeof coords.speed === "number" && !isNaN(coords.speed)) {
+      speedKmh = coords.speed * 3.6;
+      source = "GPS-Speed";
+    }
+
+    if (lastPosition) {
+      const dt = (now - lastUpdateTime) / 1000;
+      const d = haversine(
+        lastPosition.latitude,
+        lastPosition.longitude,
+        coords.latitude,
+        coords.longitude
+      );
+      if (dt > 0) {
+        const v = d / dt;
+        const vKmh = v * 3.6;
+        if (!speedKmh || vKmh < speedKmh - 3) {
+          speedKmh = vKmh;
+          source = "aus Distanz";
+        }
+      }
+
+      // Sprünge filtern
+      if (speedKmh > 60) {
+        // unrealistischer Sprung, ignorieren
+      } else if (currentRide && tracking) {
+        currentRide.distanceM += d;
+        distValueEl.textContent = formatKm(currentRide.distanceM);
+      }
+    }
+
+    // Höhenmeter
+    if (currentRide && typeof coords.altitude === "number") {
+      const alt = coords.altitude;
+      if (currentRide.lastAltitude == null) {
+        currentRide.lastAltitude = alt;
+      } else {
+        const diff = alt - currentRide.lastAltitude;
+        if (diff > 1.5) {
+          currentRide.distanceM && (currentRide.ascentM = currentRide.ascentM || 0);
+          currentRide.ascentM += diff;
+          ascentValueEl.textContent = Math.round(
+            currentRide.ascentM || 0
+          ).toString();
+        }
+        currentRide.lastAltitude = alt;
+      }
+    }
+
+    if (speedKmh < 0.5) speedKmh = 0;
+    speedValueEl.textContent = speedKmh.toFixed(1);
+    speedSourceLabelEl.textContent = source || "–";
+
+    lastPosition = coords;
+    lastUpdateTime = now;
+  }
+
+  function onGeoError(err) {
+    console.warn("Geo error", err);
+    if (err.code === 1) {
+      setStatus(
+        "Standortzugriff verweigert. Bitte im Browser erlauben.",
+        "error"
+      );
+    } else {
+      setStatus("Standort nicht verfügbar.", "error");
+    }
+  }
+
+  function startTracking() {
+    if (!navigator.geolocation) {
+      setStatus("Geolocation wird nicht unterstützt.", "error");
+      return;
+    }
+    if (!currentRide) resetCurrentRide();
+
+    tracking = true;
+    btnStart.disabled = true;
+    btnPause.disabled = false;
+    btnSaveRide.disabled = true;
+    setStatus("Läuft. Gute Fahrt!", "ok");
+
+    if (watchId != null) {
+      navigator.geolocation.clearWatch(watchId);
+    }
+    lastPosition = null;
+    lastUpdateTime = null;
+
+    watchId = navigator.geolocation.watchPosition(onGeoSuccess, onGeoError, {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 10000
+    });
+
+    startTimer();
+  }
+
+  function pauseTracking(auto = false) {
+    tracking = false;
+    btnStart.disabled = false;
+    btnPause.disabled = true;
+    if (auto) {
+      setStatus(
+        "Automatisch pausiert (App im Hintergrund). Zum Fortsetzen „Start“ drücken.",
+        "warn"
+      );
+    } else {
+      setStatus("Pausiert. Zum Fortsetzen „Start“ drücken.", "warn");
+    }
+    // Fahrt ist noch aktiv -> Speichern möglich
+    if (currentRide && currentRide.distanceM > 0) {
+      btnSaveRide.disabled = false;
+    }
+  }
+
+  function hardReset() {
+    if (tracking && !confirm("Es läuft noch eine Fahrt. Wirklich alles zurücksetzen?")) {
+      return;
+    }
+    tracking = false;
+    if (watchId != null) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    }
+    stopTimer();
+    resetCurrentRide();
+    btnStart.disabled = false;
+    btnPause.disabled = true;
+    btnSaveRide.disabled = true;
+    setStatus("Bereit. Standortzugriff muss erlaubt sein.", "warn");
+  }
+
+  // ----- Fahrt speichern / Notiz -----
+  function openSaveDialog() {
+    if (!currentRide || currentRide.distanceM <= 0) {
+      // alert("Es gibt keine Fahrtdaten zum Speichern. Bitte zuerst fahren.");
+      setStatus("Es gibt keine Fahrtdaten zum Speichern. Bitte zuerst fahren.", "error");
+      return;
+    }
+    // Kopie in pending-Objekt
+    ridePendingForSave = {
+      distanceM: currentRide.distanceM,
+      ascentM: currentRide.ascentM || 0,
+      timeS: currentRide.timeS
+    };
+    noteTextEl.value = "";
+    surfaceTextEl.value = "";
+    ratingSelectEl.value = "";
+    saveOverlay.classList.add("show");
+  }
+
+  function closeSaveDialog() {
+    saveOverlay.classList.remove("show");
+  }
+
+  function persistRide(extra) {
+    const bike = getActiveBike();
+    if (!bike || !ridePendingForSave) return;
+    const r = {
+      id: "ride-" + Date.now(),
+      dateIso: new Date().toISOString(),
+      distanceM: ridePendingForSave.distanceM,
+      ascentM: ridePendingForSave.ascentM,
+      timeS: ridePendingForSave.timeS,
+      note: extra.note || "",
+      surface: extra.surface || "",
+      rating: extra.rating || ""
+    };
+    bike.rides.push(r);
+
+    const stats = bike.stats;
+    stats.totalDistanceM += r.distanceM;
+    stats.totalAscentM += r.ascentM;
+    stats.totalTimeS += r.timeS;
+    stats.rideCount += 1;
+    if (r.distanceM > stats.longestRideM) stats.longestRideM = r.distanceM;
+    const avgKmh = (r.distanceM / 1000) / (r.timeS / 3600 || 1);
+    if (avgKmh > stats.bestAvgSpeedKmh) stats.bestAvgSpeedKmh = avgKmh;
+
+    saveBikes();
+    refreshStatsUI();
+
+    ridePendingForSave = null;
+    currentRide = null;
+    btnSaveRide.disabled = true;
+    setStatus("Fahrt gespeichert.", "ok");
+  }
+
+  // ----- Events -----
+  btnStart.addEventListener("click", () => {
+    startTracking();
+  });
+
+  btnPause.addEventListener("click", () => {
+    pauseTracking(false);
+  });
+
+  btnReset.addEventListener("click", () => {
+    // Custom modal instead of confirm()
+    const result = window.confirm("Es läuft noch eine Fahrt. Wirklich alles zurücksetzen?");
+    if (tracking && !result) {
+      return;
+    }
+    hardReset();
+  });
+
+  btnSaveRide.addEventListener("click", () => {
+    // Speichern nur, wenn gerade NICHT getrackt wird
+    if (tracking) {
+      pauseTracking(false);
+    }
+    openSaveDialog();
+  });
+
+  btnOpenSettings.addEventListener("click", () => {
+    settingsOverlay.classList.add("show");
+    refreshStatsUI();
+  });
+
+  btnCloseSettings.addEventListener("click", () => {
+    settingsOverlay.classList.remove("show");
+  });
+
+  chkAutoPause.addEventListener("change", () => {
+    autoPauseEnabled = chkAutoPause.checked;
+    saveSettings();
+  });
+
+  bikeSelectEl.addEventListener("change", () => {
+    const newId = bikeSelectEl.value;
+    if (tracking) {
+      // Custom modal instead of alert()
+      setStatus("Bitte zuerst die aktuelle Fahrt stoppen/pausieren.", "error");
+      bikeSelectEl.value = activeBikeId;
+      return;
+    }
+    activeBikeId = newId;
+    saveBikes();
+    refreshBikeSelect();
+  });
+
+  btnSaveBikeMeta.addEventListener("click", () => {
+    const bike = getActiveBike();
+    if (!bike) return;
+    bike.name = bikeNameEl.value.trim() || "Unbenanntes Bike";
+    bike.brand = bikeBrandEl.value.trim();
+    bike.type = bikeTypeEl.value.trim();
+    saveBikes();
+    refreshBikeSelect();
+    setStatus("Bike-Daten gespeichert.", "ok");
+  });
+
+  // Save dialog buttons
+  btnSaveWithoutNote.addEventListener("click", () => {
+    if (!ridePendingForSave) {
+      closeSaveDialog();
+      return;
+    }
+    persistRide({ note: "", surface: "", rating: "" });
+    closeSaveDialog();
+    hardReset();
+  });
+
+  btnSaveWithNote.addEventListener("click", () => {
+    if (!ridePendingForSave) {
+      closeSaveDialog();
+      return;
+    }
+    const note = noteTextEl.value.trim();
+    const surface = surfaceTextEl.value.trim();
+    const rating = ratingSelectEl.value;
+    persistRide({ note, surface, rating });
+    closeSaveDialog();
+    hardReset();
+  });
+
+  // Auto-Pause bei Hintergrund
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && tracking && autoPauseEnabled) {
+      pauseTracking(true);
+    }
+  });
+
+  // Init-Funktion, die alles startet
+  function init() {
+    loadSettings();
+    loadBikes();
+    refreshBikeSelect();
+    resetCurrentRide();
+    setStatus("Bereit. Standortzugriff muss erlaubt sein.", "warn");
+  }
+
+  // Warten, bis das DOM vollständig geladen ist
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
+
