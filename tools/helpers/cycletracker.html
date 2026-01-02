@@ -8,7 +8,6 @@
   <style>
     :root { --scroll: 0; }
 
-    /* --- Reset / Basics --- */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; scroll-behavior: smooth; }
     body{
@@ -20,7 +19,6 @@
     }
     a { color: inherit; text-decoration: none; }
 
-    /* --- Background / Glows --- */
     body::before{
       content:"";
       position:fixed; inset:0;
@@ -48,7 +46,6 @@
       padding:16px 16px 40px;
     }
 
-    /* --- Skip-Link --- */
     .skip-link{
       position:absolute;
       left:50%;
@@ -67,7 +64,6 @@
       outline-offset:2px;
     }
 
-    /* --- Nav + Scroll progress --- */
     .nav{
       position:fixed; top:0; left:0; right:0;
       z-index:40;
@@ -126,7 +122,6 @@
     .nav-link:focus-visible::after{ width:100%; }
     .nav-link:focus-visible{ outline:none; }
 
-    /* --- Layout --- */
     .section{ padding:40px 16px 8px; }
     .section:first-of-type{ padding-top:28px; }
 
@@ -139,7 +134,6 @@
       }
     }
 
-    /* --- Hero --- */
     .category-label{
       font-size:12px;
       letter-spacing:.25em;
@@ -209,7 +203,6 @@
       box-shadow: 0 0 22px rgba(34,211,238,.35), 0 0 22px rgba(236,72,153,.25), 0 12px 30px rgba(2,6,23,.75);
     }
 
-    /* Cover */
     .cover-wrap{
       border-radius:18px;
       border:1px solid rgba(148,163,184,.18);
@@ -234,7 +227,6 @@
       border-top:1px solid rgba(148,163,184,.12);
     }
 
-    /* Content blocks */
     .section-title{
       font-size:18px;
       font-weight:700;
@@ -314,12 +306,11 @@
   </header>
 
   <main class="page" id="main">
-    <!-- HERO -->
     <section class="section">
       <div class="hero-layout">
         <div>
           <div class="category-label">Tools · Helpers</div>
-          <h1 class="hero-title" id="helperName">CycleTracker Mini</h1>
+          <h1 class="hero-title">CycleTracker Mini</h1>
 
           <div class="hero-breadcrumbs">
             <span>
@@ -347,19 +338,15 @@
           </p>
         </div>
 
-        <!-- Cover -->
         <aside class="cover-wrap" aria-label="CycleTracker Cover">
-          <img class="cover" id="coverImg"
-               src="helpers/cover/cycletracker.jpg"
+          <img class="cover"
+               src="/helpers/covers/cycletracker.jpg"
                alt="CycleTracker Mini – App Screenshot" />
-          <div class="cover-caption">
-            Screenshot der UI (mobile).
-          </div>
+          <div class="cover-caption">Screenshot der UI (mobile).</div>
         </aside>
       </div>
     </section>
 
-    <!-- DETAILS -->
     <section class="section" aria-labelledby="details-title">
       <h2 class="section-title" id="details-title">Was das Ding kann</h2>
       <p class="section-subtitle">Kurz &amp; konkret – und dann direkt bauen/benutzen.</p>
@@ -375,12 +362,9 @@
       </div>
     </section>
 
-    <!-- CODE -->
     <section class="section" aria-labelledby="code-title">
       <h2 class="section-title" id="code-title">Code (HTML – copy &amp; run)</h2>
-      <p class="section-subtitle">
-        Voller Source-Code als Single-File.
-      </p>
+      <p class="section-subtitle">Voller Source-Code als Single-File.</p>
 
       <div class="card">
         <div class="codebox" id="codeBox"></div>
@@ -396,8 +380,8 @@
     </footer>
   </main>
 
-  <!-- Lösung B: Source-Code liegt NICHT im JS-String, sondern in einem hidden textarea -->
-  <textarea id="helperSource" style="display:none;">
+  <!-- ✅ Lösung B FIX: App-Source liegt in script[type=text/plain] (kein </textarea>-Bug) -->
+  <script id="helperSource" type="text/plain">
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -881,6 +865,7 @@
 (function () {
   "use strict";
 
+  // ----- DOM -----
   const speedValueEl = document.getElementById("speedValue");
   const speedSourceLabelEl = document.getElementById("speedSourceLabel");
   const distValueEl = document.getElementById("distValue");
@@ -919,6 +904,7 @@
   const btnSaveWithoutNote = document.getElementById("btnSaveWithoutNote");
   const btnSaveWithNote = document.getElementById("btnSaveWithNote");
 
+  // ----- State -----
   const STORAGE_KEY = "cycleTrackerMini3_bikes_v1";
   const SETTINGS_KEY = "cycleTrackerMini3_settings_v1";
 
@@ -933,16 +919,22 @@
   let lastUpdateTime = null;
   let lastPosition = null;
 
-  let currentRide = null;
-  let ridePendingForSave = null;
+  let currentRide = null; // {distanceM, ascentM, timeS, points:[]}
+  let ridePendingForSave = null; // wird in Dialog übernommen
 
-  function formatKm(meters) { return (meters / 1000).toFixed(2); }
+  // ----- Helpers -----
+  function formatKm(meters) {
+    return (meters / 1000).toFixed(2);
+  }
   function formatTime(seconds) {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
   }
-  function formatTimeHours(seconds) { return (seconds / 3600).toFixed(2); }
+  function formatTimeHours(seconds) {
+    const h = seconds / 3600;
+    return h.toFixed(2);
+  }
   function haversine(lat1, lon1, lat2, lon2) {
     const R = 6371000;
     const toRad = Math.PI / 180;
@@ -950,9 +942,12 @@
     const dLon = (lon2 - lon1) * toRad;
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+      Math.cos(lat1 * toRad) *
+        Math.cos(lat2 * toRad) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   }
 
   function setStatus(text, type) {
@@ -963,18 +958,21 @@
     else statusTextEl.classList.add("status-warn");
   }
 
+  // ----- Storage -----
   function loadSettings() {
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
-      if (raw) {
-        const s = JSON.parse(raw);
-        if (typeof s.autoPauseEnabled === "boolean") autoPauseEnabled = s.autoPauseEnabled;
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (typeof s.autoPauseEnabled === "boolean") {
+        autoPauseEnabled = s.autoPauseEnabled;
       }
-    } catch(e){}
+    } catch (e) { /* ignore */ }
     chkAutoPause.checked = autoPauseEnabled;
   }
   function saveSettings() {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ autoPauseEnabled }));
+    const s = { autoPauseEnabled };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
   }
 
   function loadBikes() {
@@ -985,7 +983,7 @@
       if (!Array.isArray(parsed.bikes)) throw new Error("invalid");
       bikes = parsed.bikes;
       activeBikeId = parsed.activeBikeId || (bikes[0] && bikes[0].id) || null;
-    } catch(e){
+    } catch (e) {
       bikes = [];
       activeBikeId = null;
     }
@@ -1010,13 +1008,17 @@
       saveBikes();
     }
   }
+
   function saveBikes() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ bikes, activeBikeId }));
+    const payload = { bikes, activeBikeId };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }
+
   function getActiveBike() {
     return bikes.find(b => b.id === activeBikeId) || null;
   }
 
+  // ----- UI: Bikes & Statistik -----
   function refreshBikeSelect() {
     bikeSelectEl.innerHTML = "";
     bikes.forEach(b => {
@@ -1026,9 +1028,9 @@
       bikeSelectEl.appendChild(opt);
     });
     bikeSelectEl.value = activeBikeId;
-
     const active = getActiveBike();
-    activeBikeLabelEl.textContent = "Aktives Fahrrad: " + (active ? (active.name || "(unbenannt)") : "–");
+    activeBikeLabelEl.textContent =
+      "Aktives Fahrrad: " + (active ? (active.name || "(unbenannt)") : "–");
     if (active) {
       bikeNameEl.value = active.name || "";
       bikeBrandEl.value = active.brand || "";
@@ -1041,7 +1043,6 @@
     const bike = getActiveBike();
     if (!bike) return;
     const s = bike.stats;
-
     statTotalDistEl.textContent = formatKm(s.totalDistanceM) + " km";
     statTotalTimeEl.textContent = formatTimeHours(s.totalTimeS) + " h";
     statTotalAscentEl.textContent = s.totalAscentM.toFixed(0) + " m";
@@ -1065,13 +1066,21 @@
       const distKm = formatKm(r.distanceM);
       const timeStr = formatTime(r.timeS);
       const avg = (r.distanceM / 1000) / (r.timeS / 3600 || 1);
-      div.textContent = date + " – " + distKm + " km, " + timeStr + ", Ø " + avg.toFixed(1) + " km/h";
+      div.textContent =
+        date + " – " + distKm + " km, " + timeStr + ", Ø " +
+        avg.toFixed(1) + " km/h";
       ridesListEl.appendChild(div);
     });
   }
 
+  // ----- Tracking -----
   function resetCurrentRide() {
-    currentRide = { distanceM: 0, ascentM: 0, timeS: 0, lastAltitude: null };
+    currentRide = {
+      distanceM: 0,
+      ascentM: 0,
+      timeS: 0,
+      lastAltitude: null
+    };
     lastPosition = null;
     lastUpdateTime = null;
     speedValueEl.textContent = "0.0";
@@ -1090,14 +1099,19 @@
       timeValueEl.textContent = formatTime(currentRide.timeS);
     }, 1000);
   }
+
   function stopTimer() {
-    if (timerId) { clearInterval(timerId); timerId = null; }
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
   }
 
   function onGeoSuccess(pos) {
     const coords = pos.coords;
     const now = Date.now();
 
+    // Geschwindigkeit
     let speedKmh = 0;
     let source = "";
     if (typeof coords.speed === "number" && !isNaN(coords.speed)) {
@@ -1107,28 +1121,43 @@
 
     if (lastPosition) {
       const dt = (now - lastUpdateTime) / 1000;
-      const d = haversine(lastPosition.latitude, lastPosition.longitude, coords.latitude, coords.longitude);
+      const d = haversine(
+        lastPosition.latitude,
+        lastPosition.longitude,
+        coords.latitude,
+        coords.longitude
+      );
       if (dt > 0) {
-        const vKmh = (d / dt) * 3.6;
+        const v = d / dt;
+        const vKmh = v * 3.6;
         if (!speedKmh || vKmh < speedKmh - 3) {
           speedKmh = vKmh;
           source = "aus Distanz";
         }
       }
-      if (speedKmh <= 60 && currentRide && tracking) {
+
+      // Sprünge filtern
+      if (speedKmh > 60) {
+        // unrealistischer Sprung, ignorieren
+      } else if (currentRide && tracking) {
         currentRide.distanceM += d;
         distValueEl.textContent = formatKm(currentRide.distanceM);
       }
     }
 
+    // Höhenmeter
     if (currentRide && typeof coords.altitude === "number") {
       const alt = coords.altitude;
-      if (currentRide.lastAltitude == null) currentRide.lastAltitude = alt;
-      else {
+      if (currentRide.lastAltitude == null) {
+        currentRide.lastAltitude = alt;
+      } else {
         const diff = alt - currentRide.lastAltitude;
         if (diff > 1.5) {
+          currentRide.distanceM && (currentRide.ascentM = currentRide.ascentM || 0);
           currentRide.ascentM += diff;
-          ascentValueEl.textContent = Math.round(currentRide.ascentM).toString();
+          ascentValueEl.textContent = Math.round(
+            currentRide.ascentM || 0
+          ).toString();
         }
         currentRide.lastAltitude = alt;
       }
@@ -1144,12 +1173,21 @@
 
   function onGeoError(err) {
     console.warn("Geo error", err);
-    if (err.code === 1) setStatus("Standortzugriff verweigert. Bitte im Browser erlauben.", "error");
-    else setStatus("Standort nicht verfügbar.", "error");
+    if (err.code === 1) {
+      setStatus(
+        "Standortzugriff verweigert. Bitte im Browser erlauben.",
+        "error"
+      );
+    } else {
+      setStatus("Standort nicht verfügbar.", "error");
+    }
   }
 
   function startTracking() {
-    if (!navigator.geolocation) { setStatus("Geolocation wird nicht unterstützt.", "error"); return; }
+    if (!navigator.geolocation) {
+      setStatus("Geolocation wird nicht unterstützt.", "error");
+      return;
+    }
     if (!currentRide) resetCurrentRide();
 
     tracking = true;
@@ -1158,7 +1196,9 @@
     btnSaveRide.disabled = true;
     setStatus("Läuft. Gute Fahrt!", "ok");
 
-    if (watchId != null) navigator.geolocation.clearWatch(watchId);
+    if (watchId != null) {
+      navigator.geolocation.clearWatch(watchId);
+    }
     lastPosition = null;
     lastUpdateTime = null;
 
@@ -1175,19 +1215,29 @@
     tracking = false;
     btnStart.disabled = false;
     btnPause.disabled = true;
-    setStatus(
-      auto
-        ? "Automatisch pausiert (App im Hintergrund). Zum Fortsetzen „Start“ drücken."
-        : "Pausiert. Zum Fortsetzen „Start“ drücken.",
-      "warn"
-    );
-    if (currentRide && currentRide.distanceM > 0) btnSaveRide.disabled = false;
+    if (auto) {
+      setStatus(
+        "Automatisch pausiert (App im Hintergrund). Zum Fortsetzen „Start“ drücken.",
+        "warn"
+      );
+    } else {
+      setStatus("Pausiert. Zum Fortsetzen „Start“ drücken.", "warn");
+    }
+    // Fahrt ist noch aktiv -> Speichern möglich
+    if (currentRide && currentRide.distanceM > 0) {
+      btnSaveRide.disabled = false;
+    }
   }
 
   function hardReset() {
-    if (tracking && !confirm("Es läuft noch eine Fahrt. Wirklich alles zurücksetzen?")) return;
+    if (tracking && !confirm("Es läuft noch eine Fahrt. Wirklich alles zurücksetzen?")) {
+      return;
+    }
     tracking = false;
-    if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    if (watchId != null) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    }
     stopTimer();
     resetCurrentRide();
     btnStart.disabled = false;
@@ -1196,18 +1246,27 @@
     setStatus("Bereit. Standortzugriff muss erlaubt sein.", "warn");
   }
 
+  // ----- Fahrt speichern / Notiz -----
   function openSaveDialog() {
     if (!currentRide || currentRide.distanceM <= 0) {
-      setStatus("Es gibt keine Fahrtdaten zum Speichern. Bitte zuerst fahren.", "error");
+      alert("Es gibt keine Fahrtdaten zum Speichern. Bitte zuerst fahren.");
       return;
     }
-    ridePendingForSave = { distanceM: currentRide.distanceM, ascentM: currentRide.ascentM || 0, timeS: currentRide.timeS };
+    // Kopie in pending-Objekt
+    ridePendingForSave = {
+      distanceM: currentRide.distanceM,
+      ascentM: currentRide.ascentM || 0,
+      timeS: currentRide.timeS
+    };
     noteTextEl.value = "";
     surfaceTextEl.value = "";
     ratingSelectEl.value = "";
     saveOverlay.classList.add("show");
   }
-  function closeSaveDialog() { saveOverlay.classList.remove("show"); }
+
+  function closeSaveDialog() {
+    saveOverlay.classList.remove("show");
+  }
 
   function persistRide(extra) {
     const bike = getActiveBike();
@@ -1230,7 +1289,6 @@
     stats.totalTimeS += r.timeS;
     stats.rideCount += 1;
     if (r.distanceM > stats.longestRideM) stats.longestRideM = r.distanceM;
-
     const avgKmh = (r.distanceM / 1000) / (r.timeS / 3600 || 1);
     if (avgKmh > stats.bestAvgSpeedKmh) stats.bestAvgSpeedKmh = avgKmh;
 
@@ -1243,12 +1301,24 @@
     setStatus("Fahrt gespeichert.", "ok");
   }
 
-  btnStart.addEventListener("click", startTracking);
-  btnPause.addEventListener("click", () => pauseTracking(false));
-  btnReset.addEventListener("click", hardReset);
+  // ----- Events -----
+  btnStart.addEventListener("click", () => {
+    startTracking();
+  });
+
+  btnPause.addEventListener("click", () => {
+    pauseTracking(false);
+  });
+
+  btnReset.addEventListener("click", () => {
+    hardReset();
+  });
 
   btnSaveRide.addEventListener("click", () => {
-    if (tracking) pauseTracking(false);
+    // Speichern nur, wenn gerade NICHT getrackt wird
+    if (tracking) {
+      pauseTracking(false);
+    }
     openSaveDialog();
   });
 
@@ -1256,6 +1326,7 @@
     settingsOverlay.classList.add("show");
     refreshStatsUI();
   });
+
   btnCloseSettings.addEventListener("click", () => {
     settingsOverlay.classList.remove("show");
   });
@@ -1268,7 +1339,7 @@
   bikeSelectEl.addEventListener("change", () => {
     const newId = bikeSelectEl.value;
     if (tracking) {
-      setStatus("Bitte zuerst die aktuelle Fahrt stoppen/pausieren.", "error");
+      alert("Bitte zuerst die aktuelle Fahrt stoppen/pausieren.");
       bikeSelectEl.value = activeBikeId;
       return;
     }
@@ -1288,28 +1359,40 @@
     setStatus("Bike-Daten gespeichert.", "ok");
   });
 
+  // Save dialog buttons
   btnSaveWithoutNote.addEventListener("click", () => {
-    if (!ridePendingForSave) { closeSaveDialog(); return; }
+    if (!ridePendingForSave) {
+      closeSaveDialog();
+      return;
+    }
     persistRide({ note: "", surface: "", rating: "" });
     closeSaveDialog();
     hardReset();
   });
 
   btnSaveWithNote.addEventListener("click", () => {
-    if (!ridePendingForSave) { closeSaveDialog(); return; }
-    persistRide({
-      note: noteTextEl.value.trim(),
-      surface: surfaceTextEl.value.trim(),
-      rating: ratingSelectEl.value
-    });
+    if (!ridePendingForSave) {
+      closeSaveDialog();
+      return;
+    }
+    const note = noteTextEl.value.trim();
+    const surface = surfaceTextEl.value.trim();
+    const rating = ratingSelectEl.value;
+    persistRide({ note, surface, rating });
     closeSaveDialog();
     hardReset();
   });
 
+  // Klick auf Overlay schließt NICHT, damit man nichts versehentlich verliert
+
+  // Auto-Pause bei Hintergrund
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden && tracking && autoPauseEnabled) pauseTracking(true);
+    if (document.hidden && tracking && autoPauseEnabled) {
+      pauseTracking(true);
+    }
   });
 
+  // ----- Init -----
   function init() {
     loadSettings();
     loadBikes();
@@ -1318,15 +1401,15 @@
     setStatus("Bereit. Standortzugriff muss erlaubt sein.", "warn");
   }
 
-  init(); // Script steht am Ende -> DOM ist da
+  init();
 })();
 </script>
 </body>
 </html>
-  </textarea>
+
+  </script>
 
   <script>
-    // Scroll progress
     window.addEventListener("scroll", () => {
       const doc = document.documentElement;
       const scrollable = doc.scrollHeight - window.innerHeight;
@@ -1334,13 +1417,9 @@
       document.documentElement.style.setProperty("--scroll", ratio.toString());
     });
 
-    // Config: Passe nur diese URL an (Pfad zur laufenden App-Datei)
-    const HELPER_URL = "./cycletrackerfile.html"; // z.B. "./app.html" oder "../helpers/cycletracker/app.html"
+    const HELPER_URL = "./cycletrackerfile.html"; // Pfad zur laufenden App-Datei
+    const HELPER_SOURCE_CODE = document.getElementById("helperSource").textContent.trim();
 
-    // Lösung B: Source-Code aus textarea lesen (keine Script-Parsing-Probleme mehr!)
-    const HELPER_SOURCE_CODE = document.getElementById("helperSource").value.trim();
-
-    // Render in Codebox
     document.getElementById("codeBox").textContent = HELPER_SOURCE_CODE;
 
     async function copyToClipboard(text) {
@@ -1369,21 +1448,17 @@
       }, 2000);
     }
 
-    // Open helper
-    const btnOpenHelper = document.getElementById("btnOpenHelper");
-    btnOpenHelper.addEventListener("click", () => {
+    document.getElementById("btnOpenHelper").addEventListener("click", () => {
       window.open(HELPER_URL, "_blank", "noopener,noreferrer");
     });
 
-    // Copy code
-    const btnCopyCode = document.getElementById("btnCopyCode");
-    btnCopyCode.addEventListener("click", async () => {
+    document.getElementById("btnCopyCode").addEventListener("click", async () => {
       try {
         await copyToClipboard(HELPER_SOURCE_CODE);
-        flashButton(btnCopyCode);
+        flashButton(document.getElementById("btnCopyCode"));
       } catch (e) {
         console.error(e);
-        flashButton(btnCopyCode, "⚠️ Copy failed");
+        flashButton(document.getElementById("btnCopyCode"), "⚠️ Copy failed");
       }
     });
   </script>
