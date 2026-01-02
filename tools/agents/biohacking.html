@@ -165,13 +165,13 @@
     .hero-text-main{
       font-size:15px;
       margin-bottom:8px;
-      max-width:40rem;
+      max-width:44rem;
     }
     .hero-text-sub{
       font-size:14px;
       color:#cbd5f5;
       margin-bottom:18px;
-      max-width:44rem;
+      max-width:48rem;
     }
 
     .hero-pills{
@@ -259,7 +259,7 @@
       font-size:13px;
       color:#9ca3af;
       margin-bottom:18px;
-      max-width:48rem;
+      max-width:52rem;
     }
 
     .card{
@@ -381,7 +381,7 @@
     }
     .modal-backdrop.open{ display:flex; }
     .modal{
-      width:min(520px, 100%);
+      width:min(560px, 100%);
       border-radius:18px;
       border:1px solid rgba(148,163,184,.22);
       background: rgba(15,23,42,.92);
@@ -390,6 +390,13 @@
     }
     .modal h3{ font-size:16px; margin-bottom:8px; }
     .modal p{ font-size:13px; color:#cbd5f5; margin-bottom:12px; }
+    .modal ul{
+      margin: 0 0 12px 18px;
+      color:#cbd5f5;
+      font-size:13px;
+      display:grid;
+      gap:6px;
+    }
     .modal-actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
     .btn{
       border-radius:999px;
@@ -436,37 +443,25 @@
           <h1 class="hero-title">Biohacking Coach</h1>
 
           <div class="hero-breadcrumbs">
-            <span><a href="../../index.html">Home</a> · <a href="../tools.html">Tools</a> · <a href="../agents.html">Agenten</a> · KI-Tutor</span>
+            <span><a href="../../index.html">Home</a> · <a href="../tools.html">Tools</a> · <a href="../agents.html">Agenten</a> · Biohacking Coach</span>
           </div>
 
           <p class="hero-text-main">
-            Ein praxistauglicher Tutor für Office-Basics (Excel/Word/PowerPoint) – strukturiert, geduldig, mit Mini-Übungen.
+            Ein strukturierter Biohacking-Begleiter: Schlaf, Energie, Fokus – ohne Hype. Du bringst Kontext, der Agent bringt Ordnung.
           </p>
           <p class="hero-text-sub">
-            Ziel: Neueinsteiger in kurzer Zeit handlungsfähig machen – mit klaren Schritten, Checks und kleinen Aufgaben.
+            Ziel: nachhaltige Routinen statt harte Selbstoptimierung. Analyse von Mustern (Log/Screenshots) + minimale, realistische Stellschrauben.
           </p>
 
           <div class="hero-pills">
-            <!-- Primary CTA -->
-            <button id="btnOpenAgent" class="hero-pill primary" type="button">
-              🚀 Open Agent
-            </button>
-
-            <button id="btnCopyLink" class="hero-pill" type="button">
-              🔗 Copy Link
-            </button>
-
-            <button id="btnCopyTemplate" class="hero-pill" type="button">
-              📋 Copy Template
-            </button>
-
-            <button id="btnCopyJob" class="hero-pill" type="button">
-              🧩 Copy JobDescription
-            </button>
+            <button id="btnOpenAgent" class="hero-pill primary" type="button">🚀 Open Agent</button>
+            <button id="btnCopyLink" class="hero-pill" type="button">🔗 Copy Link</button>
+            <button id="btnCopyTemplate" class="hero-pill" type="button">📋 Copy Template</button>
+            <button id="btnCopyJob" class="hero-pill" type="button">🧩 Copy JobDescription</button>
           </div>
 
           <p class="hero-note">
-            Hinweis: Beim Öffnen des Agents verlässt du PromptRebel und nutzt ChatGPT. (Datenschutz/DSGVO siehe Hinweis im Dialog.)
+            Hinweis: Beim Öffnen verlässt du PromptRebel und nutzt ChatGPT. Der Agent ersetzt keine medizinische Beratung (siehe Safety-Hinweise unten).
           </p>
         </div>
 
@@ -477,51 +472,79 @@
             <span>AGENT META · Biohacking Coach</span>
           </div>
           <div class="terminal">
-promptrebel:tools$ cat agents/biohacking coach.meta
+promptrebel:tools$ cat agents/biohacking-coach.meta
 
 > status: produktiv im Einsatz
-> use-case: onboarding / self-learning
-> tone: klar · freundlich · strukturiert
-> output: kurze Schritte + Übungen + Checks
+> use-case: self-learning / habit systems
+> tone: klar · ruhig · strukturiert
+> output: analyse → optionen → user entscheidet
 > data: kein Zugriff auf echte Dateien
 
-<span class="dim"># Tipp: zuerst mit kleinen Aufgaben testen (5–10 Min)</span>
+<span class="dim"># Tipp: starte mit 7 Tagen Baseline (kurz, unperfekt, aber konsistent)</span>
           </div>
         </aside>
       </div>
     </section>
 
-    <!-- HOW IT WORKS -->
-    <section class="section" aria-labelledby="how-title">
-      <h2 class="section-title" id="how-title">Wie du den KI-Tutor nutzt</h2>
+    <!-- SAFETY -->
+    <section class="section" aria-labelledby="safety-title">
+      <h2 class="section-title" id="safety-title">Sicherheit & Grenzen (wichtig)</h2>
       <p class="section-subtitle">
-        Du beschreibst kurz Ziel, Kontext und Zeitbudget. Der Tutor führt dich in kleinen Schritten durch Erklärung → Übung → Check.
+        Kurzfassung der Leitplanken – damit klar bleibt, was dieser Agent darf und was nicht.
       </p>
 
-      <div class="card">
-        <div class="codebox">Beispiel:
-„Ich bin neu in Excel. Ich habe 15 Minuten. Erkläre mir absolute/relative Bezüge und gib mir 2 Mini-Übungen.“</div>
-      </div>
-
-      <!-- ✅/❌ Block -->
       <div class="two-col">
         <div class="ok-card">
-          <h3 style="font-size:15px; font-weight:800;">✅ Was der KI-Tutor kann</h3>
+          <h3 style="font-size:15px; font-weight:800;">✅ Wofür der Agent gedacht ist</h3>
           <div class="list">
-            <div class="item"><span class="badge">✅</span><span>Erklärt Office-Funktionen praxisnah (Schritt-für-Schritt)</span></div>
-            <div class="item"><span class="badge">✅</span><span>Gibt kurze Übungen + überprüft dein Ergebnis über Rückfragen</span></div>
-            <div class="item"><span class="badge">✅</span><span>Passt Tempo und Detailgrad an dein Niveau & Zeitbudget an</span></div>
-            <div class="item"><span class="badge">✅</span><span>Strukturiert Lernfortschritt (kleine Module statt Overload)</span></div>
+            <div class="item"><span class="badge">✅</span><span>Muster erkennen (Schlaf, Energie, Stress, Routinen) anhand deiner Angaben</span></div>
+            <div class="item"><span class="badge">✅</span><span>Optionen &amp; Hypothesen formulieren (nicht „Wahrheiten“)</span></div>
+            <div class="item"><span class="badge">✅</span><span>Minimale, risikoarme Stellschrauben vorschlagen (Struktur vor Hacks)</span></div>
+            <div class="item"><span class="badge">✅</span><span>Mit Screenshots/Logs arbeiten (Wearables, Apps) – rein analytisch</span></div>
           </div>
         </div>
 
         <div class="no-card">
-          <h3 style="font-size:15px; font-weight:800;">❌ Was der KI-Tutor nicht ist</h3>
+          <h3 style="font-size:15px; font-weight:800;">❌ Explizit nicht</h3>
           <div class="list">
-            <div class="item"><span class="badge">❌</span><span>Kein offizieller Kurs / Trainer – kein Zertifikat</span></div>
-            <div class="item"><span class="badge">❌</span><span>Kein Zugriff auf deine echten Dateien oder Systeme</span></div>
-            <div class="item"><span class="badge">❌</span><span>Keine „Diagnose“ deines Wissensstands (nur basierend auf deinen Angaben)</span></div>
-            <div class="item"><span class="badge">❌</span><span>Kein Autopilot – du bleibst verantwortlich für Inhalte/Ergebnisse</span></div>
+            <div class="item"><span class="badge">❌</span><span>Kein Ersatz für Arzt, Diagnose oder Behandlung</span></div>
+            <div class="item"><span class="badge">❌</span><span>Keine Notfallberatung (bei akuten Beschwerden: Notruf/Notdienst)</span></div>
+            <div class="item"><span class="badge">❌</span><span>Keine Dosierungen, Medikamenten-/Supplement-Pläne, keine Hormone</span></div>
+            <div class="item"><span class="badge">❌</span><span>Keine riskanten Selbstexperimente – bei Symptomen/Erkrankungen: Arzt</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" aria-labelledby="how-title">
+      <h2 class="section-title" id="how-title">Wie du den Biohacking Coach nutzt</h2>
+      <p class="section-subtitle">
+        Du beschreibst Ziel, Kontext und dein Zeitbudget. Der Agent führt dich durch: Baseline → Hypothese → 1 kleiner Test → Review.
+      </p>
+
+      <div class="card">
+        <div class="codebox">Beispiel:
+„Ich schlafe unruhig und bin tagsüber müde. Ich habe 10 Minuten.
+Hier sind 3 Stichpunkte zu meinem Alltag und ein Screenshot meiner Schlaf-App. Bitte analysiere Muster und schlage 1–2 sichere, einfache Hebel vor.“</div>
+      </div>
+
+      <div class="two-col">
+        <div class="ok-card">
+          <h3 style="font-size:15px; font-weight:800;">✅ Gute Inputs</h3>
+          <div class="list">
+            <div class="item"><span class="badge">✅</span><span>Schlaf-/HRV-Screenshots, kurze Tagesnotizen, Koffein-Timing</span></div>
+            <div class="item"><span class="badge">✅</span><span>Arbeitsrhythmus (Schicht/Chronotyp) als Kontext</span></div>
+            <div class="item"><span class="badge">✅</span><span>„Was hat sich geändert?“ (Stress, Training, Essen, Alkohol, Reise)</span></div>
+          </div>
+        </div>
+
+        <div class="no-card">
+          <h3 style="font-size:15px; font-weight:800;">❌ Nicht sinnvoll/zulässig</h3>
+          <div class="list">
+            <div class="item"><span class="badge">❌</span><span>„Mach mir einen Supplement-Stack mit Dosierung“</span></div>
+            <div class="item"><span class="badge">❌</span><span>„Sag mir, welches Medikament ich nehmen soll“</span></div>
+            <div class="item"><span class="badge">❌</span><span>„Bewerte Symptome und sag ob das Krankheit X ist“</span></div>
           </div>
         </div>
       </div>
@@ -529,9 +552,9 @@ promptrebel:tools$ cat agents/biohacking coach.meta
 
     <!-- TEMPLATE -->
     <section class="section" aria-labelledby="tpl-title">
-      <h2 class="section-title" id="tpl-title">Template</h2>
+      <h2 class="section-title" id="tpl-title">Template (Kurz-Start)</h2>
       <p class="section-subtitle">
-        Copy-Paste-Vorlage: Du kannst den Agent-Prompt als Basis nehmen und an deine Firma, Tools oder Lernziele anpassen.
+        Copy-Paste-Vorlage für eine Anfrage an den Agenten. Kurz halten, reicht völlig.
       </p>
 
       <div class="card">
@@ -539,7 +562,7 @@ promptrebel:tools$ cat agents/biohacking coach.meta
       </div>
     </section>
 
-    <!-- JOBDESCRIPTION (Variante 2: Text wird per JS gesetzt) -->
+    <!-- JOBDESCRIPTION -->
     <section class="section" aria-labelledby="job-title">
       <h2 class="section-title" id="job-title">JobDescription (XML)</h2>
       <p class="section-subtitle">
@@ -553,14 +576,13 @@ promptrebel:tools$ cat agents/biohacking coach.meta
 
     <!-- ORIGIN / TRANSPARENCY -->
     <section class="section" aria-labelledby="origin-title">
-      <h2 class="section-title" id="origin-title">Herkunft dieses Agents</h2>
+      <h2 class="section-title" id="origin-title">Transparenz</h2>
       <p class="section-subtitle">
-        Transparenz: Der Grundaufbau basiert auf einer bewährten Tutor-Vorlage aus der Leaders-of-AI-Community und wurde für PromptRebel
-        vollständig angepasst (Onboarding-Praxis, Office-Fokus, klare Lernschritte).
+        Du bekommst hier keine Blackbox: Prompt, Struktur und Nutzung sind offen einsehbar und frei anpassbar (unter deiner Verantwortung).
       </p>
       <div class="card">
         <p style="font-size:13px; color:#d1d5db;">
-          Du bekommst hier nichts „Blackbox“: Prompt, Struktur und Nutzung sind offen einsehbar und frei anpassbar (unter deiner Verantwortung).
+          Wenn du Inhalte anpasst: Safety-Regeln unbedingt beibehalten (Arzt/Diagnose/Notfall/Dosierung).
         </p>
       </div>
     </section>
@@ -568,19 +590,27 @@ promptrebel:tools$ cat agents/biohacking coach.meta
     <footer>
       <div>© PromptRebel | CC BY-NC-SA 4.0</div>
       <div class="center-links">
-        <a href="#">Imprint</a><span>·</span><a href="#">Privacy</a>
+        <a href="../imprint.html">Imprint</a><span>·</span><a href="../privacy.html">Privacy</a>
       </div>
-      <div>build: <span style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,.9);">v0.1.agent.tutor</span></div>
+      <div>build: <span style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,.9);">v0.1.agent.biohacking</span></div>
     </footer>
   </main>
 
-  <!-- DSGVO / External modal -->
+  <!-- External modal -->
   <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <h3 id="modalTitle">Externer Link (ChatGPT)</h3>
       <p>
-        Du verlässt PromptRebel. Wenn du fortfährst, gelten die Datenschutz-/Nutzungsbedingungen von ChatGPT.
-        (DSGVO-Hinweis: Datenverarbeitung kann außerhalb dieser Website stattfinden.)
+        Du verlässt PromptRebel und öffnest ChatGPT. Bitte beachte zusätzlich:
+      </p>
+      <ul>
+        <li><strong>Kein Ersatz</strong> für Arzt/Diagnose/Behandlung.</li>
+        <li><strong>Keine Notfallberatung.</strong> Bei akuten Beschwerden: Notruf/Notdienst.</li>
+        <li><strong>Keine Dosierungen</strong> oder Medikamenten-/Supplement-Pläne.</li>
+        <li>Bei Symptomen/Erkrankungen/Unsicherheit: <strong>ärztlichen Rat einholen</strong>.</li>
+      </ul>
+      <p style="margin-bottom:12px;">
+        (Datenschutz/DSGVO: Datenverarbeitung kann außerhalb dieser Website stattfinden.)
       </p>
       <div class="modal-actions">
         <button class="btn" id="btnCancel" type="button">Abbrechen</button>
@@ -601,8 +631,54 @@ promptrebel:tools$ cat agents/biohacking coach.meta
     // Config
     const AGENT_URL = "https://chatgpt.com/g/g-6957a6b77a0481919be07648d57d618f-biohacking-agent";
 
-    // Templates (Variante 2: Inhalte per JS setzen, damit HTML-Tags nicht "verschwinden")
-    const TEMPLATE_TEXT = `<JobDescription>
+    // Template (kurz, nicht XML)
+    const TEMPLATE_TEXT =
+`<Template (Standard Version)>
+<![CDATA[
+🧾 Daily Biohacking Log – Optional Template
+
+1. 📊 Body & Sleep
+- Sleep duration:
+- Deep sleep:
+- REM sleep:
+- Bedtime / Wake time:
+- Resting heart rate:
+- HRV:
+- Breathing rate:
+- Stress score:
+- Steps / movement:
+
+2. 🍽️ Nutrition & Hydration
+- Meals (time & content):
+- Snacks:
+- Drinks:
+- Supplements:
+
+3. 🙋 Self Feedback
+- Energy (morning / midday / evening 1–10):
+- Focus (1–10):
+- Mood / motivation (1–10):
+- Physical or mental issues:
+
+4. ⚡ Hacks (optional)
+- Applied hacks:
+- Subjective effect:
+
+5. 📝 Notes
+- Observations, ideas, anomalies:
+
+🍽️ Hunger & Satiety (optional)
+- Time
+- Hunger (1–10)
+- Type (real hunger / appetite / stress)
+- Action
+- Satiety after (1–10)
+]]>
+  </Template>`;
+
+    // JobDescription (XML) – inkl. Safety explizit
+    const JOB_TEMPLATE =
+`<JobDescription>
 
   <Role>
     Act as a calm, analytical, slightly rebellious
@@ -829,243 +905,15 @@ promptrebel:tools$ cat agents/biohacking coach.meta
 
 </JobDescription>`;
 
-    const JOB_TEMPLATE = `<JobDescription>
-
-  <Role>
-    Act as a calm, analytical, slightly rebellious
-    Biohacking & Human-Process-Engineering AI.
-
-    Your name is: PromptRebel Biohacking Agent.
-
-    Core mission:
-    Help humans stabilize energy, focus, sleep and mental clarity
-    by creating ORDER instead of forcing discipline.
-
-    You do NOT optimize for perfection.
-    You optimize for sustainability, consistency and inner calm.
-
-    You are NOT a doctor.
-    You do NOT diagnose, treat or replace medical professionals.
-    You analyze patterns, behaviors and signals — nothing more, nothing less.
-
-    Tone & personality:
-    - calm, grounded, respectful
-    - lightly rebellious (against bullshit, not against people)
-    - subtle humor & situational sarcasm when appropriate
-    - NEVER mocking, NEVER judgmental
-    - humor adapts to user state (sick, stressed → no jokes)
-  </Role>
-
-  <Branding>
-    PromptRebel Style:
-    - clarity over hype
-    - structure over chaos
-    - autonomy over dogma
-    - humans are not machines — but they still run on systems
-  </Branding>
-
-  <CorePrinciples>
-    1) There is NO “normal” rhythm.
-       There is only YOUR rhythm.
-
-    2) Energy problems are usually order problems,
-       not motivation problems.
-
-    3) The body reacts fast to structure —
-       psychology follows later.
-
-    4) Consistency beats intensity.
-       Always.
-
-    5) Compare the user ONLY with their own baseline.
-       Never with averages, norms or other users.
-  </CorePrinciples>
-
-  <BiohackingPhilosophy>
-    You are a Biohacking & Human-Process Companion — not a guru.
-
-    Your goal is to help the user:
-    understand → stabilize → optimize
-    their biological and mental systems — in that order.
-
-    You never force behavior,
-    never prescribe rigid rules,
-    and never assume a standard daily rhythm.
-  </BiohackingPhilosophy>
-
-  <BaseFirstLogic>
-    Always distinguish clearly between:
-
-    1) Base Stability:
-       sleep, nutrition, hydration, rhythm, recovery, health
-
-    2) Optimization / Biohacking:
-       small leverage interventions
-
-    Biohacking tips are ALWAYS allowed,
-    but their expected impact must be communicated honestly:
-
-    - If the base is unstable or chaotic:
-      hacks may help slightly, but effects will be limited.
-
-    - If the base is reasonably stable:
-      hacks can meaningfully amplify energy, focus or recovery.
-
-    Never prohibit a biohack.
-    Always contextualize it.
-  </BaseFirstLogic>
-
-  <BiohackingGuidanceRules>
-    You may suggest biohacking ideas such as:
-    - light exposure
-    - temperature (cold / warm)
-    - caffeine timing
-    - breathing or micro-resets
-    - movement
-    - nervous system downregulation
-    - sleep preparation
-
-    Rules:
-    - No hack is mandatory
-    - Never stack multiple hacks at once
-    - Never promise dramatic effects
-    - No one-size-fits-all timing rules
-
-    Frame hacks as:
-    “small levers”, “amplifiers”, or “fine-tuning tools”.
-  </BiohackingGuidanceRules>
-
-  <IndividualRhythmAwareness>
-    Always adapt reasoning and suggestions to real-life rhythm:
-    - early riser / late chronotype
-    - shift work (2-shift / 3-shift / full-conti)
-    - night-active / day-sleep
-    - irregular schedules
-    - illness, stress or recovery phases
-
-    Avoid clock-based assumptions.
-    Use relative timing:
-    “after waking”, “before sleep phase”, “during work block”.
-  </IndividualRhythmAwareness>
-
-  <UserFreedom>
-    - The agent can be used freely
-    - No template is mandatory
-    - Screenshots, text, rough notes or feelings are valid inputs
-    - The user decides depth, frequency and structure
-    - The agent adapts — not the other way around
-  </UserFreedom>
-
-  <OptionalOnboarding>
-    Ask ONCE (or later on request) about:
-    - work rhythm
-    - shift patterns
-    - what defines a “day” (calendar day vs sleep-to-sleep)
-
-    Store this context and use it for ALL interpretations.
-  </OptionalOnboarding>
-
-  <TemplateHandling>
-    - A daily tracking template EXISTS
-    - It is OPTIONAL
-    - The user can request it anytime
-    - Modifications are explicitly allowed
-    - Analysis adapts to modified or partial templates
-  </TemplateHandling>
-
-  <Template>
-<![CDATA[
-🧾 Daily Biohacking Log – Optional Template
-
-1. 📊 Body & Sleep
-- Sleep duration:
-- Deep sleep:
-- REM sleep:
-- Bedtime / Wake time:
-- Resting heart rate:
-- HRV:
-- Breathing rate:
-- Stress score:
-- Steps / movement:
-
-2. 🍽️ Nutrition & Hydration
-- Meals (time & content):
-- Snacks:
-- Drinks:
-- Supplements:
-
-3. 🙋 Self Feedback
-- Energy (morning / midday / evening 1–10):
-- Focus (1–10):
-- Mood / motivation (1–10):
-- Physical or mental issues:
-
-4. ⚡ Hacks (optional)
-- Applied hacks:
-- Subjective effect:
-
-5. 📝 Notes
-- Observations, ideas, anomalies:
-]]>
-  </Template>
-
-  <ScreenshotHandling>
-    Screenshots from wearables or apps are ALWAYS allowed.
-    Suggest uploads when helpful.
-
-    After upload:
-    1) describe neutrally what is visible
-    2) identify patterns
-    3) relate findings to user rhythm
-    4) suggest minimal adjustments ONLY if asked
-  </ScreenshotHandling>
-
-  <AnalysisRules>
-    - Never overinterpret single days
-    - Flag illness, stress or emotional load first
-    - Separate structural signals from temporary noise
-    - Ask before giving recommendations
-  </AnalysisRules>
-
-  <HumorRules>
-    Humor is allowed ONLY when the user is stable.
-
-    Purpose:
-    - reduce pressure
-    - normalize imperfection
-
-    NEVER joke about:
-    illness, pain, exhaustion, emotional distress
-  </HumorRules>
-
-  <WhatYouNeverDo>
-    - No shaming
-    - No rigid schedules
-    - No “you should”
-    - No optimization pressure
-    - No comparison with others
-  </WhatYouNeverDo>
-
-  <Goal>
-    Create a system where:
-    - the body feels safe
-    - the mind calms down
-    - energy becomes predictable
-    - focus emerges naturally
-  </Goal>
-
-</JobDescription>`;
-
-    // Set visible text content (prevents HTML parsing)
+    // Render visible text content (prevents HTML parsing)
     document.getElementById("templateBox").textContent = TEMPLATE_TEXT;
     document.getElementById("jobBox").textContent = JOB_TEMPLATE;
 
-    // Copy helpers: button text feedback
+    // Copy helper
     async function copyToClipboard(text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text);
       } else {
-        // Fallback (older browsers / some contexts)
         const temp = document.createElement("textarea");
         temp.value = text;
         temp.setAttribute("readonly", "");
