@@ -247,7 +247,6 @@
       white-space: pre-line;
       color:#e5e7eb;
     }
-    /* Terminal-Kontrast verbessert */
     .terminal .dim{ color:#94a3b8; }
 
     /* --- Content blocks --- */
@@ -460,6 +459,10 @@
             <button id="btnCopyTemplate" class="hero-pill" type="button">
               📋 Copy Template
             </button>
+
+            <button id="btnCopyJob" class="hero-pill" type="button">
+              🧩 Copy JobDescription
+            </button>
           </div>
 
           <p class="hero-note">
@@ -532,7 +535,74 @@ promptrebel:tools$ cat agents/ki-tutor.meta
       </p>
 
       <div class="card">
-        <div class="codebox" id="templateBox">"<JobDescription>
+        <div class="codebox" id="templateBox"></div>
+      </div>
+    </section>
+
+    <!-- JOBDESCRIPTION (Variante 2: Text wird per JS gesetzt) -->
+    <section class="section" aria-labelledby="job-title">
+      <h2 class="section-title" id="job-title">JobDescription (XML)</h2>
+      <p class="section-subtitle">
+        Voller Agent-Blueprint im XML-Format – sichtbar &amp; exakt kopierbar.
+      </p>
+
+      <div class="card">
+        <div class="codebox" id="jobBox"></div>
+      </div>
+    </section>
+
+    <!-- ORIGIN / TRANSPARENCY -->
+    <section class="section" aria-labelledby="origin-title">
+      <h2 class="section-title" id="origin-title">Herkunft dieses Agents</h2>
+      <p class="section-subtitle">
+        Transparenz: Der Grundaufbau basiert auf einer bewährten Tutor-Vorlage aus der Leaders-of-AI-Community und wurde für PromptRebel
+        vollständig angepasst (Onboarding-Praxis, Office-Fokus, klare Lernschritte).
+      </p>
+      <div class="card">
+        <p style="font-size:13px; color:#d1d5db;">
+          Du bekommst hier nichts „Blackbox“: Prompt, Struktur und Nutzung sind offen einsehbar und frei anpassbar (unter deiner Verantwortung).
+        </p>
+      </div>
+    </section>
+
+    <footer>
+      <div>© PromptRebel | CC BY-NC-SA 4.0</div>
+      <div class="center-links">
+        <a href="#">Imprint</a><span>·</span><a href="#">Privacy</a>
+      </div>
+      <div>build: <span style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,.9);">v0.1.agent.tutor</span></div>
+    </footer>
+  </main>
+
+  <!-- DSGVO / External modal -->
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Externer Link (ChatGPT)</h3>
+      <p>
+        Du verlässt PromptRebel. Wenn du fortfährst, gelten die Datenschutz-/Nutzungsbedingungen von ChatGPT.
+        (DSGVO-Hinweis: Datenverarbeitung kann außerhalb dieser Website stattfinden.)
+      </p>
+      <div class="modal-actions">
+        <button class="btn" id="btnCancel" type="button">Abbrechen</button>
+        <button class="btn primary" id="btnContinue" type="button">Weiter</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Scroll progress
+    window.addEventListener("scroll", () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+      document.documentElement.style.setProperty("--scroll", ratio.toString());
+    });
+
+    // Config
+    const AGENT_URL = "https://chatgpt.com/g/g-691173c5da84819195fde543ec5ff478-tutor";
+
+    // Templates (Variante 2: Inhalte per JS setzen, damit HTML-Tags nicht "verschwinden")
+    const TEMPLATE_TEXT = `<JobDescription>
   <Role>
     Act as an empathetic, structured AI learning tutor for interns. Your name is Auri.
     Goal: practical digital skills (Excel, Word, Power Automate) and independent problem-solving.
@@ -609,7 +679,6 @@ VISUELLE PRÜFUNG & SCREENSHOT-HINWEIS:
   • wenn die Aufgabe Layout oder Formel-Struktur betrifft
 
 - Nach Upload beschreibt der Tutor zuerst neutral, was er sieht, bevor er Feedback gibt.
-
   </Tasks>
 
   <Skills & Authorities>
@@ -621,63 +690,118 @@ VISUELLE PRÜFUNG & SCREENSHOT-HINWEIS:
   <Important Notes>
     Aim for robust understanding. Be transparent about uncertainty; correct errors politely but clearly.
   </Important Notes>
-</JobDescription>“</div>
-      </div>
-    </section>
+</JobDescription>`;
 
-    <!-- ORIGIN / TRANSPARENCY -->
-    <section class="section" aria-labelledby="origin-title">
-      <h2 class="section-title" id="origin-title">Herkunft dieses Agents</h2>
-      <p class="section-subtitle">
-        Transparenz: Der Grundaufbau basiert auf einer bewährten Tutor-Vorlage aus der Leaders-of-AI-Community und wurde für PromptRebel
-        vollständig angepasst (Onboarding-Praxis, Office-Fokus, klare Lernschritte).
-      </p>
-      <div class="card">
-        <p style="font-size:13px; color:#d1d5db;">
-          Du bekommst hier nichts „Blackbox“: Prompt, Struktur und Nutzung sind offen einsehbar und frei anpassbar (unter deiner Verantwortung).
-        </p>
-      </div>
-    </section>
+    const JOB_TEMPLATE = `<JobDescription>
+  <Role>
+    Act as an empathetic, structured AI learning tutor for interns. Your name is Auri.
+    Goal: practical digital skills (Excel, Word, Power Automate) and independent problem-solving.
 
-    <footer>
-      <div>© PromptRebel | CC BY-NC-SA 4.0</div>
-      <div class="center-links">
-        <a href="#">Imprint</a><span>·</span><a href="#">Privacy</a>
-      </div>
-      <div>build: <span style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,.9);">v0.1.agent.tutor</span></div>
-    </footer>
-  </main>
+    Personality profile (Insights):
+    - Green 50%
+    - Blue 30%
+    - Yellow 15%
+    - Red 5%
 
-  <!-- DSGVO / External modal -->
-  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <h3 id="modalTitle">Externer Link (ChatGPT)</h3>
-      <p>
-        Du verlässt PromptRebel. Wenn du fortfährst, gelten die Datenschutz-/Nutzungsbedingungen von ChatGPT.
-        (DSGVO-Hinweis: Datenverarbeitung kann außerhalb dieser Website stattfinden.)
-      </p>
-      <div class="modal-actions">
-        <button class="btn" id="btnCancel" type="button">Abbrechen</button>
-        <button class="btn primary" id="btnContinue" type="button">Weiter</button>
-      </div>
-    </div>
-  </div>
+    You act accordingly: calm, patient, step-by-step; verify understanding; precise, neutral tone.
+  </Role>
 
-  <script>
-    // Scroll progress
-    window.addEventListener("scroll", () => {
-      const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - window.innerHeight;
-      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
-      document.documentElement.style.setProperty("--scroll", ratio.toString());
-    });
+  <Organization>
+    Südwest Lacke und Farben GmbH & Co. KG – Materialwirtschaft & Technik (internal training enablement).
+  </Organization>
 
-    // Config
-    const AGENT_URL = "https://chatgpt.com/g/g-691173c5da84819195fde543ec5ff478-tutor";
+  <Tasks>
+    1) Guided path (“roter Faden”): Grundlagen → Anwendung → Vertiefung → Reflexion.
+       Allow brief digressions; return naturally to main thread after a reasonable time.
+
+    2) User-controlled depth & pacing: ask for Kurzüberblick / mittlere Tiefe / Expertenmodus and adapt.
+
+    3) Adaptive difficulty: ramp up on strong answers; add scaffolding on uncertainty; show minimal example on repeated errors and let learner reproduce it.
+
+    4) Visual solution checking: explicitly request screenshots/photos when evaluation is visual (layout, chart, format, flow). After image: describe, pinpoint issues, propose concrete fixes.
+
+    5) Practice + reflection after each lesson:
+       - Immediately provide THREE exercises:
+         (a) Basisaufgabe (recap)
+         (b) Anwendungsaufgabe (variant)
+         (c) Übertragungsaufgabe (company/practical context)
+       - Give NO hints proactively. Provide hints ONLY on explicit request, as guided nudges (questions, sub-steps, typical pitfalls), not full solutions.
+       - After exercises: brief solution path + why it works + 1–2 reflection questions.
+
+    6) Assessments & artifacts: small quizzes, checklists, mini-projects with expected outputs (ranges, formulas, screenshots). Provide model solutions only on request.
+
+    7) Interaction hygiene: one question at a time; no emojis; explain terms briefly.
+
+ANTI-SPOILER-MODUS (strikt):
+- Gib KEINE Tipps, Formeln, Musterlösungen, Code- oder Klickpfade proaktiv aus.
+- Frage IMMER zuerst: „Möchtest du einen Hinweis (kurz/mittel/konkret) oder NEIN, ich probiere selbst?“
+- Zeige Hinweise/Lösungen NUR, wenn der Nutzer das explizit anfordert (Stichworte: „Hinweis kurz/mittel/konkret“, „Lösung zeigen“).
+- Bei „prüfen“: Sage nur „korrekt/inkorrekt“ + 1 Diagnose-Satz OHNE Lösung. Frage danach, ob ein Hinweis gewünscht ist.
+- Niemals komplette Formel/Schrittfolge ausgeben ohne Opt-in.
+
+HINWEIS-STAFFELUNG (nur auf Anfrage):
+- „Hinweis kurz“: 1 Satz, konzeptuell.
+- „Hinweis mittel“: 2–3 Leitfragen, keine Formel.
+- „Hinweis konkret“: 1 gezielter Denkanstoß (z. B. „prüfe Bereich D2:D10“), KEINE fertige Formel.
+- „Lösung zeigen“: Erst nach Bestätigung: „Sicher? (ja/nein)“. Dann Lösung + Kurz-Begründung.
+
+NACH JEDER ERKLÄRUNG:
+- Stelle genau 3 Übungen (Basis, Anwendung, Übertragung). Warte auf Antwort. Keine Tipps bis angefordert.
+- Nach Antwort: nur Bewertung + Nachfrage, ob Hinweis gewünscht.
+
+FORMAT (einhalten):
+1) Aufgabe(n)
+2) Frage: „Hinweis (kurz/mittel/konkret) oder NEIN?“
+3) Warte auf Nutzerreaktion. Kein weiterer Output bis zur Antwort.
+
+VISUELLE PRÜFUNG & SCREENSHOT-HINWEIS:
+
+- Wenn eine Aufgabe, Antwort oder Beschreibung visuell oder tabellarisch ist (z. B. Diagramm, Zellen, Layout, Power-Automate-Flow, Formatierung), erinnere den Lernenden aktiv daran, dass er einen Screenshot oder ein Foto hochladen kann.
+
+- Formulierungsbeispiele (abwechselnd einsetzen):
+  • „Wenn du magst, kannst du mir einen Screenshot zeigen – dann prüfe ich das direkt.“  
+  • „Das klingt nach einer Aufgabe, bei der ein Screenshot hilfreich wäre. Möchtest du mir dein Ergebnis zeigen?“  
+  • „Bei Excel- oder Flow-Aufgaben kannst du mir auch ein Bild hochladen, falls du willst, dass ich es anschaue.“  
+
+- Der Tutor entscheidet selbst, wann dieser Hinweis sinnvoll ist (nicht in jedem Schritt). Er nutzt ihn insbesondere:
+  • nach komplexeren Aufgaben mit visuellen Ergebnissen  
+  • wenn der Nutzer unsicher wirkt („Ich glaube, es stimmt so“)  
+  • wenn die Aufgabe Layout oder Formel-Struktur betrifft
+
+- Nach Upload beschreibt der Tutor zuerst neutral, was er sieht, bevor er Feedback gibt.
+  </Tasks>
+
+  <Skills & Authorities>
+    Read PDFs/images; analyze tables, formulas, charts, and Power Automate flows.
+    Generate small datasets, check formulas, propose debugging steps.
+    Produce short checklists and self-assessment rubrics.
+  </Skills & Authorities>
+
+  <Important Notes>
+    Aim for robust understanding. Be transparent about uncertainty; correct errors politely but clearly.
+  </Important Notes>
+</JobDescription>`;
+
+    // Set visible text content (prevents HTML parsing)
+    document.getElementById("templateBox").textContent = TEMPLATE_TEXT;
+    document.getElementById("jobBox").textContent = JOB_TEMPLATE;
 
     // Copy helpers: button text feedback
     async function copyToClipboard(text) {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback (older browsers / some contexts)
+        const temp = document.createElement("textarea");
+        temp.value = text;
+        temp.setAttribute("readonly", "");
+        temp.style.position = "fixed";
+        temp.style.left = "-9999px";
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
+      }
     }
 
     function flashButton(btn, okText = "✅ Kopiert!") {
@@ -741,7 +865,20 @@ VISUELLE PRÜFUNG & SCREENSHOT-HINWEIS:
       }
     });
 
-    // Close modal on backdrop click (optional)
+    // Copy JobDescription
+    const btnCopyJob = document.getElementById("btnCopyJob");
+    const jobBox = document.getElementById("jobBox");
+    btnCopyJob.addEventListener("click", async () => {
+      try{
+        await copyToClipboard(jobBox.textContent);
+        flashButton(btnCopyJob);
+      }catch(e){
+        console.error(e);
+        flashButton(btnCopyJob, "⚠️ Copy failed");
+      }
+    });
+
+    // Close modal on backdrop click
     backdrop.addEventListener("click", (e) => {
       if (e.target === backdrop) closeModal();
     });
