@@ -520,21 +520,21 @@ promptrebel:tools$ cat agents/biohacking-coach.meta
     <section class="section" aria-labelledby="how-title">
       <h2 class="section-title" id="how-title">Wie du den Biohacking Coach nutzt</h2>
       <p class="section-subtitle">
-        Du kannst deine Daten flexibel erfassen:
-Entweder sammelst du sie über den Tag und postest sie gesammelt als sauberes Tagespaket – oder du schickst einzelne Beobachtungen, Screenshots oder Notizen verteilt über den Tag.
-Der Coach arbeitet in beiden Fällen strukturiert weiter und fasst Muster zuverlässig zusammen.
-      </p>
+  Du kannst deine Daten flexibel erfassen:<br>
+  Entweder sammelst du sie über den Tag und postest sie gesammelt als sauberes Tagespaket – oder du schickst einzelne Beobachtungen, Screenshots oder Notizen verteilt über den Tag.<br>
+  Der Coach arbeitet in beiden Fällen strukturiert weiter und fasst Muster zuverlässig zusammen.
+</p>
 
       <div class="card">
         <div class="codebox">Beispiel:
-„„Ich möchte meinen Schlaf & meine Tagesenergie stabiler bekommen. Hier ist mein Tagespaket.
+„Ich möchte meinen Schlaf & meine Tagesenergie stabiler bekommen. Hier ist mein Tagespaket.
 
 1) Kurz-Kontext
 - Ziel: (z. B. ruhiger schlafen, weniger Mittagstief, mehr Fokus)
 - Alltag: (z. B. Büro/Schicht/Training), besondere Belastungen
 - Was war heute anders als sonst?
 
-2) Optinal (Template ausgefüllt)
+2) Optional (Template ausgefüllt)
 [füge hier dein ausgefülltes Daily Biohacking Log ein]
 
 3) Screenshots (Wearable/App)
@@ -615,14 +615,9 @@ Der Coach arbeitet in beiden Fällen strukturiert weiter und fasst Muster zuverl
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <h3 id="modalTitle">Externer Link (ChatGPT)</h3>
       <p>
-        Du verlässt PromptRebel und öffnest ChatGPT. Bitte beachte zusätzlich:
-      </p>
-      <ul>
-        <li><strong>Kein Ersatz</strong> für Arzt/Diagnose/Behandlung.</li>
-        <li><strong>Keine Notfallberatung.</strong> Bei akuten Beschwerden: Notruf/Notdienst.</li>
-        <li><strong>Keine Dosierungen</strong> oder Medikamenten-/Supplement-Pläne.</li>
-        <li>Bei Symptomen/Erkrankungen/Unsicherheit: <strong>ärztlichen Rat einholen</strong>.</li>
-      </ul>
+  Hinweis: Beim Öffnen verlässt du PromptRebel und nutzt ChatGPT.
+  (Safety-Hinweise siehe unten.)
+</p>
       <p style="margin-bottom:12px;">
         (Datenschutz/DSGVO: Datenverarbeitung kann außerhalb dieser Website stattfinden.)
       </p>
@@ -647,8 +642,8 @@ Der Coach arbeitet in beiden Fällen strukturiert weiter und fasst Muster zuverl
 
     // Template (kurz, nicht XML)
     const TEMPLATE_TEXT =
-`<Template (Standard Version)>
-<![CDATA[
+`Template (Standard Version)
+
 🧾 Daily Biohacking Log – Optional Template
 
 1. 📊 Body & Sleep
@@ -687,8 +682,7 @@ Der Coach arbeitet in beiden Fällen strukturiert weiter und fasst Muster zuverl
 - Type (real hunger / appetite / stress)
 - Action
 - Satiety after (1–10)
-]]>
-  </Template>`;
+`;
 
     // JobDescription (XML) – inkl. Safety explizit
     const JOB_TEMPLATE =
@@ -718,6 +712,13 @@ Der Coach arbeitet in beiden Fällen strukturiert weiter und fasst Muster zuverl
     - NEVER mocking, NEVER judgmental
     - humor adapts to user state (sick, stressed → no jokes)
   </Role>
+
+ <MedicalSafety>
+    - Not a replacement for a doctor, diagnosis, or treatment.
+    - No emergency guidance. In acute or severe symptoms: call local emergency services.
+    - No dosing instructions. No medication plans. No supplement protocols with amounts.
+    - No risky self-experiments. If symptoms or illness are present: seek medical advice.
+  </MedicalSafety>
 
   <Branding>
     PromptRebel Style:
@@ -908,7 +909,7 @@ Der Coach arbeitet in beiden Fällen strukturiert weiter und fasst Muster zuverl
     - No optimization pressure
     - No comparison with others
   </WhatYouNeverDo>
-
+ 
   <Goal>
     Create a system where:
     - the body feels safe
@@ -916,6 +917,13 @@ Der Coach arbeitet in beiden Fällen strukturiert weiter und fasst Muster zuverl
     - energy becomes predictable
     - focus emerges naturally
   </Goal>
+
+  <LanguagePolicy>
+  Default to the user's language.
+  If the user's language is unclear or mixed, ask which language they prefer.
+  If the user switches language, follow the latest message.
+  Keep medical safety warnings in the user's language.
+</LanguagePolicy>
 
 </JobDescription>`;
 
