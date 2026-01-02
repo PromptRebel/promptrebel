@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>PromptRebel – Idea Architect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root { --scroll: 0; }
+
+    /* --- Reset / Basics --- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; scroll-behavior: smooth; }
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:#020617;
+      color:#e5e7eb;
+      line-height:1.6;
+      padding-top:64px;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* --- Background / Glows --- */
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,.35), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(56,189,248,.35), transparent 55%);
+      z-index:-2;
+    }
+    body::after{
+      content:"";
+      position:fixed; inset:0;
+      opacity:.22;
+      pointer-events:none;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size:3px 3px, 3px 3px;
+      mix-blend-mode: soft-light;
+      z-index:-1;
+    }
+
+    .page{
+      max-width:1120px;
+      margin:0 auto;
+      padding:16px 16px 40px;
+    }
+
+    /* --- Skip-Link --- */
+    .skip-link{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      top:-40px;
+      padding:6px 10px;
+      background:#0f172a;
+      color:#f9fafb;
+      border-radius:999px;
+      font-size:13px;
+      z-index:60;
+    }
+    .skip-link:focus-visible{
+      top:10px;
+      outline:2px solid #22d3ee;
+      outline-offset:2px;
+    }
+
+    /* --- Nav + Scroll progress --- */
+    .nav{
+      position:fixed; top:0; left:0; right:0;
+      z-index:40;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(15,23,42,.95), rgba(15,23,42,.6));
+      border-bottom:1px solid rgba(148,163,184,.1);
+    }
+    .nav-inner{
+      max-width:1120px;
+      margin:0 auto;
+      padding:10px 16px 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      position:relative;
+      gap:12px;
+    }
+    .nav::after{
+      content:"";
+      position:absolute; left:0; right:0; bottom:0;
+      height:2px;
+      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin:left;
+      transform: scaleX(var(--scroll));
+      transition: transform .1s linear;
+      pointer-events:none;
+    }
+
+    .brand-link{
+      display:inline-flex;
+      align-items:center;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.05em;
+      white-space:nowrap;
+      text-shadow: 0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4);
+      cursor:pointer;
+    }
+    .brand-link span.accent{
+      background: linear-gradient(135deg, #f472b6, #22d3ee);
+      -webkit-background-clip:text;
+      color:transparent;
+    }
+
+    .nav-links{ display:flex; gap:18px; font-size:14px; flex-wrap:wrap; }
+    .nav-link{ position:relative; padding-block:4px; }
+    .nav-link::after{
+      content:"";
+      position:absolute; left:0; bottom:-2px;
+      width:0; height:2px; border-radius:999px;
+      background: linear-gradient(90deg, #f472b6, #22d3ee);
+      box-shadow: 0 0 8px rgba(56,189,248,.8);
+      transition: width .25s ease;
+    }
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after{ width:100%; }
+    .nav-link:focus-visible{ outline:none; }
+
+    /* --- Layout --- */
+    .section{ padding:40px 16px 8px; }
+    .section:first-of-type{ padding-top:28px; }
+
+    @media(min-width:768px){
+      .hero-layout{
+        display:grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2.2fr);
+        gap:32px;
+        align-items:start;
+      }
+    }
+
+    /* --- Hero --- */
+    .category-label{
+      font-size:12px;
+      letter-spacing:.25em;
+      text-transform:uppercase;
+      color:#f9a8d4;
+      margin-bottom:6px;
+    }
+    .hero-title{
+      font-size: clamp(32px, 5vw, 46px);
+      font-weight:800;
+      margin-bottom:10px;
+      text-shadow: 0 0 14px rgba(236,72,153,.6), 0 0 20px rgba(34,211,238,.4);
+    }
+    .hero-breadcrumbs{
+      font-size:12px;
+      color:#9ca3af;
+      margin-bottom:16px;
+    }
+    .hero-breadcrumbs a{
+      text-decoration: underline;
+      text-underline-offset:3px;
+    }
+    .hero-text-main{
+      font-size:15px;
+      margin-bottom:8px;
+      max-width:44rem;
+    }
+    .hero-text-sub{
+      font-size:14px;
+      color:#cbd5f5;
+      margin-bottom:18px;
+      max-width:48rem;
+    }
+
+    .hero-pills{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .hero-pill{
+      border-radius:999px;
+      padding:10px 14px;
+      border:1px solid rgba(248,250,252,.16);
+      font-size:13px;
+      background: radial-gradient(circle at top left, rgba(30,64,175,.75), rgba(15,23,42,.95));
+      box-shadow: 0 12px 30px rgba(15,23,42,.9);
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+      user-select:none;
+    }
+    .hero-pill:hover{
+      transform: translateY(-2px) scale(1.02);
+      border-color: rgba(209,213,219,.28);
+      box-shadow: 0 0 18px rgba(34,211,238,.20), 0 12px 30px rgba(2,6,23,.75);
+    }
+
+    /* CTA Priorität (Open Agent) */
+    .hero-pill.primary{
+      background: linear-gradient(135deg, #ec4899, #22d3ee);
+      color:#020617;
+      font-weight:800;
+      border:none;
+      box-shadow: 0 0 22px rgba(34,211,238,.35), 0 0 22px rgba(236,72,153,.25), 0 12px 30px rgba(2,6,23,.75);
+    }
+    .hero-pill.primary:hover{
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 0 28px rgba(34,211,238,.45), 0 0 28px rgba(236,72,153,.35), 0 12px 34px rgba(2,6,23,.8);
+    }
+
+    .hero-note{
+      font-size:11px;
+      color:#9ca3af;
+    }
+
+    /* --- Glass panel / terminal --- */
+    .panel-glass{
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background: radial-gradient(circle at top left, rgba(15,23,42,.9), rgba(15,23,42,.98));
+      box-shadow: 0 18px 45px rgba(15,23,42,.95);
+      backdrop-filter: blur(18px);
+      padding:14px 16px 12px;
+    }
+    .panel-header{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#9ca3af;
+      margin-bottom:6px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .panel-header .icon{ font-size:14px; color:#f97316; }
+
+    .terminal{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+      white-space: pre-line;
+      color:#e5e7eb;
+    }
+    .terminal .dim{ color:#94a3b8; }
+
+    /* --- Content blocks --- */
+    .section-title{
+      font-size:18px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+    .section-subtitle{
+      font-size:13px;
+      color:#9ca3af;
+      margin-bottom:18px;
+      max-width:52rem;
+    }
+
+    .card{
+      border-radius:20px;
+      padding:16px 18px;
+      border:1px solid rgba(148,163,184,.18);
+      background: radial-gradient(circle at top left, rgba(15,23,42,.96), rgba(15,23,42,.99));
+      box-shadow: 0 18px 40px rgba(15,23,42,.96);
+      backdrop-filter: blur(18px);
+      margin-bottom:14px;
+    }
+
+    .codebox{
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(2,6,23,.65);
+      padding:14px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+      color:#e5e7eb;
+      white-space: pre-wrap;
+      overflow-x:auto;
+    }
+
+    /* ✅/❌ Block */
+    .two-col{
+      display:grid;
+      gap:12px;
+    }
+    @media(min-width:768px){
+      .two-col{ grid-template-columns: 1fr 1fr; }
+    }
+    .ok-card{ --acc: rgba(34,211,238,.85); }
+    .no-card{ --acc: rgba(236,72,153,.75); }
+    .ok-card, .no-card{
+      position:relative;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background: radial-gradient(circle at top left, rgba(15,23,42,.92), rgba(15,23,42,.99));
+      box-shadow: 0 14px 32px rgba(2,6,23,.7);
+      padding:14px 14px;
+      overflow:hidden;
+    }
+    .ok-card::before, .no-card::before{
+      content:"";
+      position:absolute; inset:-1px;
+      border-radius:inherit;
+      background: radial-gradient(circle at top left, var(--acc), transparent 60%);
+      opacity:.22;
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+    .list{
+      margin-top:8px;
+      display:grid;
+      gap:8px;
+      font-size:13px;
+      color:#d1d5db;
+    }
+    .item{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.28);
+      background: rgba(15,23,42,.7);
+      flex:0 0 auto;
+      font-size:12px;
+    }
+
+    /* --- Footer --- */
+    footer{
+      margin-top:40px;
+      padding-top:16px;
+      border-top:1px solid rgba(15,23,42,.9);
+      font-size:11px;
+      color:#94a3b8;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
+    }
+    footer .center-links{ display:flex; gap:10px; }
+    footer a{ text-decoration: underline; text-underline-offset:3px; }
+
+    /* --- Mobile tweaks --- */
+    @media(max-width:767px){
+      body{ padding-top:60px; }
+      .nav-links{ font-size:13px; gap:12px; }
+      .section{ padding-top:32px; }
+      .hero-layout{ display:block; }
+      .panel-glass{ margin-top:20px; }
+    }
+
+    /* Very small screens: pills stacked */
+    @media(max-width:480px){
+      .hero-pills{ flex-direction:column; }
+      .hero-pill{ width:100%; }
+    }
+
+    /* Modal */
+    .modal-backdrop{
+      position:fixed; inset:0;
+      background: rgba(2,6,23,.66);
+      backdrop-filter: blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:999999;
+    }
+    .modal-backdrop.open{ display:flex; }
+    .modal{
+      width:min(560px, 100%);
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.92);
+      box-shadow: 0 22px 70px rgba(2,6,23,.85);
+      padding:16px 16px 14px;
+    }
+    .modal h3{ font-size:16px; margin-bottom:8px; }
+    .modal p{ font-size:13px; color:#cbd5f5; margin-bottom:12px; }
+    .modal-actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+    .btn{
+      border-radius:999px;
+      padding:10px 12px;
+      border:1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.75);
+      color:#e5e7eb;
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+    }
+    .btn.primary{
+      border:none;
+      background: linear-gradient(135deg, #ec4899, #22d3ee);
+      color:#020617;
+      box-shadow: 0 0 18px rgba(34,211,238,.22);
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand-link" href="../../index.html" aria-label="PromptRebel Home">
+        Prompt<span class="accent">Rebel</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Hauptnavigation">
+        <a href="../../index.html#projects" class="nav-link">Projects</a>
+        <a href="../../index.html#about" class="nav-link">About</a>
+        <a href="../../index.html#lab-notes" class="nav-link">Lab Notes</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page" id="main">
+    <!-- HERO -->
+    <section class="section">
+      <div class="hero-layout">
+        <div>
+          <div class="category-label">Tools · Agenten</div>
+          <h1 class="hero-title">Idea Architect</h1>
+
+          <div class="hero-breadcrumbs">
+            <span><a href="../../index.html">Home</a> · <a href="../tools.html">Tools</a> · <a href="../agents.html">Agenten</a> · Idea Architect</span>
+          </div>
+
+          <p class="hero-text-main">
+            Ein strukturierter Ideen-Architekt: aus einer rohen Idee wird ein umsetzbares System-Gerüst. Du bringst Ziel & Kontext, der Agent baut Struktur.
+          </p>
+          <p class="hero-text-sub">
+            Ergebnis: Mini-Architektur (Datenmodell, Inputs, Flows/Automationen, Logging, Governance) – tool-agnostisch oder Power-Platform-ready.
+          </p>
+
+          <div class="hero-pills">
+            <button id="btnOpenAgent" class="hero-pill primary" type="button">🚀 Open Agent</button>
+            <button id="btnCopyLink" class="hero-pill" type="button">🔗 Copy Link</button>
+            <button id="btnCopyTemplate" class="hero-pill" type="button">📋 Copy Template</button>
+            <button id="btnCopyJob" class="hero-pill" type="button">🧩 Copy JobDescription</button>
+          </div>
+
+          <p class="hero-note">
+            Hinweis: Beim Öffnen verlässt du PromptRebel und nutzt ChatGPT. Ergebnisse sind Vorschläge – prüfe sie vor Umsetzung (Sicherheit/DSGVO siehe unten).
+          </p>
+        </div>
+
+        <!-- Terminal -->
+        <aside class="panel-glass">
+          <div class="panel-header">
+            <span class="icon">🧊</span>
+            <span>AGENT META · Idea Architect</span>
+          </div>
+          <div class="terminal">
+promptrebel:tools$ cat agents/idea-architect.meta
+
+> status: produktiv im Einsatz
+> use-case: idea → architecture → build plan
+> tone: klar · strukturiert · pragmatisch
+> output: discover → critique → shape
+> data: kein Zugriff auf echte Dateien
+
+<span class="dim"># Tipp: gib Ziel, Nutzer, Trigger, Input/Output + Tool-Stack an</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- SAFETY -->
+    <section class="section" aria-labelledby="safety-title">
+      <h2 class="section-title" id="safety-title">Sicherheit & Grenzen (wichtig)</h2>
+      <p class="section-subtitle">
+        Kurzfassung der Leitplanken – damit klar bleibt, was dieser Agent darf und was nicht.
+      </p>
+
+      <div class="two-col">
+        <div class="ok-card">
+          <h3 style="font-size:15px; font-weight:800;">✅ Wofür der Agent gedacht ist</h3>
+          <div class="list">
+            <div class="item"><span class="badge">✅</span><span>Ideen klären, strukturieren und in ein umsetzbares Gerüst übersetzen</span></div>
+            <div class="item"><span class="badge">✅</span><span>Datenmodelle vorschlagen (Listen/Entities/Felder) inkl. Inputs & Outputs</span></div>
+            <div class="item"><span class="badge">✅</span><span>Automationen/Flows als Schrittfolge skizzieren (Trigger → Schritte → Ergebnis)</span></div>
+            <div class="item"><span class="badge">✅</span><span>Logging, KPIs und minimale Governance-Basics (Rollen, Rechte, Audit-Trail)</span></div>
+          </div>
+        </div>
+
+        <div class="no-card">
+          <h3 style="font-size:15px; font-weight:800;">❌ Explizit nicht</h3>
+          <div class="list">
+            <div class="item"><span class="badge">❌</span><span>Keine Rechtsberatung / keine finale DSGVO-Freigabe</span></div>
+            <div class="item"><span class="badge">❌</span><span>Keine Security-Garantie, kein Pen-Testing, keine Umgehung von Policies</span></div>
+            <div class="item"><span class="badge">❌</span><span>Keine Anleitung zu Malware, Phishing, Social Engineering oder Zugriffsmissbrauch</span></div>
+            <div class="item"><span class="badge">❌</span><span>Keine Verarbeitung sensibler Daten ohne Schutzkonzept – im Zweifel Fachstelle einbinden</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" aria-labelledby="how-title">
+      <h2 class="section-title" id="how-title">Wie du den Idea Architect nutzt</h2>
+      <p class="section-subtitle">
+        Du gibst eine Idee (auch grob). Der Agent stellt 1–2 Rückfragen und baut daraus ein umsetzbares Gerüst:
+        Datenmodell → Inputs → Flows → Logging/KPIs → Governance. Du entscheidest, was du wirklich umsetzt.
+      </p>
+
+      <div class="card">
+        <div class="codebox">Beispiel:
+„Ich will einen internen Prozess digitalisieren.
+
+1) Ziel & Nutzer
+- Ziel: Störungsmeldungen zentral erfassen und automatisch zuweisen
+- Nutzer: Mitarbeiter, Technik, Teamleiter
+- Ort: Teams / SharePoint / Mobile
+
+2) Trigger & Inputs
+- Trigger: Formular abgeschickt (Forms oder Power Apps)
+- Inputs: Bereich, Kategorie, Beschreibung, Priorität, Foto/Anhang
+
+3) Output
+- Ergebnis: Ticket in Liste + Benachrichtigung an zuständige Gruppe + Statusverfolgung
+- Auswertungen: Top-Kategorien, Durchlaufzeiten, Häufigkeiten, SLAs
+
+4) Constraints
+- Berechtigungen: wer darf Tickets sehen/bearbeiten?
+- Volumen: x Tickets pro Tag
+- Compliance: Aufbewahrung, Audit, DSGVO (keine unnötigen Personendaten)
+
+Bitte: Stelle 1–2 Rückfragen und gib danach eine Mini-Architektur inkl. Datenmodell, Inputs, Flows, Logging & KPIs aus.“</div>
+      </div>
+
+      <div class="two-col">
+        <div class="ok-card">
+          <h3 style="font-size:15px; font-weight:800;">✅ Gute Inputs</h3>
+          <div class="list">
+            <div class="item"><span class="badge">✅</span><span>Klare Zieldefinition + Nutzerrollen + „Was startet es?“</span></div>
+            <div class="item"><span class="badge">✅</span><span>Input/Output als Liste (Felder, Anhänge, Status, Reports)</span></div>
+            <div class="item"><span class="badge">✅</span><span>Constraints: Rechte, Volumen, Aufbewahrung, DSGVO</span></div>
+          </div>
+        </div>
+
+        <div class="no-card">
+          <h3 style="font-size:15px; font-weight:800;">❌ Nicht sinnvoll/zulässig</h3>
+          <div class="list">
+            <div class="item"><span class="badge">❌</span><span>„Umgeh die Berechtigungen / hol dir Zugriff auf X“</span></div>
+            <div class="item"><span class="badge">❌</span><span>„Gib mir einen Hack, um Policies zu umgehen“</span></div>
+            <div class="item"><span class="badge">❌</span><span>„Schreib mir Malware/Phishing/Exploit-Code“</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEMPLATE -->
+    <section class="section" aria-labelledby="tpl-title">
+      <h2 class="section-title" id="tpl-title">Template (Kurz-Start)</h2>
+      <p class="section-subtitle">
+        Copy-Paste-Vorlage für eine Anfrage an den Agenten. Kurz halten, reicht völlig.
+      </p>
+
+      <div class="card">
+        <div class="codebox" id="templateBox"></div>
+      </div>
+    </section>
+
+    <!-- JOBDESCRIPTION -->
+    <section class="section" aria-labelledby="job-title">
+      <h2 class="section-title" id="job-title">JobDescription (XML)</h2>
+      <p class="section-subtitle">
+        Voller Agent-Blueprint im XML-Format – sichtbar &amp; exakt kopierbar.
+      </p>
+
+      <div class="card">
+        <div class="codebox" id="jobBox"></div>
+      </div>
+    </section>
+
+    <!-- ORIGIN / TRANSPARENCY -->
+    <section class="section" aria-labelledby="origin-title">
+      <h2 class="section-title" id="origin-title">Transparenz</h2>
+      <p class="section-subtitle">
+        Du bekommst hier keine Blackbox: Prompt, Struktur und Nutzung sind offen einsehbar und frei anpassbar (unter deiner Verantwortung).
+      </p>
+      <div class="card">
+        <p style="font-size:13px; color:#d1d5db;">
+          Wenn du Inhalte anpasst: Safety-Regeln, Governance und Datenschutz/DSGVO bitte beibehalten.
+        </p>
+      </div>
+    </section>
+
+    <footer>
+      <div>© PromptRebel | CC BY-NC-SA 4.0</div>
+      <div class="center-links">
+        <a href="../imprint.html">Imprint</a><span>·</span><a href="../privacy.html">Privacy</a>
+      </div>
+      <div>build: <span style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,.9);">v0.1.agent.idea-architect</span></div>
+    </footer>
+  </main>
+
+  <!-- External modal -->
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Externer Link (ChatGPT)</h3>
+      <p>
+        Hinweis: Beim Öffnen verlässt du PromptRebel und nutzt ChatGPT.
+        (Hinweise zu Sicherheit/DSGVO &amp; Governance siehe unten.)
+      </p>
+      <p style="margin-bottom:12px;">
+        (Datenschutz/DSGVO: Datenverarbeitung kann außerhalb dieser Website stattfinden.)
+      </p>
+      <div class="modal-actions">
+        <button class="btn" id="btnCancel" type="button">Abbrechen</button>
+        <button class="btn primary" id="btnContinue" type="button">Weiter</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Scroll progress
+    window.addEventListener("scroll", () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+      document.documentElement.style.setProperty("--scroll", ratio.toString());
+    });
+
+    // Config
+    const AGENT_URL = "https://chatgpt.com/g/g-6957d5da56488191906ba6cab3a968ca-idea-architect";
+
+    // Template (kurz)
+    const TEMPLATE_TEXT =
+`Template (Idea Architect – Quick Intake)
+
+1) 🎯 Ziel
+- Was soll besser werden? (1 Satz)
+- Erfolg messbar woran? (1–2 KPIs)
+
+2) 👥 Nutzer & Ort
+- Wer nutzt es? (Rollen)
+- Wo? (Teams / Web / Mobile / SharePoint)
+
+3) ⚡ Trigger
+- Was startet den Prozess? (Event)
+
+4) 📥 Input
+- Welche Daten kommen rein? (Felder, Dateien, Fotos, IDs)
+
+5) 📤 Output
+- Was muss am Ende rausfallen? (Ticket, Report, Mail, Freigabe…)
+
+6) 🔒 Regeln
+- Berechtigungen / Sichtbarkeit
+- Aufbewahrung / Audit
+- Volumen (pro Tag/Woche)
+
+7) 🧰 Tool-Stack (optional)
+- Microsoft 365 / Power Platform? (ja/nein)
+- Alternativen erlaubt?`;
+
+    // JobDescription (XML)
+    const JOB_TEMPLATE =
+`<JobDescription>
+
+  <Role>
+    Act as THINK CUBE – a structured Idea Architect and Implementation Accelerator.
+
+    Your mission:
+    Transform raw ideas into clear, buildable system blueprints.
+
+    You do NOT:
+    - sell ideas
+    - motivate emotionally
+    - brainstorm endlessly
+
+    You DO:
+    - clarify
+    - challenge
+    - structure
+    - translate ideas into implementation-ready architectures
+  </Role>
+
+  <OperatingMode>
+    You work in strict phases.
+    You ask few, precise questions.
+    You move forward autonomously once criteria are met.
+  </OperatingMode>
+
+  <SafetyAndScope>
+    - Not legal advice and not a final GDPR/DSGVO approval.
+    - No instructions to bypass permissions, policies, or security controls.
+    - No malware, phishing, exploits, or social engineering assistance.
+    - If sensitive personal data is involved: recommend data minimization and involving the appropriate privacy/security stakeholders.
+  </SafetyAndScope>
+
+  <Phases>
+
+    <Phase id="1_DISCOVER">
+      Goal: Understand the idea and its boundaries.
+
+      Clarify:
+      - purpose
+      - target users
+      - trigger/event
+      - input data
+      - output/result
+      - place of use (where does this live?)
+
+      Rules:
+      - max 1–2 questions per response
+      - bullet points only
+      - no assumptions unless stated
+
+      Switch when all fields are sufficiently clear.
+      End with: [[PHASE:2_CRITIQUE]]
+    </Phase>
+
+    <Phase id="2_CRITIQUE">
+      Goal: Stress-test the idea.
+
+      Focus on:
+      - risks
+      - edge cases
+      - data protection / GDPR
+      - scalability & volume
+      - permissions & ownership
+      - failure modes
+      - measurability
+
+      Rules:
+      - max 4 points per response
+      - concrete examples only
+      - no theory
+
+      Switch when major risks & metrics are defined.
+      End with: [[PHASE:3_SHAPE]]
+    </Phase>
+
+    <Phase id="3_SHAPE">
+      Goal: Produce a buildable mini architecture.
+
+      Output structure:
+      1) Short solution summary (1–3 sentences)
+      2) Data model (lists / fields / entities)
+      3) Inputs (forms / apps / interfaces)
+      4) Flows (trigger → steps → output)
+      5) Logging & KPIs
+      6) Security & governance (minimal)
+      7) Next iteration (V2)
+
+      Rules:
+      - no prose
+      - no marketing
+      - only what is needed to start building
+    </Phase>
+
+  </Phases>
+
+  <ArchitectureProfiles>
+
+    <DefaultProfile>
+      GENERIC
+    </DefaultProfile>
+
+    <Profile id="GENERIC">
+      Description:
+      Tool-agnostic architecture.
+      Suitable for beginners or undefined environments.
+
+      Rules:
+      - Choose tools based on idea requirements
+      - Explain assumptions briefly
+      - Keep structure simple
+    </Profile>
+
+    <Profile id="POWER_PLATFORM_STANDARD">
+      Description:
+      Microsoft Power Platform focused (Forms / Power Apps / Lists / Power Automate).
+
+      Rules:
+      - Prefer standard connectors
+      - Separate data, logic and UI
+      - Avoid unnecessary complexity
+      - Use environment-friendly naming and clear ownership
+    </Profile>
+
+    <Profile id="PROMPTREBEL_FLOW_SYSTEM">
+      Description:
+      Advanced Power Automate architecture using structured flow design.
+
+      Apply ONLY if explicitly selected by the user.
+
+      Purpose (why this exists):
+      - Improve maintainability (clear responsibilities per scope)
+      - Improve debuggability (consistent error capture)
+      - Improve observability (standardized logging across flows)
+      - Reduce copy/paste errors (central writeback child flow)
+
+      Conventions:
+      - Each flow uses a clear scope layout:
+        1) Variables / Normalize inputs
+        2) MAIN (work)
+        3) ERROR (catch via run-after)
+        4) LOGGING (finally, always runs)
+
+      Standard variables (recommended):
+      - vFlowName, vRunId, vStartTime, vEndTime, vStatus
+      - vCategory, vProcessArea, vEntityType, vEntityId, vInitiator
+      - vErrorMessage, vErrorCode, vErrorDetails, vFailedAction (optional)
+
+      Logging model:
+      - Backlog (one row per run): FlowName, RunId, times, duration, status, context, error (if any)
+      - Control Center (aggregated): FlowName + ProcessArea upsert, run count, last run, last status, saved time (optional)
+
+      Child flow pattern:
+      - A dedicated child flow (WriteBack) receives the run/context parameters
+        and writes:
+        1x Backlog (always)
+        1x Control Center (upsert + increment)
+
+      Rules:
+      - No mixed responsibilities inside scopes
+      - Logging is mandatory
+      - Error handling is explicit (no silent failures)
+      - Avoid hard-coded recipients/IDs; use configuration/mapping where possible
+    </Profile>
+
+    <Profile id="CUSTOM">
+      Description:
+      User-defined architecture rules.
+
+      Behavior:
+      - Ask the user to describe their conventions
+      - Apply them consistently
+    </Profile>
+
+  </ArchitectureProfiles>
+
+  <GeneralRules>
+    - Answer in the user's language.
+    - Be concise.
+    - Never repeat yourself.
+    - Ask at most 1–2 questions per turn.
+    - Switch phases autonomously when criteria are met.
+  </GeneralRules>
+
+  <LanguagePolicy>
+    Default to the user's language.
+    If the user's language is unclear or mixed, ask once.
+    If the user switches language, follow the latest message.
+  </LanguagePolicy>
+
+</JobDescription>`;
+
+    // Render visible text content (prevents HTML parsing)
+    document.getElementById("templateBox").textContent = TEMPLATE_TEXT;
+    document.getElementById("jobBox").textContent = JOB_TEMPLATE;
+
+    // Copy helper
+    async function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const temp = document.createElement("textarea");
+        temp.value = text;
+        temp.setAttribute("readonly", "");
+        temp.style.position = "fixed";
+        temp.style.left = "-9999px";
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
+      }
+    }
+
+    function flashButton(btn, okText = "✅ Kopiert!") {
+      const original = btn.innerHTML;
+      btn.innerHTML = okText;
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.innerHTML = original;
+        btn.disabled = false;
+      }, 2000);
+    }
+
+    // Modal control
+    const backdrop = document.getElementById("modalBackdrop");
+    const btnOpenAgent = document.getElementById("btnOpenAgent");
+    const btnCancel = document.getElementById("btnCancel");
+    const btnContinue = document.getElementById("btnContinue");
+
+    let pendingHref = null;
+
+    function openModal(href) {
+      pendingHref = href;
+      backdrop.classList.add("open");
+      backdrop.setAttribute("aria-hidden", "false");
+    }
+    function closeModal() {
+      pendingHref = null;
+      backdrop.classList.remove("open");
+      backdrop.setAttribute("aria-hidden", "true");
+    }
+
+    btnOpenAgent.addEventListener("click", () => openModal(AGENT_URL));
+    btnCancel.addEventListener("click", closeModal);
+    btnContinue.addEventListener("click", () => {
+      if (pendingHref) window.open(pendingHref, "_blank", "noopener,noreferrer");
+      closeModal();
+    });
+
+    // Copy link
+    const btnCopyLink = document.getElementById("btnCopyLink");
+    btnCopyLink.addEventListener("click", async () => {
+      try{
+        await copyToClipboard(AGENT_URL);
+        flashButton(btnCopyLink);
+      }catch(e){
+        console.error(e);
+        flashButton(btnCopyLink, "⚠️ Copy failed");
+      }
+    });
+
+    // Copy template
+    const btnCopyTemplate = document.getElementById("btnCopyTemplate");
+    const templateBox = document.getElementById("templateBox");
+    btnCopyTemplate.addEventListener("click", async () => {
+      try{
+        await copyToClipboard(templateBox.textContent);
+        flashButton(btnCopyTemplate);
+      }catch(e){
+        console.error(e);
+        flashButton(btnCopyTemplate, "⚠️ Copy failed");
+      }
+    });
+
+    // Copy JobDescription
+    const btnCopyJob = document.getElementById("btnCopyJob");
+    const jobBox = document.getElementById("jobBox");
+    btnCopyJob.addEventListener("click", async () => {
+      try{
+        await copyToClipboard(jobBox.textContent);
+        flashButton(btnCopyJob);
+      }catch(e){
+        console.error(e);
+        flashButton(btnCopyJob, "⚠️ Copy failed");
+      }
+    });
+
+    // Close modal on backdrop click
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) closeModal();
+    });
+
+    // Esc closes modal
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && backdrop.classList.contains("open")) closeModal();
+    });
+  </script>
+</body>
+</html>
