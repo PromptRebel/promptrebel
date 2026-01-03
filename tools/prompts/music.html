@@ -339,14 +339,13 @@
       white-space:nowrap;
     }
 
-    .links{
+    /* Links under pills */
+    .links-under{
       display:flex;
-      flex-wrap:wrap;
-      gap: 10px 16px;
+      gap:14px;
+      margin-top: 12px;
       align-items:center;
-      justify-content:flex-end;
-      text-align:right;
-      min-width: 160px;
+      flex-wrap:wrap;
     }
     .link{
       text-decoration: underline;
@@ -357,40 +356,41 @@
     }
     .link:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; border-radius:10px; }
 
-    /* Details / accordion */
+    /* Details / accordion as button */
     details{
       margin-top: 12px;
       border-top: 1px solid rgba(148,163,184,.14);
       padding-top: 12px;
     }
     summary{
-      cursor:pointer;
       list-style:none;
+      cursor:pointer;
       user-select:none;
-      display:flex;
+
+      display:inline-flex;
       align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      font-weight: 800;
+      gap:10px;
+
+      border-radius:999px;
+      padding: 10px 14px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.75);
+
+      font-weight:900;
       font-size: 13px;
       letter-spacing:.02em;
     }
     summary::-webkit-details-marker{ display:none; }
-
-    .sum-meta{
-      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-      color: var(--muted2);
-      font-weight: 700;
-      font-size: 12px;
+    summary::after{
+      content:"▼";
+      font-weight:900;
+      opacity:.9;
+      transform: translateY(-1px);
     }
-    .sum-chip{
-      border-radius:999px;
-      padding: 4px 10px;
-      border:1px solid rgba(148,163,184,.22);
-      background: rgba(15,23,42,.7);
-      color:#e5e7eb;
-      font-weight:800;
-      font-size: 12px;
+    details[open] summary::after{ content:"▲"; }
+    summary:focus-visible{
+      outline:2px solid var(--cyan);
+      outline-offset:2px;
     }
 
     .prompt-grid{
@@ -515,7 +515,6 @@
       .section{ padding-top: 32px; }
       .hero-layout{ display:block; }
       .panel-glass{ margin-top: 20px; }
-      .links{ justify-content:flex-start; min-width: 0; text-align:left; }
     }
   </style>
 </head>
@@ -615,7 +614,7 @@ list --type=all --vibe=all
     <section class="section" aria-labelledby="list-title">
       <h2 class="section-title" id="list-title" style="font-size:18px;font-weight:800;margin-bottom:6px;">Tracks & Prompt-Chains</h2>
       <p class="section-subtitle" style="font-size:13px;color:#9ca3af;margin-bottom:14px;max-width:46rem;">
-        Jeder Eintrag hat View/Play und eine ausklappbare Prompt-Chain mit Copy-Buttons.
+        Jeder Eintrag hat View/Play unter den Tags und eine ausklappbare Prompt-Chain.
       </p>
 
       <div id="list" class="list"></div>
@@ -689,7 +688,7 @@ list --type=all --vibe=all
     }
 
     // -------- Data (DU ERGÄNZT NUR HIER) --------
-    // NOTE: viewUrl = deine lokale Detailseite (z.B. ../../music/ich-bin-nicht-kaputt.html)
+    // NOTE: viewUrl = deine lokale Detailseite (z.B. ../../music/trinity-protocol.html)
     //       playUrl = Riffusion/SoundCloud/etc.
     const tracks = [
       {
@@ -711,27 +710,6 @@ list --type=all --vibe=all
           notes: "Mix: ultra-trockene Drums, tiefer Subbass, Strings nur als Stabs…"
         }
       },
-      
-      {
-        id: "test",
-        title: "TRINITY PROTOCOL",
-        year: "2025",
-        type: "album",   // album | single | loop
-        vibe: "cinematic",
-        language: "DE",
-        tags: ["dystopian", "deutsch", "high energy"],
-        album: "TRINITY PROTOCOL (LP)",
-        viewUrl: "../../music/trinity-protocol.html",
-        playUrl: "#",
-        prompts: {
-          brief: "Durchgehende Cyberpunk-Rap-Story über Kontrolle, Aufstand und Mensch/KI-Fusion.",
-          lyrics: "Schreibe aggressive, story-driven Rap-Lyrics auf Deutsch…\n(Dein Lyrics-Prompt hier einfügen)",
-          sound: "Minimalistischer Dark-Orchestral-Trap, 85–88 BPM…\n(Dein Soundbrief hier einfügen)",
-          vocals: "KI-Vocals: Stimme A kalt/dominant, Stimme B ruhig/analytisch…",
-          notes: "Mix: ultra-trockene Drums, tiefer Subbass, Strings nur als Stabs…"
-        }
-      },
-      
       {
         id: "code-unsterblich",
         title: "Code:Unsterblich",
@@ -839,26 +817,22 @@ list --type=all --vibe=all
             <div class="title-block">
               <div class="title">${escapeHtml(t.title)}</div>
               <div class="sub">${escapeHtml(t.year)} · ${escapeHtml(t.type.toUpperCase())} · ${escapeHtml(t.vibe)} · ${escapeHtml(t.language)}</div>
+
               <div class="meta-chips">
                 <span class="meta-chip">${escapeHtml(t.album || "")}</span>
                 ${tags}
               </div>
-            </div>
-            <div class="links" aria-label="Links">
-              <span class="link" data-nav="${escapeHtml(t.viewUrl || "#")}">View →</span>
-              <span class="link" data-open="${escapeHtml(t.playUrl || "#")}">Play →</span>
-              <span class="link" data-jump="${escapeHtml(t.id)}">#</span>
+
+              <div class="links-under" aria-label="Links">
+                <span class="link" data-nav="${escapeHtml(t.viewUrl || "#")}">View →</span>
+                <span class="link" data-open="${escapeHtml(t.playUrl || "#")}">Play →</span>
+              </div>
             </div>
           </div>
 
-          <details ${hasAny ? "" : "disabled"}>
-            <summary>
-              <span>Prompt-Chain öffnen</span>
-              <span class="sum-meta">
-                <span class="sum-chip">Copy Block</span>
-                <span class="sum-chip">Copy All</span>
-              </span>
-            </summary>
+          ${hasAny ? `
+          <details>
+            <summary>Prompt-Chain öffnen</summary>
 
             <div class="prompt-grid">
               ${brief ? `
@@ -929,15 +903,12 @@ list --type=all --vibe=all
               </div>
             </div>
           </details>
+          ` : `
+          <div class="muted" style="margin-top:12px; border-top:1px solid rgba(148,163,184,.14); padding-top:12px;">
+            Prompt-Chain (coming soon)
+          </div>
+          `}
         `;
-
-        // Disable details cleanly when no prompts (avoid broken UX)
-        if (!hasAny) {
-          const det = el.querySelector("details");
-          det.removeAttribute("open");
-          const sum = el.querySelector("summary");
-          sum.innerHTML = `<span>Prompt-Chain (coming soon)</span><span class="sum-meta"><span class="sum-chip">—</span></span>`;
-        }
 
         listEl.appendChild(el);
       });
@@ -984,15 +955,6 @@ list --type=all --vibe=all
         e.stopPropagation();
         const url = linkOpen.getAttribute("data-open");
         if (url && url !== "#") window.open(url, "_blank", "noopener");
-        return;
-      }
-
-      const linkJump = e.target.closest("[data-jump]");
-      if (linkJump) {
-        e.preventDefault();
-        e.stopPropagation();
-        const id = linkJump.getAttribute("data-jump");
-        if (id) location.hash = "#" + id;
         return;
       }
 
