@@ -23,12 +23,10 @@
       background: #020617;
       color: #e5e7eb;
       line-height: 1.6;
+      padding-top: 64px; /* ✅ Platz für fixe Navi */
     }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
+    a { color: inherit; text-decoration: none; }
 
     /* --- Hintergrund / Noise / Glows --- */
     body::before {
@@ -63,17 +61,17 @@
 
     /* --- Scroll-Progress-Bar --- */
     .scroll-progress {
-  position: fixed;
-  top: 56px;              /* unter dem Header; ggf. 52–64px feinjustieren */
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
-  transform-origin: left;
-  transform: scaleX(0);
-  transition: transform 0.1s linear;
-  z-index: 30;            /* unter der Nav (40), über dem Inhalt */
-}
+      position: fixed;
+      top: 56px; /* unter dem Header */
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 0.1s linear;
+      z-index: 30; /* unter der Nav (40), über dem Inhalt */
+    }
 
     /* --- Skip-Link --- */
     .skip-link {
@@ -96,15 +94,15 @@
 
     /* --- Top-Navigation --- */
     .nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 40;
-  backdrop-filter: blur(14px);
-  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-}
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
 
     .nav-inner {
       max-width: 1120px;
@@ -123,6 +121,7 @@
       position: relative;
       white-space: nowrap;
       text-shadow: 0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4);
+      user-select: none;
     }
 
     .brand span.accent {
@@ -131,9 +130,7 @@
       color: transparent;
     }
 
-    .brand.glitch {
-      animation: brand-glitch 0.7s ease-out;
-    }
+    .brand.glitch { animation: brand-glitch 0.7s ease-out; }
 
     @keyframes brand-glitch {
       0% { text-shadow: 0 0 0 rgba(236,72,153,0.9), 0 0 0 rgba(56,189,248,0.9); }
@@ -167,22 +164,13 @@
     }
 
     .nav-link:hover::after,
-    .nav-link:focus-visible::after {
-      width: 100%;
-    }
+    .nav-link:focus-visible::after { width: 100%; }
 
-    .nav-link:focus-visible {
-      outline: none;
-    }
+    .nav-link:focus-visible { outline: none; }
 
     /* --- Sections / Layout --- */
-    .section {
-      padding: 40px 16px 8px;
-    }
-
-    .section:first-of-type {
-      padding-top: 28px;
-    }
+    .section { padding: 40px 16px 8px; }
+    .section:first-of-type { padding-top: 28px; }
 
     @media (min-width: 768px) {
       .hero-layout {
@@ -252,11 +240,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-    }
-
-    .hero-tab span.arrow {
-      font-size: 13px;
-      opacity: 0.9;
+      cursor: pointer;
     }
 
     .hero-tab.current {
@@ -265,6 +249,7 @@
         0 0 30px rgba(96,165,250,0.6),
         0 18px 50px rgba(15,23,42,1);
       background: radial-gradient(circle at top left, rgba(59,130,246,0.4), rgba(15,23,42,1));
+      cursor: default;
     }
 
     /* --- Panel / Terminal (oben) --- */
@@ -300,16 +285,9 @@
       color: #e5e7eb;
     }
 
-    .terminal .dim {
-      color: #6b7280;
-    }
+    .terminal .dim { color: #6b7280; }
 
-    /* --- Filters / Controls --- */
-    .controls-block {
-      margin-top: 28px;
-      margin-bottom: 10px;
-    }
-
+    /* --- Controls --- */
     .controls-intro {
       font-size: 14px;
       color: #e5e7eb;
@@ -326,10 +304,7 @@
       font-size: 14px;
     }
 
-    .control-label {
-      color: #9ca3af;
-      min-width: 52px;
-    }
+    .control-label { color: #9ca3af; min-width: 52px; }
 
     .search-input-wrap {
       flex: 1;
@@ -348,9 +323,7 @@
       font-size: 14px;
     }
 
-    .search-input::placeholder {
-      color: #6b7280;
-    }
+    .search-input::placeholder { color: #6b7280; }
 
     .search-icon {
       position: absolute;
@@ -361,11 +334,7 @@
       color: #6b7280;
     }
 
-    .chip-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 
     .chip {
       border-radius: 999px;
@@ -374,13 +343,10 @@
       background: radial-gradient(circle at top left, rgba(15,23,42,0.96), rgba(15,23,42,1));
       font-size: 13px;
       cursor: pointer;
-      transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+      transition: box-shadow 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
     }
 
-    .chip:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 28px rgba(15,23,42,0.9);
-    }
+    .chip:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(15,23,42,0.9); }
 
     .chip.active {
       border-color: rgba(248,250,252, 0.9);
@@ -390,10 +356,8 @@
       background: radial-gradient(circle at top left, rgba(37,99,235,0.65), rgba(15,23,42,1));
     }
 
-    /* --- Tracklist (Cards View) --- */
-    .tracks-section {
-      margin-top: 10px;
-    }
+    /* --- Tracklist --- */
+    .tracks-section { margin-top: 10px; }
 
     .track-list {
       display: flex;
@@ -430,10 +394,7 @@
       flex-shrink: 0;
     }
 
-    .track-title-block {
-      flex: 1;
-      min-width: 0;
-    }
+    .track-title-block { flex: 1; min-width: 0; }
 
     .track-title {
       font-size: clamp(18px, 4vw, 22px);
@@ -479,18 +440,13 @@
     .track-link {
       text-decoration: underline;
       text-underline-offset: 3px;
+      cursor: pointer;
     }
 
-    .track-length {
-      font-size: 12px;
-      color: #9ca3af;
-    }
+    .track-length { font-size: 12px; color: #9ca3af; }
 
     /* --- Compact View --- */
-    .track-list.compact .track-card {
-      padding: 10px 14px;
-      border-radius: 18px;
-    }
+    .track-list.compact .track-card { padding: 10px 14px; border-radius: 18px; }
 
     .track-list.compact .track-card-inner {
       display: grid;
@@ -500,15 +456,8 @@
       font-size: 13px;
     }
 
-    .track-list.compact .track-index {
-      margin: 0;
-    }
-
-    .track-list.compact .track-title {
-      font-size: 15px;
-      margin-bottom: 0;
-    }
-
+    .track-list.compact .track-index { margin: 0; }
+    .track-list.compact .track-title { font-size: 15px; margin-bottom: 0; }
     .track-list.compact .track-subline {
       font-size: 11px;
       text-transform: none;
@@ -522,10 +471,7 @@
       gap: 2px;
     }
 
-    .track-list.compact .track-meta-chips {
-      gap: 4px;
-      margin-top: 0;
-    }
+    .track-list.compact .track-meta-chips { gap: 4px; margin-top: 0; }
 
     .track-list.compact .track-links-row {
       flex-direction: column;
@@ -535,42 +481,19 @@
       font-size: 12px;
     }
 
-    .track-list.compact .track-length {
-      font-size: 11px;
-    }
+    .track-list.compact .track-length { font-size: 11px; }
 
     @media (max-width: 640px) {
-      .track-list.compact .track-card-inner {
-        grid-template-columns: 22px 1fr;
-      }
-      .track-list.compact .track-links-row {
-        align-items: flex-start;
-        grid-column: 2 / span 1;
-      }
+      .track-list.compact .track-card-inner { grid-template-columns: 22px 1fr; }
+      .track-list.compact .track-links-row { align-items: flex-start; grid-column: 2 / span 1; }
     }
 
     /* --- Terminal Section unten --- */
-    .terminal-section {
-      margin-top: 40px;
-      padding-top: 32px;
-    }
+    .terminal-section { margin-top: 40px; padding-top: 32px; }
+    .terminal-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .terminal-desc { font-size: 14px; color: #e5e7eb; margin-bottom: 14px; max-width: 40rem; }
 
-    .terminal-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .terminal-desc {
-      font-size: 14px;
-      color: #e5e7eb;
-      margin-bottom: 14px;
-      max-width: 40rem;
-    }
-
-    .terminal-panel {
-      margin-top: 6px;
-    }
+    .terminal-panel { margin-top: 6px; }
 
     .terminal-output {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
@@ -602,11 +525,7 @@
       cursor: pointer;
     }
 
-    .terminal-hint {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-top: 6px;
-    }
+    .terminal-hint { font-size: 11px; color: #9ca3af; margin-top: 6px; }
 
     /* --- Footer --- */
     footer {
@@ -622,15 +541,8 @@
       align-items: center;
     }
 
-    footer .center-links {
-      display: flex;
-      gap: 10px;
-    }
-
-    footer a {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
+    footer .center-links { display: flex; gap: 10px; }
+    footer a { text-decoration: underline; text-underline-offset: 3px; }
 
     .build-highlight {
       color: #22d3ee;
@@ -638,27 +550,28 @@
       cursor: pointer;
     }
 
+    /* --- a11y helper --- */
+    .visually-hidden {
+      position: absolute !important;
+      height: 1px; width: 1px;
+      overflow: hidden;
+      clip: rect(1px, 1px, 1px, 1px);
+      white-space: nowrap;
+    }
+
     /* --- Mobile Tweaks --- */
     @media (max-width: 767px) {
-      .nav-inner {
-        gap: 8px;
-      }
-      .nav-links {
-        font-size: 13px;
-        gap: 12px;
-      }
-      .section {
-        padding-top: 32px;
-      }
-      .hero-layout {
-        display: block;
-      }
-      .panel-glass {
-        margin-top: 20px;
-      }
+      body { padding-top: 60px; }
+      .nav-inner { gap: 8px; }
+      .nav-links { font-size: 13px; gap: 12px; }
+      .section { padding-top: 32px; }
+      .hero-layout { display: block; }
+      .panel-glass { margin-top: 20px; }
+      .scroll-progress { top: 52px; }
     }
   </style>
 </head>
+
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
   <div class="scroll-progress" id="scrollProgress"></div>
@@ -698,16 +611,11 @@
           </p>
 
           <div class="hero-tabs" aria-label="Musikbereiche">
-  <a href="./albums.html" class="hero-tab">
-    Alben &amp; EPs
-  </a>
-  <button type="button" class="hero-tab current" aria-current="page">
-    Singles &amp; Themes
-  </button>
-  <a href="./loops.html" class="hero-tab">
-    Loops &amp; Packs
-  </a>
-</div>
+            <a href="./albums.html" class="hero-tab">Alben &amp; EPs</a>
+            <button type="button" class="hero-tab current" aria-current="page">Singles &amp; Themes</button>
+            <a href="./loops.html" class="hero-tab">Loops &amp; Packs</a>
+          </div>
+        </div>
 
         <!-- Oberes Terminal-Panel -->
         <aside class="panel-glass">
@@ -783,7 +691,7 @@ promptrebel:music/singles$ ls --vibe
       <p class="terminal-desc">
         Für alle, die lieber mit Text als mit Kacheln arbeiten. Nutze die Buttons unten
         wie Kommandos: <code>help</code>, <code>list</code>, <code>filter vibe=…</code>.
-        Ein Klick auf einen Titel öffnet den Track auf Riffusion.
+        Ein Klick auf einen Titel öffnet den Track (oder Coming Soon).
       </p>
 
       <div class="panel-glass terminal-panel">
@@ -830,8 +738,10 @@ promptrebel:music/singles$ ls --vibe
       scrollBar.style.transform = `scaleX(${ratio})`;
     });
 
-    // --- Brand Glitch auf Load ---
+    // --- Brand behavior ---
     const brandEl = document.getElementById("brand");
+    brandEl.addEventListener("click", () => { window.location.href = "../index.html"; });
+
     window.addEventListener("load", () => {
       brandEl.classList.add("glitch");
       setTimeout(() => brandEl.classList.remove("glitch"), 800);
@@ -849,7 +759,8 @@ promptrebel:music/singles$ ls --vibe
         energy: "high",
         language: "DE",
         length: "ca. 3–4 min",
-        url: "https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf"
+        url: "https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf",
+        isPlaceholder: false
       },
       {
         id: "ich-seh-nur-dich-gpt",
@@ -861,7 +772,8 @@ promptrebel:music/singles$ ls --vibe
         energy: "mid",
         language: "DE",
         length: "ca. 3–4 min",
-        url: "https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140"
+        url: "https://classic.riffusion.com/song/e2073233-5349-4651-ad8f-e8da38fea140",
+        isPlaceholder: false
       },
       {
         id: "ki-herrscht-ende",
@@ -873,7 +785,8 @@ promptrebel:music/singles$ ls --vibe
         energy: "high",
         language: "DE",
         length: "ca. 3–4 min",
-        url: "https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552"
+        url: "https://classic.riffusion.com/song/cfb21985-840d-4511-92b2-f0f686963552",
+        isPlaceholder: false
       },
       {
         id: "alexa-zeig-mir-brueste",
@@ -885,7 +798,23 @@ promptrebel:music/singles$ ls --vibe
         energy: "mid",
         language: "DE",
         length: "ca. 3–4 min",
-        url: "https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70"
+        url: "https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70",
+        isPlaceholder: false
+      },
+
+      // ✅ Platzhalter (immer sichtbar, egal welcher Filter)
+      {
+        id: "next-lab-single",
+        index: 5,
+        title: "NEXT LAB SINGLE",
+        type: "COMING SOON · TBD",
+        vibeTag: "all",
+        vibe: "work in progress",
+        energy: "tbd",
+        language: "—",
+        length: "coming soon",
+        url: "../coming-soon.html",
+        isPlaceholder: true
       }
     ];
 
@@ -903,10 +832,14 @@ promptrebel:music/singles$ ls --vibe
     function getVisibleTracks() {
       return tracks.filter(t => {
         const matchFilter =
-          currentFilter === "all" || t.vibeTag === currentFilter;
+          currentFilter === "all" ||
+          t.vibeTag === currentFilter ||
+          t.vibeTag === "all"; // ✅ Platzhalter immer zeigen
+
         const matchSearch =
           !searchTerm ||
           t.title.toLowerCase().includes(searchTerm.toLowerCase());
+
         return matchFilter && matchSearch;
       });
     }
@@ -914,7 +847,7 @@ promptrebel:music/singles$ ls --vibe
     // --- Rendering Cards / Compact ---
     function renderTracks() {
       const visible = getVisibleTracks();
-      // Reset classes
+
       trackListEl.classList.remove("compact");
       trackListEl.innerHTML = "";
 
@@ -925,6 +858,9 @@ promptrebel:music/singles$ ls --vibe
       visible.forEach(track => {
         const card = document.createElement("article");
         card.className = "track-card";
+
+        const playUrl = track.isPlaceholder ? "../coming-soon.html" : track.url;
+        const promptsUrl = track.isPlaceholder ? "../coming-soon.html" : "../tools/prompts.html";
 
         if (currentView === "compact") {
           card.innerHTML = `
@@ -939,7 +875,14 @@ promptrebel:music/singles$ ls --vibe
                 </div>
               </div>
               <div class="track-links-row">
-                <a href="${track.url}" target="_blank" rel="noopener" class="track-link">Play →</a>
+                <span class="track-link"
+                      onclick="event.preventDefault(); window.location.href='${playUrl}';">
+                  Play →
+                </span>
+                <span class="track-link"
+                      onclick="event.preventDefault(); window.location.href='${promptsUrl}';">
+                  Prompts →
+                </span>
                 <span class="track-length">${track.language}</span>
               </div>
             </div>
@@ -958,11 +901,18 @@ promptrebel:music/singles$ ls --vibe
                 </div>
               </div>
             </div>
+
             <div class="track-links-row">
-              <a href="${track.url}" target="_blank" rel="noopener" class="track-link">
-                Play on Riffusion →
-              </a>
-              <span class="track-link">Prompts → (coming soon)</span>
+              <span class="track-link"
+                    onclick="event.preventDefault(); window.location.href='${playUrl}';">
+                Play →
+              </span>
+
+              <span class="track-link"
+                    onclick="event.preventDefault(); window.location.href='${promptsUrl}';">
+                Prompts →
+              </span>
+
               <span class="track-length">${track.length}</span>
             </div>
           `;
@@ -992,9 +942,7 @@ promptrebel:music/singles$ ls --vibe
         currentView = chip.dataset.view;
 
         if (currentView === "terminal") {
-          // Scroll zum Terminal-Bereich
-          document
-            .getElementById("terminalSection")
+          document.getElementById("terminalSection")
             .scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
           renderTracks();
@@ -1021,7 +969,7 @@ commands:
   filter vibe=dark  – nur dark singles
   filter vibe=love  – nur love singles
   view cards        – nach oben zur Kartenansicht
-klick auf einen titel = track auf Riffusion öffnen
+klick auf einen titel = track öffnen
 
 promptrebel:music/singles$ _`;
         terminalOutput.textContent = out;
@@ -1030,27 +978,25 @@ promptrebel:music/singles$ _`;
 
       out += "> list\n";
       visible.forEach(t => {
-        out += `${t.index}. `;
-        out += `${t.title} [${t.vibeTag}] · ${t.length}\n`;
+        out += `${t.index}. ${t.title} [${t.vibeTag}] · ${t.length}\n`;
       });
 
       if (!visible.length) {
         out += "(no results – filter/search too strict)\n";
       }
 
-      out +=
-"\n(click a title below to play)\n\n";
+      out += "\n(click a title below to open)\n\n";
 
-      // Wir bauen jetzt klickbare Zeilen
       terminalOutput.innerHTML = "";
       const pre = document.createElement("div");
       pre.textContent = out;
       terminalOutput.appendChild(pre);
 
       visible.forEach(t => {
+        const url = t.isPlaceholder ? "../coming-soon.html" : t.url;
         const line = document.createElement("div");
         line.innerHTML =
-          `<span class="terminal-link" data-url="${t.url}">
+          `<span class="terminal-link" data-url="${url}">
 ${t.index}. ${t.title} [${t.vibeTag}] · ${t.length}
 </span>`;
         terminalOutput.appendChild(line);
@@ -1064,46 +1010,57 @@ ${t.index}. ${t.title} [${t.vibeTag}] · ${t.length}
     // Klick auf Terminal-Titel
     terminalOutput.addEventListener("click", (e) => {
       const link = e.target.closest(".terminal-link");
-      if (link && link.dataset.url) {
-        window.open(link.dataset.url, "_blank", "noopener");
+      if (!link || !link.dataset.url) return;
+
+      const url = link.dataset.url;
+
+      // interne Seite (coming-soon) im gleichen Tab
+      if (url.includes("coming-soon.html") || url.startsWith("../")) {
+        window.location.href = url;
+        return;
       }
+
+      // externe Links (Riffusion) in neuem Tab
+      window.open(url, "_blank", "noopener");
     });
 
     // Terminal Buttons
-    document
-      .querySelectorAll(".terminal-command-row .t-chip")
-      .forEach(btn => {
-        btn.addEventListener("click", () => {
-          const cmd = btn.dataset.cmd;
-          if (cmd === "help") {
-            renderTerminal("help");
-          } else if (cmd === "list-dark") {
-            currentFilter = "dark";
-            filterChips.forEach(c =>
-              c.classList.toggle("active", c.dataset.filter === "dark")
-            );
-            renderTracks();
-          } else if (cmd === "list-love") {
-            currentFilter = "love";
-            filterChips.forEach(c =>
-              c.classList.toggle("active", c.dataset.filter === "love")
-            );
-            renderTracks();
-          } else if (cmd === "view-cards") {
-            currentView = "cards";
-            viewChips.forEach(c =>
-              c.classList.toggle("active", c.dataset.view === "cards")
-            );
-            renderTracks();
-            document
-              .getElementById("tracks-title")
-              .scrollIntoView({ behavior: "smooth", block: "start" });
-          } else {
-            // list-all
-            renderTracks();
-          }
-        });
+    document.querySelectorAll(".terminal-command-row .t-chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const cmd = btn.dataset.cmd;
+
+        if (cmd === "help") {
+          renderTerminal("help");
+          return;
+        }
+
+        if (cmd === "list-dark") {
+          currentFilter = "dark";
+          filterChips.forEach(c => c.classList.toggle("active", c.dataset.filter === "dark"));
+          renderTracks();
+          return;
+        }
+
+        if (cmd === "list-love") {
+          currentFilter = "love";
+          filterChips.forEach(c => c.classList.toggle("active", c.dataset.filter === "love"));
+          renderTracks();
+          return;
+        }
+
+        if (cmd === "view-cards") {
+          currentView = "cards";
+          viewChips.forEach(c => c.classList.toggle("active", c.dataset.view === "cards"));
+          renderTracks();
+          document.getElementById("tracks-title")
+            .scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+
+        // list-all
+        renderTracks();
       });
+    });
 
     // --- Footer-Version-Easter-Egg ---
     const buildVersionEl = document.getElementById("buildVersion");
