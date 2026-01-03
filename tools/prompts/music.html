@@ -29,7 +29,7 @@
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
-      padding-top: 64px; /* Platz für fixe Navi */
+      padding-top: 64px;
     }
     a{ color:inherit; text-decoration:none; }
 
@@ -427,6 +427,9 @@
       font: 800 12px/1 system-ui;
       cursor:pointer;
       user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
     }
     .btn:hover{
       border-color: rgba(34,211,238,.55);
@@ -477,138 +480,6 @@
       backdrop-filter: blur(10px);
     }
     .toast.show{ display:block; }
-
-    /* --- Special: Lyrics Generator Stage --- */
-    .stage{
-      margin-top: 18px;
-      border-radius: 22px;
-      border:1px solid rgba(148,163,184,.22);
-      background: radial-gradient(circle at top left, rgba(15,23,42,.96), rgba(2,6,23,.98));
-      box-shadow: 0 24px 70px rgba(2,6,23,.85);
-      overflow:hidden;
-      position:relative;
-    }
-    .stage::before{
-      content:"";
-      position:absolute;
-      inset:-2px;
-      border-radius: inherit;
-      background:
-        radial-gradient(circle at 10% 0%, rgba(236,72,153,.35), transparent 55%),
-        radial-gradient(circle at 90% 100%, rgba(34,211,238,.25), transparent 55%);
-      opacity:.20;
-      pointer-events:none;
-      mix-blend-mode: screen;
-    }
-    .stage-inner{
-      padding: 16px 16px 14px;
-      position:relative;
-    }
-    .stage-kicker{
-      font-size: 12px;
-      letter-spacing:.25em;
-      text-transform: uppercase;
-      color:#f9a8d4;
-      margin-bottom:6px;
-    }
-    .stage-title{
-      font-size: 22px;
-      font-weight: 900;
-      letter-spacing:.01em;
-      margin-bottom: 6px;
-    }
-    .stage-desc{
-      color:#cbd5f5;
-      font-size: 14px;
-      max-width: 60rem;
-      margin-bottom: 12px;
-    }
-    .stage-grid{
-      display:grid;
-      gap: 12px;
-    }
-    @media (min-width: 900px){
-      .stage-grid{
-        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-        align-items:start;
-      }
-    }
-
-    .stage-card{
-      border-radius: 18px;
-      border: 1px solid rgba(148,163,184,.18);
-      background: rgba(15,23,42,.62);
-      padding: 12px 12px;
-    }
-    .stage-card h3{
-      font-size: 13px;
-      letter-spacing:.16em;
-      text-transform: uppercase;
-      color:#cbd5e1;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
-
-    .ta{
-      width:100%;
-      min-height: 120px;
-      resize: vertical;
-      border-radius: 16px;
-      padding: 10px 12px;
-      border: 1px solid rgba(148,163,184,.22);
-      background: rgba(2,6,23,.55);
-      color: var(--text);
-      font: 600 13px/1.45 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      outline:none;
-    }
-    .ta:focus{
-      border-color: rgba(34,211,238,.45);
-      box-shadow: 0 0 18px rgba(34,211,238,.12);
-    }
-    .ta.small{ min-height: 90px; }
-
-    .stage-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap: 8px;
-      align-items:center;
-      justify-content:space-between;
-      margin-top: 10px;
-    }
-    .stage-meta{
-      color: var(--muted2);
-      font-size: 12px;
-    }
-
-    .output{
-      max-height: 320px;
-      overflow:auto;
-      border-radius: 16px;
-      padding: 10px 12px;
-      border: 1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.60);
-      color: var(--text);
-      font: 600 13px/1.45 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .pill-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:8px;
-    }
-    .mini-pill{
-      border-radius:999px;
-      padding: 5px 10px;
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(15,23,42,.55);
-      font-size:12px;
-      color:#e5e7eb;
-      font-weight:800;
-      white-space:nowrap;
-    }
 
     /* Footer */
     footer{
@@ -694,83 +565,120 @@
           </div>
           <div class="terminal" id="topTerminal">
 list --type=all --vibe=all
-> results: <span id="resultCount">0</span>
+&gt; results: <span id="resultCount">0</span>
 <span class="dim"># alles lokal, kein Tracking</span>
           </div>
         </aside>
       </div>
 
-      <!-- STAGE: Lyrics Generator -->
-      <div class="stage" style="margin-top:18px;">
-        <div class="stage-inner">
-          <div class="stage-kicker">Special</div>
-          <div class="stage-title">Lyrics Generator</div>
-          <div class="stage-desc">
+      <!-- =========================
+           LYRICS GENERATOR (3 CARDS)
+      ========================== -->
+      <section class="section" aria-label="Lyrics Generator" style="padding-top:18px;">
+        <!-- Header card -->
+        <div class="panel-glass" style="margin-bottom:14px;">
+          <div class="panel-header">
+            <span class="icon">✨</span>
+            <span>SPECIAL</span>
+          </div>
+          <h2 style="font-size:32px;font-weight:900;letter-spacing:.01em;margin:4px 0 10px;">
+            Lyrics Generator
+          </h2>
+          <p style="color:#cbd5f5;font-size:14px;max-width:52rem;">
             Zwei Wege: (1) Prompt kopieren und in deine Lieblings-KI einfügen. (2) Optional: lokal im Browser generieren (WebGPU).
             Kein Account, kein Server – läuft nur, wenn dein Gerät WebGPU unterstützt.
+          </p>
+        </div>
+
+        <!-- 1) PROMPT CARD -->
+        <div class="panel-glass" style="margin-bottom:14px;">
+          <div class="panel-header">
+            <span class="icon">1</span>
+            <span>PROMPT (FÜR JEDE KI)</span>
           </div>
 
-          <div class="stage-grid">
-            <!-- Prompt card -->
-            <div class="stage-card">
-              <h3>1) Prompt (für jede KI)</h3>
-              <textarea id="lyricsPromptTemplate" class="ta small" readonly></textarea>
+          <p class="muted" style="margin-bottom:10px;">
+            Nutzung: <b>Soundprompt einfügen</b> + optional 1–2 Sätze Thema/Story. Ausgabe ist ein fertiger Lyrics-Text.
+          </p>
 
-              <div class="stage-row">
-                <div class="stage-meta">Nutzen: Soundprompt einfügen + (optional) kurze Idee / Thema.</div>
-                <div class="btn-row">
-                  <button class="btn" type="button" id="btnCopyLyricsPrompt">Copy Prompt</button>
-                </div>
-              </div>
-
-              <div class="pill-row">
-                <span class="mini-pill">Format: Intro · Verse · Hook · Verse 2 · Hook · Bridge · Hook</span>
-                <span class="mini-pill">Deutsch</span>
-                <span class="mini-pill">ohne Overkill</span>
+          <div class="prompt-block" style="background:rgba(15,23,42,.55);border-color:rgba(148,163,184,.14);">
+            <div class="prompt-head">
+              <div class="prompt-title">Lyrics-Generator Prompt</div>
+              <div class="btn-row">
+                <button class="btn primary" type="button" id="copyLyricsPromptBtn">Copy Prompt</button>
               </div>
             </div>
-
-            <!-- Agent + Local WebGPU -->
-            <div class="stage-card">
-              <h3>2) Generator (lokal im Browser)</h3>
-
-              <div class="muted" style="margin-bottom:8px;">
-                <b>WebGPU:</b> Desktop Chrome/Edge empfohlen. iOS/Safari oft eingeschränkt.
-              </div>
-
-              <div class="btn-row" style="margin-bottom:8px;">
-                <button class="btn primary" type="button" id="btnInitModel">Start (Model laden)</button>
-                <button class="btn" type="button" id="btnClearOutput">Clear</button>
-              </div>
-
-              <div class="muted" id="modelStatus">Status: idle</div>
-
-              <div style="margin-top:10px;">
-                <div class="muted" style="margin-bottom:6px;">Input (Soundprompt oder Beschreibung):</div>
-                <textarea id="lyricsInput" class="ta" placeholder="Paste hier deinen Soundprompt rein …"></textarea>
-              </div>
-
-              <div class="stage-row">
-                <div class="stage-meta">Tipp: 1–2 Sätze Thema/Story helfen (optional).</div>
-                <div class="btn-row">
-                  <button class="btn primary" type="button" id="btnGenerate" disabled>Generate Lyrics</button>
-                  <button class="btn" type="button" id="btnCopyLyrics" disabled>Copy Lyrics</button>
-                </div>
-              </div>
-
-              <div style="margin-top:10px;">
-                <div class="muted" style="margin-bottom:6px;">Output:</div>
-                <div id="lyricsOutput" class="output" aria-live="polite">—</div>
-              </div>
-
-              <div class="muted" style="margin-top:10px;">
-                Optional: Lyrics-Agent (ChatGPT) – Platzhalter, sobald du ihn erstellt hast.
-                <span class="link" style="margin-left:6px;" data-open-agent="#">Open Agent →</span>
-              </div>
-            </div>
+            <pre id="lyricsPromptText" style="min-height:110px;"></pre>
           </div>
         </div>
-      </div>
+
+        <!-- 2) AGENT CARD -->
+        <div class="panel-glass" style="margin-bottom:14px;">
+          <div class="panel-header">
+            <span class="icon">2</span>
+            <span>OPTIONAL: LYRICS-AGENT (CHATGPT)</span>
+          </div>
+          <p class="muted" style="margin-bottom:10px;">
+            Für “immer bereit”: öffnet deinen Lyrics-Agent. Hinweis: Du verlässt PromptRebel und wechselst zu ChatGPT.
+          </p>
+
+          <!-- TODO: Agent-URL eintragen (später ersetzen) -->
+          <a class="btn" href="#" id="openLyricsAgentBtn">
+            Open Agent →
+          </a>
+          <span class="muted" style="display:block;margin-top:8px;">
+            (Platzhalter – Link setzt du, sobald der Agent existiert.)
+          </span>
+        </div>
+
+        <!-- 3) LOCAL WEBGPU CARD -->
+        <div class="panel-glass">
+          <div class="panel-header">
+            <span class="icon">3</span>
+            <span>GENERATOR (LOKAL IM BROWSER)</span>
+          </div>
+
+          <p class="muted" style="margin-bottom:10px;">
+            WebGPU: Desktop Chrome/Edge empfohlen. iPhone/iOS meistens nicht verfügbar (abhängig von Browser/Settings).
+          </p>
+
+          <div class="pr-lg-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+            <button class="btn primary" type="button" id="lgStartBtn">Start (Model laden)</button>
+            <button class="btn" type="button" id="lgClearBtn">Clear</button>
+            <span class="muted" id="lgStatus" style="align-self:center;">Status: idle</span>
+          </div>
+
+          <label class="muted" for="lgInput" style="display:block;margin:8px 0 6px;">
+            Input (Soundprompt oder Beschreibung):
+          </label>
+          <textarea
+            id="lgInput"
+            class="search"
+            style="border-radius:16px;min-height:120px;padding:12px 12px;max-width:100%;"
+            placeholder="Paste hier deinen Soundprompt rein…&#10;Optional: 1–2 Sätze Thema/Story darunter."
+          ></textarea>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+            <button class="btn primary" type="button" id="lgGenerateBtn">Generate Lyrics</button>
+            <button class="btn" type="button" id="lgCopyBtn" disabled>Copy Lyrics</button>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div class="muted" style="margin-bottom:6px;">Output:</div>
+            <textarea
+              id="lgOutput"
+              class="search"
+              style="border-radius:16px;min-height:160px;padding:12px 12px;max-width:100%;"
+              placeholder="—"
+              readonly
+            ></textarea>
+          </div>
+
+          <div class="muted" style="margin-top:10px;">
+            Tipp: Wenn das Ergebnis zu “generisch” ist, ergänze 2–3 konkrete Stichworte (Motiv, Perspektive, Hook-Idee).
+          </div>
+        </div>
+      </section>
 
       <!-- FILTERS -->
       <div class="controls" aria-label="Filter & Suche" style="margin-top:18px;">
@@ -847,7 +755,7 @@ list --type=all --vibe=all
       setTimeout(() => brandEl.classList.remove("glitch"), 800);
     });
 
-    // -------- Toast --------
+    // -------- Toast (used by lyrics-generator.js too) --------
     const toastEl = document.getElementById("toast");
     let toastTimer = null;
     function toast(msg="Copied ✓") {
@@ -857,7 +765,7 @@ list --type=all --vibe=all
       toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1200);
     }
 
-    // -------- Copy helpers --------
+    // -------- Copy helpers (used by this page) --------
     async function copyText(text) {
       try {
         await navigator.clipboard.writeText(text);
@@ -897,38 +805,6 @@ list --type=all --vibe=all
         prompts: {
           sound: "Minimalistischer Dark-Orchestral-Trap, 85–88 BPM …\n(Dein kompletter Riffusion-Soundprompt hier rein)",
           notes: "Mix/Notes …"
-        }
-      },
-      {
-        id: "code-unsterblich",
-        title: "Code:Unsterblich",
-        year: "2025",
-        type: "single",
-        vibe: "dark",
-        language: "DE",
-        tags: ["dark", "dystopian", "single"],
-        album: "Singles & Themes",
-        viewUrl: "../../music/singles.html#code-unsterblich",
-        playUrl: "https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf",
-        prompts: {
-          sound: "(Dein kompletter Riffusion-Soundprompt hier rein)",
-          notes: ""
-        }
-      },
-      {
-        id: "alexa-zeig-mir-brueste",
-        title: "Alexa, zeig mir Brüste",
-        year: "2025",
-        type: "single",
-        vibe: "meme",
-        language: "DE",
-        tags: ["meme", "absurd", "satire"],
-        album: "Singles & Themes",
-        viewUrl: "../../music/singles.html#alexa-zeig-mir-brueste",
-        playUrl: "https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70",
-        prompts: {
-          sound: "(Dein kompletter Riffusion-Soundprompt hier rein)",
-          notes: ""
         }
       }
     ];
@@ -1050,8 +926,6 @@ list --type=all --vibe=all
         `;
 
         if (!hasAny) {
-          const det = el.querySelector("details");
-          det.removeAttribute("open");
           const sum = el.querySelector("summary");
           sum.textContent = "Prompt-Chain (coming soon)";
         }
@@ -1156,239 +1030,16 @@ ${mdFence("Notes / Settings", p.notes)}
     // -------- Init --------
     render();
 
-    // If hash present, scroll into view (nice for direct links)
+    // If hash present, scroll into view
     window.addEventListener("load", () => {
       const id = (location.hash || "").replace("#", "");
       if (!id) return;
       const el = document.getElementById(id);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     });
-
-    // ==========================================================
-    // LYRICS GENERATOR (Prompt + optional local WebGPU via WebLLM)
-    // Model: Qwen2-0.5B-Instruct-q4f16_1-MLC (stable)
-    // ==========================================================
-    function hasWebGPU(){ return !!navigator.gpu; }
-
-    const lyricsPromptTemplateEl = document.getElementById("lyricsPromptTemplate");
-    const btnCopyLyricsPrompt = document.getElementById("btnCopyLyricsPrompt");
-
-    const btnInitModel = document.getElementById("btnInitModel");
-    const btnClearOutput = document.getElementById("btnClearOutput");
-    const btnGenerate = document.getElementById("btnGenerate");
-    const btnCopyLyrics = document.getElementById("btnCopyLyrics");
-    const modelStatusEl = document.getElementById("modelStatus");
-
-    const lyricsInputEl = document.getElementById("lyricsInput");
-    const lyricsOutputEl = document.getElementById("lyricsOutput");
-
-    // --- System prompt tuned for SMALL models (clean, no overkill) ---
-    // Goals:
-    // - stable structure
-    // - no meta talk, no placeholders
-    // - concrete imagery, simple rhymes, no overly complex schemes
-    // - avoid repetition, avoid generic "Ich bin..." spam
-    const SYSTEM_LYRICS = `
-Du bist ein Lyrics-Generator für deutschsprachige Songs.
-
-Aufgabe:
-- Erzeuge einen vollständigen Songtext, passend zum angegebenen SOUND-PROMPT (Stil, Tempo, Vibe, Thema).
-- Wenn der SOUND-PROMPT unklar ist: erzeuge einen neutral passenden Rap/Pop-Text, aber trotzdem konkret.
-
-Wichtige Regeln:
-- Antworte NUR mit dem Songtext. Keine Erklärungen, keine Meta-Kommentare.
-- Kein "Titel:" und keine Klammer-Notizen wie "(Verse)" im Fließtext außer den festen Section-Labels unten.
-- Keine Platzhalter wie <...> oder [füge ein].
-- Deutsch, klare Bilder, wenige Floskeln, keine unnötigen Füllzeilen.
-
-Struktur (genau so ausgeben):
-INTRO (2 Zeilen)
-VERSE 1 (8 Zeilen)
-HOOK (4 Zeilen, einprägsam, wiederholbar, keine langen Sätze)
-VERSE 2 (8 Zeilen)
-HOOK (4 Zeilen, gleiche Hook wie oben)
-BRIDGE (4 Zeilen, Perspektivwechsel oder Twist)
-HOOK (4 Zeilen, gleiche Hook)
-
-Stilqualität:
-- Reime: optional, aber wenn dann sauber und nicht erzwungen.
-- Wiederholungen vermeiden (außer Hook).
-- Keine extremen Namen/Marken. Keine Hassrede. Kein sexualisierter Inhalt.
-`.trim();
-
-    // Template prompt for external AIs (user copy-pastes)
-    const EXTERNAL_PROMPT_TEMPLATE =
-`Rolle: Du bist ein Lyrics-Generator für deutschsprachige Songs.
-
-SYSTEMREGELN:
-- Antworte NUR mit dem Songtext. Keine Erklärungen, kein Meta.
-- Keine Platzhalter. Kein "Titel:".
-- Struktur exakt einhalten:
-INTRO (2 Zeilen)
-VERSE 1 (8 Zeilen)
-HOOK (4 Zeilen)
-VERSE 2 (8 Zeilen)
-HOOK (4 Zeilen, identisch)
-BRIDGE (4 Zeilen)
-HOOK (4 Zeilen, identisch)
-
-INPUT:
-SOUND-PROMPT:
-<<< HIER DEIN SOUND-PROMPT EINSETZEN >>>
-
-OPTIONAL (1–2 Sätze):
-Thema/Story/Keylines: <<< optional >>>
-
-AUFGABE:
-Erzeuge einen passenden Songtext auf Deutsch, konkret und ohne Floskeln.`;
-
-    lyricsPromptTemplateEl.value = EXTERNAL_PROMPT_TEMPLATE;
-
-    btnCopyLyricsPrompt.addEventListener("click", () => {
-      copyText(lyricsPromptTemplateEl.value);
-    });
-
-    btnClearOutput.addEventListener("click", () => {
-      lyricsOutputEl.textContent = "—";
-      btnCopyLyrics.disabled = true;
-    });
-
-    let engine = null;
-    let modelReady = false;
-
-    function setProgress(p){
-      const pct = Math.max(0, Math.min(100, Math.round(p)));
-      modelStatusEl.textContent = modelStatusEl.textContent.replace(/\s*\(\d+%\)\s*$/, "");
-      modelStatusEl.textContent += ` (${pct}%)`;
-    }
-
-    // Load model (same strategy as your stable local-ai widget)
-    btnInitModel.addEventListener("click", async () => {
-      if (!hasWebGPU()){
-        modelStatusEl.textContent = "Status: WebGPU nicht verfügbar (nutze den Prompt oben).";
-        toast("WebGPU nicht verfügbar");
-        return;
-      }
-
-      try {
-        modelStatusEl.textContent = "Status: lade WebLLM …";
-        setProgress(5);
-
-        const { MLCEngine } = await import("https://esm.run/@mlc-ai/web-llm@0.2.80");
-        setProgress(10);
-
-        modelStatusEl.textContent = "Status: initialisiere Engine …";
-        engine = new MLCEngine({
-          initProgressCallback: (report) => {
-            // report shape can differ; we keep it safe
-            const p = (report && typeof report.progress === "number") ? report.progress * 100 : null;
-            if (p !== null) setProgress(10 + p * 0.90);
-            if (report && report.text) modelStatusEl.textContent = "Status: " + report.text;
-          }
-        });
-
-        const DEFAULT_MODEL = "Qwen2-0.5B-Instruct-q4f16_1-MLC";
-        await engine.reload(DEFAULT_MODEL);
-
-        setProgress(100);
-        modelReady = true;
-        btnGenerate.disabled = false;
-        modelStatusEl.textContent = `Status: ready (${DEFAULT_MODEL})`;
-        toast("Model ready ✓");
-      } catch (e) {
-        console.error(e);
-        modelReady = false;
-        engine = null;
-        btnGenerate.disabled = true;
-
-        const msg = String(e?.message || e || "");
-        modelStatusEl.textContent =
-          msg.toLowerCase().includes("disposed") || msg.toLowerCase().includes("device was lost")
-            ? "Status: WebGPU wurde zurückgesetzt (device lost). Seite neu laden und erneut versuchen."
-            : "Status: Fehler beim Laden (Konsole prüfen).";
-
-        toast("Load failed");
-      }
-    });
-
-    // Generate lyrics (no streaming – simpler & stable for small model)
-    btnGenerate.addEventListener("click", async () => {
-      const userInput = (lyricsInputEl.value || "").trim();
-      if (!userInput){
-        toast("Bitte Input einfügen");
-        return;
-      }
-      if (!modelReady || !engine){
-        toast("Model nicht bereit");
-        modelStatusEl.textContent = "Status: nicht bereit – bitte Start klicken.";
-        return;
-      }
-
-      btnGenerate.disabled = true;
-      btnCopyLyrics.disabled = true;
-      lyricsOutputEl.textContent = "Generating …";
-      modelStatusEl.textContent = "Status: generating …";
-
-      // User prompt to keep it simple and deterministic
-      const USER_LYRICS = `
-SOUND-PROMPT:
-${userInput}
-
-AUFGABE:
-Erzeuge den Songtext gemäß den Regeln.
-`.trim();
-
-      try {
-        const resp = await engine.chat.completions.create({
-          messages: [
-            { role: "system", content: SYSTEM_LYRICS },
-            { role: "user", content: USER_LYRICS }
-          ],
-          temperature: 0.7,
-          top_p: 0.9,
-          max_tokens: 700
-        });
-
-        const text = (resp?.choices?.[0]?.message?.content || "").trim();
-        lyricsOutputEl.textContent = text || "—";
-        btnCopyLyrics.disabled = !text;
-        modelStatusEl.textContent = "Status: ready";
-        toast("Done ✓");
-      } catch (e) {
-        console.error(e);
-        const msg = String(e?.message || e || "");
-        if (msg.toLowerCase().includes("disposed") || msg.toLowerCase().includes("device was lost")) {
-          modelReady = false;
-          engine = null;
-          btnGenerate.disabled = true;
-          modelStatusEl.textContent = "Status: WebGPU reset. Seite neu laden und neu starten.";
-          lyricsOutputEl.textContent = "WebGPU wurde zurückgesetzt. Bitte Seite neu laden.";
-        } else {
-          modelStatusEl.textContent = "Status: Fehler (Konsole prüfen).";
-          lyricsOutputEl.textContent = "Fehler beim Generieren.";
-        }
-      } finally {
-        if (modelReady) btnGenerate.disabled = false;
-      }
-    });
-
-    btnCopyLyrics.addEventListener("click", () => {
-      const out = (lyricsOutputEl.textContent || "").trim();
-      if (out && out !== "—") copyText(out);
-    });
-
-    // agent placeholder link
-    document.body.addEventListener("click", (e) => {
-      const el = e.target.closest("[data-open-agent]");
-      if (!el) return;
-      e.preventDefault();
-      const url = el.getAttribute("data-open-agent");
-      if (!url || url === "#") {
-        toast("Agent-Link noch nicht gesetzt");
-        return;
-      }
-      window.open(url, "_blank", "noopener");
-    });
   </script>
+
+  <!-- Lyrics Generator module (your file) -->
+  <script type="module" src="../../assets/js/lyrics-generator.js"></script>
 </body>
 </html>
