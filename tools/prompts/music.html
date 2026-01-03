@@ -154,7 +154,7 @@
         display:grid;
         grid-template-columns: minmax(0, 3fr) minmax(0, 2.2fr);
         gap: 32px;
-        align-items:center;
+        align-items:start;
       }
     }
 
@@ -211,9 +211,105 @@
     }
     .terminal .dim{ color:#6b7280; }
 
-    /* Controls */
+    /* Info blocks */
+    .info-block{
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(15,23,42,.62);
+      padding: 12px 14px;
+      box-shadow: 0 16px 40px rgba(15,23,42,.85);
+      margin-top: 12px;
+    }
+    .info-title{
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .info-title .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: linear-gradient(135deg, var(--pink), var(--cyan));
+      box-shadow: 0 0 12px rgba(34,211,238,.35);
+    }
+    .info-text{ font-size: 13px; color: #e5e7eb; }
+    .info-text .muted{ color: var(--muted2); font-size: 12px; }
+
+    /* Buttons / chips */
+    .btn{
+      border-radius:999px;
+      padding: 9px 12px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.75);
+      color: #e5e7eb;
+      font: 900 13px/1 system-ui;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .btn:hover{
+      border-color: rgba(34,211,238,.55);
+      box-shadow: 0 0 14px rgba(34,211,238,.22);
+    }
+    .btn:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+    .btn.primary{
+      border-color: rgba(34,211,238,.35);
+    }
+    .btn.danger{
+      border-color: rgba(236,72,153,.45);
+    }
+
+    .mono{
+      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    }
+
+    textarea.input, textarea.output{
+      width:100%;
+      border-radius: 16px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(2,6,23,.55);
+      color: #e5e7eb;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      min-height: 110px;
+      resize: vertical;
+      outline: none;
+    }
+    textarea.output{ min-height: 180px; }
+
+    .row{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      align-items:center;
+      margin-top: 10px;
+    }
+    .row .spacer{ flex:1; }
+
+    .progress{
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(2,6,23,.45);
+      overflow:hidden;
+    }
+    .progress > div{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+      transition: width .18s ease;
+    }
+
+    /* Controls for library */
     .controls{
-      margin-top: 8px;
+      margin-top: 18px;
       display:flex;
       flex-wrap:wrap;
       gap: 10px 12px;
@@ -316,7 +412,7 @@
     .title-block{ flex:1; min-width:0; }
     .title{
       font-size: clamp(18px, 4vw, 22px);
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing:.01em;
       margin-bottom: 2px;
       color:#f9fafb;
@@ -339,7 +435,7 @@
       white-space:nowrap;
     }
 
-    /* Links under pills */
+    /* Links under meta chips */
     .links-under{
       display:flex;
       gap:14px;
@@ -356,7 +452,7 @@
     }
     .link:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; border-radius:10px; }
 
-    /* Details / accordion as button */
+    /* Details as button */
     details{
       margin-top: 12px;
       border-top: 1px solid rgba(148,163,184,.14);
@@ -367,31 +463,23 @@
       cursor:pointer;
       user-select:none;
 
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
 
-      border-radius:999px;
+      border-radius: 999px;
       padding: 10px 14px;
       border: 1px solid rgba(148,163,184,.22);
       background: rgba(15,23,42,.75);
 
-      font-weight:900;
+      font-weight: 900;
       font-size: 13px;
-      letter-spacing:.02em;
+      letter-spacing: .02em;
     }
-    summary::-webkit-details-marker{ display:none; }
-    summary::after{
-      content:"▼";
-      font-weight:900;
-      opacity:.9;
-      transform: translateY(-1px);
-    }
+    summary::after{ content:"▼"; font-weight:900; opacity:.9; transform: translateY(-1px); }
     details[open] summary::after{ content:"▲"; }
-    summary:focus-visible{
-      outline:2px solid var(--cyan);
-      outline-offset:2px;
-    }
+    summary:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+    summary::-webkit-details-marker{ display:none; }
 
     .prompt-grid{
       margin-top: 12px;
@@ -419,29 +507,6 @@
       color: #cbd5e1;
       font-weight: 900;
     }
-    .btn-row{
-      display:flex;
-      gap: 8px;
-      flex-wrap:wrap;
-    }
-    .btn{
-      border-radius:999px;
-      padding: 7px 10px;
-      border: 1px solid rgba(148,163,184,.22);
-      background: rgba(15,23,42,.75);
-      color: #e5e7eb;
-      font: 800 12px/1 system-ui;
-      cursor:pointer;
-      user-select:none;
-    }
-    .btn:hover{
-      border-color: rgba(34,211,238,.55);
-      box-shadow: 0 0 14px rgba(34,211,238,.22);
-    }
-    .btn:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
-    .btn.primary{
-      border-color: rgba(34,211,238,.35);
-    }
 
     pre{
       margin:0;
@@ -450,10 +515,6 @@
       font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
       font-size: 12px;
       color: #e5e7eb;
-    }
-    .muted{
-      color: var(--muted);
-      font-size: 12px;
     }
 
     /* Empty state */
@@ -481,10 +542,41 @@
       background: rgba(15,23,42,.92);
       color:#e5e7eb;
       box-shadow: 0 10px 30px rgba(2,6,23,.7);
-      font: 800 13px/1 system-ui;
+      font: 900 13px/1 system-ui;
       backdrop-filter: blur(10px);
     }
     .toast.show{ display:block; }
+
+    /* Modal */
+    .modal-backdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(2,6,23,.72);
+      backdrop-filter: blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index: 9998;
+      padding: 18px;
+    }
+    .modal-backdrop.show{ display:flex; }
+    .modal{
+      width: min(560px, 100%);
+      border-radius: 20px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.92);
+      box-shadow: 0 26px 70px rgba(2,6,23,.75);
+      padding: 14px 14px 12px;
+    }
+    .modal h3{
+      font-size: 14px;
+      letter-spacing:.12em;
+      text-transform: uppercase;
+      color: #cbd5e1;
+      margin-bottom: 10px;
+    }
+    .modal p{ font-size: 13px; color: #e5e7eb; margin-bottom: 12px; }
+    .modal .actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
 
     /* Footer */
     footer{
@@ -518,6 +610,7 @@
     }
   </style>
 </head>
+
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
 
@@ -546,51 +639,17 @@
             <span>
               <a href="../../index.html">Home</a> ·
               <a href="../index.html">Tools</a> ·
-              <a href="./prompts.html">Prompts</a> ·
+              <a href="./index.html">Prompts</a> ·
               <span>Music</span>
             </span>
           </div>
 
           <p class="hero-text-main">
-            Prompt-Chains für Tracks, Releases und Sound-Experimente – als saubere Library.
+            Sound-Prompts (Riffusion) als saubere Library – plus optionaler Lyrics-Generator.
           </p>
           <p class="hero-text-sub">
-            Suche, filtere und kopiere einzelne Prompt-Blöcke oder komplette Chains pro Track.
-          </p>
-
-          <div class="controls" aria-label="Filter & Suche">
-            <div class="control" style="flex:1">
-              <span class="control-label">Suche:</span>
-              <div class="search-wrap">
-                <span class="search-icon">🔍</span>
-                <input id="searchInput" class="search" type="search" placeholder="Titel, Album, Tags …" />
-              </div>
-            </div>
-
-            <div class="control" style="width:100%">
-              <span class="control-label">Type:</span>
-              <div class="chip-row" id="typeChips">
-                <span class="chip active" data-type="all">All</span>
-                <span class="chip" data-type="album">Album</span>
-                <span class="chip" data-type="single">Single</span>
-                <span class="chip" data-type="loop">Loop/Pack</span>
-              </div>
-            </div>
-
-            <div class="control" style="width:100%">
-              <span class="control-label">Vibe:</span>
-              <div class="chip-row" id="vibeChips">
-                <span class="chip active" data-vibe="all">All</span>
-                <span class="chip" data-vibe="dark">Dark</span>
-                <span class="chip" data-vibe="meme">Meme</span>
-                <span class="chip" data-vibe="cinematic">Cinematic</span>
-                <span class="chip" data-vibe="ambient">Ambient</span>
-              </div>
-            </div>
-          </div>
-
-          <p class="muted" style="margin-top:10px">
-            Tipp: Pro Track kannst du “Copy All” nutzen (Markdown-Export).
+            Du pflegst pro Track nur noch <span class="mono">prompts.music</span>.
+            Lyrics bleiben transparent: meist Brainstorming/Editing – kein “One-Prompt-Text”.
           </p>
         </div>
 
@@ -602,19 +661,125 @@
           <div class="terminal" id="topTerminal">
 list --type=all --vibe=all
 > results: <span id="resultCount">0</span>
-> copy: block | all
-<span class="dim"># alles lokal, kein Tracking</span>
+
+<span class="dim"># library · local-first · no tracking</span>
           </div>
         </aside>
       </div>
+
+      <!-- Transparency -->
+      <div class="info-block">
+        <div class="info-title"><span class="dot"></span>Transparenz: Wie Lyrics hier entstehen</div>
+        <div class="info-text">
+          Die meisten PromptRebel-Lyrics entstehen <b>nicht</b> als “fertiger Text aus einem einzigen Prompt”,
+          sondern im <b>Brainstorming, Umschreiben und Feinschliff</b> (Idee → Rohfassung → Edit → Hook-Schärfung).
+          <div class="muted" style="margin-top:8px;">
+            Trotzdem: Für Nutzer, die schnell starten wollen, gibt es unten einen Lyrics-Generator-Prompt
+            (Copy & in deine KI einfügen) und optional einen lokalen Generator direkt auf dieser Seite.
+          </div>
+        </div>
+      </div>
+
+      <!-- Lyrics Generator Prompt + Agent -->
+      <div class="info-block">
+        <div class="info-title"><span class="dot"></span>Lyrics Generator Prompt</div>
+
+        <div class="info-text" style="margin-bottom:10px;">
+          Nutzung: <b>Prompt kopieren</b> → in deine KI einfügen → <b>Sound-Prompt</b> einsetzen → Lyrics erhalten.
+        </div>
+
+        <textarea id="lyricsPromptTemplate" class="input mono" spellcheck="false"></textarea>
+
+        <div class="row">
+          <button class="btn primary" id="btnCopyLyricsPrompt" type="button">Copy Prompt</button>
+          <span class="spacer"></span>
+          <button class="btn danger" id="btnOpenAgent" type="button">Open Lyrics-Agent ↗</button>
+        </div>
+
+        <div class="muted" style="margin-top:10px;">
+          Hinweis: “Open Lyrics-Agent” öffnet einen externen Chat/Agent (du verlässt PromptRebel).
+        </div>
+      </div>
+
+      <!-- Local Lyrics Generator -->
+      <div class="info-block">
+        <div class="info-title"><span class="dot"></span>Local Lyrics Generator (kostenlos, on-device)</div>
+
+        <div class="info-text">
+          Läuft nur, wenn dein Browser <b>WebGPU</b> unterstützt. Auf iPhone kann das je nach Safari/iOS fehlen.
+          Wenn WebGPU nicht verfügbar ist, nutze einfach den Prompt oben in deiner KI.
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn primary" id="btnInitModel" type="button">Modell laden</button>
+          <span class="muted" id="modelStatus">Status: idle</span>
+        </div>
+
+        <div class="progress" style="margin-top:10px;">
+          <div id="dlBar"></div>
+        </div>
+
+        <div class="muted" style="margin-top:10px;">
+          Input: Sound-Prompt (oder Stichpunkte: Vibe, Thema, Tempo, Hook-Style …)
+        </div>
+
+        <textarea id="lyricsInput" class="input mono" spellcheck="false"
+          placeholder="Sound-Prompt hier einfügen …"></textarea>
+
+        <div class="row">
+          <button class="btn primary" id="btnGenerate" type="button" disabled>Lyrics generieren</button>
+          <span class="spacer"></span>
+          <button class="btn" id="btnCopyOutput" type="button" style="display:none;">Copy Lyrics</button>
+        </div>
+
+        <textarea id="lyricsOutput" class="output mono" spellcheck="false" readonly
+          placeholder="Output erscheint hier …"></textarea>
+
+        <div class="muted" style="margin-top:10px;">
+          Wenn dein Gerät zu schwach ist: nimm ein kleineres Modell oder nutze den Prompt oben.
+        </div>
+      </div>
     </section>
 
-    <!-- LIST -->
+    <!-- LIBRARY FILTERS -->
     <section class="section" aria-labelledby="list-title">
-      <h2 class="section-title" id="list-title" style="font-size:18px;font-weight:800;margin-bottom:6px;">Tracks & Prompt-Chains</h2>
+      <h2 class="section-title" id="list-title" style="font-size:18px;font-weight:900;margin-bottom:6px;">
+        Tracks & Sound-Prompts
+      </h2>
       <p class="section-subtitle" style="font-size:13px;color:#9ca3af;margin-bottom:14px;max-width:46rem;">
-        Jeder Eintrag hat View/Play unter den Tags und eine ausklappbare Prompt-Chain.
+        Pro Track: View/Play + ein ausklappbarer <b>Music Prompt</b> (Riffusion).
       </p>
+
+      <div class="controls" aria-label="Filter & Suche">
+        <div class="control" style="flex:1">
+          <span class="control-label">Suche:</span>
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input id="searchInput" class="search" type="search" placeholder="Titel, Album, Tags …" />
+          </div>
+        </div>
+
+        <div class="control" style="width:100%">
+          <span class="control-label">Type:</span>
+          <div class="chip-row" id="typeChips">
+            <span class="chip active" data-type="all">All</span>
+            <span class="chip" data-type="album">Album</span>
+            <span class="chip" data-type="single">Single</span>
+            <span class="chip" data-type="loop">Loop/Pack</span>
+          </div>
+        </div>
+
+        <div class="control" style="width:100%">
+          <span class="control-label">Vibe:</span>
+          <div class="chip-row" id="vibeChips">
+            <span class="chip active" data-vibe="all">All</span>
+            <span class="chip" data-vibe="dark">Dark</span>
+            <span class="chip" data-vibe="meme">Meme</span>
+            <span class="chip" data-vibe="cinematic">Cinematic</span>
+            <span class="chip" data-vibe="ambient">Ambient</span>
+          </div>
+        </div>
+      </div>
 
       <div id="list" class="list"></div>
       <div id="empty" class="empty" style="display:none;">
@@ -629,14 +794,28 @@ list --type=all --vibe=all
         <span>·</span>
         <a href="../../privacy.html">Privacy</a>
       </div>
-      <div>current build: <span id="buildVersion" class="build-highlight">v0.1.prompts.music</span> – prompts library</div>
+      <div>current build: <span id="buildVersion" class="build-highlight">v0.2.prompts.music</span> – prompts library</div>
     </footer>
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite">Copied ✓</div>
 
-  <script>
-    // -------- Scroll progress (CSS var) --------
+  <!-- Confirm Modal -->
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <h3>Externer Link</h3>
+      <p>
+        Du verlässt jetzt PromptRebel und öffnest den Lyrics-Agent in einer externen Seite/App.
+      </p>
+      <div class="actions">
+        <button class="btn" id="btnCancelModal" type="button">Cancel</button>
+        <button class="btn danger" id="btnConfirmModal" type="button">Continue ↗</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ---------------- Scroll progress (CSS var) ----------------
     window.addEventListener("scroll", () => {
       const doc = document.documentElement;
       const scrollable = doc.scrollHeight - window.innerHeight;
@@ -644,14 +823,14 @@ list --type=all --vibe=all
       document.documentElement.style.setProperty("--scroll", ratio.toString());
     });
 
-    // -------- Brand glitch on load --------
+    // ---------------- Brand glitch on load ----------------
     const brandEl = document.getElementById("brand");
     window.addEventListener("load", () => {
       brandEl.classList.add("glitch");
       setTimeout(() => brandEl.classList.remove("glitch"), 800);
     });
 
-    // -------- Toast --------
+    // ---------------- Toast ----------------
     const toastEl = document.getElementById("toast");
     let toastTimer = null;
     function toast(msg="Copied ✓") {
@@ -661,15 +840,15 @@ list --type=all --vibe=all
       toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1200);
     }
 
-    // -------- Copy helpers --------
+    // ---------------- Copy helpers ----------------
     async function copyText(text) {
+      const t = String(text || "");
       try {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(t);
         toast("Copied ✓");
-      } catch (e) {
-        // Fallback
+      } catch {
         const ta = document.createElement("textarea");
-        ta.value = text;
+        ta.value = t;
         ta.style.position = "fixed";
         ta.style.left = "-9999px";
         document.body.appendChild(ta);
@@ -680,33 +859,243 @@ list --type=all --vibe=all
       }
     }
 
-    function mdFence(title, content) {
-      const safe = (content || "").trim();
-      if (!safe) return "";
-      return `### ${title}\n\n\`\`\`\n${safe}\n\`\`\`\n`;
+    function escapeHtml(s){
+      return String(s || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;");
     }
 
-    // -------- Data (DU ERGÄNZT NUR HIER) --------
-    // NOTE: viewUrl = deine lokale Detailseite (z.B. ../../music/trinity-protocol.html)
-    //       playUrl = Riffusion/SoundCloud/etc.
+    // ==========================================================
+    // 1) GLOBAL: Lyrics Generator Prompt Template (Copy)
+    // ==========================================================
+    const LYRICS_PROMPT_TEMPLATE =
+`Du bist ein Lyrics-Generator für Musik. Du lieferst nur Lyrics – keine Erklärungen, keine Meta-Texte.
+
+INPUT:
+Ich gebe dir einen "SOUND-PROMPT" (Genre, Tempo, Stimmung, Vocal-Style, Themen, Referenzen).
+Optional gebe ich dir: Thema, Perspektive, Hook-Quote, Reimstil, Sprache, Härtegrad.
+
+AUFGABE:
+- Erstelle einen Songtext, der zum SOUND-PROMPT passt.
+- Output-Format strikt:
+[INTRO]
+...
+[VERSE 1]
+...
+[HOOK]
+...
+[VERSE 2]
+...
+[HOOK]
+...
+[BRIDGE] (optional)
+...
+[OUTRO]
+...
+
+REGELN:
+- Sprache: Deutsch (wenn nicht anders angegeben).
+- Hook muss eingängig sein (max. 2–4 Zeilen, wiederholbar).
+- Verse: bildreich, konkret, keine generischen Phrasen.
+- Kein "As an AI", keine Erklärungen.
+
+SOUND-PROMPT:
+<<<HIER SOUND-PROMPT EINFÜGEN>>>
+
+OPTIONALE INFOS (falls vorhanden):
+- Thema:
+- Perspektive (Ich/Du/Er/Sie/Wir):
+- Vibe (dark/ironisch/meme/ernst):
+- Explizit? (ja/nein):
+- Reimschema / Flow:
+- Hook-Quote (wenn du eine willst):`;
+
+    const lyricsPromptEl = document.getElementById("lyricsPromptTemplate");
+    lyricsPromptEl.value = LYRICS_PROMPT_TEMPLATE;
+
+    document.getElementById("btnCopyLyricsPrompt").addEventListener("click", () => {
+      copyText(lyricsPromptEl.value);
+    });
+
+    // ==========================================================
+    // 2) OPTIONAL: Open Lyrics Agent (external link with confirm)
+    // ==========================================================
+    // TODO: Hier später deinen echten Agent-Link rein.
+    // Beispiel (Platzhalter): const LYRICS_AGENT_URL = "https://chatgpt.com/g/g-XXXX";
+    const LYRICS_AGENT_URL = "#";
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const btnOpenAgent = document.getElementById("btnOpenAgent");
+    const btnCancelModal = document.getElementById("btnCancelModal");
+    const btnConfirmModal = document.getElementById("btnConfirmModal");
+
+    function openModal(){
+      modalBackdrop.classList.add("show");
+      modalBackdrop.setAttribute("aria-hidden", "false");
+    }
+    function closeModal(){
+      modalBackdrop.classList.remove("show");
+      modalBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    btnOpenAgent.addEventListener("click", () => {
+      if (!LYRICS_AGENT_URL || LYRICS_AGENT_URL === "#") {
+        toast("Agent-Link fehlt (TODO)"); 
+        return;
+      }
+      openModal();
+    });
+
+    btnCancelModal.addEventListener("click", closeModal);
+    modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === modalBackdrop) closeModal();
+    });
+
+    btnConfirmModal.addEventListener("click", () => {
+      closeModal();
+      window.open(LYRICS_AGENT_URL, "_blank", "noopener");
+    });
+
+    // ==========================================================
+    // 3) LOCAL Lyrics Generator (WebGPU / WebLLM)
+    // ==========================================================
+    const modelStatusEl = document.getElementById("modelStatus");
+    const dlBarEl = document.getElementById("dlBar");
+    const btnInitModel = document.getElementById("btnInitModel");
+    const btnGenerate = document.getElementById("btnGenerate");
+    const btnCopyOutput = document.getElementById("btnCopyOutput");
+    const lyricsInput = document.getElementById("lyricsInput");
+    const lyricsOutput = document.getElementById("lyricsOutput");
+
+    let engine = null;
+    let modelReady = false;
+
+    function hasWebGPU(){
+      return typeof navigator !== "undefined" && !!navigator.gpu;
+    }
+
+    function setProgress(pct){
+      const clamped = Math.max(0, Math.min(100, pct));
+      dlBarEl.style.width = clamped.toFixed(1) + "%";
+    }
+
+    // NOTE:
+    // - WebLLM Modell-IDs ändern sich manchmal.
+    // - Wenn ein Modell nicht lädt: nimm ein anderes "small instruct" Modell.
+    // - Du kannst hier später exakt das Modell eintragen, das ihr auch bei LocalAI verwendet.
+    const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1"; // ggf. anpassen
+
+    btnInitModel.addEventListener("click", async () => {
+      if (!hasWebGPU()){
+        modelStatusEl.textContent = "Status: WebGPU nicht verfügbar (nutze Prompt oben).";
+        toast("WebGPU nicht verfügbar");
+        return;
+      }
+
+      try{
+        modelStatusEl.textContent = "Status: lade WebLLM …";
+        setProgress(5);
+
+        // WebLLM import (CDN)
+        // Falls du lieber alles lokal hosten willst: diese URL ersetzen und Dateien lokal ablegen.
+        const webllm = await import("https://esm.run/@mlc-ai/web-llm");
+        setProgress(12);
+
+        modelStatusEl.textContent = "Status: initialisiere Engine …";
+        engine = await webllm.CreateMLCEngine(
+          DEFAULT_MODEL,
+          {
+            initProgressCallback: (report) => {
+              // report: {progress, text} (abhängig von Version)
+              const p = (report && typeof report.progress === "number") ? report.progress * 100 : null;
+              if (p !== null) setProgress(12 + p * 0.88);
+              if (report && report.text) modelStatusEl.textContent = "Status: " + report.text;
+            }
+          }
+        );
+
+        setProgress(100);
+        modelReady = true;
+        btnGenerate.disabled = false;
+        modelStatusEl.textContent = "Status: ready (" + DEFAULT_MODEL + ")";
+        toast("Model ready ✓");
+      } catch (e){
+        console.error(e);
+        modelReady = false;
+        btnGenerate.disabled = true;
+        modelStatusEl.textContent = "Status: Fehler beim Laden (Modell/Browser).";
+        toast("Load failed");
+      }
+    });
+
+    btnGenerate.addEventListener("click", async () => {
+      if (!modelReady || !engine) return;
+
+      const soundPrompt = String(lyricsInput.value || "").trim();
+      if (!soundPrompt){
+        toast("Bitte Sound-Prompt einfügen");
+        return;
+      }
+
+      btnGenerate.disabled = true;
+      lyricsOutput.value = "";
+      btnCopyOutput.style.display = "none";
+      modelStatusEl.textContent = "Status: generating …";
+
+      // Minimaler System-Prompt für Local-Mode (kurz halten -> kleine Modelle!)
+      const system =
+        "Du bist ein Lyrics-Generator. Antworte NUR mit Songtext im Format [INTRO]/[VERSE 1]/[HOOK]/[VERSE 2]/[HOOK]/[OUTRO]. Keine Erklärungen.";
+
+      const user =
+        `SOUND-PROMPT:\n${soundPrompt}\n\nErstelle passende Lyrics (Deutsch).`;
+
+      try{
+        const resp = await engine.chat.completions.create({
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user }
+          ],
+          temperature: 0.9,
+          top_p: 0.9,
+          max_tokens: 600
+        });
+
+        const text = resp?.choices?.[0]?.message?.content ?? "";
+        lyricsOutput.value = String(text).trim();
+        btnCopyOutput.style.display = lyricsOutput.value ? "inline-flex" : "none";
+        modelStatusEl.textContent = "Status: done ✓";
+      } catch (e){
+        console.error(e);
+        modelStatusEl.textContent = "Status: generate error";
+        toast("Generate failed");
+      } finally{
+        btnGenerate.disabled = false;
+      }
+    });
+
+    btnCopyOutput.addEventListener("click", () => {
+      copyText(lyricsOutput.value || "");
+    });
+
+    // ==========================================================
+    // 4) LIBRARY DATA (DU ERGÄNZT NUR HIER)
+    //    -> pro Track nur prompts.music
+    // ==========================================================
     const tracks = [
       {
         id: "trinity-protocol",
         title: "TRINITY PROTOCOL",
         year: "2025",
-        type: "album",   // album | single | loop
-        vibe: "cinematic",
+        type: "album",        // album | single | loop
+        vibe: "cinematic",    // dark | meme | cinematic | ambient ...
         language: "DE",
         tags: ["dystopian", "deutsch", "high energy"],
         album: "TRINITY PROTOCOL (LP)",
         viewUrl: "../../music/trinity-protocol.html",
-        playUrl: "../../music/trinity-protocol.html",
+        playUrl: "#",
         prompts: {
-          brief: "Durchgehende Cyberpunk-Rap-Story über Kontrolle, Aufstand und Mensch/KI-Fusion.",
-          lyrics: "Schreibe aggressive, story-driven Rap-Lyrics auf Deutsch…\n(Dein Lyrics-Prompt hier einfügen)",
-          sound: "Minimalistischer Dark-Orchestral-Trap, 85–88 BPM…\n(Dein Soundbrief hier einfügen)",
-          vocals: "KI-Vocals: Stimme A kalt/dominant, Stimme B ruhig/analytisch…",
-          notes: "Mix: ultra-trockene Drums, tiefer Subbass, Strings nur als Stabs…"
+          music: "Minimalistischer Dark-Orchestral-Trap … (dein kompletter Riffusion-Prompt hier)"
         }
       },
       {
@@ -721,11 +1110,7 @@ list --type=all --vibe=all
         viewUrl: "../../music/singles.html#code-unsterblich",
         playUrl: "https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf",
         prompts: {
-          brief: "Dark single: kalter Puls, dystopische Bilder, prägnante Hook.",
-          lyrics: "(Lyrics-Prompt hier einfügen)",
-          sound: "(Music/Sound-Prompt hier einfügen)",
-          vocals: "(Vocal/Voice Hinweise hier einfügen)",
-          notes: "(Notizen/Settings hier einfügen)"
+          music: "(dein kompletter Riffusion-Prompt hier)"
         }
       },
       {
@@ -740,16 +1125,12 @@ list --type=all --vibe=all
         viewUrl: "../../music/singles.html#alexa-zeig-mir-brueste",
         playUrl: "https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70",
         prompts: {
-          brief: "Meme-Rap: absurd, schnell verständlich, Punchlines, aber sauber lesbar.",
-          lyrics: "(Lyrics-Prompt hier einfügen)",
-          sound: "(Music/Sound-Prompt hier einfügen)",
-          vocals: "",
-          notes: ""
+          music: "(dein kompletter Riffusion-Prompt hier)"
         }
       }
     ];
 
-    // -------- State --------
+    // ---------------- State ----------------
     let currentType = "all";
     let currentVibe = "all";
     let searchTerm = "";
@@ -781,31 +1162,16 @@ list --type=all --vibe=all
       });
     }
 
-    function escapeHtml(s){
-      return String(s || "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;");
-    }
-
     function render(){
       const visible = getVisible();
       listEl.innerHTML = "";
       resultCountEl.textContent = String(visible.length);
-
       emptyEl.style.display = visible.length ? "none" : "block";
 
       visible.forEach(t => {
         const tags = (t.tags || []).map(x => `<span class="meta-chip">${escapeHtml(x)}</span>`).join("");
-
-        const p = t.prompts || {};
-        const brief = (p.brief || "").trim();
-        const lyrics = (p.lyrics || "").trim();
-        const sound  = (p.sound  || "").trim();
-        const vocals = (p.vocals || "").trim();
-        const notes  = (p.notes  || "").trim();
-
-        const hasAny = !!(brief || lyrics || sound || vocals || notes);
+        const music = String(t.prompts?.music || "").trim();
+        const hasMusic = !!music;
 
         const el = document.createElement("article");
         el.className = "card";
@@ -816,7 +1182,6 @@ list --type=all --vibe=all
             <div class="title-block">
               <div class="title">${escapeHtml(t.title)}</div>
               <div class="sub">${escapeHtml(t.year)} · ${escapeHtml(t.type.toUpperCase())} · ${escapeHtml(t.vibe)} · ${escapeHtml(t.language)}</div>
-
               <div class="meta-chips">
                 <span class="meta-chip">${escapeHtml(t.album || "")}</span>
                 ${tags}
@@ -829,91 +1194,30 @@ list --type=all --vibe=all
             </div>
           </div>
 
-          ${hasAny ? `
-          <details>
-            <summary>Prompt-Chain öffnen</summary>
+          <details ${hasMusic ? "" : "disabled"}>
+            <summary>Music Prompt öffnen</summary>
 
             <div class="prompt-grid">
-              ${brief ? `
+              ${hasMusic ? `
               <div class="prompt-block">
                 <div class="prompt-head">
-                  <div class="prompt-title">Brief</div>
-                  <div class="btn-row">
-                    <button class="btn" type="button" data-copy="brief">Copy</button>
-                  </div>
+                  <div class="prompt-title">Music Prompt (Riffusion)</div>
+                  <button class="btn primary" type="button" data-copy="music">Copy</button>
                 </div>
-                <pre>${escapeHtml(brief)}</pre>
-              </div>` : ""}
-
-              ${lyrics ? `
+                <pre>${escapeHtml(music)}</pre>
+              </div>` : `
               <div class="prompt-block">
-                <div class="prompt-head">
-                  <div class="prompt-title">Lyrics Prompt</div>
-                  <div class="btn-row">
-                    <button class="btn" type="button" data-copy="lyrics">Copy</button>
-                  </div>
-                </div>
-                <pre>${escapeHtml(lyrics)}</pre>
-              </div>` : ""}
-
-              ${sound ? `
-              <div class="prompt-block">
-                <div class="prompt-head">
-                  <div class="prompt-title">Music / Sound Prompt</div>
-                  <div class="btn-row">
-                    <button class="btn" type="button" data-copy="sound">Copy</button>
-                  </div>
-                </div>
-                <pre>${escapeHtml(sound)}</pre>
-              </div>` : ""}
-
-              ${vocals ? `
-              <div class="prompt-block">
-                <div class="prompt-head">
-                  <div class="prompt-title">Vocals / Voice Notes</div>
-                  <div class="btn-row">
-                    <button class="btn" type="button" data-copy="vocals">Copy</button>
-                  </div>
-                </div>
-                <pre>${escapeHtml(vocals)}</pre>
-              </div>` : ""}
-
-              ${notes ? `
-              <div class="prompt-block">
-                <div class="prompt-head">
-                  <div class="prompt-title">Notes / Settings</div>
-                  <div class="btn-row">
-                    <button class="btn" type="button" data-copy="notes">Copy</button>
-                  </div>
-                </div>
-                <pre>${escapeHtml(notes)}</pre>
-              </div>` : ""}
-
-              <div class="prompt-block">
-                <div class="prompt-head">
-                  <div class="prompt-title">Export</div>
-                  <div class="btn-row">
-                    <button class="btn primary" type="button" data-copy="all">Copy All (MD)</button>
-                  </div>
-                </div>
-                <div class="muted">
-                  Exportiert die verfügbaren Blöcke als Markdown (perfekt für deine Prompt-Library / GitHub).
-                </div>
-              </div>
+                <div class="prompt-title">coming soon</div>
+              </div>`}
             </div>
           </details>
-          ` : `
-          <div class="muted" style="margin-top:12px; border-top:1px solid rgba(148,163,184,.14); padding-top:12px;">
-            Prompt-Chain (coming soon)
-          </div>
-          `}
         `;
 
         listEl.appendChild(el);
       });
     }
 
-    // -------- Events: chips + search --------
+    // Events: chips + search
     searchInput.addEventListener("input", () => {
       searchTerm = searchInput.value.trim();
       render();
@@ -937,12 +1241,11 @@ list --type=all --vibe=all
       });
     });
 
-    // -------- Delegated clicks: View/Play/Copy --------
+    // Delegated clicks: View/Play/Copy
     listEl.addEventListener("click", async (e) => {
       const linkNav = e.target.closest("[data-nav]");
       if (linkNav) {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         const url = linkNav.getAttribute("data-nav");
         if (url && url !== "#") window.location.href = url;
         return;
@@ -950,8 +1253,7 @@ list --type=all --vibe=all
 
       const linkOpen = e.target.closest("[data-open]");
       if (linkOpen) {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         const url = linkOpen.getAttribute("data-open");
         if (url && url !== "#") window.open(url, "_blank", "noopener");
         return;
@@ -960,51 +1262,22 @@ list --type=all --vibe=all
       const btn = e.target.closest("button[data-copy]");
       if (!btn) return;
 
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
 
       const card = e.target.closest(".card");
       if (!card) return;
-
-      const id = card.id;
-      const t = tracks.find(x => x.id === id);
+      const t = tracks.find(x => x.id === card.id);
       if (!t) return;
 
-      const what = btn.dataset.copy;
-      const p = t.prompts || {};
-
-      if (what === "brief")  return copyText((p.brief  || "").trim());
-      if (what === "lyrics") return copyText((p.lyrics || "").trim());
-      if (what === "sound")  return copyText((p.sound  || "").trim());
-      if (what === "vocals") return copyText((p.vocals || "").trim());
-      if (what === "notes")  return copyText((p.notes  || "").trim());
-
-      if (what === "all") {
-        const out =
-`# ${t.title} (${t.year})
-Type: ${t.type} · Vibe: ${t.vibe} · Lang: ${t.language}
-Album/Serie: ${t.album || "-"}
-Tags: ${(t.tags || []).join(", ")}
-
-Links:
-- View: ${t.viewUrl || "-"}
-- Play: ${t.playUrl || "-"}
-
-${mdFence("Brief", p.brief)}
-${mdFence("Lyrics Prompt", p.lyrics)}
-${mdFence("Music / Sound Prompt", p.sound)}
-${mdFence("Vocals / Voice Notes", p.vocals)}
-${mdFence("Notes / Settings", p.notes)}
-`.trim();
-
-        return copyText(out);
+      if (btn.dataset.copy === "music") {
+        return copyText(String(t.prompts?.music || "").trim());
       }
     });
 
-    // -------- Footer version easter egg --------
+    // Footer version easter egg
     const buildVersionEl = document.getElementById("buildVersion");
     buildVersionEl.addEventListener("click", () => {
-      const versions = ["v0.1.prompts.music", "v0.2.prompts.music", "v0.6.9.prompts.music", "v1.0.prompts.music", "v∞.prompts.music"];
+      const versions = ["v0.2.prompts.music", "v0.3.prompts.music", "v0.6.9.prompts.music", "v1.0.prompts.music", "v∞.prompts.music"];
       let i = 0;
       const int = setInterval(() => {
         buildVersionEl.textContent = versions[i++ % versions.length];
@@ -1012,10 +1285,10 @@ ${mdFence("Notes / Settings", p.notes)}
       }, 120);
     });
 
-    // -------- Init --------
+    // Init
     render();
 
-    // If hash present, scroll into view (nice for direct links)
+    // If hash present, scroll into view
     window.addEventListener("load", () => {
       const id = (location.hash || "").replace("#", "");
       if (!id) return;
