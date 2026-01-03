@@ -8,7 +8,6 @@
   <style>
     :root { --scroll: 0; }
 
-    /* --- Reset / Basics --- */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; scroll-behavior: smooth; }
 
@@ -19,13 +18,11 @@
       line-height:1.6;
       padding-top:64px;
     }
-    a { color: inherit; text-decoration: none; }
+    a{ color:inherit; text-decoration:none; }
 
-    /* --- Background / Noise / Glows (wie Games) --- */
     body::before{
       content:"";
-      position:fixed;
-      inset:0;
+      position:fixed; inset:0;
       background:
         radial-gradient(circle at 10% 0%, rgba(236,72,153,0.35), transparent 55%),
         radial-gradient(circle at 90% 100%, rgba(56,189,248,0.35), transparent 55%);
@@ -33,8 +30,7 @@
     }
     body::after{
       content:"";
-      position:fixed;
-      inset:0;
+      position:fixed; inset:0;
       opacity:0.22;
       pointer-events:none;
       background-image:
@@ -47,7 +43,6 @@
 
     .page{ max-width:1120px; margin:0 auto; padding:16px 16px 40px; }
 
-    /* --- Skip-Link --- */
     .skip-link{
       position:absolute;
       left:50%;
@@ -66,7 +61,6 @@
       outline-offset:2px;
     }
 
-    /* --- Nav + Scroll Progress --- */
     .nav{
       position:fixed; top:0; left:0; right:0;
       z-index:40;
@@ -86,8 +80,7 @@
     }
     .nav::after{
       content:"";
-      position:absolute;
-      left:0; right:0; bottom:0;
+      position:absolute; left:0; right:0; bottom:0;
       height:2px;
       background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
       transform-origin:left;
@@ -96,17 +89,15 @@
       pointer-events:none;
     }
 
-    .brand-link{
-      display:inline-flex;
-      align-items:center;
+    .brand{
       font-size:22px;
       font-weight:800;
       letter-spacing:0.05em;
+      cursor:pointer;
       white-space:nowrap;
       text-shadow:0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4);
-      cursor:pointer;
     }
-    .brand-link span.accent{
+    .brand span.accent{
       background: linear-gradient(135deg, #f472b6, #22d3ee);
       -webkit-background-clip:text;
       color:transparent;
@@ -127,7 +118,6 @@
     .nav-link:hover::after, .nav-link:focus-visible::after { width:100%; }
     .nav-link:focus-visible{ outline:none; }
 
-    /* --- Layout --- */
     .section{ padding:40px 16px 8px; }
     .section:first-of-type{ padding-top:28px; }
 
@@ -140,7 +130,6 @@
       }
     }
 
-    /* --- Hero --- */
     .category-label{
       font-size:12px;
       letter-spacing:0.25em;
@@ -157,10 +146,11 @@
     }
     .hero-breadcrumbs{ font-size:12px; color:#9ca3af; margin-bottom:16px; }
     .hero-breadcrumbs a{ text-decoration: underline; text-underline-offset: 3px; }
-    .hero-text-main{ font-size:15px; color:#e5e7eb; margin-bottom:8px; max-width:46rem; }
-    .hero-text-sub{ font-size:14px; color:#cbd5f5; margin-bottom:18px; max-width:52rem; }
 
-    .hero-pills{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+    .hero-text-main{ font-size:15px; color:#e5e7eb; margin-bottom:8px; max-width:46rem; }
+    .hero-text-sub{ font-size:14px; color:#cbd5f5; margin-bottom:20px; max-width:52rem; }
+
+    .hero-pills{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px; }
     .hero-pill{
       border-radius:999px;
       padding:10px 14px;
@@ -171,30 +161,29 @@
       cursor:pointer;
       display:inline-flex;
       align-items:center;
-      justify-content:center;
       gap:8px;
-      transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
       user-select:none;
+      transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
     }
     .hero-pill:hover{
       transform: translateY(-2px) scale(1.02);
       border-color: rgba(209,213,219,0.28);
-      box-shadow: 0 0 18px rgba(34,211,238,0.20), 0 12px 30px rgba(2,6,23,0.75);
+      box-shadow:0 0 18px rgba(34,211,238,0.20), 0 12px 30px rgba(2,6,23,0.75);
     }
     .hero-pill.primary{
       background: linear-gradient(135deg, #ec4899, #22d3ee);
       color:#020617;
       font-weight:800;
       border:none;
-      box-shadow: 0 0 22px rgba(34,211,238,0.35), 0 0 22px rgba(236,72,153,0.25), 0 12px 30px rgba(2,6,23,0.75);
+      box-shadow: 0 0 22px rgba(34,211,238,.35), 0 0 22px rgba(236,72,153,.25), 0 12px 30px rgba(2,6,23,.75);
     }
+    .hero-note{ font-size:11px; color:#9ca3af; margin-top:10px; }
 
-    /* --- Cover --- */
     .cover-wrap{
       border-radius:18px;
       border:1px solid rgba(148,163,184,0.18);
       background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
-      box-shadow: 0 18px 45px rgba(15,23,42,0.95);
+      box-shadow:0 18px 45px rgba(15,23,42,0.95);
       backdrop-filter: blur(18px);
       overflow:hidden;
     }
@@ -202,9 +191,9 @@
       width:100%;
       aspect-ratio: 1 / 1;
       object-fit: cover;
-      object-position: center;
+      object-position:center;
       display:block;
-      filter: saturate(.98) contrast(1.02);
+      filter: saturate(.95) contrast(1.02);
       transform: scale(1.01);
     }
     .cover-caption{
@@ -214,7 +203,6 @@
       border-top:1px solid rgba(148,163,184,0.12);
     }
 
-    /* --- Content blocks --- */
     .section-title{ font-size:18px; font-weight:700; margin-bottom:8px; }
     .section-subtitle{ font-size:13px; color:#9ca3af; margin-bottom:18px; max-width:52rem; }
 
@@ -223,120 +211,57 @@
       padding:16px 18px;
       border:1px solid rgba(148,163,184,0.18);
       background: radial-gradient(circle at top left, rgba(15,23,42,0.96), rgba(15,23,42,0.99));
-      box-shadow: 0 18px 40px rgba(15,23,42,0.96);
+      box-shadow:0 18px 40px rgba(15,23,42,0.96);
       backdrop-filter: blur(18px);
       margin-bottom:14px;
     }
 
-    .bullets{
-      display:grid;
-      gap:8px;
-      font-size:13px;
-      color:#d1d5db;
-    }
-
-    .mini-grid{
-      display:grid;
-      gap:10px;
-      margin-top:10px;
-    }
-    @media(min-width:768px){
-      .mini-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-    }
-    .mini{
-      border-radius:16px;
-      border:1px solid rgba(148,163,184,0.18);
-      background: rgba(2,6,23,0.55);
-      padding:12px 12px;
-      font-size:12px;
-      color:#cbd5f5;
-    }
-    .mini strong{ color:#e5e7eb; }
-
-    /* --- Modal (Code) --- */
-    .overlay{
-      position:fixed;
-      inset:0;
-      background: rgba(0,0,0,0.65);
-      display:none;
-      justify-content:center;
-      align-items:center;
-      padding:16px;
-      z-index:60;
-    }
-    .overlay.show{ display:flex; }
-
-    .panel{
-      width:100%;
-      max-width:980px;
-      border-radius:22px;
-      border:1px solid rgba(148,163,184,0.18);
-      background: #020617;
-      box-shadow:0 22px 60px rgba(0,0,0,0.85);
-      overflow:hidden;
-    }
-    .panel-head{
+    .code-toolbar{
       display:flex;
+      flex-wrap:wrap;
+      gap:10px;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
-      padding:14px 16px;
-      border-bottom:1px solid rgba(148,163,184,0.12);
-      background: linear-gradient(to bottom, rgba(15,23,42,0.95), rgba(2,6,23,0.95));
+      margin-bottom:10px;
     }
-    .panel-title{
-      font-size:14px;
-      font-weight:700;
-      color:#f9fafb;
-      letter-spacing:.02em;
-    }
-    .panel-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-
-    .btn-small{
+    .code-tabs{ display:flex; gap:8px; flex-wrap:wrap; }
+    .code-tab{
       border-radius:999px;
+      padding:8px 10px;
       border:1px solid rgba(148,163,184,0.22);
-      background:#111827;
+      background: rgba(15,23,42,0.65);
       color:#e5e7eb;
-      padding:8px 12px;
-      font-size:13px;
+      font:800 12px/1 system-ui;
       cursor:pointer;
-      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
     }
-    .btn-small:hover{
-      transform: translateY(-1px);
-      border-color: rgba(209,213,219,0.32);
-      box-shadow: 0 0 18px rgba(34,211,238,0.12);
+    .code-tab.active{
+      border-color: rgba(34,211,238,0.55);
+      box-shadow: 0 0 18px rgba(34,211,238,0.18);
     }
-    .btn-small.primary{
-      background: linear-gradient(135deg, #34d399, #0ea5e9);
-      color:#031016;
-      border:none;
-      font-weight:800;
+    .code-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .code-action{
+      border-radius:999px;
+      padding:8px 10px;
+      border:1px solid rgba(148,163,184,0.22);
+      background: rgba(15,23,42,0.65);
+      color:#e5e7eb;
+      font:800 12px/1 system-ui;
+      cursor:pointer;
     }
 
-    .code-area{
-      width:100%;
-      min-height: 56vh;
-      border:0;
-      outline:none;
-      resize: vertical;
+    pre.codebox{
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,0.18);
+      background: rgba(2,6,23,0.65);
       padding:14px 14px;
-      background:#020617;
-      color:#e5e7eb;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size:12px;
-      line-height:1.55;
+      color:#e5e7eb;
       white-space: pre;
       overflow:auto;
-    }
-    .panel-foot{
-      padding:10px 16px 14px;
-      border-top:1px solid rgba(148,163,184,0.12);
-      color:#9ca3af;
-      font-size:12px;
+      max-height: 520px;
     }
 
-    /* --- Footer --- */
     footer{
       margin-top:40px;
       padding-top:16px;
@@ -352,7 +277,112 @@
     footer .center-links{ display:flex; gap:10px; }
     footer a{ text-decoration: underline; text-underline-offset: 3px; }
 
-    /* --- Mobile tweaks --- */
+    /* Modal (Copy) */
+    .overlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,0.65);
+      display:none;
+      justify-content:center;
+      align-items:center;
+      padding:16px;
+      z-index:80;
+    }
+    .overlay.show{ display:flex; }
+    .panel{
+      width:min(880px, calc(100vw - 32px));
+      max-height: min(78vh, 720px);
+      overflow:hidden;
+      border-radius:22px;
+      border:1px solid rgba(148,163,184,0.22);
+      background: rgba(2,6,23,0.94);
+      box-shadow:0 22px 60px rgba(2,6,23,0.85);
+      backdrop-filter: blur(14px);
+      display:flex;
+      flex-direction:column;
+    }
+    .panel-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 14px;
+      background: linear-gradient(to bottom, rgba(15,23,42,0.92), rgba(15,23,42,0.55));
+      border-bottom:1px solid rgba(148,163,184,0.15);
+    }
+    .panel-top .title{
+      font-weight:800;
+      font-size:13px;
+      letter-spacing:0.02em;
+    }
+    .panel-top .meta{
+      font-size:12px;
+      color:#94a3b8;
+      font-weight:600;
+      margin-top:2px;
+    }
+    .panel-x{
+      border-radius:999px;
+      padding:8px 10px;
+      border:1px solid rgba(148,163,184,0.25);
+      background: rgba(15,23,42,0.7);
+      color:#e5e7eb;
+      cursor:pointer;
+      font-weight:900;
+      line-height:1;
+    }
+    .panel-body{
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:0;
+    }
+    .panel-note{
+      font-size:12px;
+      color:#94a3b8;
+      border:1px solid rgba(148,163,184,0.14);
+      background: rgba(15,23,42,0.55);
+      padding:10px 12px;
+      border-radius:14px;
+    }
+    .panel-textarea{
+      width:100%;
+      min-height: 220px;
+      max-height: calc(78vh - 220px);
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,0.18);
+      background: rgba(2,6,23,0.65);
+      padding:12px 12px;
+      color:#e5e7eb;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+      white-space: pre;
+      resize: vertical;
+      outline:none;
+    }
+    .panel-actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      padding-top:4px;
+    }
+    .panel-btn{
+      border-radius:999px;
+      padding:10px 12px;
+      border:1px solid rgba(148,163,184,0.22);
+      background: rgba(15,23,42,0.65);
+      color:#e5e7eb;
+      font-weight:900;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .panel-btn.primary{
+      border:none;
+      background: linear-gradient(135deg, #ec4899, #22d3ee);
+      color:#020617;
+    }
+
     @media (max-width:767px){
       body{ padding-top:60px; }
       .nav-inner{ gap:8px; }
@@ -361,11 +391,9 @@
       .hero-layout{ display:block; }
       .cover-wrap{ margin-top:20px; }
     }
-    @media(max-width:480px){
+    @media (max-width:480px){
       .hero-pills{ flex-direction:column; }
-      .hero-pill{ width:100%; }
-      .panel-actions{ width:100%; }
-      .btn-small{ width:100%; }
+      .hero-pill{ width:100%; justify-content:center; }
     }
   </style>
 </head>
@@ -373,12 +401,11 @@
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
 
-  <!-- NAV -->
   <header class="nav">
     <div class="nav-inner">
-      <a class="brand-link" href="../../index.html" aria-label="PromptRebel Home">
+      <div class="brand" onclick="window.location.href='../../index.html'">
         Prompt<span class="accent">Rebel</span>
-      </a>
+      </div>
 
       <nav class="nav-links" aria-label="Hauptnavigation">
         <a href="../../index.html#projects" class="nav-link">Projects</a>
@@ -394,7 +421,7 @@
       <div class="hero-layout">
         <div>
           <div class="category-label">Tools · Helpers</div>
-          <h1 class="hero-title" id="helperName">Local AI</h1>
+          <h1 class="hero-title">Local AI</h1>
 
           <div class="hero-breadcrumbs">
             <span>
@@ -406,29 +433,28 @@
           </div>
 
           <p class="hero-text-main">
-            Ein kleiner Website-Chatbot, der Antworten aus einfachen Wissens-Snippets zieht – ohne Accounts, ohne Backend.
+            Ein kleiner lokaler Website-Chatbot (Browser-LLM via WebGPU) mit simpel stabiler Q&A-Retrieval-Logik aus Markdown-Dateien.
           </p>
           <p class="hero-text-sub">
-            Wichtig: Das hier ist absichtlich „simpel & nachbaubar“ (Keyword-Suche statt Magie). Ideal als Basis, um einen eigenen Bot auf einer Website zu integrieren.
+            Ziel: kein Cloud-Backend, kein Account, kein Tracking – nur lokale Berechnung + statische Wissensdateien (MD).
+            Funktioniert am besten auf Desktop (Chrome/Edge) oder Safari mit aktivem WebGPU.
           </p>
 
           <div class="hero-pills">
-            <button id="btnOpenHelper" class="hero-pill primary" type="button">💬 Open Helper</button>
-            <button id="btnOpenCode" class="hero-pill" type="button">📋 Code / Starter Kit</button>
+            <button id="btnOpenDemo" class="hero-pill primary" type="button">🚀 Open Helper</button>
+            <button id="btnOpenCopy" class="hero-pill" type="button">📋 Copy</button>
           </div>
 
-          <p class="hero-text-sub" style="font-size:12px;color:#9ca3af;margin-top:6px;">
-            Hinweis: Das „Copy“-Kit ist ein Starter-Template. Für deine echte PromptRebel-Integration müssen Pfade/Kategorien angepasst werden.
+          <p class="hero-note">
+            Hinweis: Auf iPhone/iOS ist WebGPU nicht überall verfügbar. Dann kann das Modell nicht laden (das ist kein Bug der Seite, sondern Feature-Support).
           </p>
         </div>
 
         <!-- Cover -->
         <aside class="cover-wrap" aria-label="Local AI Cover">
-          <img class="cover"
-               src="./cover/localai.PNG"
-               alt="Local AI – Cover" loading="lazy" />
+          <img class="cover" src="./cover/localai.PNG" alt="Local AI – Cover" loading="lazy">
           <div class="cover-caption">
-            Cover für die Helpers-Übersicht & Detailseite.
+            Local AI – Standalone Helper (Demo).
           </div>
         </aside>
       </div>
@@ -436,47 +462,52 @@
 
     <!-- DETAILS -->
     <section class="section" aria-labelledby="details-title">
-      <h2 class="section-title" id="details-title">Was es ist (und was nicht)</h2>
-      <p class="section-subtitle">Kurz & ehrlich – damit es nicht nach „Copy & pray“ aussieht.</p>
+      <h2 class="section-title" id="details-title">Was das Ding kann</h2>
+      <p class="section-subtitle">Kurz & konkret – plus Copy-Vorlagen für Einbau/Anpassung.</p>
 
       <div class="card">
-        <div class="bullets">
-          <div>✅ Autarker Chat-UI-Block für Websites</div>
-          <div>✅ Antworten aus <strong>lokalen Snippets</strong> (Keyword-Match)</div>
-          <div>✅ Einfach erweiterbar (mehr Kategorien, mehr Text, andere Trigger)</div>
-          <div>⚠️ Kein LLM, kein Server, keine „echte“ Semantik – bewusst simpel</div>
-          <div>⚠️ Für Produktion musst du Inhalte/Pfade an deine Website-Struktur anpassen</div>
+        <div style="display:grid;gap:8px;font-size:13px;color:#d1d5db;">
+          <div>✅ Lokal im Browser: WebLLM (WebGPU) – keine Server-API nötig</div>
+          <div>✅ Stabiler Modus: Antworten nur aus passenden Q&A (Markdown)</div>
+          <div>✅ Fallback: nur wenn Q&A nicht reicht (und dann strikt “Ich weiß es nicht.”)</div>
+          <div>✅ Einfache Wissenspflege: Dateien unter <code>assets/knowledge/*.md</code></div>
+          <div>✅ Copy-Templates: “Embed-Snippet” + kompletter JS-Code</div>
         </div>
+      </div>
 
-        <div class="mini-grid">
-          <div class="mini">
-            <strong>Prinzip:</strong> User-Frage → Keywords → passende Kategorie → Snippet → Antwort.
-          </div>
-          <div class="mini">
-            <strong>Warum so?</strong> Damit jeder es ohne Backend/Key/Account nachbauen kann – und du es leicht erklären kannst.
-          </div>
+      <div class="card">
+        <div style="font-size:13px;color:#d1d5db;">
+          <b>Wie du’s auf einer eigenen Website nutzt:</b><br/>
+          1) <code>assets/js/local-ai.js</code> + <code>assets/knowledge/*.md</code> übernehmen<br/>
+          2) Einmal Script einbinden (Snippet) – fertig<br/>
+          3) Bei anderem Ordneraufbau: Pfade in <code>KNOWLEDGE</code> anpassen
         </div>
       </div>
     </section>
 
-    <!-- HOWTO -->
-    <section class="section" aria-labelledby="howto-title">
-      <h2 class="section-title" id="howto-title">So passt man es an (Minimal-Checkliste)</h2>
+    <!-- CODE -->
+    <section class="section" aria-labelledby="code-title">
+      <h2 class="section-title" id="code-title">Code (Copy & Anpassung)</h2>
       <p class="section-subtitle">
-        Genau das ist der Punkt bei Local AI: du kopierst das Grundgerüst – und ersetzt dein Wissen.
+        Du kannst entweder das Embed-Snippet kopieren (empfohlen) oder den kompletten JS-Code.
       </p>
 
       <div class="card">
-        <div class="bullets">
-          <div>1) Ersetze die <strong>KNOWLEDGE</strong>-Blöcke (Kategorien + Snippets)</div>
-          <div>2) Pflege Keywords: lieber 10 gute als 200 generische</div>
-          <div>3) Optional: verlinke in Antworten auf echte Seiten (FAQ, Imprint, Kontakt)</div>
-          <div>4) Style: Farben/Fonts an deine Website anpassen</div>
+        <div class="code-toolbar">
+          <div class="code-tabs" role="tablist" aria-label="Code Auswahl">
+            <button class="code-tab active" type="button" data-tab="snippet">Embed Snippet</button>
+            <button class="code-tab" type="button" data-tab="fulljs">local-ai.js (vollständig)</button>
+          </div>
+          <div class="code-actions">
+            <button class="code-action" id="btnCopyActive" type="button">📋 Copy active</button>
+            <button class="code-action" id="btnOpenCopy2" type="button">Open Copy-Box</button>
+          </div>
         </div>
+
+        <pre class="codebox" id="codeBox" aria-label="Codebox"></pre>
       </div>
     </section>
 
-    <!-- FOOTER -->
     <footer>
       <div>© PromptRebel | CC BY-NC-SA 4.0</div>
       <div class="center-links">
@@ -488,22 +519,629 @@
     </footer>
   </main>
 
-  <!-- CODE MODAL -->
-  <div id="codeOverlay" class="overlay" aria-hidden="true">
-    <div class="panel" role="dialog" aria-modal="true" aria-label="Local AI Starter Kit Code">
-      <div class="panel-head">
-        <div class="panel-title">Local AI – Starter Kit (HTML Single-File)</div>
-        <div class="panel-actions">
-          <button id="btnCopyStarter" class="btn-small primary" type="button">✅ Copy</button>
-          <button id="btnCloseCode" class="btn-small" type="button">Schließen</button>
+  <!-- COPY MODAL -->
+  <div class="overlay" id="copyOverlay" aria-hidden="true">
+    <div class="panel" role="dialog" aria-modal="true" aria-label="Copy Code">
+      <div class="panel-top">
+        <div>
+          <div class="title" id="copyTitle">Copy</div>
+          <div class="meta" id="copyMeta">Wähle Snippet oder Full JS und kopiere.</div>
         </div>
+        <button class="panel-x" id="btnCloseCopy" type="button" aria-label="Close">×</button>
       </div>
-      <textarea id="codeTextarea" class="code-area" spellcheck="false" readonly></textarea>
-      <div class="panel-foot">
-        Tipp: Speichere die Datei als <code>local-ai-starter.html</code> und öffne sie im Browser. Dann ersetze <code>KNOWLEDGE</code> durch deine Inhalte.
+
+      <div class="panel-body">
+        <div class="panel-note" id="copyNote">
+          Tipp: Für andere Websites ist das Snippet die bessere Basis. Beim Full-JS musst du ggf. Pfade im KNOWLEDGE-Block anpassen.
+        </div>
+
+        <textarea class="panel-textarea" id="copyTextarea" spellcheck="false"></textarea>
+
+        <div class="panel-actions">
+          <button class="panel-btn" id="btnCopyNow" type="button">📋 Copy</button>
+          <button class="panel-btn primary" id="btnCloseCopy2" type="button">Done</button>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- CODE SOURCES (RAW, NOT PARSED) -->
+  <script type="text/plain" id="code_snippet">
+<!-- 1) Knowledge-Dateien ablegen: /assets/knowledge/*.md
+     (z.B. about.md, faq.md, licensing.md ...)
+  2) JS ablegen: /assets/js/local-ai.js
+  3) Dann EINMAL einbinden:
+
+<script type="module" src="./assets/js/local-ai.js"></script>
+
+Hinweis:
+- Wenn dein Ordner-Layout anders ist, musst du in local-ai.js im KNOWLEDGE-Block die Pfade anpassen.
+- WebGPU nötig (Desktop Chrome/Edge / Safari mit WebGPU).
+-->
+  </script>
+
+  <script type="text/plain" id="code_fulljs">
+// assets/js/local-ai.js
+// PromptRebel Local-AI Widget (WebLLM / WebGPU) – STABLE FIRST
+// Model: Qwen2-0.5B-Instruct-q4f16_1-MLC
+// Strategy: Q&A Retrieval (scored) + Direct Answer when confident, else LLM fallback
+// Docs: https://webllm.mlc.ai/docs/user/basic_usage.html
+
+import { MLCEngine } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
+
+// ---- Guard: prevent double init (double script tag / navigation) ----
+if (window.__PROMPTREBEL_LOCAL_AI__) {
+  // already initialized
+} else {
+  window.__PROMPTREBEL_LOCAL_AI__ = true;
+
+  // ========= Config =========
+  const DEFAULT_MODEL = "Qwen2-0.5B-Instruct-q4f16_1-MLC"; // <- Standard: kleines, stabiles Modell
+
+  // Answer behavior
+  const TEMPERATURE = 0.0;          // deterministic
+  const MAX_TOKENS = 320;           // allow full answers
+  const HISTORY_MAX_MSGS = 2;       // minimal history (user + assistant)
+
+  // Retrieval behavior
+  const MAX_QA_CONTEXT = 4;         // inject top N QAs when LLM needed
+  const MIN_SCORE_TO_USE = 0.22;    // below => "Ich weiß es nicht."
+  const DIRECT_ANSWER_SCORE = 0.62; // above => return answer directly (no LLM)
+
+  // ========= Knowledge index (assets/knowledge/*.md) =========
+  const KNOWLEDGE = {
+    about:     new URL("../knowledge/about.md", import.meta.url).href,
+    faq:       new URL("../knowledge/faq.md", import.meta.url).href,
+    licensing: new URL("../knowledge/licensing.md", import.meta.url).href,
+    music:     new URL("../knowledge/music.md", import.meta.url).href,
+    visuals:   new URL("../knowledge/visuals.md", import.meta.url).href,
+    video:     new URL("../knowledge/video.md", import.meta.url).href,
+    tools:     new URL("../knowledge/tools.md", import.meta.url).href,
+    stories:   new URL("../knowledge/stories.md", import.meta.url).href,
+    // optional später: extras: new URL("../knowledge/extras.md", import.meta.url).href,
+  };
+
+  // ========= Caches =========
+  const fileTextCache = new Map(); // key -> raw markdown
+  const qaCache = new Map();       // key -> parsed QAs [{q,a,file, qTokens, qaTokens}]
+
+  // ========= Helpers =========
+  function hasWebGPU() { return !!navigator.gpu; }
+
+  function clampHistory(history) {
+    while (history.length > HISTORY_MAX_MSGS) history.shift();
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function normalizeText(s) {
+    return (s || "")
+      .toLowerCase()
+      .replace(/[\u2013\u2014]/g, "-")
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function tokenize(s) {
+    const t = normalizeText(s);
+    if (!t) return [];
+    const raw = t.split(" ");
+    // keep tokens >= 3 chars, but allow "cc", "by"
+    return raw.filter(w => w.length >= 3 || w === "cc" || w === "by");
+  }
+
+  // Jaccard-ish overlap + small phrase bonus
+  function scoreCandidate(queryTokens, candTokens, queryNorm, candNorm) {
+    if (!queryTokens.length || !candTokens.length) return 0;
+
+    const set = new Set(candTokens);
+    let hit = 0;
+    for (const w of queryTokens) if (set.has(w)) hit++;
+
+    // base overlap: hits normalized by query length
+    let score = hit / Math.max(3, queryTokens.length);
+
+    // phrase bonus: if normalized query is contained as substring (or important part)
+    // (helps for "was ist promptrebel" matching a Q exactly)
+    if (queryNorm && candNorm) {
+      if (candNorm.includes(queryNorm)) score += 0.25;
+      // also bonus for 2-word phrase matches
+      const qWords = queryNorm.split(" ").filter(Boolean);
+      if (qWords.length >= 2) {
+        const bigrams = [];
+        for (let i = 0; i < qWords.length - 1; i++) bigrams.push(`${qWords[i]} ${qWords[i+1]}`);
+        const bgHit = bigrams.some(bg => candNorm.includes(bg));
+        if (bgHit) score += 0.15;
+      }
+    }
+
+    return score;
+  }
+
+  // ========= Fetch + Parse Q&A =========
+  async function loadFileText(key) {
+    if (!KNOWLEDGE[key]) return "";
+    if (fileTextCache.has(key)) return fileTextCache.get(key);
+
+    const res = await fetch(KNOWLEDGE[key], { cache: "force-cache" });
+    if (!res.ok) throw new Error(`Knowledge fetch failed: ${key} (${res.status})`);
+    const txt = ((await res.text()) || "").trim();
+    fileTextCache.set(key, txt);
+    return txt;
+  }
+
+  // Parse markdown:
+  // - Q in "## ..."
+  // - A is until next "## ..."
+  function parseMarkdownToQA(md, fileKey) {
+    const lines = (md || "").split(/\r?\n/);
+    const qa = [];
+    let currentQ = null;
+    let buf = [];
+
+    const flush = () => {
+      const a = buf.join("\n").trim();
+      if (currentQ && a) {
+        const qNorm = normalizeText(currentQ);
+        const aNorm = normalizeText(a);
+        const qTokens = tokenize(currentQ);
+        const qaTokens = tokenize(`${currentQ} ${a}`); // IMPORTANT: include answer tokens too
+        qa.push({
+          q: currentQ.trim(),
+          a,
+          file: fileKey,
+          qNorm,
+          aNorm,
+          qTokens,
+          qaTokens
+        });
+      }
+      currentQ = null;
+      buf = [];
+    };
+
+    for (const line of lines) {
+      const m = line.match(/^##\s+(.*)\s*$/);
+      if (m) {
+        flush();
+        currentQ = m[1];
+        continue;
+      }
+      if (currentQ) buf.push(line);
+    }
+    flush();
+    return qa;
+  }
+
+  async function loadQAs(keys) {
+    const all = [];
+    for (const k of keys) {
+      if (!KNOWLEDGE[k]) continue;
+      if (!qaCache.has(k)) {
+        const md = await loadFileText(k);
+        qaCache.set(k, parseMarkdownToQA(md, k));
+      }
+      const qas = qaCache.get(k) || [];
+      for (const item of qas) all.push(item);
+    }
+    return all;
+  }
+
+  // ========= Cheap routing (keyword) =========
+  function pickSourcesHeuristic(question) {
+    const q = (question || "").toLowerCase();
+
+    if (q.includes("lizenz") || q.includes("license") || q.includes("cc") || q.includes("by-nc-sa")) return ["licensing", "faq"];
+    if (q.includes("iphone") || q.includes("ios") || q.includes("webgpu")) return ["faq"];
+    if (q.includes("musik") || q.includes("audio") || q.includes("riffusion") || q.includes("soundcloud")) return ["music", "faq"];
+    if (q.includes("bild") || q.includes("visual") || q.includes("cover")) return ["visuals", "faq"];
+    if (q.includes("video") || q.includes("sora")) return ["video", "faq"];
+    if (q.includes("tool") || q.includes("app") || q.includes("game") || q.includes("waste")) return ["tools", "faq"];
+    if (q.includes("story") || q.includes("hörbuch") || q.includes("welt")) return ["stories", "faq"];
+    if (q.includes("wer bist du") || q.includes("promptrebel") || q.includes("was ist")) return ["about", "faq"];
+
+    return ["faq"];
+  }
+
+  function selectBestQAs(allQAs, userQuestion, limit = 4) {
+    const qNorm = normalizeText(userQuestion);
+    const qTokens = tokenize(userQuestion);
+
+    const scored = allQAs.map(item => {
+      // score against QA tokens (Q + A), not only Q
+      const s = scoreCandidate(qTokens, item.qaTokens, qNorm, item.qNorm);
+      return { ...item, score: s };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, limit);
+  }
+
+  // ========= Prompt (only for fallback) =========
+  const SYSTEM_PROMPT = `
+Du bist "PromptRebel Local AI" (läuft lokal im Browser).
+
+Regeln:
+- Antworte NUR mit Informationen aus dem KONTEXT (Q&A).
+- Wenn der Kontext nicht reicht: antworte exakt "Ich weiß es nicht." (ohne Zusatz).
+- Keine Vermutungen, keine erfundenen Fakten.
+- Antworte kurz & klar (1–6 Sätze).
+- Hänge am Ende die Quelle an, z.B. "(faq.md)".
+`.trim();
+
+  function buildContextFromQAs(qas) {
+    const chunks = qas.map(x =>
+      `Q: ${x.q}\nA: ${x.a}\nSOURCE: ${x.file}.md`
+    );
+    return chunks.join("\n\n---\n\n");
+  }
+
+  function formatDirectAnswer(best) {
+    // Directly return the stored answer (most stable / no hallucination)
+    // Ensure it ends with source marker:
+    const src = `(${best.file}.md)`;
+    const a = (best.a || "").trim();
+    if (!a) return "Ich weiß es nicht.";
+    return a.endsWith(src) ? a : `${a} ${src}`;
+  }
+
+  // ========= CSS =========
+  const style = document.createElement("style");
+  style.textContent = `
+  .pr-ai-btn{
+    position:fixed; right:16px; bottom:16px; z-index:999999;
+    border:1px solid rgba(148,163,184,.35);
+    background:rgba(15,23,42,.88);
+    color:#e5e7eb; border-radius:999px;
+    padding:10px 14px; font:600 13px/1 system-ui;
+    backdrop-filter: blur(10px);
+    box-shadow:0 10px 30px rgba(2,6,23,.7);
+    cursor:pointer;
+  }
+  .pr-ai-btn:hover{
+    border-color: rgba(34,211,238,.8);
+    box-shadow:0 0 18px rgba(34,211,238,.35), 0 10px 30px rgba(2,6,23,.7);
+  }
+  .pr-ai-panel{
+    position:fixed; right:16px; bottom:68px; z-index:999999;
+    width:min(420px, calc(100vw - 32px));
+    height:min(680px, calc(100vh - 96px));
+    display:none; flex-direction:column;
+    border-radius:20px; overflow:hidden;
+    border:1px solid rgba(148,163,184,.28);
+    background:rgba(2,6,23,.92);
+    box-shadow:0 20px 60px rgba(2,6,23,.75);
+    backdrop-filter: blur(14px);
+  }
+  .pr-ai-panel.open{ display:flex; }
+  .pr-ai-top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px; gap:10px;
+    background:linear-gradient(to bottom, rgba(15,23,42,.92), rgba(15,23,42,.55));
+    border-bottom:1px solid rgba(148,163,184,.15);
+    font:700 13px/1 system-ui; color:#e5e7eb;
+  }
+  .pr-ai-top small{ font-weight:600; color:#94a3b8; }
+  .pr-ai-x{
+    border:1px solid rgba(148,163,184,.25);
+    background:rgba(15,23,42,.7);
+    color:#e5e7eb; border-radius:999px;
+    padding:6px 10px; cursor:pointer; font:700 12px/1 system-ui;
+  }
+  .pr-ai-x[disabled]{ opacity:.55; cursor:not-allowed; }
+  .pr-ai-body{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:12px;
+    height:100%;
+    min-height:0;
+  }
+  .pr-ai-note{
+    font:12px/1.35 system-ui; color:#94a3b8;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(15,23,42,.55);
+    padding:10px 12px; border-radius:14px;
+  }
+  .pr-ai-progress{ font:12px/1.35 system-ui; color:#94a3b8; }
+  .pr-ai-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .pr-ai-action{
+    border-radius:999px; padding:8px 10px;
+    border:1px solid rgba(148,163,184,.22);
+    background:rgba(15,23,42,.65);
+    color:#e5e7eb; font:700 12px/1 system-ui;
+    cursor:pointer;
+  }
+  .pr-ai-action[disabled]{ opacity:.55; cursor:not-allowed; }
+  .pr-ai-msgs{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    padding:12px;
+    padding-bottom:96px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    font:13px/1.45 system-ui;
+    color:#e5e7eb;
+  }
+  .pr-ai-bubble{
+    max-width:92%;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid rgba(148,163,184,.18);
+    background:rgba(15,23,42,.7);
+    white-space:pre-wrap;
+  }
+  .pr-ai-bubble.user{ align-self:flex-end; border-color: rgba(34,211,238,.22); }
+  .pr-ai-bubble.ai{ align-self:flex-start; border-color: rgba(236,72,153,.22); }
+  .pr-ai-row{
+    position:sticky;
+    bottom:0;
+    display:flex;
+    gap:8px;
+    padding:12px;
+    margin-top:12px;
+    background: rgba(2,6,23,.88);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(148,163,184,.15);
+  }
+  .pr-ai-input{
+    flex:1; border-radius:999px;
+    border:1px solid rgba(148,163,184,.22);
+    background:rgba(15,23,42,.75);
+    color:#e5e7eb; padding:10px 12px;
+    outline:none; font:600 13px/1 system-ui;
+  }
+  .pr-ai-input[disabled]{ opacity:.55; cursor:not-allowed; }
+  .pr-ai-send{
+    border-radius:999px; padding:10px 12px;
+    border:1px solid rgba(34,211,238,.35);
+    background:rgba(15,23,42,.75);
+    color:#e5e7eb; font:800 13px/1 system-ui;
+    cursor:pointer;
+  }
+  .pr-ai-send[disabled]{ opacity:.55; cursor:not-allowed; }
+  `;
+  document.head.appendChild(style);
+
+  // ========= Engine / state =========
+  let engine = null;
+  let ready = false;
+  let starting = false;
+  let busy = false;
+  const chatHistory = [];
+
+  // ========= UI =========
+  function initUI() {
+    if (document.querySelector(".pr-ai-btn") || document.querySelector(".pr-ai-panel")) return;
+
+    const btn = document.createElement("button");
+    btn.className = "pr-ai-btn";
+    btn.type = "button";
+    btn.textContent = "Local AI";
+
+    const panel = document.createElement("div");
+    panel.className = "pr-ai-panel";
+    panel.innerHTML = `
+      <div class="pr-ai-top">
+        <div>PromptRebel Local AI <small>· Modell: Qwen2-0.5B (WebGPU)</small></div>
+        <button class="pr-ai-x" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="pr-ai-body">
+        <div class="pr-ai-note">
+          <b>Stabiler Modus:</b> Antworten basieren nur auf passenden Q&A aus den MD-Dateien.
+        </div>
+
+        <div class="pr-ai-actions">
+          <button class="pr-ai-action" type="button" data-action="start">Start (Model laden)</button>
+          <button class="pr-ai-action" type="button" data-action="clear">Chat löschen</button>
+        </div>
+
+        <div class="pr-ai-progress" id="prAiProgress"></div>
+        <div class="pr-ai-msgs" id="prAiMsgs"></div>
+
+        <div class="pr-ai-row">
+          <input class="pr-ai-input" id="prAiInput" placeholder="Frage zu PromptRebel…" />
+          <button class="pr-ai-send" type="button" id="prAiSend">Send</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(btn);
+    document.body.appendChild(panel);
+
+    const closeBtn = panel.querySelector(".pr-ai-x");
+    const progressEl = panel.querySelector("#prAiProgress");
+    const msgsEl = panel.querySelector("#prAiMsgs");
+    const inputEl = panel.querySelector("#prAiInput");
+    const sendEl = panel.querySelector("#prAiSend");
+    const startBtn = panel.querySelector('[data-action="start"]');
+    const clearBtn = panel.querySelector('[data-action="clear"]');
+
+    function setBusy(on) {
+      busy = !!on;
+      sendEl.toggleAttribute("disabled", busy);
+      inputEl.toggleAttribute("disabled", busy);
+      startBtn.toggleAttribute("disabled", busy);
+      clearBtn.toggleAttribute("disabled", busy);
+      closeBtn.toggleAttribute("disabled", busy);
+    }
+
+    function addBubble(text, who) {
+      const d = document.createElement("div");
+      d.className = `pr-ai-bubble ${who}`;
+      d.textContent = text;
+      msgsEl.appendChild(d);
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+      return d;
+    }
+
+    function initProgressCallback(p) {
+      const msg = typeof p === "string" ? p : JSON.stringify(p);
+      progressEl.textContent = `Loading: ${msg}`;
+    }
+
+    async function startModel() {
+      if (starting || busy) return;
+      if (ready && engine) return;
+
+      if (!hasWebGPU()) {
+        progressEl.textContent =
+          "WebGPU nicht verfügbar. Nutze Desktop (Chrome/Edge) oder Safari mit WebGPU aktiviert.";
+        return;
+      }
+
+      starting = true;
+      setBusy(true);
+      progressEl.textContent = "Initialisiere…";
+
+      try {
+        engine = new MLCEngine({ initProgressCallback });
+        await engine.reload(DEFAULT_MODEL);
+        ready = true;
+
+        progressEl.textContent = "Bereit.";
+        msgsEl.innerHTML = "";
+        chatHistory.length = 0;
+
+        addBubble("Hi! Stell mir eine Frage – ich nutze nur passende Q&A aus den MD-Dateien.", "ai");
+      } catch (e) {
+        console.error(e);
+        ready = false;
+        engine = null;
+        const msg = String(e?.message || e || "");
+        progressEl.textContent = msg.toLowerCase().includes("disposed")
+          ? "WebGPU/Engine wurde zurückgesetzt (disposed). Bitte Seite neu laden und erneut Start klicken."
+          : "Fehler beim Laden des Modells. (Konsole prüfen)";
+      } finally {
+        starting = false;
+        setBusy(false);
+      }
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text || busy) return;
+
+      if (!ready || !engine) {
+        addBubble("Model ist nicht bereit. Klicke zuerst auf „Start (Model laden)“.", "ai");
+        return;
+      }
+
+      setBusy(true);
+      inputEl.value = "";
+
+      addBubble(text, "user");
+      const aiBubble = addBubble("Suche passende Q&A…", "ai");
+
+      try {
+        chatHistory.push({ role: "user", content: text });
+        clampHistory(chatHistory);
+
+        const sources = pickSourcesHeuristic(text);
+        const allQAs = await loadQAs(sources);
+        if (!allQAs.length) {
+          aiBubble.textContent = "Ich weiß es nicht.";
+          chatHistory.push({ role: "assistant", content: aiBubble.textContent });
+          clampHistory(chatHistory);
+          return;
+        }
+
+        const ranked = selectBestQAs(allQAs, text, MAX_QA_CONTEXT);
+        const best = ranked[0];
+
+        if (!best || best.score < MIN_SCORE_TO_USE) {
+          aiBubble.textContent = "Ich weiß es nicht.";
+          chatHistory.push({ role: "assistant", content: aiBubble.textContent });
+          clampHistory(chatHistory);
+          return;
+        }
+
+        if (best.score >= DIRECT_ANSWER_SCORE) {
+          const out = formatDirectAnswer(best);
+          aiBubble.textContent = out;
+          chatHistory.push({ role: "assistant", content: out });
+          clampHistory(chatHistory);
+          return;
+        }
+
+        const context = buildContextFromQAs(ranked);
+        const messages = [
+          { role: "system", content: `${SYSTEM_PROMPT}\n\nKONTEXT (Q&A):\n${context}` },
+          ...chatHistory
+        ];
+
+        await sleep(20);
+
+        const chunks = await engine.chat.completions.create({
+          messages,
+          temperature: TEMPERATURE,
+          stream: true,
+          max_tokens: MAX_TOKENS,
+        });
+
+        let reply = "";
+        for await (const chunk of chunks) {
+          const delta = chunk.choices?.[0]?.delta?.content || "";
+          if (delta) {
+            reply += delta;
+            aiBubble.textContent = reply;
+            msgsEl.scrollTop = msgsEl.scrollHeight;
+          }
+        }
+
+        const final = (reply || "").trim() || "Ich weiß es nicht.";
+        aiBubble.textContent = final;
+
+        chatHistory.push({ role: "assistant", content: final });
+        clampHistory(chatHistory);
+      } catch (e) {
+        console.error(e);
+        const msg = String(e?.message || e || "");
+        if (msg.toLowerCase().includes("disposed") || msg.toLowerCase().includes("device was lost")) {
+          aiBubble.textContent = "WebGPU wurde zurückgesetzt. Bitte Seite neu laden und Modell erneut starten.";
+          ready = false;
+          engine = null;
+          progressEl.textContent = "Engine nicht bereit.";
+        } else {
+          aiBubble.textContent = "Fehler beim Antworten. (Konsole prüfen)";
+        }
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    btn.addEventListener("click", () => panel.classList.toggle("open"));
+
+    closeBtn.addEventListener("click", () => {
+      if (busy) return;
+      panel.classList.remove("open");
+    });
+
+    startBtn.addEventListener("click", startModel);
+
+    clearBtn.addEventListener("click", () => {
+      if (busy) return;
+      msgsEl.innerHTML = "";
+      chatHistory.length = 0;
+      addBubble("Chat gelöscht.", "ai");
+    });
+
+    sendEl.addEventListener("click", sendMessage);
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initUI, { once: true });
+  } else {
+    initUI();
+  }
+}
+  </script>
 
   <script>
     // Scroll progress
@@ -515,276 +1153,114 @@
     });
 
     // Config
-    const HELPER_URL = "./local-ai.html";
+    const DEMO_URL = "./local-ai-demo.html";
 
-    // Starter Kit (bewusst generisch, nicht PromptRebel-spezifisch)
-    const STARTER_CODE = `<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Local AI – Starter Kit</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:#020617;color:#e5e7eb;min-height:100vh;
-      display:flex;align-items:center;justify-content:center;padding:16px;
-    }
-    .app{
-      width:100%;max-width:780px;
-      border-radius:22px;
-      border:1px solid rgba(148,163,184,.18);
-      background: radial-gradient(circle at top left, rgba(15,23,42,.96), rgba(15,23,42,.99));
-      box-shadow:0 22px 60px rgba(0,0,0,.75);
-      overflow:hidden;
-    }
-    header{
-      padding:14px 16px;
-      border-bottom:1px solid rgba(148,163,184,.12);
-      background: linear-gradient(to bottom, rgba(15,23,42,.95), rgba(2,6,23,.95));
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-    }
-    header .title{font-weight:800;letter-spacing:.02em}
-    header .hint{font-size:12px;color:#9ca3af}
-    .chat{padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-height:52vh}
-    .bubble{
-      max-width:92%;
-      border-radius:16px;
-      padding:10px 12px;
-      font-size:13px;
-      line-height:1.55;
-      border:1px solid rgba(148,163,184,.14);
-      background: rgba(2,6,23,.55);
-    }
-    .bubble.user{align-self:flex-end;background: rgba(56,189,248,.12); border-color: rgba(56,189,248,.22)}
-    .bubble.bot{align-self:flex-start}
-    .meta{font-size:11px;color:#9ca3af;margin-top:2px}
-    .inputbar{
-      padding:12px 12px;
-      border-top:1px solid rgba(148,163,184,.12);
-      display:flex;gap:10px;align-items:center;
-      background: rgba(2,6,23,.55);
-    }
-    input{
-      flex:1;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.18);
-      background:#020617;color:#e5e7eb;
-      padding:10px 12px;font-size:14px;
-      outline:none;
-    }
-    button{
-      border-radius:999px;
-      border:none;
-      padding:10px 14px;
-      cursor:pointer;
-      font-weight:800;
-      background: linear-gradient(135deg, #ec4899, #22d3ee);
-      color:#020617;
-    }
-    button:disabled{opacity:.55;cursor:not-allowed}
-    .small{font-size:11px;color:#9ca3af;padding:10px 16px 14px}
-    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
-  </style>
-</head>
-<body>
-  <div class="app">
-    <header>
-      <div>
-        <div class="title">Local AI – Starter Kit</div>
-        <div class="hint">Keyword-Suche in lokalen Snippets (ohne Backend)</div>
-      </div>
-      <div class="hint">offline-friendly</div>
-    </header>
+    const codeBox = document.getElementById("codeBox");
+    const snippetRaw = document.getElementById("code_snippet").textContent.trim();
+    const fullJsRaw = document.getElementById("code_fulljs").textContent.trim();
 
-    <div id="chat" class="chat" aria-live="polite"></div>
+    let activeTab = "snippet";
 
-    <div class="inputbar">
-      <input id="q" type="text" placeholder="Frag etwas… (z. B. Öffnungszeiten, Kontakt, Produktinfo)" />
-      <button id="send">Send</button>
-    </div>
-
-    <div class="small">
-      Anpassung: Ersetze <code>KNOWLEDGE</code> (Kategorien + Keywords + Snippets) durch deine Inhalte.
-    </div>
-  </div>
-
-  <script>
-  (function(){
-    "use strict";
-
-    // 1) Dein Wissen: Kategorien → Keywords → Snippets
-    const KNOWLEDGE = [
-      {
-        category: "Kontakt",
-        keywords: ["kontakt","email","telefon","anschrift","adresse"],
-        snippets: [
-          "Du erreichst uns per E-Mail: example@domain.tld",
-          "Telefon: +49 000 000000",
-          "Adresse: Musterstraße 1, 12345 Musterstadt"
-        ]
-      },
-      {
-        category: "Öffnungszeiten",
-        keywords: ["öffnungszeiten","geöffnet","uhrzeit","wann","zeiten"],
-        snippets: [
-          "Mo–Fr: 09:00–17:00",
-          "Sa: 10:00–14:00",
-          "So: geschlossen"
-        ]
-      },
-      {
-        category: "Produkte",
-        keywords: ["produkt","sortiment","angebot","preis","kaufen"],
-        snippets: [
-          "Unser Sortiment findest du auf der Website unter /products.",
-          "Wenn du mir sagst, was du suchst, nenne ich dir die passende Kategorie."
-        ]
-      }
-    ];
-
-    // 2) Rendering
-    const chat = document.getElementById("chat");
-    const q = document.getElementById("q");
-    const send = document.getElementById("send");
-
-    function addBubble(text, who, meta){
-      const div = document.createElement("div");
-      div.className = "bubble " + who;
-      div.textContent = text;
-      chat.appendChild(div);
-      if(meta){
-        const m = document.createElement("div");
-        m.className = "meta";
-        m.textContent = meta;
-        chat.appendChild(m);
-      }
-      chat.scrollTop = chat.scrollHeight;
+    function renderActive() {
+      const txt = activeTab === "snippet" ? snippetRaw : fullJsRaw;
+      codeBox.textContent = txt; // IMPORTANT: textContent (never innerHTML)
     }
 
-    // 3) Simple Matching
-    function normalize(s){
-      return (s || "").toLowerCase().trim();
+    function setTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll(".code-tab").forEach(b => {
+        b.classList.toggle("active", b.dataset.tab === tab);
+      });
+      renderActive();
     }
 
-    function answer(question){
-      const nq = normalize(question);
-      if(!nq) return { text: "Schreib kurz, was du wissen willst.", meta: "hint" };
+    setTab("snippet");
 
-      // Treffer: zählt Keyword-Hits pro Kategorie
-      let best = null;
-      for(const item of KNOWLEDGE){
-        let hits = 0;
-        for(const kw of item.keywords){
-          if(nq.includes(kw)) hits++;
-        }
-        if(hits > 0 && (!best || hits > best.hits)){
-          best = { item, hits };
-        }
-      }
-
-      if(!best){
-        return {
-          text: "Dazu habe ich in meinen Snippets nichts Passendes gefunden. Versuch’s mit einem anderen Keyword (z. B. Kontakt, Öffnungszeiten, Produkt).",
-          meta: "no match"
-        };
-      }
-
-      // wählt ein Snippet (hier: erstes – du kannst randomisieren)
-      const snippet = best.item.snippets[0] || "Kein Snippet vorhanden.";
-      return { text: snippet, meta: "Kategorie: " + best.item.category };
-    }
-
-    function onSend(){
-      const text = q.value;
-      q.value = "";
-      addBubble(text, "user");
-      const a = answer(text);
-      addBubble(a.text, "bot", a.meta);
-    }
-
-    send.addEventListener("click", onSend);
-    q.addEventListener("keydown", (e) => {
-      if(e.key === "Enter") onSend();
-    });
-
-    addBubble("Hi! Ich bin ein kleiner Local-AI-Starter. Frag mich was – ich suche per Keyword in Snippets.", "bot", "ready");
-  })();
-  <\/script>
-</body>
-</html>`;
-
-    // Helpers
     async function copyToClipboard(text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text);
-        return true;
+      } else {
+        const temp = document.createElement("textarea");
+        temp.value = text;
+        temp.setAttribute("readonly", "");
+        temp.style.position = "fixed";
+        temp.style.left = "-9999px";
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
       }
-      // Fallback
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(ta);
-      return ok;
     }
 
-    function flashButton(btn, okText = "✅ Kopiert!") {
-      const original = btn.textContent;
-      btn.textContent = okText;
-      btn.disabled = true;
+    function flash(el, okText = "✅ Kopiert!") {
+      const original = el.textContent;
+      el.textContent = okText;
+      el.disabled = true;
       setTimeout(() => {
-        btn.textContent = original;
-        btn.disabled = false;
-      }, 1800);
+        el.textContent = original;
+        el.disabled = false;
+      }, 1700);
     }
 
-    // Open helper
-    document.getElementById("btnOpenHelper").addEventListener("click", () => {
-      window.open(HELPER_URL, "_blank", "noopener,noreferrer");
+    // Tabs
+    document.querySelectorAll(".code-tab").forEach(btn => {
+      btn.addEventListener("click", () => setTab(btn.dataset.tab));
     });
 
-    // Code modal open/close
-    const overlay = document.getElementById("codeOverlay");
-    const ta = document.getElementById("codeTextarea");
+    // Open demo
+    document.getElementById("btnOpenDemo").addEventListener("click", () => {
+      window.open(DEMO_URL, "_blank", "noopener,noreferrer");
+    });
 
-    function openCode(){
-      ta.value = STARTER_CODE;
+    // Copy active quick
+    document.getElementById("btnCopyActive").addEventListener("click", async (e) => {
+      try{
+        const txt = activeTab === "snippet" ? snippetRaw : fullJsRaw;
+        await copyToClipboard(txt);
+        flash(e.currentTarget);
+      }catch(err){
+        console.error(err);
+        flash(e.currentTarget, "⚠️ Copy failed");
+      }
+    });
+
+    // Copy modal
+    const overlay = document.getElementById("copyOverlay");
+    const ta = document.getElementById("copyTextarea");
+    const copyTitle = document.getElementById("copyTitle");
+
+    function openCopy() {
       overlay.classList.add("show");
       overlay.setAttribute("aria-hidden", "false");
-      // Fokus in den Dialog
-      document.getElementById("btnCopyStarter").focus();
+      const txt = activeTab === "snippet" ? snippetRaw : fullJsRaw;
+      ta.value = txt;
+      copyTitle.textContent = activeTab === "snippet" ? "Copy · Embed Snippet" : "Copy · local-ai.js (vollständig)";
+      ta.focus();
+      ta.select();
     }
-    function closeCode(){
+    function closeCopy() {
       overlay.classList.remove("show");
       overlay.setAttribute("aria-hidden", "true");
     }
 
-    document.getElementById("btnOpenCode").addEventListener("click", openCode);
-    document.getElementById("btnCloseCode").addEventListener("click", closeCode);
+    document.getElementById("btnOpenCopy").addEventListener("click", openCopy);
+    document.getElementById("btnOpenCopy2").addEventListener("click", openCopy);
+    document.getElementById("btnCloseCopy").addEventListener("click", closeCopy);
+    document.getElementById("btnCloseCopy2").addEventListener("click", closeCopy);
 
-    // Close on ESC
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && overlay.classList.contains("show")) closeCode();
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeCopy();
     });
 
-    // Copy inside modal
-    document.getElementById("btnCopyStarter").addEventListener("click", async () => {
+    document.getElementById("btnCopyNow").addEventListener("click", async (e) => {
       try{
-        const ok = await copyToClipboard(STARTER_CODE);
-        flashButton(document.getElementById("btnCopyStarter"), ok ? "✅ Kopiert!" : "⚠️ Copy failed");
+        await copyToClipboard(ta.value);
+        flash(e.currentTarget);
       }catch(err){
         console.error(err);
-        flashButton(document.getElementById("btnCopyStarter"), "⚠️ Copy failed");
+        flash(e.currentTarget, "⚠️ Copy failed");
       }
     });
-
-    // Click outside panel does NOT close (wie bei dir: nichts versehentlich verlieren)
   </script>
 </body>
 </html>
