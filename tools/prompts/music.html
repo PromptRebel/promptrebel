@@ -192,6 +192,85 @@
       backdrop-filter: blur(18px);
       padding:14px 16px 12px;
     }
+    /* Lyrics Generator: nicer headers + glow */
+.lg-hero-title{
+  font-size: clamp(46px, 6.5vw, 78px);
+  line-height: .95;
+  font-weight: 900;
+  letter-spacing: -.02em;
+  margin: 8px 0 10px;
+  color:#f9fafb;
+  text-shadow:
+    0 0 18px rgba(236,72,153,.28),
+    0 0 26px rgba(34,211,238,.18);
+}
+
+.lg-hero-kicker{
+  font-size: 14px;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: rgba(229,231,235,.65);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.lg-hero-kicker .spark{
+  color:#facc15;
+  text-shadow:0 0 12px rgba(250,204,21,.35);
+}
+
+.lg-card-title{
+  font-size: 15px;
+  letter-spacing:.18em;
+  text-transform: uppercase;
+  color:#cbd5e1;
+  font-weight: 900;
+  margin-bottom: 2px;
+}
+
+.lg-card-sub{
+  font-size: 12px;
+  color: rgba(148,163,184,.9);
+  margin-bottom: 10px;
+}
+
+/* optional: make special card feel more “stage” */
+.panel-glass.lg-special{
+  padding: 18px 18px 16px;
+  border-color: rgba(148,163,184,.22);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(236,72,153,.22), transparent 55%),
+    radial-gradient(circle at 90% 100%, rgba(34,211,238,.18), transparent 55%),
+    radial-gradient(circle at top left, rgba(15,23,42,.92), rgba(15,23,42,.99));
+}
+    /* --- Lyrics Generator: spacing + stage polish --- */
+
+.lg-hero-kicker{
+  margin-bottom: 10px;
+}
+
+/* Special-Card bekommt mehr Bühne */
+.panel-glass.lg-special{
+  position: relative;
+  overflow: hidden;
+}
+
+.panel-glass.lg-special::after{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(236,72,153,.22), transparent 45%),
+    radial-gradient(circle at 80% 90%, rgba(34,211,238,.18), transparent 45%);
+  opacity:.55;
+}
+
+/* Prompt-Card etwas luftiger */
+.panel-glass .prompt-block{
+  margin-top: 10px;
+}
     .panel-header{
       font-size:12px;
       letter-spacing:.16em;
@@ -572,113 +651,100 @@ list --type=all --vibe=all
       </div>
 
       <!-- =========================
-           LYRICS GENERATOR (3 CARDS)
-      ========================== -->
-      <section class="section" aria-label="Lyrics Generator" style="padding-top:18px;">
-        <!-- Header card -->
-        <div class="panel-glass" style="margin-bottom:14px;">
-          <div class="panel-header">
-            <span class="icon">✨</span>
-            <span>SPECIAL</span>
-          </div>
-          <h2 style="font-size:32px;font-weight:900;letter-spacing:.01em;margin:4px 0 10px;">
-            Lyrics Generator
-          </h2>
-          <p style="color:#cbd5f5;font-size:14px;max-width:52rem;">
-            Zwei Wege: (1) Prompt kopieren und in deine Lieblings-KI einfügen. (2) Optional: lokal im Browser generieren (WebGPU).
-            Kein Account, kein Server – läuft nur, wenn dein Gerät WebGPU unterstützt.
-          </p>
+     LYRICS GENERATOR (3 CARDS)
+========================== -->
+<section class="section" aria-label="Lyrics Generator" style="padding-top:18px;">
+
+  <!-- SPECIAL HEADER (nur fürs Generators-Feature) -->
+  <div class="panel-glass lg-special" style="margin-bottom:14px;">
+    <div class="lg-hero-kicker">
+      <span class="spark">✨</span>
+      <span>SPECIAL</span>
+    </div>
+
+    <div class="lg-hero-title">Lyrics<br/>Generator</div>
+  </div>
+
+  <!-- 1) PROMPT CARD -->
+  <div class="panel-glass" style="margin-bottom:14px;">
+    <div class="lg-card-title">LYRICS-GENERATOR PROMPT</div>
+    <div class="lg-card-sub">(FÜR JEDE KI)</div>
+
+    <div class="prompt-block" style="background:rgba(15,23,42,.55);border-color:rgba(148,163,184,.14);">
+      <div class="prompt-head">
+        <div class="prompt-title">Prompt</div>
+        <div class="btn-row">
+          <button class="btn primary" type="button" id="copyLyricsPromptBtn">Copy Prompt</button>
         </div>
+      </div>
+      <pre id="lyricsPromptText" style="min-height:110px;"></pre>
+    </div>
 
-        <!-- 1) PROMPT CARD -->
-        <div class="panel-glass" style="margin-bottom:14px;">
-          <div class="panel-header">
-            <span class="icon">1</span>
-            <span>PROMPT (FÜR JEDE KI)</span>
-          </div>
+    <p class="muted" style="margin-top:10px;">
+      Nutzung: <b>Soundprompt einfügen</b> + optional 1–2 Sätze Thema/Story. Ausgabe ist ein fertiger Lyrics-Text.
+    </p>
+  </div>
 
-          <p class="muted" style="margin-bottom:10px;">
-            Nutzung: <b>Soundprompt einfügen</b> + optional 1–2 Sätze Thema/Story. Ausgabe ist ein fertiger Lyrics-Text.
-          </p>
+  <!-- 2) AGENT CARD -->
+  <div class="panel-glass" style="margin-bottom:14px;">
+    <div class="lg-card-title">LYRICS-AGENT</div>
 
-          <div class="prompt-block" style="background:rgba(15,23,42,.55);border-color:rgba(148,163,184,.14);">
-            <div class="prompt-head">
-              <div class="prompt-title">Lyrics-Generator Prompt</div>
-              <div class="btn-row">
-                <button class="btn primary" type="button" id="copyLyricsPromptBtn">Copy Prompt</button>
-              </div>
-            </div>
-            <pre id="lyricsPromptText" style="min-height:110px;"></pre>
-          </div>
-        </div>
+    <p class="muted" style="margin:8px 0 10px;">
+      Öffnet deinen Lyrics-Agent in ChatGPT (externer Link).
+    </p>
 
-        <!-- 2) AGENT CARD -->
-        <div class="panel-glass" style="margin-bottom:14px;">
-          <div class="panel-header">
-            <span class="icon">2</span>
-            <span>OPTIONAL: LYRICS-AGENT (CHATGPT)</span>
-          </div>
-          <p class="muted" style="margin-bottom:10px;">
-            Für “immer bereit”: öffnet deinen Lyrics-Agent. Hinweis: Du verlässt PromptRebel und wechselst zu ChatGPT.
-          </p>
+    <!-- TODO: Agent-URL eintragen -->
+    <a class="btn" href="#" id="openLyricsAgentBtn" style="display:inline-flex;align-items:center;gap:8px;">
+      Open Agent →
+    </a>
 
-          <!-- TODO: Agent-URL eintragen (später ersetzen) -->
-          <a class="btn" href="#" id="openLyricsAgentBtn">
-            Open Agent →
-          </a>
-          <span class="muted" style="display:block;margin-top:8px;">
-            (Platzhalter – Link setzt du, sobald der Agent existiert.)
-          </span>
-        </div>
+    <span class="muted" style="display:block;margin-top:8px;">
+      (Platzhalter – Link setzt du, sobald der Agent existiert.)
+    </span>
+  </div>
 
-        <!-- 3) LOCAL WEBGPU CARD -->
-        <div class="panel-glass">
-          <div class="panel-header">
-            <span class="icon">3</span>
-            <span>GENERATOR (LOKAL IM BROWSER)</span>
-          </div>
+  <!-- 3) GENERATOR CARD -->
+  <div class="panel-glass">
+    <div class="lg-card-title">GENERATOR</div>
 
-          <p class="muted" style="margin-bottom:10px;">
-            WebGPU: Desktop Chrome/Edge empfohlen. iPhone/iOS meistens nicht verfügbar (abhängig von Browser/Settings).
-          </p>
+    <p class="muted" style="margin:8px 0 10px;">
+      WebGPU: Desktop Chrome/Edge empfohlen. iOS/Safari oft eingeschränkt.
+    </p>
 
-          <div class="pr-lg-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-            <button class="btn primary" type="button" id="lgStartBtn">Start (Model laden)</button>
-            <button class="btn" type="button" id="lgClearBtn">Clear</button>
-            <span class="muted" id="lgStatus" style="align-self:center;">Status: idle</span>
-          </div>
+    <div class="pr-lg-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn primary" type="button" id="lgStartBtn">Start (Model laden)</button>
+      <button class="btn" type="button" id="lgClearBtn">Clear</button>
+      <span class="muted" id="lgStatus" style="align-self:center;">Status: idle</span>
+    </div>
 
-          <label class="muted" for="lgInput" style="display:block;margin:8px 0 6px;">
-            Input (Soundprompt oder Beschreibung):
-          </label>
-          <textarea
-            id="lgInput"
-            class="search"
-            style="border-radius:16px;min-height:120px;padding:12px 12px;max-width:100%;"
-            placeholder="Paste hier deinen Soundprompt rein…&#10;Optional: 1–2 Sätze Thema/Story darunter."
-          ></textarea>
+    <label class="muted" for="lgInput" style="display:block;margin:8px 0 6px;">
+      Input (Soundprompt oder Beschreibung):
+    </label>
 
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
-            <button class="btn primary" type="button" id="lgGenerateBtn">Generate Lyrics</button>
-            <button class="btn" type="button" id="lgCopyBtn" disabled>Copy Lyrics</button>
-          </div>
+    <textarea
+      id="lgInput"
+      class="search"
+      style="border-radius:16px;min-height:120px;padding:12px 12px;max-width:100%;"
+      placeholder="Paste hier deinen Soundprompt rein…&#10;Optional: 1–2 Sätze Thema/Story darunter."
+    ></textarea>
 
-          <div style="margin-top:12px;">
-            <div class="muted" style="margin-bottom:6px;">Output:</div>
-            <textarea
-              id="lgOutput"
-              class="search"
-              style="border-radius:16px;min-height:160px;padding:12px 12px;max-width:100%;"
-              placeholder="—"
-              readonly
-            ></textarea>
-          </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+      <button class="btn primary" type="button" id="lgGenerateBtn">Generate Lyrics</button>
+      <button class="btn" type="button" id="lgCopyBtn" disabled>Copy Lyrics</button>
+    </div>
 
-          <div class="muted" style="margin-top:10px;">
-            Tipp: Wenn das Ergebnis zu “generisch” ist, ergänze 2–3 konkrete Stichworte (Motiv, Perspektive, Hook-Idee).
-          </div>
-        </div>
-      </section>
+    <div style="margin-top:12px;">
+      <div class="muted" style="margin-bottom:6px;">Output:</div>
+      <textarea
+        id="lgOutput"
+        class="search"
+        style="border-radius:16px;min-height:160px;padding:12px 12px;max-width:100%;"
+        placeholder="—"
+        readonly
+      ></textarea>
+    </div>
+  </div>
+</section>
 
       <!-- FILTERS -->
       <div class="controls" aria-label="Filter & Suche" style="margin-top:18px;">
