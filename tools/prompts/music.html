@@ -655,15 +655,7 @@ list --type=all --vibe=all
 ========================== -->
 <div aria-label="Lyrics Generator" style="padding-top:18px;">
 
-  <!-- SPECIAL HEADER (nur fürs Generators-Feature) -->
-  <div class="panel-glass lg-special" style="margin-bottom:14px;">
-    <div class="lg-hero-kicker">
-      <span class="spark">✨</span>
-      <span>SPECIAL</span>
-    </div>
-
-    <div class="lg-hero-title">Lyrics<br/>Generator</div>
-  </div>
+  
 
   <!-- 1) PROMPT CARD -->
   <div class="panel-glass" style="margin-bottom:14px;">
@@ -703,47 +695,57 @@ list --type=all --vibe=all
     </span>
   </div>
 
-  <!-- 3) GENERATOR CARD -->
-  <div class="panel-glass">
-    <div class="lg-card-title">GENERATOR</div>
+  <!-- SPECIAL: LYRICS GENERATOR STAGE -->
+<div class="panel-glass lg-special" style="margin-bottom:18px;">
 
-    <p class="muted" style="margin:8px 0 10px;">
-      WebGPU: Desktop Chrome/Edge empfohlen. iOS/Safari oft eingeschränkt.
-    </p>
-
-    <div class="pr-lg-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-      <button class="btn primary" type="button" id="lgStartBtn">Start (Model laden)</button>
-      <button class="btn" type="button" id="lgClearBtn">Clear</button>
-      <span class="muted" id="lgStatus" style="align-self:center;">Status: idle</span>
-    </div>
-
-    <label class="muted" for="lgInput" style="display:block;margin:8px 0 6px;">
-      Input (Soundprompt oder Beschreibung):
-    </label>
-
-    <textarea
-      id="lgInput"
-      class="search"
-      style="border-radius:16px;min-height:120px;padding:12px 12px;max-width:100%;"
-      placeholder="Paste hier deinen Soundprompt rein…&#10;Optional: 1–2 Sätze Thema/Story darunter."
-    ></textarea>
-
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
-      <button class="btn primary" type="button" id="lgGenerateBtn">Generate Lyrics</button>
-      <button class="btn" type="button" id="lgCopyBtn" disabled>Copy Lyrics</button>
-    </div>
-
-    <div style="margin-top:12px;">
-      <div class="muted" style="margin-bottom:6px;">Output:</div>
-      <textarea
-        id="lgOutput"
-        class="search"
-        style="border-radius:16px;min-height:160px;padding:12px 12px;max-width:100%;"
-        placeholder="—"
-        readonly
-      ></textarea>
-    </div>
+  <!-- Header -->
+  <div class="lg-hero-kicker">
+    <span class="spark">✨</span>
+    <span>SPECIAL</span>
   </div>
+
+  <div class="lg-hero-title">
+    Lyrics<br/>Generator
+  </div>
+
+  <!-- Generator Content -->
+  <p class="muted" style="margin:12px 0 10px;">
+    WebGPU: Desktop Chrome/Edge empfohlen. iOS/Safari oft eingeschränkt.
+  </p>
+
+  <div class="pr-lg-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+    <button class="btn primary" type="button" id="lgStartBtn">Start (Model laden)</button>
+    <button class="btn" type="button" id="lgClearBtn">Clear</button>
+    <span class="muted" id="lgStatus" style="align-self:center;">Status: idle</span>
+  </div>
+
+  <label class="muted" for="lgInput" style="display:block;margin:8px 0 6px;">
+    Input (Soundprompt oder Beschreibung):
+  </label>
+
+  <textarea
+    id="lgInput"
+    class="search"
+    style="border-radius:16px;min-height:120px;padding:12px;max-width:100%;"
+    placeholder="Paste hier deinen Soundprompt rein…&#10;Optional: 1–2 Sätze Thema/Story darunter."
+  ></textarea>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+    <button class="btn primary" type="button" id="lgGenerateBtn">Generate Lyrics</button>
+    <button class="btn" type="button" id="lgCopyBtn" disabled>Copy Lyrics</button>
+  </div>
+
+  <div style="margin-top:12px;">
+    <div class="muted" style="margin-bottom:6px;">Output:</div>
+    <textarea
+      id="lgOutput"
+      class="search"
+      style="border-radius:16px;min-height:160px;padding:12px;max-width:100%;"
+      placeholder="—"
+      readonly
+    ></textarea>
+  </div>
+
 </div>
 
       <!-- FILTERS -->
