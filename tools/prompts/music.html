@@ -211,105 +211,9 @@
     }
     .terminal .dim{ color:#6b7280; }
 
-    /* Info blocks */
-    .info-block{
-      border-radius: 18px;
-      border: 1px solid rgba(148,163,184,.18);
-      background: rgba(15,23,42,.62);
-      padding: 12px 14px;
-      box-shadow: 0 16px 40px rgba(15,23,42,.85);
-      margin-top: 12px;
-    }
-    .info-title{
-      font-weight: 900;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      font-size: 12px;
-      color: #cbd5e1;
-      margin-bottom: 8px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-    }
-    .info-title .dot{
-      width:10px;height:10px;border-radius:999px;
-      background: linear-gradient(135deg, var(--pink), var(--cyan));
-      box-shadow: 0 0 12px rgba(34,211,238,.35);
-    }
-    .info-text{ font-size: 13px; color: #e5e7eb; }
-    .info-text .muted{ color: var(--muted2); font-size: 12px; }
-
-    /* Buttons / chips */
-    .btn{
-      border-radius:999px;
-      padding: 9px 12px;
-      border: 1px solid rgba(148,163,184,.22);
-      background: rgba(15,23,42,.75);
-      color: #e5e7eb;
-      font: 900 13px/1 system-ui;
-      cursor:pointer;
-      user-select:none;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-    }
-    .btn:hover{
-      border-color: rgba(34,211,238,.55);
-      box-shadow: 0 0 14px rgba(34,211,238,.22);
-    }
-    .btn:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
-    .btn.primary{
-      border-color: rgba(34,211,238,.35);
-    }
-    .btn.danger{
-      border-color: rgba(236,72,153,.45);
-    }
-
-    .mono{
-      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-    }
-
-    textarea.input, textarea.output{
-      width:100%;
-      border-radius: 16px;
-      border: 1px solid rgba(148,163,184,.22);
-      background: rgba(2,6,23,.55);
-      color: #e5e7eb;
-      padding: 10px 12px;
-      font-size: 13px;
-      line-height: 1.45;
-      min-height: 110px;
-      resize: vertical;
-      outline: none;
-    }
-    textarea.output{ min-height: 180px; }
-
-    .row{
-      display:flex;
-      flex-wrap:wrap;
-      gap: 10px;
-      align-items:center;
-      margin-top: 10px;
-    }
-    .row .spacer{ flex:1; }
-
-    .progress{
-      height: 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,.22);
-      background: rgba(2,6,23,.45);
-      overflow:hidden;
-    }
-    .progress > div{
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--pink), var(--cyan));
-      transition: width .18s ease;
-    }
-
-    /* Controls for library */
+    /* Controls */
     .controls{
-      margin-top: 18px;
+      margin-top: 8px;
       display:flex;
       flex-wrap:wrap;
       gap: 10px 12px;
@@ -412,7 +316,7 @@
     .title-block{ flex:1; min-width:0; }
     .title{
       font-size: clamp(18px, 4vw, 22px);
-      font-weight: 900;
+      font-weight: 800;
       letter-spacing:.01em;
       margin-bottom: 2px;
       color:#f9fafb;
@@ -435,11 +339,11 @@
       white-space:nowrap;
     }
 
-    /* Links under meta chips */
+    /* links under pills */
     .links-under{
       display:flex;
       gap:14px;
-      margin-top: 12px;
+      margin-top:12px;
       align-items:center;
       flex-wrap:wrap;
     }
@@ -462,24 +366,26 @@
       list-style:none;
       cursor:pointer;
       user-select:none;
-
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-
-      border-radius: 999px;
-      padding: 10px 14px;
-      border: 1px solid rgba(148,163,184,.22);
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      border-radius:999px;
+      padding:10px 14px;
+      border:1px solid rgba(148,163,184,.22);
       background: rgba(15,23,42,.75);
-
       font-weight: 900;
       font-size: 13px;
-      letter-spacing: .02em;
+      letter-spacing:.02em;
     }
-    summary::after{ content:"▼"; font-weight:900; opacity:.9; transform: translateY(-1px); }
+    summary::-webkit-details-marker{ display:none; }
+    summary::after{
+      content:"▼";
+      font-weight: 900;
+      opacity:.9;
+      transform: translateY(-1px);
+    }
     details[open] summary::after{ content:"▲"; }
     summary:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
-    summary::-webkit-details-marker{ display:none; }
 
     .prompt-grid{
       margin-top: 12px;
@@ -507,6 +413,27 @@
       color: #cbd5e1;
       font-weight: 900;
     }
+    .btn-row{
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border-radius:999px;
+      padding: 7px 10px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.75);
+      color: #e5e7eb;
+      font: 800 12px/1 system-ui;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{
+      border-color: rgba(34,211,238,.55);
+      box-shadow: 0 0 14px rgba(34,211,238,.22);
+    }
+    .btn:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+    .btn.primary{ border-color: rgba(34,211,238,.35); }
 
     pre{
       margin:0;
@@ -515,6 +442,10 @@
       font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
       font-size: 12px;
       color: #e5e7eb;
+    }
+    .muted{
+      color: var(--muted);
+      font-size: 12px;
     }
 
     /* Empty state */
@@ -542,41 +473,142 @@
       background: rgba(15,23,42,.92);
       color:#e5e7eb;
       box-shadow: 0 10px 30px rgba(2,6,23,.7);
-      font: 900 13px/1 system-ui;
+      font: 800 13px/1 system-ui;
       backdrop-filter: blur(10px);
     }
     .toast.show{ display:block; }
 
-    /* Modal */
-    .modal-backdrop{
-      position: fixed;
-      inset: 0;
-      background: rgba(2,6,23,.72);
-      backdrop-filter: blur(8px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index: 9998;
-      padding: 18px;
+    /* --- Special: Lyrics Generator Stage --- */
+    .stage{
+      margin-top: 18px;
+      border-radius: 22px;
+      border:1px solid rgba(148,163,184,.22);
+      background: radial-gradient(circle at top left, rgba(15,23,42,.96), rgba(2,6,23,.98));
+      box-shadow: 0 24px 70px rgba(2,6,23,.85);
+      overflow:hidden;
+      position:relative;
     }
-    .modal-backdrop.show{ display:flex; }
-    .modal{
-      width: min(560px, 100%);
-      border-radius: 20px;
-      border: 1px solid rgba(148,163,184,.22);
-      background: rgba(15,23,42,.92);
-      box-shadow: 0 26px 70px rgba(2,6,23,.75);
-      padding: 14px 14px 12px;
+    .stage::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,.35), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(34,211,238,.25), transparent 55%);
+      opacity:.20;
+      pointer-events:none;
+      mix-blend-mode: screen;
     }
-    .modal h3{
-      font-size: 14px;
-      letter-spacing:.12em;
+    .stage-inner{
+      padding: 16px 16px 14px;
+      position:relative;
+    }
+    .stage-kicker{
+      font-size: 12px;
+      letter-spacing:.25em;
       text-transform: uppercase;
-      color: #cbd5e1;
-      margin-bottom: 10px;
+      color:#f9a8d4;
+      margin-bottom:6px;
     }
-    .modal p{ font-size: 13px; color: #e5e7eb; margin-bottom: 12px; }
-    .modal .actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+    .stage-title{
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing:.01em;
+      margin-bottom: 6px;
+    }
+    .stage-desc{
+      color:#cbd5f5;
+      font-size: 14px;
+      max-width: 60rem;
+      margin-bottom: 12px;
+    }
+    .stage-grid{
+      display:grid;
+      gap: 12px;
+    }
+    @media (min-width: 900px){
+      .stage-grid{
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+        align-items:start;
+      }
+    }
+
+    .stage-card{
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(15,23,42,.62);
+      padding: 12px 12px;
+    }
+    .stage-card h3{
+      font-size: 13px;
+      letter-spacing:.16em;
+      text-transform: uppercase;
+      color:#cbd5e1;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .ta{
+      width:100%;
+      min-height: 120px;
+      resize: vertical;
+      border-radius: 16px;
+      padding: 10px 12px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(2,6,23,.55);
+      color: var(--text);
+      font: 600 13px/1.45 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      outline:none;
+    }
+    .ta:focus{
+      border-color: rgba(34,211,238,.45);
+      box-shadow: 0 0 18px rgba(34,211,238,.12);
+    }
+    .ta.small{ min-height: 90px; }
+
+    .stage-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      align-items:center;
+      justify-content:space-between;
+      margin-top: 10px;
+    }
+    .stage-meta{
+      color: var(--muted2);
+      font-size: 12px;
+    }
+
+    .output{
+      max-height: 320px;
+      overflow:auto;
+      border-radius: 16px;
+      padding: 10px 12px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(2,6,23,.60);
+      color: var(--text);
+      font: 600 13px/1.45 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .pill-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+    }
+    .mini-pill{
+      border-radius:999px;
+      padding: 5px 10px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(15,23,42,.55);
+      font-size:12px;
+      color:#e5e7eb;
+      font-weight:800;
+      white-space:nowrap;
+    }
 
     /* Footer */
     footer{
@@ -645,11 +677,13 @@
           </div>
 
           <p class="hero-text-main">
-            Sound-Prompts (Riffusion) als saubere Library – plus optionaler Lyrics-Generator.
+            Prompt-Chains für Tracks, Releases und Sound-Experimente – als saubere Library.
           </p>
           <p class="hero-text-sub">
-            Du pflegst pro Track nur noch <span class="mono">prompts.music</span>.
-            Lyrics bleiben transparent: meist Brainstorming/Editing – kein “One-Prompt-Text”.
+            Suche, filtere und kopiere komplette Chains pro Track.
+            Hinweis: Meine finalen Texte entstehen aktuell in Brainstorming & Feinschliff zusammen mit ChatGPT
+            (Idee → Varianten → Punchlines/Hook → Iteration). Unten gibt’s dennoch einen schlanken Lyrics-Generator
+            (Prompt + optional Local-WebGPU), damit Nutzer ohne eigenen Text direkt loslegen können.
           </p>
         </div>
 
@@ -661,96 +695,85 @@
           <div class="terminal" id="topTerminal">
 list --type=all --vibe=all
 > results: <span id="resultCount">0</span>
-
-<span class="dim"># library · local-first · no tracking</span>
+<span class="dim"># alles lokal, kein Tracking</span>
           </div>
         </aside>
       </div>
 
-      <!-- Transparency -->
-      <div class="info-block">
-        <div class="info-title"><span class="dot"></span>Transparenz: Wie Lyrics hier entstehen</div>
-        <div class="info-text">
-          Die meisten PromptRebel-Lyrics entstehen <b>nicht</b> als “fertiger Text aus einem einzigen Prompt”,
-          sondern im <b>Brainstorming, Umschreiben und Feinschliff</b> (Idee → Rohfassung → Edit → Hook-Schärfung).
-          <div class="muted" style="margin-top:8px;">
-            Trotzdem: Für Nutzer, die schnell starten wollen, gibt es unten einen Lyrics-Generator-Prompt
-            (Copy & in deine KI einfügen) und optional einen lokalen Generator direkt auf dieser Seite.
+      <!-- STAGE: Lyrics Generator -->
+      <div class="stage" style="margin-top:18px;">
+        <div class="stage-inner">
+          <div class="stage-kicker">Special</div>
+          <div class="stage-title">Lyrics Generator</div>
+          <div class="stage-desc">
+            Zwei Wege: (1) Prompt kopieren und in deine Lieblings-KI einfügen. (2) Optional: lokal im Browser generieren (WebGPU).
+            Kein Account, kein Server – läuft nur, wenn dein Gerät WebGPU unterstützt.
+          </div>
+
+          <div class="stage-grid">
+            <!-- Prompt card -->
+            <div class="stage-card">
+              <h3>1) Prompt (für jede KI)</h3>
+              <textarea id="lyricsPromptTemplate" class="ta small" readonly></textarea>
+
+              <div class="stage-row">
+                <div class="stage-meta">Nutzen: Soundprompt einfügen + (optional) kurze Idee / Thema.</div>
+                <div class="btn-row">
+                  <button class="btn" type="button" id="btnCopyLyricsPrompt">Copy Prompt</button>
+                </div>
+              </div>
+
+              <div class="pill-row">
+                <span class="mini-pill">Format: Intro · Verse · Hook · Verse 2 · Hook · Bridge · Hook</span>
+                <span class="mini-pill">Deutsch</span>
+                <span class="mini-pill">ohne Overkill</span>
+              </div>
+            </div>
+
+            <!-- Agent + Local WebGPU -->
+            <div class="stage-card">
+              <h3>2) Generator (lokal im Browser)</h3>
+
+              <div class="muted" style="margin-bottom:8px;">
+                <b>WebGPU:</b> Desktop Chrome/Edge empfohlen. iOS/Safari oft eingeschränkt.
+              </div>
+
+              <div class="btn-row" style="margin-bottom:8px;">
+                <button class="btn primary" type="button" id="btnInitModel">Start (Model laden)</button>
+                <button class="btn" type="button" id="btnClearOutput">Clear</button>
+              </div>
+
+              <div class="muted" id="modelStatus">Status: idle</div>
+
+              <div style="margin-top:10px;">
+                <div class="muted" style="margin-bottom:6px;">Input (Soundprompt oder Beschreibung):</div>
+                <textarea id="lyricsInput" class="ta" placeholder="Paste hier deinen Soundprompt rein …"></textarea>
+              </div>
+
+              <div class="stage-row">
+                <div class="stage-meta">Tipp: 1–2 Sätze Thema/Story helfen (optional).</div>
+                <div class="btn-row">
+                  <button class="btn primary" type="button" id="btnGenerate" disabled>Generate Lyrics</button>
+                  <button class="btn" type="button" id="btnCopyLyrics" disabled>Copy Lyrics</button>
+                </div>
+              </div>
+
+              <div style="margin-top:10px;">
+                <div class="muted" style="margin-bottom:6px;">Output:</div>
+                <div id="lyricsOutput" class="output" aria-live="polite">—</div>
+              </div>
+
+              <div class="muted" style="margin-top:10px;">
+                Optional: Lyrics-Agent (ChatGPT) – Platzhalter, sobald du ihn erstellt hast.
+                <span class="link" style="margin-left:6px;" data-open-agent="#">Open Agent →</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Lyrics Generator Prompt + Agent -->
-      <div class="info-block">
-        <div class="info-title"><span class="dot"></span>Lyrics Generator Prompt</div>
-
-        <div class="info-text" style="margin-bottom:10px;">
-          Nutzung: <b>Prompt kopieren</b> → in deine KI einfügen → <b>Sound-Prompt</b> einsetzen → Lyrics erhalten.
-        </div>
-
-        <textarea id="lyricsPromptTemplate" class="input mono" spellcheck="false"></textarea>
-
-        <div class="row">
-          <button class="btn primary" id="btnCopyLyricsPrompt" type="button">Copy Prompt</button>
-          <span class="spacer"></span>
-          <button class="btn danger" id="btnOpenAgent" type="button">Open Lyrics-Agent ↗</button>
-        </div>
-
-        <div class="muted" style="margin-top:10px;">
-          Hinweis: “Open Lyrics-Agent” öffnet einen externen Chat/Agent (du verlässt PromptRebel).
-        </div>
-      </div>
-
-      <!-- Local Lyrics Generator -->
-      <div class="info-block">
-        <div class="info-title"><span class="dot"></span>Local Lyrics Generator (kostenlos, on-device)</div>
-
-        <div class="info-text">
-          Läuft nur, wenn dein Browser <b>WebGPU</b> unterstützt. Auf iPhone kann das je nach Safari/iOS fehlen.
-          Wenn WebGPU nicht verfügbar ist, nutze einfach den Prompt oben in deiner KI.
-        </div>
-
-        <div class="row" style="margin-top:12px;">
-          <button class="btn primary" id="btnInitModel" type="button">Modell laden</button>
-          <span class="muted" id="modelStatus">Status: idle</span>
-        </div>
-
-        <div class="progress" style="margin-top:10px;">
-          <div id="dlBar"></div>
-        </div>
-
-        <div class="muted" style="margin-top:10px;">
-          Input: Sound-Prompt (oder Stichpunkte: Vibe, Thema, Tempo, Hook-Style …)
-        </div>
-
-        <textarea id="lyricsInput" class="input mono" spellcheck="false"
-          placeholder="Sound-Prompt hier einfügen …"></textarea>
-
-        <div class="row">
-          <button class="btn primary" id="btnGenerate" type="button" disabled>Lyrics generieren</button>
-          <span class="spacer"></span>
-          <button class="btn" id="btnCopyOutput" type="button" style="display:none;">Copy Lyrics</button>
-        </div>
-
-        <textarea id="lyricsOutput" class="output mono" spellcheck="false" readonly
-          placeholder="Output erscheint hier …"></textarea>
-
-        <div class="muted" style="margin-top:10px;">
-          Wenn dein Gerät zu schwach ist: nimm ein kleineres Modell oder nutze den Prompt oben.
-        </div>
-      </div>
-    </section>
-
-    <!-- LIBRARY FILTERS -->
-    <section class="section" aria-labelledby="list-title">
-      <h2 class="section-title" id="list-title" style="font-size:18px;font-weight:900;margin-bottom:6px;">
-        Tracks & Sound-Prompts
-      </h2>
-      <p class="section-subtitle" style="font-size:13px;color:#9ca3af;margin-bottom:14px;max-width:46rem;">
-        Pro Track: View/Play + ein ausklappbarer <b>Music Prompt</b> (Riffusion).
-      </p>
-
-      <div class="controls" aria-label="Filter & Suche">
+      <!-- FILTERS -->
+      <div class="controls" aria-label="Filter & Suche" style="margin-top:18px;">
         <div class="control" style="flex:1">
           <span class="control-label">Suche:</span>
           <div class="search-wrap">
@@ -780,6 +803,14 @@ list --type=all --vibe=all
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- LIST -->
+    <section class="section" aria-labelledby="list-title">
+      <h2 class="section-title" id="list-title" style="font-size:18px;font-weight:800;margin-bottom:6px;">Tracks & Prompt-Chains</h2>
+      <p class="section-subtitle" style="font-size:13px;color:#9ca3af;margin-bottom:14px;max-width:46rem;">
+        Jeder Eintrag hat View/Play und eine ausklappbare Prompt-Chain mit Copy-Buttons.
+      </p>
 
       <div id="list" class="list"></div>
       <div id="empty" class="empty" style="display:none;">
@@ -800,22 +831,8 @@ list --type=all --vibe=all
 
   <div id="toast" class="toast" role="status" aria-live="polite">Copied ✓</div>
 
-  <!-- Confirm Modal -->
-  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal">
-      <h3>Externer Link</h3>
-      <p>
-        Du verlässt jetzt PromptRebel und öffnest den Lyrics-Agent in einer externen Seite/App.
-      </p>
-      <div class="actions">
-        <button class="btn" id="btnCancelModal" type="button">Cancel</button>
-        <button class="btn danger" id="btnConfirmModal" type="button">Continue ↗</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    // ---------------- Scroll progress (CSS var) ----------------
+  <script>
+    // -------- Scroll progress (CSS var) --------
     window.addEventListener("scroll", () => {
       const doc = document.documentElement;
       const scrollable = doc.scrollHeight - window.innerHeight;
@@ -823,14 +840,14 @@ list --type=all --vibe=all
       document.documentElement.style.setProperty("--scroll", ratio.toString());
     });
 
-    // ---------------- Brand glitch on load ----------------
+    // -------- Brand glitch on load --------
     const brandEl = document.getElementById("brand");
     window.addEventListener("load", () => {
       brandEl.classList.add("glitch");
       setTimeout(() => brandEl.classList.remove("glitch"), 800);
     });
 
-    // ---------------- Toast ----------------
+    // -------- Toast --------
     const toastEl = document.getElementById("toast");
     let toastTimer = null;
     function toast(msg="Copied ✓") {
@@ -840,15 +857,14 @@ list --type=all --vibe=all
       toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1200);
     }
 
-    // ---------------- Copy helpers ----------------
+    // -------- Copy helpers --------
     async function copyText(text) {
-      const t = String(text || "");
       try {
-        await navigator.clipboard.writeText(t);
+        await navigator.clipboard.writeText(text);
         toast("Copied ✓");
-      } catch {
+      } catch (e) {
         const ta = document.createElement("textarea");
-        ta.value = t;
+        ta.value = text;
         ta.style.position = "fixed";
         ta.style.left = "-9999px";
         document.body.appendChild(ta);
@@ -859,243 +875,28 @@ list --type=all --vibe=all
       }
     }
 
-    function escapeHtml(s){
-      return String(s || "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;");
+    function mdFence(title, content) {
+      const safe = (content || "").trim();
+      if (!safe) return "";
+      return `### ${title}\n\n\`\`\`\n${safe}\n\`\`\`\n`;
     }
 
-    // ==========================================================
-    // 1) GLOBAL: Lyrics Generator Prompt Template (Copy)
-    // ==========================================================
-    const LYRICS_PROMPT_TEMPLATE =
-`Du bist ein Lyrics-Generator für Musik. Du lieferst nur Lyrics – keine Erklärungen, keine Meta-Texte.
-
-INPUT:
-Ich gebe dir einen "SOUND-PROMPT" (Genre, Tempo, Stimmung, Vocal-Style, Themen, Referenzen).
-Optional gebe ich dir: Thema, Perspektive, Hook-Quote, Reimstil, Sprache, Härtegrad.
-
-AUFGABE:
-- Erstelle einen Songtext, der zum SOUND-PROMPT passt.
-- Output-Format strikt:
-[INTRO]
-...
-[VERSE 1]
-...
-[HOOK]
-...
-[VERSE 2]
-...
-[HOOK]
-...
-[BRIDGE] (optional)
-...
-[OUTRO]
-...
-
-REGELN:
-- Sprache: Deutsch (wenn nicht anders angegeben).
-- Hook muss eingängig sein (max. 2–4 Zeilen, wiederholbar).
-- Verse: bildreich, konkret, keine generischen Phrasen.
-- Kein "As an AI", keine Erklärungen.
-
-SOUND-PROMPT:
-<<<HIER SOUND-PROMPT EINFÜGEN>>>
-
-OPTIONALE INFOS (falls vorhanden):
-- Thema:
-- Perspektive (Ich/Du/Er/Sie/Wir):
-- Vibe (dark/ironisch/meme/ernst):
-- Explizit? (ja/nein):
-- Reimschema / Flow:
-- Hook-Quote (wenn du eine willst):`;
-
-    const lyricsPromptEl = document.getElementById("lyricsPromptTemplate");
-    lyricsPromptEl.value = LYRICS_PROMPT_TEMPLATE;
-
-    document.getElementById("btnCopyLyricsPrompt").addEventListener("click", () => {
-      copyText(lyricsPromptEl.value);
-    });
-
-    // ==========================================================
-    // 2) OPTIONAL: Open Lyrics Agent (external link with confirm)
-    // ==========================================================
-    // TODO: Hier später deinen echten Agent-Link rein.
-    // Beispiel (Platzhalter): const LYRICS_AGENT_URL = "https://chatgpt.com/g/g-XXXX";
-    const LYRICS_AGENT_URL = "#";
-
-    const modalBackdrop = document.getElementById("modalBackdrop");
-    const btnOpenAgent = document.getElementById("btnOpenAgent");
-    const btnCancelModal = document.getElementById("btnCancelModal");
-    const btnConfirmModal = document.getElementById("btnConfirmModal");
-
-    function openModal(){
-      modalBackdrop.classList.add("show");
-      modalBackdrop.setAttribute("aria-hidden", "false");
-    }
-    function closeModal(){
-      modalBackdrop.classList.remove("show");
-      modalBackdrop.setAttribute("aria-hidden", "true");
-    }
-
-    btnOpenAgent.addEventListener("click", () => {
-      if (!LYRICS_AGENT_URL || LYRICS_AGENT_URL === "#") {
-        toast("Agent-Link fehlt (TODO)"); 
-        return;
-      }
-      openModal();
-    });
-
-    btnCancelModal.addEventListener("click", closeModal);
-    modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === modalBackdrop) closeModal();
-    });
-
-    btnConfirmModal.addEventListener("click", () => {
-      closeModal();
-      window.open(LYRICS_AGENT_URL, "_blank", "noopener");
-    });
-
-    // ==========================================================
-    // 3) LOCAL Lyrics Generator (WebGPU / WebLLM)
-    // ==========================================================
-    const modelStatusEl = document.getElementById("modelStatus");
-    const dlBarEl = document.getElementById("dlBar");
-    const btnInitModel = document.getElementById("btnInitModel");
-    const btnGenerate = document.getElementById("btnGenerate");
-    const btnCopyOutput = document.getElementById("btnCopyOutput");
-    const lyricsInput = document.getElementById("lyricsInput");
-    const lyricsOutput = document.getElementById("lyricsOutput");
-
-    let engine = null;
-    let modelReady = false;
-
-    function hasWebGPU(){
-      return typeof navigator !== "undefined" && !!navigator.gpu;
-    }
-
-    function setProgress(pct){
-      const clamped = Math.max(0, Math.min(100, pct));
-      dlBarEl.style.width = clamped.toFixed(1) + "%";
-    }
-
-    // NOTE:
-    // - WebLLM Modell-IDs ändern sich manchmal.
-    // - Wenn ein Modell nicht lädt: nimm ein anderes "small instruct" Modell.
-    // - Du kannst hier später exakt das Modell eintragen, das ihr auch bei LocalAI verwendet.
-    const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1"; // ggf. anpassen
-
-    btnInitModel.addEventListener("click", async () => {
-      if (!hasWebGPU()){
-        modelStatusEl.textContent = "Status: WebGPU nicht verfügbar (nutze Prompt oben).";
-        toast("WebGPU nicht verfügbar");
-        return;
-      }
-
-      try{
-        modelStatusEl.textContent = "Status: lade WebLLM …";
-        setProgress(5);
-
-        // WebLLM import (CDN)
-        // Falls du lieber alles lokal hosten willst: diese URL ersetzen und Dateien lokal ablegen.
-        const webllm = await import("https://esm.run/@mlc-ai/web-llm");
-        setProgress(12);
-
-        modelStatusEl.textContent = "Status: initialisiere Engine …";
-        engine = await webllm.CreateMLCEngine(
-          DEFAULT_MODEL,
-          {
-            initProgressCallback: (report) => {
-              // report: {progress, text} (abhängig von Version)
-              const p = (report && typeof report.progress === "number") ? report.progress * 100 : null;
-              if (p !== null) setProgress(12 + p * 0.88);
-              if (report && report.text) modelStatusEl.textContent = "Status: " + report.text;
-            }
-          }
-        );
-
-        setProgress(100);
-        modelReady = true;
-        btnGenerate.disabled = false;
-        modelStatusEl.textContent = "Status: ready (" + DEFAULT_MODEL + ")";
-        toast("Model ready ✓");
-      } catch (e){
-        console.error(e);
-        modelReady = false;
-        btnGenerate.disabled = true;
-        modelStatusEl.textContent = "Status: Fehler beim Laden (Modell/Browser).";
-        toast("Load failed");
-      }
-    });
-
-    btnGenerate.addEventListener("click", async () => {
-      if (!modelReady || !engine) return;
-
-      const soundPrompt = String(lyricsInput.value || "").trim();
-      if (!soundPrompt){
-        toast("Bitte Sound-Prompt einfügen");
-        return;
-      }
-
-      btnGenerate.disabled = true;
-      lyricsOutput.value = "";
-      btnCopyOutput.style.display = "none";
-      modelStatusEl.textContent = "Status: generating …";
-
-      // Minimaler System-Prompt für Local-Mode (kurz halten -> kleine Modelle!)
-      const system =
-        "Du bist ein Lyrics-Generator. Antworte NUR mit Songtext im Format [INTRO]/[VERSE 1]/[HOOK]/[VERSE 2]/[HOOK]/[OUTRO]. Keine Erklärungen.";
-
-      const user =
-        `SOUND-PROMPT:\n${soundPrompt}\n\nErstelle passende Lyrics (Deutsch).`;
-
-      try{
-        const resp = await engine.chat.completions.create({
-          messages: [
-            { role: "system", content: system },
-            { role: "user", content: user }
-          ],
-          temperature: 0.9,
-          top_p: 0.9,
-          max_tokens: 600
-        });
-
-        const text = resp?.choices?.[0]?.message?.content ?? "";
-        lyricsOutput.value = String(text).trim();
-        btnCopyOutput.style.display = lyricsOutput.value ? "inline-flex" : "none";
-        modelStatusEl.textContent = "Status: done ✓";
-      } catch (e){
-        console.error(e);
-        modelStatusEl.textContent = "Status: generate error";
-        toast("Generate failed");
-      } finally{
-        btnGenerate.disabled = false;
-      }
-    });
-
-    btnCopyOutput.addEventListener("click", () => {
-      copyText(lyricsOutput.value || "");
-    });
-
-    // ==========================================================
-    // 4) LIBRARY DATA (DU ERGÄNZT NUR HIER)
-    //    -> pro Track nur prompts.music
-    // ==========================================================
+    // -------- Data (DU ERGÄNZT NUR HIER) --------
     const tracks = [
       {
         id: "trinity-protocol",
         title: "TRINITY PROTOCOL",
         year: "2025",
-        type: "album",        // album | single | loop
-        vibe: "cinematic",    // dark | meme | cinematic | ambient ...
+        type: "album",
+        vibe: "cinematic",
         language: "DE",
         tags: ["dystopian", "deutsch", "high energy"],
         album: "TRINITY PROTOCOL (LP)",
         viewUrl: "../../music/trinity-protocol.html",
         playUrl: "#",
         prompts: {
-          music: "Minimalistischer Dark-Orchestral-Trap … (dein kompletter Riffusion-Prompt hier)"
+          sound: "Minimalistischer Dark-Orchestral-Trap, 85–88 BPM …\n(Dein kompletter Riffusion-Soundprompt hier rein)",
+          notes: "Mix/Notes …"
         }
       },
       {
@@ -1110,7 +911,8 @@ OPTIONALE INFOS (falls vorhanden):
         viewUrl: "../../music/singles.html#code-unsterblich",
         playUrl: "https://classic.riffusion.com/song/c9d17e4d-b9f5-4ee3-9d30-af9fb407f6cf",
         prompts: {
-          music: "(dein kompletter Riffusion-Prompt hier)"
+          sound: "(Dein kompletter Riffusion-Soundprompt hier rein)",
+          notes: ""
         }
       },
       {
@@ -1125,12 +927,13 @@ OPTIONALE INFOS (falls vorhanden):
         viewUrl: "../../music/singles.html#alexa-zeig-mir-brueste",
         playUrl: "https://classic.riffusion.com/song/8000038e-de78-4855-a4a8-f6a5ee9fee70",
         prompts: {
-          music: "(dein kompletter Riffusion-Prompt hier)"
+          sound: "(Dein kompletter Riffusion-Soundprompt hier rein)",
+          notes: ""
         }
       }
     ];
 
-    // ---------------- State ----------------
+    // -------- State --------
     let currentType = "all";
     let currentVibe = "all";
     let searchTerm = "";
@@ -1162,6 +965,13 @@ OPTIONALE INFOS (falls vorhanden):
       });
     }
 
+    function escapeHtml(s){
+      return String(s || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;");
+    }
+
     function render(){
       const visible = getVisible();
       listEl.innerHTML = "";
@@ -1170,8 +980,12 @@ OPTIONALE INFOS (falls vorhanden):
 
       visible.forEach(t => {
         const tags = (t.tags || []).map(x => `<span class="meta-chip">${escapeHtml(x)}</span>`).join("");
-        const music = String(t.prompts?.music || "").trim();
-        const hasMusic = !!music;
+
+        const p = t.prompts || {};
+        const sound  = (p.sound  || "").trim();
+        const notes  = (p.notes  || "").trim();
+
+        const hasAny = !!(sound || notes);
 
         const el = document.createElement("article");
         el.className = "card";
@@ -1187,37 +1001,66 @@ OPTIONALE INFOS (falls vorhanden):
                 ${tags}
               </div>
 
-              <div class="links-under" aria-label="Links">
+              <div class="links-under">
                 <span class="link" data-nav="${escapeHtml(t.viewUrl || "#")}">View →</span>
                 <span class="link" data-open="${escapeHtml(t.playUrl || "#")}">Play →</span>
               </div>
             </div>
           </div>
 
-          <details ${hasMusic ? "" : "disabled"}>
-            <summary>Music Prompt öffnen</summary>
+          <details ${hasAny ? "" : "disabled"}>
+            <summary>Prompt-Chain öffnen</summary>
 
             <div class="prompt-grid">
-              ${hasMusic ? `
+              ${sound ? `
               <div class="prompt-block">
                 <div class="prompt-head">
                   <div class="prompt-title">Music Prompt (Riffusion)</div>
-                  <button class="btn primary" type="button" data-copy="music">Copy</button>
+                  <div class="btn-row">
+                    <button class="btn" type="button" data-copy="sound">Copy</button>
+                  </div>
                 </div>
-                <pre>${escapeHtml(music)}</pre>
-              </div>` : `
+                <pre>${escapeHtml(sound)}</pre>
+              </div>` : ""}
+
+              ${notes ? `
               <div class="prompt-block">
-                <div class="prompt-title">coming soon</div>
-              </div>`}
+                <div class="prompt-head">
+                  <div class="prompt-title">Notes / Settings</div>
+                  <div class="btn-row">
+                    <button class="btn" type="button" data-copy="notes">Copy</button>
+                  </div>
+                </div>
+                <pre>${escapeHtml(notes)}</pre>
+              </div>` : ""}
+
+              <div class="prompt-block">
+                <div class="prompt-head">
+                  <div class="prompt-title">Export</div>
+                  <div class="btn-row">
+                    <button class="btn primary" type="button" data-copy="all">Copy All (MD)</button>
+                  </div>
+                </div>
+                <div class="muted">
+                  Exportiert die verfügbaren Blöcke als Markdown.
+                </div>
+              </div>
             </div>
           </details>
         `;
+
+        if (!hasAny) {
+          const det = el.querySelector("details");
+          det.removeAttribute("open");
+          const sum = el.querySelector("summary");
+          sum.textContent = "Prompt-Chain (coming soon)";
+        }
 
         listEl.appendChild(el);
       });
     }
 
-    // Events: chips + search
+    // -------- Events: chips + search --------
     searchInput.addEventListener("input", () => {
       searchTerm = searchInput.value.trim();
       render();
@@ -1241,11 +1084,12 @@ OPTIONALE INFOS (falls vorhanden):
       });
     });
 
-    // Delegated clicks: View/Play/Copy
+    // -------- Delegated clicks: View/Play/Copy --------
     listEl.addEventListener("click", async (e) => {
       const linkNav = e.target.closest("[data-nav]");
       if (linkNav) {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         const url = linkNav.getAttribute("data-nav");
         if (url && url !== "#") window.location.href = url;
         return;
@@ -1253,7 +1097,8 @@ OPTIONALE INFOS (falls vorhanden):
 
       const linkOpen = e.target.closest("[data-open]");
       if (linkOpen) {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         const url = linkOpen.getAttribute("data-open");
         if (url && url !== "#") window.open(url, "_blank", "noopener");
         return;
@@ -1262,19 +1107,42 @@ OPTIONALE INFOS (falls vorhanden):
       const btn = e.target.closest("button[data-copy]");
       if (!btn) return;
 
-      e.preventDefault(); e.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
 
       const card = e.target.closest(".card");
       if (!card) return;
-      const t = tracks.find(x => x.id === card.id);
+
+      const id = card.id;
+      const t = tracks.find(x => x.id === id);
       if (!t) return;
 
-      if (btn.dataset.copy === "music") {
-        return copyText(String(t.prompts?.music || "").trim());
+      const what = btn.dataset.copy;
+      const p = t.prompts || {};
+
+      if (what === "sound") return copyText((p.sound || "").trim());
+      if (what === "notes") return copyText((p.notes || "").trim());
+
+      if (what === "all") {
+        const out =
+`# ${t.title} (${t.year})
+Type: ${t.type} · Vibe: ${t.vibe} · Lang: ${t.language}
+Album/Serie: ${t.album || "-"}
+Tags: ${(t.tags || []).join(", ")}
+
+Links:
+- View: ${t.viewUrl || "-"}
+- Play: ${t.playUrl || "-"}
+
+${mdFence("Music Prompt (Riffusion)", p.sound)}
+${mdFence("Notes / Settings", p.notes)}
+`.trim();
+
+        return copyText(out);
       }
     });
 
-    // Footer version easter egg
+    // -------- Footer version easter egg --------
     const buildVersionEl = document.getElementById("buildVersion");
     buildVersionEl.addEventListener("click", () => {
       const versions = ["v0.2.prompts.music", "v0.3.prompts.music", "v0.6.9.prompts.music", "v1.0.prompts.music", "v∞.prompts.music"];
@@ -1285,15 +1153,241 @@ OPTIONALE INFOS (falls vorhanden):
       }, 120);
     });
 
-    // Init
+    // -------- Init --------
     render();
 
-    // If hash present, scroll into view
+    // If hash present, scroll into view (nice for direct links)
     window.addEventListener("load", () => {
       const id = (location.hash || "").replace("#", "");
       if (!id) return;
       const el = document.getElementById(id);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    // ==========================================================
+    // LYRICS GENERATOR (Prompt + optional local WebGPU via WebLLM)
+    // Model: Qwen2-0.5B-Instruct-q4f16_1-MLC (stable)
+    // ==========================================================
+    function hasWebGPU(){ return !!navigator.gpu; }
+
+    const lyricsPromptTemplateEl = document.getElementById("lyricsPromptTemplate");
+    const btnCopyLyricsPrompt = document.getElementById("btnCopyLyricsPrompt");
+
+    const btnInitModel = document.getElementById("btnInitModel");
+    const btnClearOutput = document.getElementById("btnClearOutput");
+    const btnGenerate = document.getElementById("btnGenerate");
+    const btnCopyLyrics = document.getElementById("btnCopyLyrics");
+    const modelStatusEl = document.getElementById("modelStatus");
+
+    const lyricsInputEl = document.getElementById("lyricsInput");
+    const lyricsOutputEl = document.getElementById("lyricsOutput");
+
+    // --- System prompt tuned for SMALL models (clean, no overkill) ---
+    // Goals:
+    // - stable structure
+    // - no meta talk, no placeholders
+    // - concrete imagery, simple rhymes, no overly complex schemes
+    // - avoid repetition, avoid generic "Ich bin..." spam
+    const SYSTEM_LYRICS = `
+Du bist ein Lyrics-Generator für deutschsprachige Songs.
+
+Aufgabe:
+- Erzeuge einen vollständigen Songtext, passend zum angegebenen SOUND-PROMPT (Stil, Tempo, Vibe, Thema).
+- Wenn der SOUND-PROMPT unklar ist: erzeuge einen neutral passenden Rap/Pop-Text, aber trotzdem konkret.
+
+Wichtige Regeln:
+- Antworte NUR mit dem Songtext. Keine Erklärungen, keine Meta-Kommentare.
+- Kein "Titel:" und keine Klammer-Notizen wie "(Verse)" im Fließtext außer den festen Section-Labels unten.
+- Keine Platzhalter wie <...> oder [füge ein].
+- Deutsch, klare Bilder, wenige Floskeln, keine unnötigen Füllzeilen.
+
+Struktur (genau so ausgeben):
+INTRO (2 Zeilen)
+VERSE 1 (8 Zeilen)
+HOOK (4 Zeilen, einprägsam, wiederholbar, keine langen Sätze)
+VERSE 2 (8 Zeilen)
+HOOK (4 Zeilen, gleiche Hook wie oben)
+BRIDGE (4 Zeilen, Perspektivwechsel oder Twist)
+HOOK (4 Zeilen, gleiche Hook)
+
+Stilqualität:
+- Reime: optional, aber wenn dann sauber und nicht erzwungen.
+- Wiederholungen vermeiden (außer Hook).
+- Keine extremen Namen/Marken. Keine Hassrede. Kein sexualisierter Inhalt.
+`.trim();
+
+    // Template prompt for external AIs (user copy-pastes)
+    const EXTERNAL_PROMPT_TEMPLATE =
+`Rolle: Du bist ein Lyrics-Generator für deutschsprachige Songs.
+
+SYSTEMREGELN:
+- Antworte NUR mit dem Songtext. Keine Erklärungen, kein Meta.
+- Keine Platzhalter. Kein "Titel:".
+- Struktur exakt einhalten:
+INTRO (2 Zeilen)
+VERSE 1 (8 Zeilen)
+HOOK (4 Zeilen)
+VERSE 2 (8 Zeilen)
+HOOK (4 Zeilen, identisch)
+BRIDGE (4 Zeilen)
+HOOK (4 Zeilen, identisch)
+
+INPUT:
+SOUND-PROMPT:
+<<< HIER DEIN SOUND-PROMPT EINSETZEN >>>
+
+OPTIONAL (1–2 Sätze):
+Thema/Story/Keylines: <<< optional >>>
+
+AUFGABE:
+Erzeuge einen passenden Songtext auf Deutsch, konkret und ohne Floskeln.`;
+
+    lyricsPromptTemplateEl.value = EXTERNAL_PROMPT_TEMPLATE;
+
+    btnCopyLyricsPrompt.addEventListener("click", () => {
+      copyText(lyricsPromptTemplateEl.value);
+    });
+
+    btnClearOutput.addEventListener("click", () => {
+      lyricsOutputEl.textContent = "—";
+      btnCopyLyrics.disabled = true;
+    });
+
+    let engine = null;
+    let modelReady = false;
+
+    function setProgress(p){
+      const pct = Math.max(0, Math.min(100, Math.round(p)));
+      modelStatusEl.textContent = modelStatusEl.textContent.replace(/\s*\(\d+%\)\s*$/, "");
+      modelStatusEl.textContent += ` (${pct}%)`;
+    }
+
+    // Load model (same strategy as your stable local-ai widget)
+    btnInitModel.addEventListener("click", async () => {
+      if (!hasWebGPU()){
+        modelStatusEl.textContent = "Status: WebGPU nicht verfügbar (nutze den Prompt oben).";
+        toast("WebGPU nicht verfügbar");
+        return;
+      }
+
+      try {
+        modelStatusEl.textContent = "Status: lade WebLLM …";
+        setProgress(5);
+
+        const { MLCEngine } = await import("https://esm.run/@mlc-ai/web-llm@0.2.80");
+        setProgress(10);
+
+        modelStatusEl.textContent = "Status: initialisiere Engine …";
+        engine = new MLCEngine({
+          initProgressCallback: (report) => {
+            // report shape can differ; we keep it safe
+            const p = (report && typeof report.progress === "number") ? report.progress * 100 : null;
+            if (p !== null) setProgress(10 + p * 0.90);
+            if (report && report.text) modelStatusEl.textContent = "Status: " + report.text;
+          }
+        });
+
+        const DEFAULT_MODEL = "Qwen2-0.5B-Instruct-q4f16_1-MLC";
+        await engine.reload(DEFAULT_MODEL);
+
+        setProgress(100);
+        modelReady = true;
+        btnGenerate.disabled = false;
+        modelStatusEl.textContent = `Status: ready (${DEFAULT_MODEL})`;
+        toast("Model ready ✓");
+      } catch (e) {
+        console.error(e);
+        modelReady = false;
+        engine = null;
+        btnGenerate.disabled = true;
+
+        const msg = String(e?.message || e || "");
+        modelStatusEl.textContent =
+          msg.toLowerCase().includes("disposed") || msg.toLowerCase().includes("device was lost")
+            ? "Status: WebGPU wurde zurückgesetzt (device lost). Seite neu laden und erneut versuchen."
+            : "Status: Fehler beim Laden (Konsole prüfen).";
+
+        toast("Load failed");
+      }
+    });
+
+    // Generate lyrics (no streaming – simpler & stable for small model)
+    btnGenerate.addEventListener("click", async () => {
+      const userInput = (lyricsInputEl.value || "").trim();
+      if (!userInput){
+        toast("Bitte Input einfügen");
+        return;
+      }
+      if (!modelReady || !engine){
+        toast("Model nicht bereit");
+        modelStatusEl.textContent = "Status: nicht bereit – bitte Start klicken.";
+        return;
+      }
+
+      btnGenerate.disabled = true;
+      btnCopyLyrics.disabled = true;
+      lyricsOutputEl.textContent = "Generating …";
+      modelStatusEl.textContent = "Status: generating …";
+
+      // User prompt to keep it simple and deterministic
+      const USER_LYRICS = `
+SOUND-PROMPT:
+${userInput}
+
+AUFGABE:
+Erzeuge den Songtext gemäß den Regeln.
+`.trim();
+
+      try {
+        const resp = await engine.chat.completions.create({
+          messages: [
+            { role: "system", content: SYSTEM_LYRICS },
+            { role: "user", content: USER_LYRICS }
+          ],
+          temperature: 0.7,
+          top_p: 0.9,
+          max_tokens: 700
+        });
+
+        const text = (resp?.choices?.[0]?.message?.content || "").trim();
+        lyricsOutputEl.textContent = text || "—";
+        btnCopyLyrics.disabled = !text;
+        modelStatusEl.textContent = "Status: ready";
+        toast("Done ✓");
+      } catch (e) {
+        console.error(e);
+        const msg = String(e?.message || e || "");
+        if (msg.toLowerCase().includes("disposed") || msg.toLowerCase().includes("device was lost")) {
+          modelReady = false;
+          engine = null;
+          btnGenerate.disabled = true;
+          modelStatusEl.textContent = "Status: WebGPU reset. Seite neu laden und neu starten.";
+          lyricsOutputEl.textContent = "WebGPU wurde zurückgesetzt. Bitte Seite neu laden.";
+        } else {
+          modelStatusEl.textContent = "Status: Fehler (Konsole prüfen).";
+          lyricsOutputEl.textContent = "Fehler beim Generieren.";
+        }
+      } finally {
+        if (modelReady) btnGenerate.disabled = false;
+      }
+    });
+
+    btnCopyLyrics.addEventListener("click", () => {
+      const out = (lyricsOutputEl.textContent || "").trim();
+      if (out && out !== "—") copyText(out);
+    });
+
+    // agent placeholder link
+    document.body.addEventListener("click", (e) => {
+      const el = e.target.closest("[data-open-agent]");
+      if (!el) return;
+      e.preventDefault();
+      const url = el.getAttribute("data-open-agent");
+      if (!url || url === "#") {
+        toast("Agent-Link noch nicht gesetzt");
+        return;
+      }
+      window.open(url, "_blank", "noopener");
     });
   </script>
 </body>
