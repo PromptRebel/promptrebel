@@ -373,6 +373,91 @@
       color:#e6f7ff;
       font-size:13px;
     }
+	  /* Callout: structured */
+.callout-title{
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.02em;
+  margin-bottom:8px;
+  color:#e6f7ff;
+  text-shadow:0 0 10px rgba(34,211,238,.18);
+}
+
+.callout-lead{
+  font-size:13px;
+  color:#e6f7ff;
+  margin-bottom:10px;
+  opacity:.95;
+}
+
+.callout-grid{
+  display:grid;
+  gap:10px;
+  margin-top:10px;
+}
+
+@media (min-width:900px){
+  .callout-grid{ grid-template-columns: 1fr 1fr; }
+}
+
+.callout-card{
+  border-radius:16px;
+  border:1px solid rgba(148,163,184,.18);
+  background:rgba(2,6,23,.35);
+  padding:12px 12px 10px;
+}
+
+.callout-card h4{
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#93c5fd;
+  margin-bottom:6px;
+}
+
+.callout-card p{
+  font-size:13px;
+  color:#e5e7eb;
+}
+
+.callout-card ul{
+  margin-top:8px;
+  padding-left:18px;
+}
+.callout-card li{
+  font-size:13px;
+  color:#e5e7eb;
+  margin-bottom:6px;
+}
+
+.callout-kicker{
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid rgba(148,163,184,.14);
+  font-size:12px;
+  color:#cbd5e1;
+}
+
+details.callout-details{
+  margin-top:10px;
+  border-radius:14px;
+  border:1px solid rgba(148,163,184,.14);
+  background:rgba(15,23,42,.30);
+  padding:10px 12px;
+}
+
+details.callout-details summary{
+  cursor:pointer;
+  font-size:12px;
+  color:#dbeafe;
+  user-select:none;
+}
+
+details.callout-details p{
+  margin-top:8px;
+  font-size:13px;
+  color:#e5e7eb;
+}
 
     /* Footer */
     footer{
@@ -539,49 +624,58 @@ Constraints:
         </figure>
       </div>
 
-      <div class="callout">
-        Warum dieser Prompt auf Englisch ist
+      <div class="callout" role="note" aria-label="Hinweis zu Sprache und Prompt-Struktur">
+  <div class="callout-title">Warum Englisch – und warum diese Struktur</div>
+  <div class="callout-lead">
+    Du musst Prompts nicht so schreiben wie ich. Das hier ist kein „richtig/falsch“ – sondern ein Weg,
+    um Ergebnisse <b>reproduzierbarer</b> zu machen und Änderungen gezielt testen zu können.
+  </div>
 
-(und warum du ihn nicht kopieren musst)
+  <div class="callout-grid">
+    <!-- Block 1 -->
+    <div class="callout-card">
+      <h4>1) Warum Englisch?</h4>
+      <p>
+        Viele Modelle interpretieren Englisch im Schnitt <b>präziser und konsistenter</b>, weil sehr viele Trainingsdaten
+        und Beispiel-Prompts auf Englisch vorliegen.
+      </p>
+      <ul>
+        <li><b>Deutsch funktioniert auch</b> – besonders bei klaren, einfachen Prompts.</li>
+        <li>Wenn ein Ergebnis „driftet“ (Pose/Objekte falsch), ist Englisch oft leichter nachzuschärfen.</li>
+        <li>Wichtig: Nicht die Sprache ist Magie – sondern <b>Klarheit</b>.</li>
+      </ul>
+    </div>
 
-Dieser Prompt ist auf Englisch geschrieben.
-Nicht, weil Deutsch „falsch“ wäre – sondern aus zwei pragmatischen Gründen:
+    <!-- Block 2 -->
+    <div class="callout-card">
+      <h4>2) Warum Blöcke?</h4>
+      <p>
+        Ich schreibe in getrennten Bausteinen (Motiv, Kamera, Licht, Stil, Constraints), weil das wie eine Checkliste wirkt.
+        Du vergisst weniger – und kannst <b>gezielt nur eine Sache ändern</b>.
+      </p>
+      <ul>
+        <li>Du kannst denselben Inhalt auch als <b>Fließtext</b> schreiben.</li>
+        <li>Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich – die Blöcke helfen nur bei Kontrolle & Vergleich.</li>
+        <li>Für Lernfortschritt: <b>immer nur 1 Block pro Test verändern</b>.</li>
+      </ul>
+    </div>
+  </div>
 
-1. Englisch ist die Basissprache der meisten KI-Modelle
-Die Trainingsdaten vieler Bild- und Sprachmodelle bestehen überwiegend aus englischen Texten.
-Das bedeutet nicht, dass andere Sprachen nicht funktionieren –
-aber Englisch wird in der Regel präziser, konsistenter und vorhersehbarer interpretiert.
+  <div class="callout-kicker">
+    <b>Merksatz:</b> Das Ziel dieser Seite ist nicht „copy/paste“ – sondern zu zeigen, <b>warum</b> ein Prompt funktioniert,
+    damit du deinen eigenen Weg findest.
+  </div>
 
-2. Die Struktur dient der Übersicht – nicht der Pflicht
-Ich schreibe Prompts bewusst in klar getrennten Blöcken
-(z. B. Motiv, Kamera, Licht, Stil, Constraints).
-
-Das ist keine Regel, sondern ein Werkzeug:
-	•	um Gedanken zu sortieren
-	•	um nichts zu vergessen
-	•	um gezielt einzelne Teile verändern zu können
-
-Du kannst denselben Inhalt auch als einen einzigen Fließtext schreiben.
-Wenn alle relevanten Informationen enthalten sind, wird das Ergebnis sehr ähnlich sein.
-
-Wichtig: Das ist ein Weg – nicht der Weg
-
-Du musst diesen Prompt nicht 1:1 kopieren,
-und du musst Prompts nicht so schreiben wie ich, damit gute Ergebnisse entstehen.
-
-Dieser Aufbau zeigt lediglich:
-	•	wie ich denke
-	•	wie ich Entscheidungen treffe
-	•	warum bestimmte Formulierungen gewählt wurden
-
-Wenn du anders denkst, anders schreibst oder lieber frei formulierst,
-ist das völlig in Ordnung.
-
-Ziel dieser Seite ist nicht, dir einen Prompt vorzuschreiben.
-Ziel ist, zu zeigen warum bestimmte Dinge funktionieren –
-damit du deinen eigenen Weg findest.
-
-      </div>
+  <details class="callout-details">
+    <summary>Optional: Wenn du lieber frei schreibst …</summary>
+    <p>
+      Dann schreib einfach, was du willst – aber denk an die üblichen Stellschrauben:
+      <b>Motiv</b> (was genau), <b>Kamera</b> (wie aufgenommen), <b>Licht</b> (Stimmung), <b>Hintergrund</b> (Kontext),
+      <b>Stil</b> (Textur/Look), <b>Constraints</b> (was darf NICHT passieren).
+      Wenn das enthalten ist, kommst du oft sehr weit – auch ohne Block-Struktur.
+    </p>
+  </details>
+</div>
     </section>
 
     <!-- BLOCK: IDENTITY -->
