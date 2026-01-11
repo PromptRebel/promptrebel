@@ -458,6 +458,30 @@ details.callout-details p{
   font-size:13px;
   color:#e5e7eb;
 }
+	  /* TL;DR / Key callouts */
+.callout.tldr{
+  border-color: rgba(251,146,60,.28);
+  background: rgba(251,146,60,.09);
+}
+.callout.key{
+  border-color: rgba(236,72,153,.26);
+  background: rgba(236,72,153,.09);
+}
+.callout h3{
+  font-size:12px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+  color:#e2e8f0;
+}
+.callout p{ margin:0; }
+.callout .bullets{
+  margin-top:8px;
+  padding-left:18px;
+}
+.callout .bullets li{
+  margin:4px 0;
+}
 
     /* Footer */
     footer{
@@ -484,6 +508,14 @@ details.callout-details p{
       .hero-layout{ display:block; }
       .panel-glass{ margin-top:18px; }
     }
+	  @media (max-width:380px){
+  .mb-grid{ grid-template-columns: 1fr; }
+  .chip-row{ gap:8px; }
+  .chip{ font-size:11px; padding:6px 9px; }
+}
+	  @media (max-width:380px){
+  .callout-grid{ grid-template-columns: 1fr; }
+}
   </style>
 </head>
 
@@ -537,6 +569,27 @@ details.callout-details p{
             <button class="chip" type="button" data-jump="#block-style">Style</button>
             <button class="chip" type="button" data-jump="#block-constraints">Constraints</button>
           </div>
+			
+			<div class="callout tldr">
+  <h3>TL;DR</h3>
+  <p>
+    Prompts sind keine Magie. Sie sind Bausteine (Identität, Kamera, Pose, Licht …).<br/>
+    Änderst du <b>einen</b> Baustein, ändert sich das Bild meist <b>vorhersehbar</b>.
+  </p>
+  <ul class="bullets">
+    <li><b>1 Block ändern</b> → vergleichen</li>
+    <li>Rest gleich lassen → Ursache klar</li>
+    <li>Das Ziel ist Verständnis, nicht Perfektion</li>
+  </ul>
+</div>
+
+<div class="callout key">
+  <h3>Wichtig</h3>
+  <p>
+    Diese Seite verkauft kein „perfektes Prompt“.<br/>
+    Sie zeigt dir die <b>Hebel</b> – damit du deinen eigenen Weg findest.
+  </p>
+</div>
 
           <div class="callout">
             Tipp: Du brauchst nicht „kreativ“ zu sein. Ändere nur ein Wort – und beobachte den Effekt.
@@ -623,8 +676,7 @@ Constraints:
           <figcaption>Referenz Foto</figcaption>
         </figure>
       </div>
-
-      <div class="callout" role="note" aria-label="Hinweis zu Sprache und Prompt-Struktur">
+<div class="callout" role="note" aria-label="Hinweis zu Sprache und Prompt-Struktur">
   <div class="callout-title">Warum Englisch – und warum diese Struktur</div>
   <div class="callout-lead">
     Du musst Prompts nicht so schreiben wie ich. Das hier ist kein „richtig/falsch“ – sondern ein Weg,
@@ -632,46 +684,43 @@ Constraints:
   </div>
 
   <div class="callout-grid">
-    <!-- Block 1 -->
     <div class="callout-card">
-      <h4>1) Warum Englisch?</h4>
+      <h4>1) Trainingsdaten-Realität</h4>
       <p>
-        Viele Modelle interpretieren Englisch im Schnitt <b>präziser und konsistenter</b>, weil sehr viele Trainingsdaten
-        und Beispiel-Prompts auf Englisch vorliegen.
+        Viele Bild- und Sprachmodelle wurden stark mit englischen Texten trainiert.
+        Deutsch funktioniert oft – aber Englisch ist meist <b>präziser</b>, <b>konsistenter</b>
+        und leichter zu debuggen, wenn ein Prompt „driftet“.
       </p>
       <ul>
-        <li><b>Deutsch funktioniert auch</b> – besonders bei klaren, einfachen Prompts.</li>
-        <li>Wenn ein Ergebnis „driftet“ (Pose/Objekte falsch), ist Englisch oft leichter nachzuschärfen.</li>
-        <li>Wichtig: Nicht die Sprache ist Magie – sondern <b>Klarheit</b>.</li>
+        <li><b>Deutsch klappt auch</b> – vor allem bei klaren, einfachen Prompts.</li>
+        <li>Wenn Pose/Objekte kippen, ist Englisch oft leichter nachzuschärfen.</li>
+        <li>Es geht nicht um Sprache – sondern um <b>Klarheit</b>.</li>
       </ul>
     </div>
 
-    <!-- Block 2 -->
     <div class="callout-card">
-      <h4>2) Warum Blöcke?</h4>
+      <h4>2) Struktur ist ein Werkzeug</h4>
       <p>
-        Ich schreibe in getrennten Bausteinen (Motiv, Kamera, Licht, Stil, Constraints), weil das wie eine Checkliste wirkt.
-        Du vergisst weniger – und kannst <b>gezielt nur eine Sache ändern</b>.
+        Ich schreibe in Blöcken (Motiv, Kamera, Licht, Stil, Constraints), damit ich nichts vergesse
+        und <b>gezielt</b> einzelne Hebel drehen kann.
       </p>
       <ul>
         <li>Du kannst denselben Inhalt auch als <b>Fließtext</b> schreiben.</li>
-        <li>Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich – die Blöcke helfen nur bei Kontrolle & Vergleich.</li>
-        <li>Für Lernfortschritt: <b>immer nur 1 Block pro Test verändern</b>.</li>
+        <li>Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich.</li>
+        <li>Für Lernfortschritt: <b>immer nur 1 Block pro Test ändern</b>.</li>
       </ul>
     </div>
   </div>
 
   <div class="callout-kicker">
-    <b>Merksatz:</b> Das Ziel dieser Seite ist nicht „copy/paste“ – sondern zu zeigen, <b>warum</b> ein Prompt funktioniert,
-    damit du deinen eigenen Weg findest.
+    <b>Merksatz:</b> Das ist ein Weg – nicht der Weg. Ziel ist Verständnis, nicht Copy/Paste.
   </div>
 
   <details class="callout-details">
     <summary>Optional: Wenn du lieber frei schreibst …</summary>
     <p>
-      Dann schreib einfach, was du willst – aber denk an die üblichen Stellschrauben:
-      <b>Motiv</b> (was genau), <b>Kamera</b> (wie aufgenommen), <b>Licht</b> (Stimmung), <b>Hintergrund</b> (Kontext),
-      <b>Stil</b> (Textur/Look), <b>Constraints</b> (was darf NICHT passieren).
+      Dann denk trotzdem an die üblichen Stellschrauben:
+      <b>Motiv</b>, <b>Kamera</b>, <b>Licht</b>, <b>Hintergrund</b>, <b>Stil</b>, <b>Constraints</b>.
       Wenn das enthalten ist, kommst du oft sehr weit – auch ohne Block-Struktur.
     </p>
   </details>
@@ -692,6 +741,11 @@ Constraints:
             <div class="mb-sub">Die wichtigste Regel: „Wie auf dem Referenzfoto“ – klar und wiederholt.</div>
           </div>
         </div>
+
+		  <div class="callout" style="margin-top:10px;">
+  <b>Kurz gesagt:</b> Dieser Block entscheidet, ob es wirklich <b>dein</b> Hund bleibt
+  (Fell, Muster, Proportionen) – oder ob das Modell zu „Random Dog“ driftet.
+</div>
 
         <div class="quote">
           <div class="quote-label">Prompt-Ausschnitt</div>
@@ -752,6 +806,11 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
+		  <div class="callout" style="margin-top:10px;">
+  <b>Kurz gesagt:</b> Kamera-Wörter sind ein Look-Schalter.
+  Fisheye = maximal dynamisch, aber anfälliger für anatomische Fehler.
+</div>
+
         <div class="quote">
           <div class="quote-label">Prompt-Ausschnitt (original)</div>
           <pre>– Camera angle: Low-angle fisheye perspective, extreme dramatic distortion.</pre>
@@ -806,6 +865,11 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
             <div class="mb-sub">Je genauer die Pose, desto weniger Drift – aber: nicht überladen.</div>
           </div>
         </div>
+
+		  <div class="callout" style="margin-top:10px;">
+  <b>Kurz gesagt:</b> Pose-Details steuern Körperlogik.
+  Je klarer „wo sind die Pfoten“, desto stabiler wird das Ergebnis – aber nicht überladen.
+</div>
 
         <div class="quote">
           <div class="quote-label">Prompt-Ausschnitt (original)</div>
@@ -868,6 +932,11 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
+		  <div class="callout" style="margin-top:10px;">
+  <b>Kurz gesagt:</b> Hintergrund steuert Kontext + Lesbarkeit.
+  „Busy“ erhöht Action – aber auch Fehler (Text, Logos, Chaos).
+</div>
+
         <div class="quote">
           <div class="quote-label">Prompt-Ausschnitt (original)</div>
           <pre>Background: Urban street environment with motion blur.</pre>
@@ -922,6 +991,11 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
             <div class="mb-sub">Wenn „epic“ zu viel ist: runterregeln, nicht löschen.</div>
           </div>
         </div>
+
+		  <div class="callout" style="margin-top:10px;">
+  <b>Kurz gesagt:</b> Licht ist Stimmung.
+  „Epic“ pusht Drama, „Natural“ pusht Glaubwürdigkeit.
+</div>
 
         <div class="quote">
           <div class="quote-label">Prompt-Ausschnitt (original)</div>
@@ -978,6 +1052,11 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
+		  <div class="callout" style="margin-top:10px;">
+  <b>Kurz gesagt:</b> Style-Keywords ändern Textur/Materialität.
+  Grain kann kaschieren – oder Details kaputt machen.
+</div>
+
         <div class="quote">
           <div class="quote-label">Prompt-Ausschnitt (original)</div>
           <pre>Visual style: analog film grain, gritty, energetic.</pre>
@@ -1033,6 +1112,11 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
+		  <div class="callout" style="margin-top:10px;">
+  <b>Kurz gesagt:</b> Constraints sind Leitplanken.
+  Sie reduzieren Ausreißer – wenn sie kurz, klar und testbar sind.
+</div>
+
         <div class="quote">
           <div class="quote-label">Prompt-Ausschnitt (original)</div>
           <pre>Constraints:
@@ -1078,6 +1162,60 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </figure>
         </div>
       </article>
+
+		<article class="manual-block" style="margin-top:16px;">
+  <div class="mb-head">
+    <div>
+      <div class="mb-title">Was oft schiefgeht (und warum)</div>
+      <div class="mb-sub">Wenn du das erkennst, verschwindet 80% der Frustration.</div>
+    </div>
+  </div>
+
+  <div class="mb-grid">
+    <div class="mb-card">
+      <h4>❌ Zu viel auf einmal</h4>
+      <p>
+        Wenn du mehrere Blöcke gleichzeitig änderst, weißt du nicht, was den Effekt ausgelöst hat.
+      </p>
+    </div>
+    <div class="mb-card">
+      <h4>❌ Fließtext-Overkill</h4>
+      <p>
+        Sehr lange Prompts können Prioritäten verwässern. Oft ist „klar + kurz“ stabiler.
+      </p>
+    </div>
+    <div class="mb-card">
+      <h4>❌ „Mehr Adjektive = besser“</h4>
+      <p>
+        Zu viele Stilwörter konkurrieren miteinander. Ergebnis: Drift, Chaos, KI-Poster-Look.
+      </p>
+    </div>
+
+    <div class="mb-card">
+      <h4>✅ So debugst du richtig</h4>
+      <ul>
+        <li>1 Block ändern</li>
+        <li>3 Runs generieren</li>
+        <li>Vergleichen → erst dann weiter</li>
+      </ul>
+    </div>
+    <div class="mb-card">
+      <h4>✅ Wenn’s „driftet“</h4>
+      <ul>
+        <li>Identität verstärken (kurz + wiederholt)</li>
+        <li>Kamera vereinfachen (kein Fisheye)</li>
+        <li>Constraints konkretisieren</li>
+      </ul>
+    </div>
+    <div class="mb-card">
+      <h4>✅ Sprachen-Realität</h4>
+      <p>
+        Deutsch funktioniert oft. Wenn etwas unklar wird, ist Englisch leichter zu „debuggen“,
+        weil viele Modelle darauf stärker trainiert sind.
+      </p>
+    </div>
+  </div>
+</article>
 
       <div class="callout" style="margin-top:16px;">
         Minimal-Regel für Lernfortschritt: <b>Immer nur 1 Block ändern</b>, dann vergleichen.
