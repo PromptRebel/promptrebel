@@ -2,64 +2,50 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>PromptRebel – So funktioniert’s: Prompts</title>
+  <title>PromptRebel – So funktioniert’s · Prompts</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    :root{
-      --bg:#020617;
-      --panel: rgba(2,6,23,.92);
-      --panel2: rgba(15,23,42,.88);
-      --border: rgba(148,163,184,.18);
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --muted2:#94a3b8;
-      --pink:#ec4899;
-      --cyan:#22d3ee;
-      --shadow: 0 18px 45px rgba(15,23,42,.95);
-      --radius: 20px;
-      --scroll: 0;
-    }
+    :root { --scroll: 0; }
 
     /* Reset */
-    *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
-    html,body{ height:100%; scroll-behavior:smooth; }
-    body{
-      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      padding-top: 64px;
-    }
-    a{ color:inherit; text-decoration:none; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; scroll-behavior: smooth; }
 
-    /* Background glows + grid noise */
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:#020617;
+      color:#e5e7eb;
+      line-height:1.6;
+      padding-top:64px;
+    }
+    a{ color: inherit; text-decoration: none; }
+
+    /* Background glow + grid */
     body::before{
       content:"";
-      position:fixed; inset:0;
+      position:fixed;
+      inset:0;
       background:
-        radial-gradient(circle at 10% 0%, rgba(236,72,153,.35), transparent 55%),
-        radial-gradient(circle at 90% 100%, rgba(56,189,248,.35), transparent 55%);
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,0.35), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(56,189,248,0.35), transparent 55%);
       z-index:-2;
     }
     body::after{
       content:"";
-      position:fixed; inset:0;
+      position:fixed;
+      inset:0;
       opacity:.22;
       pointer-events:none;
       background-image:
         linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
       background-size:3px 3px, 3px 3px;
-      mix-blend-mode: soft-light;
+      mix-blend-mode:soft-light;
       z-index:-1;
     }
 
-    .page{
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 16px 16px 48px;
-    }
+    .page{ max-width:1120px; margin:0 auto; padding:16px 16px 40px; }
 
     /* Skip link */
     .skip-link{
@@ -75,19 +61,19 @@
       z-index:60;
     }
     .skip-link:focus-visible{
-      top: 10px;
-      outline:2px solid var(--cyan);
+      top:10px;
+      outline:2px solid #22d3ee;
       outline-offset:2px;
     }
 
-    /* Nav */
+    /* Nav + scroll progress */
     .nav{
       position:fixed;
       top:0; left:0; right:0;
       z-index:40;
-      backdrop-filter: blur(14px);
-      background: linear-gradient(to bottom, rgba(15,23,42,.95), rgba(15,23,42,.6));
-      border-bottom: 1px solid rgba(148,163,184,.1);
+      backdrop-filter:blur(14px);
+      background:linear-gradient(to bottom, rgba(15,23,42,.95), rgba(15,23,42,.6));
+      border-bottom:1px solid rgba(148,163,184,.1);
     }
     .nav-inner{
       max-width:1120px;
@@ -103,10 +89,10 @@
       position:absolute;
       left:0; right:0; bottom:0;
       height:2px;
-      background: linear-gradient(90deg, var(--pink), rgba(34,211,238,0), var(--cyan));
+      background:linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
       transform-origin:left;
-      transform: scaleX(var(--scroll));
-      transition: transform .1s linear;
+      transform:scaleX(var(--scroll));
+      transition:transform .1s linear;
       pointer-events:none;
     }
 
@@ -116,10 +102,10 @@
       letter-spacing:.05em;
       cursor:pointer;
       white-space:nowrap;
-      text-shadow: 0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4);
+      text-shadow:0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4);
     }
     .brand span.accent{
-      background: linear-gradient(135deg, #f472b6, var(--cyan));
+      background:linear-gradient(135deg, #f472b6, #22d3ee);
       -webkit-background-clip:text;
       color:transparent;
     }
@@ -135,35 +121,32 @@
     .nav-link{ position:relative; padding-block:4px; }
     .nav-link::after{
       content:"";
-      position:absolute; left:0; bottom:-2px;
+      position:absolute;
+      left:0; bottom:-2px;
       width:0; height:2px;
       border-radius:999px;
-      background: linear-gradient(90deg, #f472b6, var(--cyan));
+      background:linear-gradient(90deg, #f472b6, #22d3ee);
       box-shadow:0 0 8px rgba(56,189,248,.8);
-      transition: width .25s ease;
+      transition:width .25s ease;
     }
-    .nav-link:hover::after, .nav-link:focus-visible::after{ width:100%; }
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after{ width:100%; }
     .nav-link:focus-visible{ outline:none; }
 
     /* Sections */
-    .section{ padding: 40px 16px 8px; }
-    .section:first-of-type{ padding-top: 28px; }
+    .section{ padding:40px 16px 8px; }
+    .section:first-of-type{ padding-top:28px; }
 
     @media (min-width:768px){
       .hero-layout{
         display:grid;
-        grid-template-columns: minmax(0, 3fr) minmax(0, 2.2fr);
-        gap: 32px;
-        align-items:start;
-      }
-      .two-col{
-        display:grid;
-        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-        gap: 18px;
+        grid-template-columns:minmax(0, 3fr) minmax(0, 2.2fr);
+        gap:32px;
         align-items:start;
       }
     }
 
+    /* Hero */
     .category-label{
       font-size:12px;
       letter-spacing:.25em;
@@ -172,33 +155,28 @@
       margin-bottom:6px;
     }
     .hero-title{
-      font-size: clamp(32px, 5vw, 46px);
+      font-size:clamp(32px, 5vw, 46px);
       font-weight:800;
-      letter-spacing:.01em;
       margin-bottom:10px;
-      text-shadow: 0 0 14px rgba(236,72,153,.6), 0 0 20px rgba(34,211,238,.4);
+      text-shadow:0 0 14px rgba(236,72,153,.6), 0 0 20px rgba(34,211,238,.4);
     }
-    .hero-breadcrumbs{
-      font-size:12px;
-      color:#9ca3af;
-      margin-bottom:16px;
-    }
-    .hero-breadcrumbs a{
-      text-decoration: underline;
-      text-underline-offset:3px;
-    }
-    .hero-text-main{ font-size:15px; margin-bottom:8px; max-width:44rem; }
-    .hero-text-sub{ font-size:14px; color:#cbd5f5; margin-bottom:16px; max-width:44rem; }
+    .hero-breadcrumbs{ font-size:12px; color:#9ca3af; margin-bottom:16px; }
+    .hero-breadcrumbs a{ text-decoration:underline; text-underline-offset:3px; }
 
+    .hero-text-main{ font-size:15px; margin-bottom:8px; max-width:44rem; }
+    .hero-text-sub{ font-size:14px; color:#cbd5f5; margin-bottom:18px; max-width:44rem; }
+
+    .hero-note{ font-size:11px; color:#9ca3af; }
+
+    /* Panels / Glass */
     .panel-glass{
       border-radius:18px;
       border:1px solid rgba(148,163,184,.18);
-      background: radial-gradient(circle at top left, rgba(15,23,42,.9), rgba(15,23,42,.98));
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
+      background:radial-gradient(circle at top left, rgba(15,23,42,.9), rgba(15,23,42,.98));
+      box-shadow:0 18px 45px rgba(15,23,42,.95);
+      backdrop-filter:blur(18px);
       padding:14px 16px 12px;
     }
-
     .panel-header{
       font-size:12px;
       letter-spacing:.16em;
@@ -207,269 +185,219 @@
       margin-bottom:8px;
       display:flex;
       align-items:center;
-      gap:6px;
+      gap:8px;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .panel-header .left{
+      display:flex; align-items:center; gap:8px;
     }
     .panel-header span.icon{ font-size:14px; color:#f97316; }
 
+    /* Terminal / Prompt box */
     .terminal{
-      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
       font-size:12px;
-      white-space:pre-line;
+      white-space:pre-wrap;
       color:#e5e7eb;
     }
     .terminal .dim{ color:#6b7280; }
 
-    /* Text bits */
-    .muted{ color: var(--muted); }
-    .lead{
-      font-size: 14px;
-      color:#cbd5e1;
-      margin-top: 6px;
-      max-width: 54rem;
-    }
-
-    /* Buttons */
-    .btn-row{ display:flex; gap:10px; flex-wrap:wrap; }
     .btn{
-      border-radius:999px;
-      padding: 9px 12px;
-      border: 1px solid rgba(148,163,184,.22);
-      background: rgba(15,23,42,.75);
-      color: #e5e7eb;
-      font: 800 12px/1 system-ui;
-      cursor:pointer;
-      user-select:none;
       display:inline-flex;
       align-items:center;
       gap:8px;
+      padding:10px 14px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(15,23,42,.55);
+      color:#f8fafc;
+      font-size:13px;
+      cursor:pointer;
+      transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease, background .14s ease;
+      user-select:none;
     }
     .btn:hover{
-      border-color: rgba(34,211,238,.55);
-      box-shadow: 0 0 14px rgba(34,211,238,.22);
+      transform:translateY(-1px);
+      border-color:rgba(209,213,219,.4);
+      box-shadow:0 0 0 1px rgba(34,211,238,.18), 0 18px 40px rgba(15,23,42,.95);
+      background:rgba(15,23,42,.75);
     }
-    .btn:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
-    .btn.primary{ border-color: rgba(34,211,238,.35); }
-
-    /* Prompt box */
-    .prompt-box{
-      border-radius: 16px;
-      border: 1px solid rgba(148,163,184,.16);
-      background: rgba(15,23,42,.62);
-      padding: 12px 12px 10px;
-      margin-top: 10px;
+    .btn.primary{
+      border-color:rgba(34,211,238,.5);
+      box-shadow:0 0 18px rgba(34,211,238,.22);
     }
-    .prompt-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom: 8px;
-    }
-    .prompt-title{
-      font-size: 12px;
-      letter-spacing:.16em;
-      text-transform: uppercase;
-      color: #cbd5e1;
-      font-weight: 900;
-    }
-    pre{
-      margin:0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      font-size: 12px;
-      color: #e5e7eb;
+    .btn:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:2px;
     }
 
-    /* Pill list */
-    .pill-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-    .pill{
+    /* Page sections */
+    .section-title{ font-size:18px; font-weight:700; margin-bottom:8px; }
+    .section-subtitle{ font-size:13px; color:#9ca3af; margin-bottom:18px; max-width:44rem; }
+
+    /* Quick nav */
+    .chip-row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+    .chip{
       border-radius:999px;
-      padding: 6px 12px;
-      border: 1px solid rgba(148,163,184,.35);
-      background: rgba(15,23,42,.75);
-      font-size: 12px;
-      color:#e5e7eb;
-      opacity:.95;
-    }
-
-    /* Accordion */
-    details{
-      margin-top: 12px;
-      border-top: 1px solid rgba(148,163,184,.14);
-      padding-top: 12px;
-    }
-    summary{
-      list-style:none;
-      cursor:pointer;
-      user-select:none;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      border-radius:999px;
-      padding:10px 14px;
+      padding:6px 10px;
       border:1px solid rgba(148,163,184,.22);
-      background: rgba(15,23,42,.75);
-      font-weight: 900;
-      font-size: 13px;
-      letter-spacing:.02em;
+      background:rgba(15,23,42,.45);
+      font-size:12px;
+      color:#dbeafe;
+      cursor:pointer;
+      transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+      user-select:none;
     }
-    summary::-webkit-details-marker{ display:none; }
-    summary::after{
-      content:"▼";
-      font-weight: 900;
-      opacity:.9;
-      transform: translateY(-1px);
-    }
-    details[open] summary::after{ content:"▲"; }
-    summary:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
-
-    .block{
-      margin-top: 12px;
-      border-radius: 18px;
-      border: 1px solid rgba(148,163,184,.18);
-      background: radial-gradient(circle at top left, rgba(15,23,42,.94), rgba(15,23,42,.99));
-      box-shadow: 0 18px 45px rgba(15,23,42,.95);
-      padding: 14px 14px 12px;
+    .chip:hover{
+      transform:translateY(-1px);
+      border-color:rgba(34,211,238,.5);
+      box-shadow:0 0 0 1px rgba(34,211,238,.16);
     }
 
-    .block-top{
+    /* Manual blocks */
+    .manual-block{
+      margin-top:18px;
+      padding:16px;
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,.16);
+      background:rgba(15,23,42,.45);
+      box-shadow:0 18px 45px rgba(15,23,42,.92);
+      backdrop-filter:blur(14px);
+    }
+    .mb-head{
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
-      gap: 12px;
-      margin-bottom: 10px;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
     }
-    .block-title{
-      font-size: 15px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#f9fafb;
-      font-weight: 900;
+    .mb-title{
+      font-size:16px;
+      font-weight:800;
+      letter-spacing:.01em;
+      text-shadow:0 0 14px rgba(34,211,238,.14);
     }
-    .block-sub{
-      font-size: 12px;
-      color: rgba(148,163,184,.95);
-      margin-top: 3px;
+    .mb-sub{
+      font-size:12px;
+      color:#9ca3af;
+      margin-top:3px;
+      max-width:46rem;
     }
 
-    .mini-grid{
-      display:grid;
-      gap: 10px;
-      margin-top: 10px;
+    .quote{
+      margin-top:10px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(2,6,23,.55);
+      padding:12px 12px 10px;
     }
-    @media (min-width:768px){
-      .mini-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-    }
-    .mini{
-      border-radius: 16px;
-      border: 1px solid rgba(148,163,184,.14);
-      background: rgba(15,23,42,.62);
-      padding: 10px 12px;
-    }
-    .mini h4{
-      font-size: 12px;
+    .quote-label{
+      font-size:11px;
       letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#93c5fd;
+      margin-bottom:6px;
+      opacity:.9;
+    }
+    .quote pre{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:12px;
+      white-space:pre-wrap;
+      color:#e5e7eb;
+    }
+
+    .mb-grid{
+      margin-top:12px;
+      display:grid;
+      gap:10px;
+    }
+    @media (min-width:900px){
+      .mb-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+    .mb-card{
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(15,23,42,.55);
+      padding:12px 12px 10px;
+    }
+    .mb-card h4{
+      font-size:12px;
+      letter-spacing:.16em;
       text-transform:uppercase;
       color:#cbd5e1;
-      margin-bottom: 6px;
+      margin-bottom:6px;
     }
-    .mini p{ font-size: 13px; color:#e5e7eb; }
-    .mini ul{ margin-top: 8px; padding-left: 18px; color:#d1d5db; font-size: 13px; }
-    .mini li{ margin: 4px 0; }
+    .mb-card p, .mb-card li{
+      font-size:13px;
+      color:#e5e7eb;
+    }
+    .mb-card ul{ padding-left:18px; margin-top:6px; }
 
-    /* “Change one thing” cards */
-    .card-row{
+    /* Image compare */
+    .img-compare{
       display:grid;
-      gap: 14px;
-      margin-top: 14px;
+      gap:10px;
+      margin-top:12px;
     }
     @media (min-width:768px){
-      .card-row{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .img-compare{ grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
-    .card{
-      border-radius: 20px;
-      border: 1px solid rgba(148,163,184,.18);
-      background: radial-gradient(circle at top left, rgba(15,23,42,.96), rgba(15,23,42,.99));
-      box-shadow: 0 18px 40px rgba(15,23,42,.96);
-      padding: 14px 14px 12px;
+    .img-card{
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(15,23,42,.55);
       overflow:hidden;
-      position:relative;
     }
-    .card::before{
-      content:"";
-      position:absolute;
-      inset:-1px;
-      border-radius:inherit;
-      background: radial-gradient(circle at top left, rgba(34,211,238,.35), transparent 60%);
-      opacity:.18;
-      pointer-events:none;
-      mix-blend-mode: screen;
-    }
-    .card h3{
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      margin-bottom: 8px;
-    }
-    .card .hint{ font-size: 13px; color:#d1d5db; margin-bottom: 10px; }
-    .card code{
+    .img-card img{
+      width:100%;
+      height:auto;
       display:block;
-      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      font-size: 12px;
-      padding: 10px 10px;
-      border-radius: 14px;
-      border: 1px solid rgba(148,163,184,.14);
-      background: rgba(15,23,42,.62);
-      white-space: pre-wrap;
-      word-break: break-word;
-      color:#e5e7eb;
+      background:#0b1220;
+    }
+    .img-card figcaption{
+      font-size:12px;
+      color:#cbd5e1;
+      padding:8px 10px;
+      border-top:1px solid rgba(148,163,184,.14);
     }
 
-    /* Toast */
-    .toast{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 18px;
-      z-index: 9999;
-      display:none;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border:1px solid rgba(34,211,238,.35);
-      background: rgba(15,23,42,.92);
-      color:#e5e7eb;
-      box-shadow: 0 10px 30px rgba(2,6,23,.7);
-      font: 800 13px/1 system-ui;
-      backdrop-filter: blur(10px);
+    /* Callouts */
+    .callout{
+      margin-top:12px;
+      border-radius:18px;
+      border:1px solid rgba(34,211,238,.20);
+      background:rgba(34,211,238,.08);
+      padding:12px 12px 10px;
+      color:#e6f7ff;
+      font-size:13px;
     }
-    .toast.show{ display:block; }
 
     /* Footer */
     footer{
-      margin-top: 44px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(15,23,42,.9);
-      font-size: 11px;
-      color: #94a3b8;
+      margin-top:40px;
+      padding-top:16px;
+      border-top:1px solid rgba(15,23,42,.9);
+      font-size:11px;
+      color:#94a3b8;
       display:flex;
       flex-wrap:wrap;
-      gap: 10px;
-      justify-content: space-between;
-      align-items: center;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
     }
     footer .center-links{ display:flex; gap:10px; }
-    footer a{ text-decoration: underline; text-underline-offset: 3px; }
+    footer a{ text-decoration:underline; text-underline-offset:3px; }
 
     /* Mobile */
-    @media (max-width: 767px){
-      body{ padding-top: 60px; }
-      .nav-inner{ gap: 8px; }
-      .nav-links{ font-size: 13px; gap: 12px; }
-      .section{ padding-top: 32px; }
+    @media (max-width:767px){
+      body{ padding-top:60px; }
+      .nav-inner{ gap:8px; }
+      .nav-links{ font-size:13px; gap:12px; }
+      .section{ padding-top:32px; }
       .hero-layout{ display:block; }
-      .panel-glass{ margin-top: 20px; }
+      .panel-glass{ margin-top:18px; }
     }
   </style>
 </head>
@@ -477,6 +405,7 @@
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
 
+  <!-- NAV -->
   <header class="nav">
     <div class="nav-inner">
       <div id="brand" class="brand" onclick="window.location.href='../index.html'">
@@ -491,6 +420,7 @@
   </header>
 
   <main class="page" id="main">
+
     <!-- HERO -->
     <section class="section">
       <div class="hero-layout">
@@ -499,498 +429,81 @@
           <h1 class="hero-title">Prompts verstehen</h1>
 
           <div class="hero-breadcrumbs">
-            <span>
-              <a href="../index.html">Home</a> ·
-              <a href="./so-funktionierts.html">So funktioniert’s</a> ·
-              <span>Prompts</span>
-            </span>
+            <span><a href="../index.html">Home</a> · So funktioniert’s · Prompts</span>
           </div>
 
           <p class="hero-text-main">
-            🔥 Kein Zauber. Nur Struktur.
+            🔥 Kein Zauber. Nur Struktur.<br/>
+            Wir zerlegen einen Prompt in klare Bausteine – und zeigen,
+            was passiert, wenn du genau <b>eine</b> Stelle änderst.
           </p>
           <p class="hero-text-sub">
-            Ein Prompt ist kein Geheimcode – sondern ein Bauplan aus Bausteinen.
-            Du musst nicht „prompten können“. Du musst nur wissen, <b>welcher Block was macht</b> –
-            und wie du <b>1–2 Wörter</b> gezielt tauschst.
+            Ziel: Du sollst Prompts nicht „glauben“, sondern <b>verstehen</b>.<br/>
+            Du kannst danach denselben Aufbau auf eigene Ideen übertragen.
           </p>
 
-          <div class="pill-row" aria-label="In 60 Sekunden">
-            <span class="pill">1) Identität fixieren</span>
-            <span class="pill">2) Szene/Action definieren</span>
-            <span class="pill">3) Kamera + Licht</span>
-            <span class="pill">4) Stil/Constraints</span>
+          <div class="chip-row" aria-label="Schnellnavigation">
+            <button class="chip" type="button" data-jump="#prompt-original">Original</button>
+            <button class="chip" type="button" data-jump="#block-identity">Identität</button>
+            <button class="chip" type="button" data-jump="#block-camera">Kamera</button>
+            <button class="chip" type="button" data-jump="#block-pose">Pose</button>
+            <button class="chip" type="button" data-jump="#block-background">Hintergrund</button>
+            <button class="chip" type="button" data-jump="#block-light">Licht</button>
+            <button class="chip" type="button" data-jump="#block-style">Style</button>
+            <button class="chip" type="button" data-jump="#block-constraints">Constraints</button>
+          </div>
+
+          <div class="callout">
+            Tipp: Du brauchst nicht „kreativ“ zu sein. Ändere nur ein Wort – und beobachte den Effekt.
           </div>
         </div>
 
+        <!-- Terminal / quick summary -->
         <aside class="panel-glass">
           <div class="panel-header">
-            <span class="icon">🧪</span>
-            <span>promptrebel:so-funktionierts/prompts$</span>
+            <div class="left">
+              <span class="icon">🧪</span>
+              <span>NOW LOADING · PROMPT AUTOPSY</span>
+            </div>
           </div>
-          <div class="terminal" id="topTerminal">
-autopsy --prompt=image --example=skateboard
+          <div class="terminal">
+promptrebel:autopsy$ explain skateboard_prompt
 
-&gt; blocks: 7
-&gt; changes: 1-word swaps
-<span class="dim"># Ziel: nachvollziehbar statt mystisch</span>
+> INPUT:   reference photo + prompt blocks
+> OUTPUT:  consistent image variations
+
+Blocks:
+- identity transfer
+- camera / lens
+- pose & action
+- background
+- lighting
+- style
+- constraints
+
+<span class="dim"># ändere nie alles auf einmal.</span>
           </div>
         </aside>
       </div>
     </section>
 
-    <!-- QUICKSTART -->
-    <section class="section" aria-labelledby="qs-title">
-      <h2 id="qs-title" style="font-size:18px;font-weight:900;margin-bottom:8px;">Quickstart</h2>
-      <p class="lead">
-        Du kannst den Beispielprompt unten 1:1 kopieren. Wenn du nur <b>eine Sache</b> änderst, bleibt der Output stabil.
+    <!-- ORIGINAL PROMPT -->
+    <section class="section" id="prompt-original" aria-labelledby="prompt-original-title">
+      <h2 class="section-title" id="prompt-original-title">Beispielprompt: Skateboard</h2>
+      <p class="section-subtitle">
+        Das ist der Ausgangspunkt. Von hier aus ändern wir gezielt einzelne Bausteine.
       </p>
 
-      <div class="panel-glass" style="margin-top:14px;">
+      <div class="panel-glass">
         <div class="panel-header">
-          <span class="icon">⚡</span>
-          <span>3 Schritte</span>
-        </div>
-        <div class="mini-grid">
-          <div class="mini">
-            <h4>Step 1</h4>
-            <p>Prompt kopieren → ins Tool deiner Wahl einfügen.</p>
+          <div class="left">
+            <span class="icon">🧾</span>
+            <span>ORIGINAL PROMPT</span>
           </div>
-          <div class="mini">
-            <h4>Step 2</h4>
-            <p>Referenzfoto hochladen (damit Identität/Fell/Farben stabil bleiben).</p>
-          </div>
-          <div class="mini">
-            <h4>Step 3</h4>
-            <p>Nur 1–2 Wörter ändern (z.B. Skateboard → BMX). Dann iterieren.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- EXAMPLE PROMPT -->
-    <section class="section" aria-labelledby="ex-title">
-      <h2 id="ex-title" style="font-size:18px;font-weight:900;margin-bottom:8px;">Beispielprompt (Skateboard)</h2>
-      <p class="lead muted">
-        Dieser Prompt ist absichtlich „blockig“: Jede Zeile ist ein Baustein, den du gezielt ersetzen kannst.
-      </p>
-
-      <div class="panel-glass" style="margin-top:14px;">
-        <div class="prompt-box" id="promptBox">
-          <div class="prompt-head">
-            <div class="prompt-title">Prompt</div>
-            <div class="btn-row">
-              <button class="btn primary" type="button" id="copyPromptBtn">Copy Prompt</button>
-              <button class="btn" type="button" id="copyPromptMiniBtn">Copy „Mini“</button>
-            </div>
-          </div>
-          <pre id="promptText"></pre>
-          <p class="muted" style="font-size:12px;margin-top:10px;">
-            Tipp: Wenn das Ergebnis „driftet“, mach die Constraints wieder strenger (z.B. „exactly as in the reference photo“).
-          </p>
-        </div>
-      </div>
-
-      <!-- AUTOPSY -->
-      <div class="block" style="margin-top:16px;">
-        <div class="block-top">
-          <div>
-            <div class="block-title">Prompt-Autopsie</div>
-            <div class="block-sub">Block für Block – was es macht, warum es so drin steht, und wie du es sicher änderst.</div>
-          </div>
+          <button class="btn primary" type="button" id="copyPromptBtn">Copy Prompt</button>
         </div>
 
-        <details open>
-          <summary>1) Szene & „Ergebnis-Frame“</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Was macht das?</h4>
-              <p>Setzt den Modus: „Action Scene“ statt Portrait/Studio/Still.</p>
-              <ul>
-                <li>„Ultra-detailed cinematic action scene“ → Bewegung + Drama.</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Was kannst du ändern?</h4>
-              <ul>
-                <li>„action scene“ → „studio portrait“</li>
-                <li>„cinematic“ → „documentary“</li>
-                <li>„ultra-detailed“ → „clean / minimal“</li>
-              </ul>
-              <p class="muted">Effekt: weniger „Movie“, mehr „real“.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>2) Identität aus Referenzfoto (das wichtigste Stück)</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Was macht das?</h4>
-              <p>Hält Fellfarben, Markierungen, Körperform stabil – statt „random dog“.</p>
-              <ul>
-                <li>„from the reference photo“</li>
-                <li>„exactly … body features“</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Änderungen, die sicher sind</h4>
-              <ul>
-                <li>Mehr streng: „match 1:1 / no stylization“</li>
-                <li>Weniger streng: „inspired by“ (Risiko: Drift)</li>
-                <li>Extra: „keep the same facial expression“</li>
-              </ul>
-              <p class="muted">Wenn Identität wichtig ist: streng formulieren.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>3) Zubehör/No-Zubehör (verhindert „KI-Deko“)</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Was macht das?</h4>
-              <p>Stoppt typische KI-Fehler: Halsband, Harness, random Accessoires.</p>
-              <ul>
-                <li>„Do not add a collar or harness“</li>
-                <li>„No accessories besides skateboard“</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Was kannst du ändern?</h4>
-              <ul>
-                <li>Erlauben: „small bandana“ (dann bewusst!)</li>
-                <li>Verbieten: „no text / no logos“</li>
-                <li>Mehr sauber: „clean design, nothing distracting“</li>
-              </ul>
-              <p class="muted">Regel: Wenn du’s nicht willst → explizit verbieten.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>4) Action & Pose (hier entsteht der „Moment“)</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Was macht das?</h4>
-              <p>Definiert die Körperhaltung + Trick-Moment: Mid-air + dynamisch + Board tilt.</p>
-              <ul>
-                <li>„captured mid-air while skateboarding“</li>
-                <li>„skateboard tilted mid-trick“</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Was kannst du ändern?</h4>
-              <ul>
-                <li>Skateboard → BMX / Surfboard / Snowboard</li>
-                <li>Mid-air → „landing“ / „rolling“</li>
-                <li>High-five paw → „paw wave“ / „front paw pointing“</li>
-              </ul>
-              <p class="muted">Nur 1 Action-Detail pro Iteration ändern.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>5) Kamera (macht’s „krass“ oder „real“)</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Was macht das?</h4>
-              <p>Low-angle + fisheye = extreme Dynamik + Verzerrung + Nähe.</p>
-              <ul>
-                <li>„Low-angle fisheye perspective“</li>
-                <li>„extreme dramatic distortion“</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Was kannst du ändern?</h4>
-              <ul>
-                <li>Realistisch: „35mm / 50mm, no distortion“</li>
-                <li>Noch extremer: „ultra-wide 14mm“</li>
-                <li>Stabil: „eye-level, documentary“</li>
-              </ul>
-              <p class="muted">Fisheye = cool, aber erhöht „KI-Look“-Risiko.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>6) Background & Motion Blur (Tempo + Energie)</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Was macht das?</h4>
-              <p>Urban + Motion Blur = Speed/Trick-Feeling. Hintergrund wird „Film“.</p>
-              <ul>
-                <li>„Urban street environment with motion blur“</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Was kannst du ändern?</h4>
-              <ul>
-                <li>Clean: „simple neutral background“</li>
-                <li>Story: „skatepark“ / „alley“ / „sunset street“</li>
-                <li>Stabiler: „background softly blurred, not busy“</li>
-              </ul>
-              <p class="muted">Busy background = mehr Fehlerquellen.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>7) Lighting & Style (Mood-Regler)</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Was macht das?</h4>
-              <p>„Epic cinematic lighting“ + Grain = Trailer-Look, gritty Energie.</p>
-              <ul>
-                <li>„Epic cinematic lighting“</li>
-                <li>„analog film grain, gritty, energetic“</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Was kannst du ändern?</h4>
-              <ul>
-                <li>Real: „soft natural daylight“</li>
-                <li>Noir: „hard contrast, rain, wet reflections“</li>
-                <li>Clean: „no grain, crisp studio lighting“</li>
-              </ul>
-              <p class="muted">Style ist Geschmack – aber Grain + Epic wirkt schnell „KI-Poster“.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>8) Constraints (Fehlerbremse)</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Was macht das?</h4>
-              <p>Verhindert Quatsch: Anatomie, Accessoires, Fokus. Stabilisiert Output.</p>
-              <ul>
-                <li>„Natural anatomy“</li>
-                <li>„No accessories besides skateboard“</li>
-                <li>„Strong focus on movement & intensity“</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Was kannst du ergänzen?</h4>
-              <ul>
-                <li>„no extra limbs / no deformities“</li>
-                <li>„no text / no logos“</li>
-                <li>„no cartoon / no anime“ (wenn fotoreal)</li>
-              </ul>
-              <p class="muted">Wenn etwas nervt: als Constraint hinzufügen.</p>
-            </div>
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <!-- CHANGE ONE THING -->
-    <section class="section" aria-labelledby="one-title">
-      <h2 id="one-title" style="font-size:18px;font-weight:900;margin-bottom:8px;">Ändere 1 Sache (Beispiele)</h2>
-      <p class="lead muted">Wenn du nur einen Block tauschst, bleibt der Prompt stabil – und du lernst schneller.</p>
-
-      <div class="card-row">
-        <div class="card">
-          <h3>Action Swap</h3>
-          <div class="hint">Skateboard → BMX (nur 1 Wort tauschen)</div>
-          <code>... mid-air while <b>skateboarding</b>.
-... all paws on the <b>skateboard</b>.</code>
-          <div class="btn-row" style="margin-top:10px;">
-            <button class="btn" type="button" data-copy-snippet="action">Copy Snippet</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Mood Swap</h3>
-          <div class="hint">Epic → Natural (weniger „Trailer“)</div>
-          <code>Lighting: <b>soft natural daylight</b>.
-Visual style: <b>clean, crisp, no grain</b>.</code>
-          <div class="btn-row" style="margin-top:10px;">
-            <button class="btn" type="button" data-copy-snippet="mood">Copy Snippet</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Stabilitäts-Boost</h3>
-          <div class="hint">Wenn Identität driftet: constraints strenger</div>
-          <code>Constraints:
-– <b>Match the reference photo 1:1</b>
-– <b>No stylization</b>
-– <b>No extra accessories</b></code>
-          <div class="btn-row" style="margin-top:10px;">
-            <button class="btn" type="button" data-copy-snippet="stability">Copy Snippet</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TROUBLESHOOTING -->
-    <section class="section" aria-labelledby="ts-title">
-      <h2 id="ts-title" style="font-size:18px;font-weight:900;margin-bottom:8px;">Wenn’s nicht passt (Fixes)</h2>
-      <p class="lead muted">Häufige Probleme + schnelle, praktische Korrekturen.</p>
-
-      <div class="panel-glass" style="margin-top:14px;">
-        <details open>
-          <summary>❌ Hund sieht nicht wie Referenz aus</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Fix</h4>
-              <ul>
-                <li>„exactly as in the reference photo“ verstärken</li>
-                <li>„match fur markings 1:1“ ergänzen</li>
-                <li>Style reduzieren (weniger „epic“, weniger „grain“)</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Warum?</h4>
-              <p>Starke Styles (Poster/Grain/Fisheye) erhöhen „Drift“. Identität gewinnt mit klaren Constraints.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>❌ Zu „KI-Poster“ / zu stylized</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Fix</h4>
-              <ul>
-                <li>„cinematic“ → „documentary“</li>
-                <li>„analog film grain“ entfernen</li>
-                <li>Fisheye reduzieren (35–50mm)</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Warum?</h4>
-              <p>„Epic + Grain + Fisheye“ ist geiler Stil – aber sieht schnell generiert aus. Realismus = weniger Effekte.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>❌ Anatomie wirkt komisch</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Fix</h4>
-              <ul>
-                <li>„Natural anatomy“ erweitern: „no deformities, no extra limbs“</li>
-                <li>Pose vereinfachen (weniger extreme Paw-Perspektive)</li>
-                <li>„all paws firmly on board“ klarer</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Warum?</h4>
-              <p>Extreme Perspektive + Action ist schwer. Wenn’s bricht: 1 Komplexitätsblock runterdrehen.</p>
-            </div>
-          </div>
-        </details>
-
-        <details>
-          <summary>❌ Background lenkt ab / wird chaotisch</summary>
-          <div class="mini-grid">
-            <div class="mini">
-              <h4>Fix</h4>
-              <ul>
-                <li>„simple urban street, not busy“</li>
-                <li>„background softly blurred“</li>
-                <li>„no readable text, no logos“</li>
-              </ul>
-            </div>
-            <div class="mini">
-              <h4>Warum?</h4>
-              <p>Hintergrund ist Fehlerquelle #1. Je ruhiger, desto stabiler wirkt das Motiv.</p>
-            </div>
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <!-- RULES -->
-    <section class="section" aria-labelledby="rules-title">
-      <h2 id="rules-title" style="font-size:18px;font-weight:900;margin-bottom:8px;">Mini-Regeln (damit du schnell besser wirst)</h2>
-
-      <div class="panel-glass" style="margin-top:14px;">
-        <div class="mini-grid">
-          <div class="mini">
-            <h4>Regel 1</h4>
-            <p><b>Identität zuerst.</b> Wenn das Motiv nicht stimmt, ist alles andere egal.</p>
-          </div>
-          <div class="mini">
-            <h4>Regel 2</h4>
-            <p><b>Nur 1–2 Änderungen pro Versuch.</b> Sonst weißt du nicht, was den Effekt auslöst.</p>
-          </div>
-          <div class="mini">
-            <h4>Regel 3</h4>
-            <p><b>Wenn’s driftet:</b> Style runter, Constraints rauf.</p>
-          </div>
-          <div class="mini">
-            <h4>Regel 4</h4>
-            <p><b>Verbiete, was du nicht willst.</b> KI füllt sonst Lücken mit „Deko“.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <footer>
-      <div>© PromptRebel | CC BY-NC-SA 4.0</div>
-      <div class="center-links">
-        <a href="../imprint.html">Imprint</a>
-        <span>·</span>
-        <a href="../privacy.html">Privacy</a>
-      </div>
-      <div>current build: <span id="buildVersion" style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,0.9); cursor:pointer;">v0.1.so-funktionierts.prompts</span></div>
-    </footer>
-  </main>
-
-  <div id="toast" class="toast" role="status" aria-live="polite">Copied ✓</div>
-
-  <script>
-    // -------- Scroll progress (CSS var) --------
-    window.addEventListener("scroll", () => {
-      const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - window.innerHeight;
-      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
-      document.documentElement.style.setProperty("--scroll", ratio.toString());
-    });
-
-    // -------- Brand glitch on load --------
-    const brandEl = document.getElementById("brand");
-    window.addEventListener("load", () => {
-      brandEl.classList.add("glitch");
-      setTimeout(() => brandEl.classList.remove("glitch"), 800);
-    });
-
-    // -------- Toast --------
-    const toastEl = document.getElementById("toast");
-    let toastTimer = null;
-    function toast(msg="Copied ✓") {
-      toastEl.textContent = msg;
-      toastEl.classList.add("show");
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1200);
-    }
-
-    // -------- Copy helper --------
-    async function copyText(text) {
-      try {
-        await navigator.clipboard.writeText(text);
-        toast("Copied ✓");
-      } catch (e) {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.left = "-9999px";
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-        toast("Copied ✓");
-      }
-    }
-
-    // -------- Prompt content --------
-    const FULL_PROMPT =
-`Ultra-detailed cinematic action scene.
+        <pre class="terminal" id="promptText">Ultra-detailed cinematic action scene.
 
 The dog from the reference photo is captured mid-air while skateboarding.
 Reproduce its natural fur colors, markings, and body features exactly as in the reference photo.
@@ -1008,53 +521,531 @@ Visual style: analog film grain, gritty, energetic.
 Constraints:
 – Natural anatomy
 – No accessories besides skateboard
-– Strong focus on movement & intensity.`;
+– Strong focus on movement & intensity.</pre>
 
-    // A mini version: keeps identity + action + constraints
-    const MINI_PROMPT =
-`The dog from the reference photo, captured mid-air while skateboarding.
-Match fur colors/markings/body exactly to the reference photo. No collar/harness.
-Low-angle action shot. Urban street background with motion blur.
-Constraints: natural anatomy, no accessories besides skateboard.`;
+        <p class="hero-note" style="margin-top:10px;">
+          Hinweis: Das Referenzfoto ist der „Identity Anchor“. Der Rest ist Szene/Styling.
+        </p>
+      </div>
 
-    document.getElementById("promptText").textContent = FULL_PROMPT;
+      <div class="img-compare" style="margin-top:14px;">
+        <figure class="img-card">
+          <img src="../assets/so-funktionierts/skateboard/original.jpg" alt="Original Output (bitte Bilddatei ersetzen)" loading="lazy">
+          <figcaption>Original Output (assets/…/original.jpg)</figcaption>
+        </figure>
+        <figure class="img-card">
+          <img src="../assets/so-funktionierts/skateboard/original_2.jpg" alt="Optional: zweites Original / Alternative" loading="lazy">
+          <figcaption>Optional: zweites Beispiel (original_2.jpg)</figcaption>
+        </figure>
+      </div>
 
-    document.getElementById("copyPromptBtn").addEventListener("click", () => copyText(FULL_PROMPT));
-    document.getElementById("copyPromptMiniBtn").addEventListener("click", () => copyText(MINI_PROMPT));
+      <div class="callout">
+        Wenn du mit Bildbeispielen startest: reicht <b>Original + 6 Varianten</b>. Mehr kommt später.
+      </div>
+    </section>
 
-    // -------- Snippet copy (change one thing) --------
-    const snippets = {
-      action: `Swap examples:
-- skateboard → BMX bike
-- skateboard → snowboard
-- skateboard → surfboard`,
-      mood: `Lighting & style alternatives:
-- Lighting: soft natural daylight.
-- Visual style: clean, crisp, no grain.`,
-      stability: `Stability boost (if identity drifts):
-Constraints:
-- Match the reference photo 1:1
-- No stylization
-- No extra accessories`
-    };
+    <!-- BLOCK: IDENTITY -->
+    <section class="section" id="block-identity" aria-labelledby="block-identity-title">
+      <h2 class="section-title" id="block-identity-title">Block 1: Identität (Referenzfoto)</h2>
+      <p class="section-subtitle">
+        Dieser Block sorgt dafür, dass es <b>dein</b> Tier bleibt – und nicht irgendein generischer Hund.
+      </p>
 
-    document.querySelectorAll("[data-copy-snippet]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const key = btn.getAttribute("data-copy-snippet");
-        const txt = snippets[key] || "";
-        if (txt) copyText(txt);
-      });
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title">Identity Transfer</div>
+            <div class="mb-sub">Die wichtigste Regel: „Wie auf dem Referenzfoto“ – klar und wiederholt.</div>
+          </div>
+        </div>
+
+        <div class="quote">
+          <div class="quote-label">Prompt-Ausschnitt</div>
+          <pre>The dog from the reference photo is captured mid-air while skateboarding.
+Reproduce its natural fur colors, markings, and body features exactly as in the reference photo.</pre>
+        </div>
+
+        <div class="mb-grid">
+          <div class="mb-card">
+            <h4>Was macht das?</h4>
+            <p>
+              Verankert Fellfarben, Muster, Proportionen und den „Look“ am Referenzfoto.
+              Ohne diesen Block driftet das Ergebnis schnell zu „Random Dog“.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>Typische Anpassungen</h4>
+            <ul>
+              <li>„dog“ → „animal“ (für jedes Tier)</li>
+              <li>„captured mid-air“ → „standing / sitting“</li>
+              <li>mehr Details zu Fell/Markings (wenn nötig)</li>
+            </ul>
+          </div>
+          <div class="mb-card">
+            <h4>Risiko</h4>
+            <p>
+              Zu viel Zusatzbeschreibung kann das Referenzfoto „überschreiben“.
+              Besser: kurz + eindeutig + wiederholbar.
+            </p>
+          </div>
+        </div>
+
+        <div class="img-compare">
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/original.jpg" alt="Original (Identity Transfer aktiv)" loading="lazy">
+            <figcaption>Original (Referenz stark)</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/identity_weak.jpg" alt="Variante: Identity schwach/unspezifisch" loading="lazy">
+            <figcaption>Variante: Identity zu schwach (identity_weak.jpg)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK: CAMERA -->
+    <section class="section" id="block-camera" aria-labelledby="block-camera-title">
+      <h2 class="section-title" id="block-camera-title">Block 2: Kamera / Lens</h2>
+      <p class="section-subtitle">
+        Kamera ist ein „Look-Schalter“. Fisheye wirkt krass – aber ist fehleranfälliger.
+      </p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title">Fisheye vs. realistischer Look</div>
+            <div class="mb-sub">Ein einzelner Satz verändert die gesamte Bildphysik.</div>
+          </div>
+        </div>
+
+        <div class="quote">
+          <div class="quote-label">Prompt-Ausschnitt (original)</div>
+          <pre>– Camera angle: Low-angle fisheye perspective, extreme dramatic distortion.</pre>
+        </div>
+
+        <div class="mb-grid">
+          <div class="mb-card">
+            <h4>Was macht das?</h4>
+            <p>
+              Fisheye verstärkt Dynamik durch Verzerrung: Vordergrund riesig, Background gebogen.
+              Stark für Action – riskant für Anatomie.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>Alternative (copy)</h4>
+            <pre style="white-space:pre-wrap;margin-top:8px;">– Camera angle: 35mm documentary photo, low-angle, no distortion.</pre>
+          </div>
+          <div class="mb-card">
+            <h4>Erwarteter Effekt</h4>
+            <ul>
+              <li>realistischer, weniger „Poster“</li>
+              <li>stabilere Pfoten/Skateboard</li>
+              <li>weniger extreme Perspektivfehler</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="img-compare">
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/original.jpg" alt="Original: Fisheye" loading="lazy">
+            <figcaption>Original: Fisheye</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/cam_35mm.jpg" alt="Variante: 35mm, keine Verzerrung" loading="lazy">
+            <figcaption>Variante: 35mm (cam_35mm.jpg)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK: POSE -->
+    <section class="section" id="block-pose" aria-labelledby="block-pose-title">
+      <h2 class="section-title" id="block-pose-title">Block 3: Pose & Action</h2>
+      <p class="section-subtitle">
+        Action entsteht durch klare Körperlogik: Was macht welche Pfote – und warum?
+      </p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title">Paw / Trick / Board</div>
+            <div class="mb-sub">Je genauer die Pose, desto weniger Drift – aber: nicht überladen.</div>
+          </div>
+        </div>
+
+        <div class="quote">
+          <div class="quote-label">Prompt-Ausschnitt (original)</div>
+          <pre>– One exaggerated paw reaches forward into the extreme foreground, as if giving a high-five.
+– All other paws are placed firmly on the skateboard.
+– The skateboard is tilted mid-trick, dynamic and realistic.</pre>
+        </div>
+
+        <div class="mb-grid">
+          <div class="mb-card">
+            <h4>Was macht das?</h4>
+            <p>
+              Erzwingt eine „Story Pose“ (High-five) + Stabilität (andere Pfoten am Board).
+              Das gibt Bewegung und Fokus.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>Alternative (cleaner)</h4>
+            <pre style="white-space:pre-wrap;margin-top:8px;">– All paws are placed naturally on the skateboard.
+– No exaggerated paw perspective.
+– The dog is balanced mid-trick, realistic stance.</pre>
+          </div>
+          <div class="mb-card">
+            <h4>Erwarteter Effekt</h4>
+            <ul>
+              <li>weniger übertriebener Vordergrund</li>
+              <li>mehr „realer“ Skate-Look</li>
+              <li>stabilere Anatomie</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="img-compare">
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/original.jpg" alt="Original: High-five paw" loading="lazy">
+            <figcaption>Original: High-five paw</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/pose_natural.jpg" alt="Variante: natürliche Pose" loading="lazy">
+            <figcaption>Variante: natürliche Pose (pose_natural.jpg)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK: BACKGROUND -->
+    <section class="section" id="block-background" aria-labelledby="block-background-title">
+      <h2 class="section-title" id="block-background-title">Block 4: Hintergrund</h2>
+      <p class="section-subtitle">
+        Hintergrund ist nicht Deko – er steuert Kontext, Tempo und Lesbarkeit.
+      </p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title">Urban Street vs. Skatepark</div>
+            <div class="mb-sub">Busy Background + Motion Blur kann „Action“ verstärken – oder das Motiv schlucken.</div>
+          </div>
+        </div>
+
+        <div class="quote">
+          <div class="quote-label">Prompt-Ausschnitt (original)</div>
+          <pre>Background: Urban street environment with motion blur.</pre>
+        </div>
+
+        <div class="mb-grid">
+          <div class="mb-card">
+            <h4>Was macht das?</h4>
+            <p>
+              Urban + Motion Blur = Geschwindigkeit. Aber: zu viele Elemente erhöhen Fehlerquote
+              (Texte, Schilder, Logos, Chaos).
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>Alternative (stabiler)</h4>
+            <pre style="white-space:pre-wrap;margin-top:8px;">Background: simple skatepark, clean shapes, no text, no logos, subtle motion blur.</pre>
+          </div>
+          <div class="mb-card">
+            <h4>Erwarteter Effekt</h4>
+            <ul>
+              <li>Motiv bleibt klarer</li>
+              <li>weniger „zufällige“ Details</li>
+              <li>bessere Wiederholbarkeit</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="img-compare">
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/original.jpg" alt="Original: Urban motion blur" loading="lazy">
+            <figcaption>Original: Urban</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/bg_skatepark.jpg" alt="Variante: Skatepark clean" loading="lazy">
+            <figcaption>Variante: Skatepark (bg_skatepark.jpg)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK: LIGHTING -->
+    <section class="section" id="block-light" aria-labelledby="block-light-title">
+      <h2 class="section-title" id="block-light-title">Block 5: Licht</h2>
+      <p class="section-subtitle">
+        Licht ist „Emotion“. Es kann ein Bild retten oder komplett künstlich wirken lassen.
+      </p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title">Epic Cinematic vs. Natural Daylight</div>
+            <div class="mb-sub">Wenn „epic“ zu viel ist: runterregeln, nicht löschen.</div>
+          </div>
+        </div>
+
+        <div class="quote">
+          <div class="quote-label">Prompt-Ausschnitt (original)</div>
+          <pre>Lighting: Epic cinematic lighting.</pre>
+        </div>
+
+        <div class="mb-grid">
+          <div class="mb-card">
+            <h4>Was macht das?</h4>
+            <p>
+              „Epic cinematic“ pusht Kontrast und Highlights. Gut für Drama.
+              Kann aber schnell „KI-Poster“ schreien.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>Alternative (realer)</h4>
+            <pre style="white-space:pre-wrap;margin-top:8px;">Lighting: soft natural daylight, realistic highlights, no harsh rim light.</pre>
+          </div>
+          <div class="mb-card">
+            <h4>Erwarteter Effekt</h4>
+            <ul>
+              <li>mehr „echtes Foto“</li>
+              <li>weniger extremes Color-Grading</li>
+              <li>Details bleiben natürlicher</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="img-compare">
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/original.jpg" alt="Original: Epic cinematic lighting" loading="lazy">
+            <figcaption>Original: Epic</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/light_day.jpg" alt="Variante: Natural daylight" loading="lazy">
+            <figcaption>Variante: Daylight (light_day.jpg)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK: STYLE -->
+    <section class="section" id="block-style" aria-labelledby="block-style-title">
+      <h2 class="section-title" id="block-style-title">Block 6: Stil / Textur</h2>
+      <p class="section-subtitle">
+        Style-Keywords beeinflussen „Materialität“: Körnung, Schärfe, Look.
+      </p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title">Film Grain vs. Clean</div>
+            <div class="mb-sub">Körnung kann kaschieren – oder das Bild schmutzig machen.</div>
+          </div>
+        </div>
+
+        <div class="quote">
+          <div class="quote-label">Prompt-Ausschnitt (original)</div>
+          <pre>Visual style: analog film grain, gritty, energetic.</pre>
+        </div>
+
+        <div class="mb-grid">
+          <div class="mb-card">
+            <h4>Was macht das?</h4>
+            <p>
+              „film grain/gritty“ fügt Dreck/Körnung/Analog-Look hinzu. Das kann „real“ wirken,
+              aber auch Details fressen.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>Alternative (clean)</h4>
+            <pre style="white-space:pre-wrap;margin-top:8px;">Visual style: clean, crisp, natural texture, no film grain, realistic photo look.</pre>
+          </div>
+          <div class="mb-card">
+            <h4>Erwarteter Effekt</h4>
+            <ul>
+              <li>schärfer, klarer</li>
+              <li>weniger „dirty“</li>
+              <li>Details am Fell besser sichtbar</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="img-compare">
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/original.jpg" alt="Original: film grain gritty" loading="lazy">
+            <figcaption>Original: Grain</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/style_clean.jpg" alt="Variante: clean crisp" loading="lazy">
+            <figcaption>Variante: Clean (style_clean.jpg)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK: CONSTRAINTS -->
+    <section class="section" id="block-constraints" aria-labelledby="block-constraints-title">
+      <h2 class="section-title" id="block-constraints-title">Block 7: Constraints</h2>
+      <p class="section-subtitle">
+        Constraints sind „Leitplanken“. Sie reduzieren Chaos – wenn sie konkret sind.
+      </p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title">Constraints (Rules)</div>
+            <div class="mb-sub">Kurz, klar, testbar. Keine Romane.</div>
+          </div>
+        </div>
+
+        <div class="quote">
+          <div class="quote-label">Prompt-Ausschnitt (original)</div>
+          <pre>Constraints:
+– Natural anatomy
+– No accessories besides skateboard
+– Strong focus on movement & intensity.</pre>
+        </div>
+
+        <div class="mb-grid">
+          <div class="mb-card">
+            <h4>Was macht das?</h4>
+            <p>
+              Verhindert typische Ausreißer: Collars, Harness, seltsame Proportionen,
+              Zusatzobjekte. Stabilisiert das Ergebnis.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>Stabilere Variante</h4>
+            <pre style="white-space:pre-wrap;margin-top:8px;">Constraints:
+– Natural anatomy, correct paws count
+– No collar, no harness, no extra accessories
+– Only skateboard as prop
+– Keep fur markings identical to reference</pre>
+          </div>
+          <div class="mb-card">
+            <h4>Erwarteter Effekt</h4>
+            <ul>
+              <li>weniger „Halluzinationen“</li>
+              <li>bessere Konsistenz über mehrere Runs</li>
+              <li>weniger Zufallsobjekte</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="img-compare">
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/original.jpg" alt="Original: Constraints basic" loading="lazy">
+            <figcaption>Original: Basic Constraints</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="../assets/so-funktionierts/skateboard/constraints_strict.jpg" alt="Variante: stricter constraints" loading="lazy">
+            <figcaption>Variante: Strict (constraints_strict.jpg)</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <div class="callout" style="margin-top:16px;">
+        Minimal-Regel für Lernfortschritt: <b>Immer nur 1 Block ändern</b>, dann vergleichen.
+      </div>
+    </section>
+
+    <!-- NEXT -->
+    <section class="section" aria-labelledby="next-title">
+      <h2 class="section-title" id="next-title">Nächste Schritte</h2>
+      <p class="section-subtitle">
+        Wenn dieses Beispiel sitzt, kopieren wir das Pattern auf einen zweiten Prompt (z.B. Portrait/Regen).
+      </p>
+
+      <div class="panel-glass">
+        <div class="panel-header">
+          <div class="left">
+            <span class="icon">✅</span>
+            <span>CHECKLIST</span>
+          </div>
+        </div>
+        <div class="terminal">
+1) Lege 7 Bilder ab:
+   - original.jpg
+   - identity_weak.jpg
+   - cam_35mm.jpg
+   - pose_natural.jpg
+   - bg_skatepark.jpg
+   - light_day.jpg
+   - style_clean.jpg
+   - (optional) constraints_strict.jpg
+
+2) Passe nur die Dateinamen an (wenn du anders benennst).
+
+3) Teste Mobile:
+   - lädt schnell?
+   - Text lesbar?
+   - Copy Button ok?
+
+<span class="dim"># Das PDF-Handbuch kann später 1:1 aus dieser Seite entstehen.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div>© PromptRebel | CC BY-NC-SA 4.0</div>
+      <div class="center-links">
+        <a href="../imprint.html">Imprint</a>
+        <span>·</span>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+      <div>current build: <span id="buildVersion" style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,0.9); cursor:pointer;">v0.1.how-prompts</span></div>
+    </footer>
+  </main>
+
+  <script>
+    // Scroll progress
+    window.addEventListener("scroll", () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+      document.documentElement.style.setProperty("--scroll", ratio.toString());
     });
 
-    // -------- Footer build click --------
+    // Brand glitch on load
+    const brandEl = document.getElementById("brand");
+    window.addEventListener("load", () => {
+      brandEl.classList.add("glitch");
+      setTimeout(() => brandEl.classList.remove("glitch"), 800);
+    });
+
+    // Footer build click
     const buildEl = document.getElementById("buildVersion");
     buildEl.addEventListener("click", () => {
-      const versions = ["v0.1.so-funktionierts.prompts", "v0.2.so-funktionierts.prompts", "v0.6.9.so-funktionierts.prompts", "v1.0.so-funktionierts.prompts", "v∞.so-funktionierts.prompts"];
+      const versions = ["v0.1.how-prompts", "v0.2.how-prompts", "v0.6.9.how-prompts", "v1.0.how-prompts", "v∞.how-prompts"];
       let i = 0;
       const int = setInterval(() => {
         buildEl.textContent = versions[i++ % versions.length];
         if (i > 10) clearInterval(int);
       }, 120);
+    });
+
+    // Copy prompt
+    const copyBtn = document.getElementById("copyPromptBtn");
+    const promptText = document.getElementById("promptText");
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(promptText.innerText.trim());
+        const old = copyBtn.textContent;
+        copyBtn.textContent = "Copied ✅";
+        setTimeout(() => copyBtn.textContent = old, 900);
+      } catch (e) {
+        alert("Copy failed. Bitte manuell markieren & kopieren.");
+      }
+    });
+
+    // Chips jump
+    document.querySelectorAll("[data-jump]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = document.querySelector(btn.getAttribute("data-jump"));
+        if (!target) return;
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     });
   </script>
 </body>
