@@ -233,7 +233,15 @@
     }
 
     /* Page sections */
-    .section-title{ font-size:18px; font-weight:700; margin-bottom:8px; }
+    .section-title{
+  font-size: clamp(20px, 4.5vw, 24px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+.mb-title{
+  font-size: clamp(15px, 3.8vw, 17px);
+}
     .section-subtitle{ font-size:13px; color:#9ca3af; margin-bottom:18px; max-width:44rem; }
 
     /* Quick nav */
@@ -481,6 +489,48 @@ details.callout-details p{
 }
 .callout .bullets li{
   margin:4px 0;
+}
+	  /* Collapsible details for the 3-column grids */
+details.mb-details{
+  margin-top: 12px;
+}
+
+summary.mb-summary{
+  cursor: pointer;
+  user-select: none;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(15,23,42,.30);
+  color: #dbeafe;
+  font-size: 13px;
+  list-style: none;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+summary.mb-summary:hover{
+  background: rgba(15,23,42,.55);
+  border-color: rgba(34,211,238,.25);
+}
+
+summary.mb-summary::-webkit-details-marker{ display:none; }
+
+summary.mb-summary::before{
+  content:"▶";
+  display:inline-block;
+  margin-right:8px;
+  color:#22d3ee;
+  transform: translateY(1px);
+  transition: transform .2s ease;
+}
+
+details.mb-details[open] summary.mb-summary::before{
+  transform: rotate(90deg) translateY(-1px);
+}
+
+/* Optional: on desktop keep them open by default visually */
+@media (min-width:768px){
+  details.mb-details:not([open]) .mb-grid{ display:grid; }
 }
 
     /* Footer */
@@ -753,6 +803,9 @@ Constraints:
 Reproduce its natural fur colors, markings, and body features exactly as in the reference photo.</pre>
         </div>
 
+		  <details class="mb-details" open>
+  <summary class="mb-summary">Details anzeigen</summary>
+
         <div class="mb-grid">
           <div class="mb-card">
             <h4>Was macht das?</h4>
@@ -761,6 +814,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               Ohne diesen Block driftet das Ergebnis schnell zu „Random Dog“.
             </p>
           </div>
+			</details>
           <div class="mb-card">
             <h4>Typische Anpassungen</h4>
             <ul>
