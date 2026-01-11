@@ -234,14 +234,11 @@
 
     /* Page sections */
     .section-title{
-  font-size: clamp(20px, 4.5vw, 24px);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  margin-bottom: 12px;
-}
-.mb-title{
-  font-size: clamp(15px, 3.8vw, 17px);
-}
+      font-size: clamp(20px, 4.5vw, 24px);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
     .section-subtitle{ font-size:13px; color:#9ca3af; margin-bottom:18px; max-width:44rem; }
 
     /* Quick nav */
@@ -261,6 +258,10 @@
       transform:translateY(-1px);
       border-color:rgba(34,211,238,.5);
       box-shadow:0 0 0 1px rgba(34,211,238,.16);
+    }
+    .chip:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:2px;
     }
 
     /* Manual blocks */
@@ -282,7 +283,7 @@
       margin-bottom:10px;
     }
     .mb-title{
-      font-size:16px;
+      font-size: clamp(15px, 3.8vw, 17px);
       font-weight:800;
       letter-spacing:.01em;
       text-shadow:0 0 14px rgba(34,211,238,.14);
@@ -294,36 +295,20 @@
       max-width:46rem;
     }
 
-    .quote{
-      margin-top:10px;
-      border-radius:16px;
-      border:1px solid rgba(148,163,184,.14);
-      background:rgba(2,6,23,.55);
-      padding:12px 12px 10px;
-    }
-    .quote-label{
-      font-size:11px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#93c5fd;
-      margin-bottom:6px;
-      opacity:.9;
-    }
-    .quote pre{
-      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-      font-size:12px;
-      white-space:pre-wrap;
-      color:#e5e7eb;
-    }
-
     .mb-grid{
       margin-top:12px;
       display:grid;
       gap:10px;
     }
-    @media (min-width:900px){
-      .mb-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    /* 4 Karten -> 2x2 ab Tablet */
+    @media (min-width:768px){
+      .mb-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
+    /* optional: 4 in einer Reihe ab großem Desktop */
+    @media (min-width:1100px){
+      .mb-grid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+    }
+
     .mb-card{
       border-radius:18px;
       border:1px solid rgba(148,163,184,.14);
@@ -342,6 +327,50 @@
       color:#e5e7eb;
     }
     .mb-card ul{ padding-left:18px; margin-top:6px; }
+    .mb-card pre{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:12px;
+      white-space:pre-wrap;
+      color:#e5e7eb;
+      margin-top:8px;
+    }
+
+    /* Collapsible "Mehr anzeigen" inside manual blocks */
+    details.mb-more{
+      margin-top: 10px;
+    }
+    summary.mb-more-summary{
+      cursor: pointer;
+      user-select: none;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.30);
+      color: #dbeafe;
+      font-size: 13px;
+      list-style: none;
+      transition: background .2s ease, border-color .2s ease;
+    }
+    summary.mb-more-summary:hover{
+      background: rgba(15,23,42,.55);
+      border-color: rgba(34,211,238,.25);
+    }
+    summary.mb-more-summary:focus-visible{
+      outline: 2px solid #22d3ee;
+      outline-offset: 2px;
+    }
+    summary.mb-more-summary::-webkit-details-marker{ display:none; }
+    summary.mb-more-summary::before{
+      content:"▶";
+      display:inline-block;
+      margin-right:8px;
+      color:#22d3ee;
+      transform: translateY(1px);
+      transition: transform .2s ease;
+    }
+    details.mb-more[open] summary.mb-more-summary::before{
+      transform: rotate(90deg) translateY(-1px);
+    }
 
     /* Image compare */
     .img-compare{
@@ -363,6 +392,8 @@
       height:auto;
       display:block;
       background:#0b1220;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
     }
     .img-card figcaption{
       font-size:12px;
@@ -381,157 +412,107 @@
       color:#e6f7ff;
       font-size:13px;
     }
-	  /* Callout: structured */
-.callout-title{
-  font-size:13px;
-  font-weight:800;
-  letter-spacing:.02em;
-  margin-bottom:8px;
-  color:#e6f7ff;
-  text-shadow:0 0 10px rgba(34,211,238,.18);
-}
 
-.callout-lead{
-  font-size:13px;
-  color:#e6f7ff;
-  margin-bottom:10px;
-  opacity:.95;
-}
+    /* Callout: structured */
+    .callout-title{
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.02em;
+      margin-bottom:8px;
+      color:#e6f7ff;
+      text-shadow:0 0 10px rgba(34,211,238,.18);
+    }
+    .callout-lead{
+      font-size:13px;
+      color:#e6f7ff;
+      margin-bottom:10px;
+      opacity:.95;
+    }
+    .callout-grid{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+    @media (min-width:900px){
+      .callout-grid{ grid-template-columns: 1fr 1fr; }
+    }
+    .callout-card{
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(2,6,23,.35);
+      padding:12px 12px 10px;
+    }
+    .callout-card h4{
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#93c5fd;
+      margin-bottom:6px;
+    }
+    .callout-card p{
+      font-size:13px;
+      color:#e5e7eb;
+    }
+    .callout-card ul{
+      margin-top:8px;
+      padding-left:18px;
+    }
+    .callout-card li{
+      font-size:13px;
+      color:#e5e7eb;
+      margin-bottom:6px;
+    }
+    .callout-kicker{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid rgba(148,163,184,.14);
+      font-size:12px;
+      color:#cbd5e1;
+    }
 
-.callout-grid{
-  display:grid;
-  gap:10px;
-  margin-top:10px;
-}
+    details.callout-details{
+      margin-top:10px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(15,23,42,.30);
+      padding:10px 12px;
+    }
+    details.callout-details summary{
+      cursor:pointer;
+      font-size:12px;
+      color:#dbeafe;
+      user-select:none;
+    }
+    details.callout-details p{
+      margin-top:8px;
+      font-size:13px;
+      color:#e5e7eb;
+    }
 
-@media (min-width:900px){
-  .callout-grid{ grid-template-columns: 1fr 1fr; }
-}
-
-.callout-card{
-  border-radius:16px;
-  border:1px solid rgba(148,163,184,.18);
-  background:rgba(2,6,23,.35);
-  padding:12px 12px 10px;
-}
-
-.callout-card h4{
-  font-size:11px;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:#93c5fd;
-  margin-bottom:6px;
-}
-
-.callout-card p{
-  font-size:13px;
-  color:#e5e7eb;
-}
-
-.callout-card ul{
-  margin-top:8px;
-  padding-left:18px;
-}
-.callout-card li{
-  font-size:13px;
-  color:#e5e7eb;
-  margin-bottom:6px;
-}
-
-.callout-kicker{
-  margin-top:10px;
-  padding-top:10px;
-  border-top:1px solid rgba(148,163,184,.14);
-  font-size:12px;
-  color:#cbd5e1;
-}
-
-details.callout-details{
-  margin-top:10px;
-  border-radius:14px;
-  border:1px solid rgba(148,163,184,.14);
-  background:rgba(15,23,42,.30);
-  padding:10px 12px;
-}
-
-details.callout-details summary{
-  cursor:pointer;
-  font-size:12px;
-  color:#dbeafe;
-  user-select:none;
-}
-
-details.callout-details p{
-  margin-top:8px;
-  font-size:13px;
-  color:#e5e7eb;
-}
-	  /* TL;DR / Key callouts */
-.callout.tldr{
-  border-color: rgba(251,146,60,.28);
-  background: rgba(251,146,60,.09);
-}
-.callout.key{
-  border-color: rgba(236,72,153,.26);
-  background: rgba(236,72,153,.09);
-}
-.callout h3{
-  font-size:12px;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  margin-bottom:6px;
-  color:#e2e8f0;
-}
-.callout p{ margin:0; }
-.callout .bullets{
-  margin-top:8px;
-  padding-left:18px;
-}
-.callout .bullets li{
-  margin:4px 0;
-}
-	  /* Collapsible details for the 3-column grids */
-details.mb-details{
-  margin-top: 12px;
-}
-
-summary.mb-summary{
-  cursor: pointer;
-  user-select: none;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(148,163,184,.14);
-  background: rgba(15,23,42,.30);
-  color: #dbeafe;
-  font-size: 13px;
-  list-style: none;
-  transition: background .2s ease, border-color .2s ease;
-}
-
-summary.mb-summary:hover{
-  background: rgba(15,23,42,.55);
-  border-color: rgba(34,211,238,.25);
-}
-
-summary.mb-summary::-webkit-details-marker{ display:none; }
-
-summary.mb-summary::before{
-  content:"▶";
-  display:inline-block;
-  margin-right:8px;
-  color:#22d3ee;
-  transform: translateY(1px);
-  transition: transform .2s ease;
-}
-
-details.mb-details[open] summary.mb-summary::before{
-  transform: rotate(90deg) translateY(-1px);
-}
-
-/* Optional: on desktop keep them open by default visually */
-@media (min-width:768px){
-  details.mb-details:not([open]) .mb-grid{ display:grid; }
-}
+    /* TL;DR / Key callouts */
+    .callout.tldr{
+      border-color: rgba(251,146,60,.28);
+      background: rgba(251,146,60,.09);
+    }
+    .callout.key{
+      border-color: rgba(236,72,153,.26);
+      background: rgba(236,72,153,.09);
+    }
+    .callout h3{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      margin-bottom:6px;
+      color:#e2e8f0;
+    }
+    .callout p{ margin:0; }
+    .callout .bullets{
+      margin-top:8px;
+      padding-left:18px;
+    }
+    .callout .bullets li{
+      margin:4px 0;
+    }
 
     /* Footer */
     footer{
@@ -557,15 +538,25 @@ details.mb-details[open] summary.mb-summary::before{
       .section{ padding-top:32px; }
       .hero-layout{ display:block; }
       .panel-glass{ margin-top:18px; }
+
+      .chip{ padding:8px 12px; font-size:13px; }
+      .btn{ padding:12px 16px; }
     }
-	  @media (max-width:380px){
-  .mb-grid{ grid-template-columns: 1fr; }
-  .chip-row{ gap:8px; }
-  .chip{ font-size:11px; padding:6px 9px; }
-}
-	  @media (max-width:380px){
-  .callout-grid{ grid-template-columns: 1fr; }
-}
+
+    @media (max-width:380px){
+      .chip-row{ gap:8px; }
+      .chip{ font-size:11px; padding:6px 9px; }
+      .callout-grid{ grid-template-columns: 1fr; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation-duration:0.01ms !important;
+        transition-duration:0.01ms !important;
+        scroll-behavior:auto !important;
+      }
+    }
   </style>
 </head>
 
@@ -619,27 +610,27 @@ details.mb-details[open] summary.mb-summary::before{
             <button class="chip" type="button" data-jump="#block-style">Style</button>
             <button class="chip" type="button" data-jump="#block-constraints">Constraints</button>
           </div>
-			
-			<div class="callout tldr">
-  <h3>TL;DR</h3>
-  <p>
-    Prompts sind keine Magie. Sie sind Bausteine (Identität, Kamera, Pose, Licht …).<br/>
-    Änderst du <b>einen</b> Baustein, ändert sich das Bild meist <b>vorhersehbar</b>.
-  </p>
-  <ul class="bullets">
-    <li><b>1 Block ändern</b> → vergleichen</li>
-    <li>Rest gleich lassen → Ursache klar</li>
-    <li>Das Ziel ist Verständnis, nicht Perfektion</li>
-  </ul>
-</div>
 
-<div class="callout key">
-  <h3>Wichtig</h3>
-  <p>
-    Diese Seite verkauft kein „perfektes Prompt“.<br/>
-    Sie zeigt dir die <b>Hebel</b> – damit du deinen eigenen Weg findest.
-  </p>
-</div>
+          <div class="callout tldr">
+            <h3>TL;DR</h3>
+            <p>
+              Prompts sind keine Magie. Sie sind Bausteine (Identität, Kamera, Pose, Licht …).<br/>
+              Änderst du <b>einen</b> Baustein, ändert sich das Bild meist <b>vorhersehbar</b>.
+            </p>
+            <ul class="bullets">
+              <li><b>1 Block ändern</b> → vergleichen</li>
+              <li>Rest gleich lassen → Ursache klar</li>
+              <li>Das Ziel ist Verständnis, nicht Perfektion</li>
+            </ul>
+          </div>
+
+          <div class="callout key">
+            <h3>Wichtig</h3>
+            <p>
+              Diese Seite verkauft kein „perfektes Prompt“.<br/>
+              Sie zeigt dir die <b>Hebel</b> – damit du deinen eigenen Weg findest.
+            </p>
+          </div>
 
           <div class="callout">
             Tipp: Du brauchst nicht „kreativ“ zu sein. Ändere nur ein Wort – und beobachte den Effekt.
@@ -722,59 +713,61 @@ Constraints:
           <figcaption>Original Output (assets/…/original.PNG)</figcaption>
         </figure>
         <figure class="img-card">
-          <img src="../assets/so-funktionierts/skateboard/referenz.HEIC" alt="Optional: zweites Original / Alternative" loading="lazy">
+          <img src="../assets/so-funktionierts/skateboard/referenz.HEIC" alt="Referenz Foto" loading="lazy">
           <figcaption>Referenz Foto</figcaption>
         </figure>
       </div>
-<div class="callout" role="note" aria-label="Hinweis zu Sprache und Prompt-Struktur">
-  <div class="callout-title">Warum Englisch – und warum diese Struktur</div>
-  <div class="callout-lead">
-    Du musst Prompts nicht so schreiben wie ich. Das hier ist kein „richtig/falsch“ – sondern ein Weg,
-    um Ergebnisse <b>reproduzierbarer</b> zu machen und Änderungen gezielt testen zu können.
-  </div>
 
-  <div class="callout-grid">
-    <div class="callout-card">
-      <h4>1) Trainingsdaten-Realität</h4>
-      <p>
-        Viele Bild- und Sprachmodelle wurden stark mit englischen Texten trainiert.
-        Deutsch funktioniert oft – aber Englisch ist meist <b>präziser</b>, <b>konsistenter</b>
-        und leichter zu debuggen, wenn ein Prompt „driftet“.
-      </p>
-      <ul>
-        <li><b>Deutsch klappt auch</b> – vor allem bei klaren, einfachen Prompts.</li>
-        <li>Wenn Pose/Objekte kippen, ist Englisch oft leichter nachzuschärfen.</li>
-        <li>Es geht nicht um Sprache – sondern um <b>Klarheit</b>.</li>
-      </ul>
-    </div>
+      <!-- Sprache & Struktur -->
+      <div class="callout" role="note" aria-label="Hinweis zu Sprache und Prompt-Struktur">
+        <div class="callout-title">Warum Englisch – und warum diese Struktur</div>
+        <div class="callout-lead">
+          Du musst Prompts nicht so schreiben wie ich. Das hier ist kein „richtig/falsch“ – sondern ein Weg,
+          um Ergebnisse <b>reproduzierbarer</b> zu machen und Änderungen gezielt testen zu können.
+        </div>
 
-    <div class="callout-card">
-      <h4>2) Struktur ist ein Werkzeug</h4>
-      <p>
-        Ich schreibe in Blöcken (Motiv, Kamera, Licht, Stil, Constraints), damit ich nichts vergesse
-        und <b>gezielt</b> einzelne Hebel drehen kann.
-      </p>
-      <ul>
-        <li>Du kannst denselben Inhalt auch als <b>Fließtext</b> schreiben.</li>
-        <li>Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich.</li>
-        <li>Für Lernfortschritt: <b>immer nur 1 Block pro Test ändern</b>.</li>
-      </ul>
-    </div>
-  </div>
+        <div class="callout-grid">
+          <div class="callout-card">
+            <h4>1) Trainingsdaten-Realität</h4>
+            <p>
+              Viele Bild- und Sprachmodelle wurden stark mit englischen Texten trainiert.
+              Deutsch funktioniert oft – aber Englisch ist meist <b>präziser</b>, <b>konsistenter</b>
+              und leichter zu debuggen, wenn ein Prompt „driftet“.
+            </p>
+            <ul>
+              <li><b>Deutsch klappt auch</b> – vor allem bei klaren, einfachen Prompts.</li>
+              <li>Wenn Pose/Objekte kippen, ist Englisch oft leichter nachzuschärfen.</li>
+              <li>Es geht nicht um Sprache – sondern um <b>Klarheit</b>.</li>
+            </ul>
+          </div>
 
-  <div class="callout-kicker">
-    <b>Merksatz:</b> Das ist ein Weg – nicht der Weg. Ziel ist Verständnis, nicht Copy/Paste.
-  </div>
+          <div class="callout-card">
+            <h4>2) Struktur ist ein Werkzeug</h4>
+            <p>
+              Ich schreibe in Blöcken (Motiv, Kamera, Licht, Stil, Constraints), damit ich nichts vergesse
+              und <b>gezielt</b> einzelne Hebel drehen kann.
+            </p>
+            <ul>
+              <li>Du kannst denselben Inhalt auch als <b>Fließtext</b> schreiben.</li>
+              <li>Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich.</li>
+              <li>Für Lernfortschritt: <b>immer nur 1 Block pro Test ändern</b>.</li>
+            </ul>
+          </div>
+        </div>
 
-  <details class="callout-details">
-    <summary>Optional: Wenn du lieber frei schreibst …</summary>
-    <p>
-      Dann denk trotzdem an die üblichen Stellschrauben:
-      <b>Motiv</b>, <b>Kamera</b>, <b>Licht</b>, <b>Hintergrund</b>, <b>Stil</b>, <b>Constraints</b>.
-      Wenn das enthalten ist, kommst du oft sehr weit – auch ohne Block-Struktur.
-    </p>
-  </details>
-</div>
+        <div class="callout-kicker">
+          <b>Merksatz:</b> Das ist ein Weg – nicht der Weg. Ziel ist Verständnis, nicht Copy/Paste.
+        </div>
+
+        <details class="callout-details">
+          <summary>Optional: Wenn du lieber frei schreibst …</summary>
+          <p>
+            Dann denk trotzdem an die üblichen Stellschrauben:
+            <b>Motiv</b>, <b>Kamera</b>, <b>Licht</b>, <b>Hintergrund</b>, <b>Stil</b>, <b>Constraints</b>.
+            Wenn das enthalten ist, kommst du oft sehr weit – auch ohne Block-Struktur.
+          </p>
+        </details>
+      </div>
     </section>
 
     <!-- BLOCK: IDENTITY -->
@@ -792,45 +785,47 @@ Constraints:
           </div>
         </div>
 
-		  <div class="callout" style="margin-top:10px;">
-  <b>Kurz gesagt:</b> Dieser Block entscheidet, ob es wirklich <b>dein</b> Hund bleibt
-  (Fell, Muster, Proportionen) – oder ob das Modell zu „Random Dog“ driftet.
-</div>
+        <div class="callout" style="margin-top:10px;">
+          <b>Kurz gesagt:</b> Dieser Block entscheidet, ob es wirklich <b>dein</b> Hund bleibt
+          (Fell, Muster, Proportionen) – oder ob das Modell zu „Random Dog“ driftet.
+        </div>
 
-        <div class="quote">
-          <div class="quote-label">Prompt-Ausschnitt</div>
-          <pre>The dog from the reference photo is captured mid-air while skateboarding.
+        <details class="mb-more" open>
+          <summary class="mb-more-summary">Mehr anzeigen</summary>
+
+          <div class="mb-grid">
+            <div class="mb-card">
+              <h4>Prompt-Ausschnitt</h4>
+              <pre>The dog from the reference photo is captured mid-air while skateboarding.
 Reproduce its natural fur colors, markings, and body features exactly as in the reference photo.</pre>
-        </div>
+            </div>
 
-		  <details class="mb-details" open>
-  <summary class="mb-summary">Details anzeigen</summary>
+            <div class="mb-card">
+              <h4>Was macht das?</h4>
+              <p>
+                Verankert Fellfarben, Muster, Proportionen und den „Look“ am Referenzfoto.
+                Ohne diesen Block driftet das Ergebnis schnell zu „Random Dog“.
+              </p>
+            </div>
 
-        <div class="mb-grid">
-          <div class="mb-card">
-            <h4>Was macht das?</h4>
-            <p>
-              Verankert Fellfarben, Muster, Proportionen und den „Look“ am Referenzfoto.
-              Ohne diesen Block driftet das Ergebnis schnell zu „Random Dog“.
-            </p>
+            <div class="mb-card">
+              <h4>Typische Anpassungen</h4>
+              <ul>
+                <li>„dog“ → „animal“ (für jedes Tier)</li>
+                <li>„captured mid-air“ → „standing / sitting“</li>
+                <li>mehr Details zu Fell/Markings (wenn nötig)</li>
+              </ul>
+            </div>
+
+            <div class="mb-card">
+              <h4>Risiko</h4>
+              <p>
+                Zu viel Zusatzbeschreibung kann das Referenzfoto „überschreiben“.
+                Besser: kurz + eindeutig + wiederholbar.
+              </p>
+            </div>
           </div>
-			</details>
-          <div class="mb-card">
-            <h4>Typische Anpassungen</h4>
-            <ul>
-              <li>„dog“ → „animal“ (für jedes Tier)</li>
-              <li>„captured mid-air“ → „standing / sitting“</li>
-              <li>mehr Details zu Fell/Markings (wenn nötig)</li>
-            </ul>
-          </div>
-          <div class="mb-card">
-            <h4>Risiko</h4>
-            <p>
-              Zu viel Zusatzbeschreibung kann das Referenzfoto „überschreiben“.
-              Besser: kurz + eindeutig + wiederholbar.
-            </p>
-          </div>
-        </div>
+        </details>
 
         <div class="img-compare">
           <figure class="img-card">
@@ -839,7 +834,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </figure>
           <figure class="img-card">
             <img src="../assets/so-funktionierts/skateboard/identity_weak.PNG" alt="Variante: Identity schwach/unspezifisch" loading="lazy">
-            <figcaption>Variante: Identity zu schwach (identity_weak.jpg)</figcaption>
+            <figcaption>Variante: Identity zu schwach (identity_weak.PNG)</figcaption>
           </figure>
         </div>
       </article>
@@ -860,37 +855,47 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
-		  <div class="callout" style="margin-top:10px;">
-  <b>Kurz gesagt:</b> Kamera-Wörter sind ein Look-Schalter.
-  Fisheye = maximal dynamisch, aber anfälliger für anatomische Fehler.
-</div>
-
-        <div class="quote">
-          <div class="quote-label">Prompt-Ausschnitt (original)</div>
-          <pre>– Camera angle: Low-angle fisheye perspective, extreme dramatic distortion.</pre>
+        <div class="callout" style="margin-top:10px;">
+          <b>Kurz gesagt:</b> Kamera-Wörter sind ein Look-Schalter.
+          Fisheye = maximal dynamisch, aber anfälliger für anatomische Fehler.
         </div>
 
-        <div class="mb-grid">
-          <div class="mb-card">
-            <h4>Was macht das?</h4>
-            <p>
-              Fisheye verstärkt Dynamik durch Verzerrung: Vordergrund riesig, Background gebogen.
-              Stark für Action – riskant für Anatomie.
-            </p>
+        <details class="mb-more">
+          <summary class="mb-more-summary">Mehr anzeigen</summary>
+
+          <div class="mb-grid">
+            <div class="mb-card">
+              <h4>Prompt-Ausschnitt</h4>
+              <pre>– Camera angle: Low-angle fisheye perspective, extreme dramatic distortion.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Was macht das?</h4>
+              <p>
+                Fisheye verstärkt Dynamik durch Verzerrung: Vordergrund riesig, Background gebogen.
+                Stark für Action – riskant für Anatomie.
+              </p>
+            </div>
+
+            <div class="mb-card">
+              <h4>Typische Anpassungen</h4>
+              <ul>
+                <li>„fisheye“ → „35mm documentary photo“ (stabiler)</li>
+                <li>„extreme distortion“ → „no distortion“</li>
+                <li>Low-angle beibehalten, aber Verzerrung rausnehmen</li>
+              </ul>
+              <pre>– Camera angle: 35mm documentary photo, low-angle, no distortion.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Risiko</h4>
+              <p>
+                Extreme Linsen/Verzerrungen erhöhen die Fehlerquote (Pfoten, Board, Proportionen).
+                Wenn es “driftet”: vereinfachen.
+              </p>
+            </div>
           </div>
-          <div class="mb-card">
-            <h4>Alternative (copy)</h4>
-            <pre style="white-space:pre-wrap;margin-top:8px;">– Camera angle: 35mm documentary photo, low-angle, no distortion.</pre>
-          </div>
-          <div class="mb-card">
-            <h4>Erwarteter Effekt</h4>
-            <ul>
-              <li>realistischer, weniger „Poster“</li>
-              <li>stabilere Pfoten/Skateboard</li>
-              <li>weniger extreme Perspektivfehler</li>
-            </ul>
-          </div>
-        </div>
+        </details>
 
         <div class="img-compare">
           <figure class="img-card">
@@ -920,43 +925,53 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
-		  <div class="callout" style="margin-top:10px;">
-  <b>Kurz gesagt:</b> Pose-Details steuern Körperlogik.
-  Je klarer „wo sind die Pfoten“, desto stabiler wird das Ergebnis – aber nicht überladen.
-</div>
-
-        <div class="quote">
-          <div class="quote-label">Prompt-Ausschnitt (original)</div>
-          <pre>– One exaggerated paw reaches forward into the extreme foreground, as if giving a high-five.
-– All other paws are placed firmly on the skateboard.
-– The skateboard is tilted mid-trick, dynamic and realistic.</pre>
+        <div class="callout" style="margin-top:10px;">
+          <b>Kurz gesagt:</b> Pose-Details steuern Körperlogik.
+          Je klarer „wo sind die Pfoten“, desto stabiler wird das Ergebnis – aber nicht überladen.
         </div>
 
-        <div class="mb-grid">
-          <div class="mb-card">
-            <h4>Was macht das?</h4>
-            <p>
-              Erzwingt eine „Story Pose“ (High-five) + Stabilität (andere Pfoten am Board).
-              Das gibt Bewegung und Fokus.
-            </p>
-          </div>
-          <div class="mb-card">
-            <h4>Alternative (cleaner)</h4>
-            <pre style="white-space:pre-wrap;margin-top:8px;">– The dog stands naturally on the skateboard.
+        <details class="mb-more">
+          <summary class="mb-more-summary">Mehr anzeigen</summary>
+
+          <div class="mb-grid">
+            <div class="mb-card">
+              <h4>Prompt-Ausschnitt</h4>
+              <pre>– One exaggerated paw reaches forward into the extreme foreground, as if giving a high-five.
+– All other paws are placed firmly on the skateboard.
+– The skateboard is tilted mid-trick, dynamic and realistic.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Was macht das?</h4>
+              <p>
+                Erzwingt eine „Story Pose“ (High-five) + Stabilität (andere Pfoten am Board).
+                Das gibt Bewegung und Fokus.
+              </p>
+            </div>
+
+            <div class="mb-card">
+              <h4>Typische Anpassungen</h4>
+              <ul>
+                <li>High-five rausnehmen → stabilere Anatomie</li>
+                <li>„ALL FOUR paws … visible contact“ hinzufügen</li>
+                <li>Board-Logik konkretisieren (Kontaktflächen)</li>
+              </ul>
+              <pre>– The dog stands naturally on the skateboard.
 – ALL FOUR paws are placed firmly on the deck at the same time.
 – Each paw has visible contact with the board surface.
 – No lifted paws, no jumping, no exaggerated gestures.
 – Balanced stance, natural weight distribution.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Risiko</h4>
+              <p>
+                Zu viele Pose-Details können miteinander konkurrieren.
+                Besser: klare Priorität + wenige, testbare Sätze.
+              </p>
+            </div>
           </div>
-          <div class="mb-card">
-            <h4>Erwarteter Effekt</h4>
-            <ul>
-              <li>weniger übertriebener Vordergrund</li>
-              <li>mehr „realer“ Skate-Look</li>
-              <li>stabilere Anatomie</li>
-            </ul>
-          </div>
-        </div>
+        </details>
 
         <div class="img-compare">
           <figure class="img-card">
@@ -986,37 +1001,47 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
-		  <div class="callout" style="margin-top:10px;">
-  <b>Kurz gesagt:</b> Hintergrund steuert Kontext + Lesbarkeit.
-  „Busy“ erhöht Action – aber auch Fehler (Text, Logos, Chaos).
-</div>
-
-        <div class="quote">
-          <div class="quote-label">Prompt-Ausschnitt (original)</div>
-          <pre>Background: Urban street environment with motion blur.</pre>
+        <div class="callout" style="margin-top:10px;">
+          <b>Kurz gesagt:</b> Hintergrund steuert Kontext + Lesbarkeit.
+          „Busy“ erhöht Action – aber auch Fehler (Text, Logos, Chaos).
         </div>
 
-        <div class="mb-grid">
-          <div class="mb-card">
-            <h4>Was macht das?</h4>
-            <p>
-              Urban + Motion Blur = Geschwindigkeit. Aber: zu viele Elemente erhöhen Fehlerquote
-              (Texte, Schilder, Logos, Chaos).
-            </p>
+        <details class="mb-more">
+          <summary class="mb-more-summary">Mehr anzeigen</summary>
+
+          <div class="mb-grid">
+            <div class="mb-card">
+              <h4>Prompt-Ausschnitt</h4>
+              <pre>Background: Urban street environment with motion blur.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Was macht das?</h4>
+              <p>
+                Urban + Motion Blur = Geschwindigkeit. Aber: zu viele Elemente erhöhen Fehlerquote
+                (Texte, Schilder, Logos, Chaos).
+              </p>
+            </div>
+
+            <div class="mb-card">
+              <h4>Typische Anpassungen</h4>
+              <ul>
+                <li>Hintergrund vereinfachen → Motiv bleibt klar</li>
+                <li>„no text, no logos“ hinzufügen</li>
+                <li>Motion Blur reduzieren</li>
+              </ul>
+              <pre>Background: simple skatepark, clean shapes, no text, no logos, subtle motion blur.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Risiko</h4>
+              <p>
+                Komplexe Hintergründe ziehen Aufmerksamkeit ab und erzeugen Nebenobjekte.
+                Wenn dein Ziel Vergleichbarkeit ist: “clean” gewinnt.
+              </p>
+            </div>
           </div>
-          <div class="mb-card">
-            <h4>Alternative (stabiler)</h4>
-            <pre style="white-space:pre-wrap;margin-top:8px;">Background: simple skatepark, clean shapes, no text, no logos, subtle motion blur.</pre>
-          </div>
-          <div class="mb-card">
-            <h4>Erwarteter Effekt</h4>
-            <ul>
-              <li>Motiv bleibt klarer</li>
-              <li>weniger „zufällige“ Details</li>
-              <li>bessere Wiederholbarkeit</li>
-            </ul>
-          </div>
-        </div>
+        </details>
 
         <div class="img-compare">
           <figure class="img-card">
@@ -1046,37 +1071,47 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
-		  <div class="callout" style="margin-top:10px;">
-  <b>Kurz gesagt:</b> Licht ist Stimmung.
-  „Epic“ pusht Drama, „Natural“ pusht Glaubwürdigkeit.
-</div>
-
-        <div class="quote">
-          <div class="quote-label">Prompt-Ausschnitt (original)</div>
-          <pre>Lighting: Epic cinematic lighting.</pre>
+        <div class="callout" style="margin-top:10px;">
+          <b>Kurz gesagt:</b> Licht ist Stimmung.
+          „Epic“ pusht Drama, „Natural“ pusht Glaubwürdigkeit.
         </div>
 
-        <div class="mb-grid">
-          <div class="mb-card">
-            <h4>Was macht das?</h4>
-            <p>
-              „Epic cinematic“ pusht Kontrast und Highlights. Gut für Drama.
-              Kann aber schnell „KI-Poster“ schreien.
-            </p>
+        <details class="mb-more">
+          <summary class="mb-more-summary">Mehr anzeigen</summary>
+
+          <div class="mb-grid">
+            <div class="mb-card">
+              <h4>Prompt-Ausschnitt</h4>
+              <pre>Lighting: Epic cinematic lighting.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Was macht das?</h4>
+              <p>
+                „Epic cinematic“ pusht Kontrast und Highlights. Gut für Drama.
+                Kann aber schnell „KI-Poster“ schreien.
+              </p>
+            </div>
+
+            <div class="mb-card">
+              <h4>Typische Anpassungen</h4>
+              <ul>
+                <li>„soft natural daylight“ für Foto-Realismus</li>
+                <li>Rim-Light reduzieren</li>
+                <li>Highlights “realistic” setzen</li>
+              </ul>
+              <pre>Lighting: soft natural daylight, realistic highlights, no harsh rim light.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Risiko</h4>
+              <p>
+                Zu viel “epic” macht das Bild oft künstlich (übertriebene Kantenlichter, HDR-Look).
+                Wenn es unnatürlich wirkt: “runterregeln”.
+              </p>
+            </div>
           </div>
-          <div class="mb-card">
-            <h4>Alternative (realer)</h4>
-            <pre style="white-space:pre-wrap;margin-top:8px;">Lighting: soft natural daylight, realistic highlights, no harsh rim light.</pre>
-          </div>
-          <div class="mb-card">
-            <h4>Erwarteter Effekt</h4>
-            <ul>
-              <li>mehr „echtes Foto“</li>
-              <li>weniger extremes Color-Grading</li>
-              <li>Details bleiben natürlicher</li>
-            </ul>
-          </div>
-        </div>
+        </details>
 
         <div class="img-compare">
           <figure class="img-card">
@@ -1106,37 +1141,47 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
-		  <div class="callout" style="margin-top:10px;">
-  <b>Kurz gesagt:</b> Style-Keywords ändern Textur/Materialität.
-  Grain kann kaschieren – oder Details kaputt machen.
-</div>
-
-        <div class="quote">
-          <div class="quote-label">Prompt-Ausschnitt (original)</div>
-          <pre>Visual style: analog film grain, gritty, energetic.</pre>
+        <div class="callout" style="margin-top:10px;">
+          <b>Kurz gesagt:</b> Style-Keywords ändern Textur/Materialität.
+          Grain kann kaschieren – oder Details kaputt machen.
         </div>
 
-        <div class="mb-grid">
-          <div class="mb-card">
-            <h4>Was macht das?</h4>
-            <p>
-              „film grain/gritty“ fügt Dreck/Körnung/Analog-Look hinzu. Das kann „real“ wirken,
-              aber auch Details fressen.
-            </p>
+        <details class="mb-more">
+          <summary class="mb-more-summary">Mehr anzeigen</summary>
+
+          <div class="mb-grid">
+            <div class="mb-card">
+              <h4>Prompt-Ausschnitt</h4>
+              <pre>Visual style: analog film grain, gritty, energetic.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Was macht das?</h4>
+              <p>
+                „film grain/gritty“ fügt Dreck/Körnung/Analog-Look hinzu. Das kann „real“ wirken,
+                aber auch Details fressen.
+              </p>
+            </div>
+
+            <div class="mb-card">
+              <h4>Typische Anpassungen</h4>
+              <ul>
+                <li>„clean, crisp“ für mehr Detail</li>
+                <li>Grain komplett raus → Fellstruktur wird sichtbarer</li>
+                <li>“realistic photo look” als Anker</li>
+              </ul>
+              <pre>Visual style: clean, crisp, natural texture, no film grain, realistic photo look.</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Risiko</h4>
+              <p>
+                Zu viele Stilwörter konkurrieren (gritty + glossy + dreamy + cinematic …).
+                Ergebnis: Drift oder Chaos. Weniger ist oft stabiler.
+              </p>
+            </div>
           </div>
-          <div class="mb-card">
-            <h4>Alternative (clean)</h4>
-            <pre style="white-space:pre-wrap;margin-top:8px;">Visual style: clean, crisp, natural texture, no film grain, realistic photo look.</pre>
-          </div>
-          <div class="mb-card">
-            <h4>Erwarteter Effekt</h4>
-            <ul>
-              <li>schärfer, klarer</li>
-              <li>weniger „dirty“</li>
-              <li>Details am Fell besser sichtbar</li>
-            </ul>
-          </div>
-        </div>
+        </details>
 
         <div class="img-compare">
           <figure class="img-card">
@@ -1166,44 +1211,54 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </div>
         </div>
 
-		  <div class="callout" style="margin-top:10px;">
-  <b>Kurz gesagt:</b> Constraints sind Leitplanken.
-  Sie reduzieren Ausreißer – wenn sie kurz, klar und testbar sind.
-</div>
+        <div class="callout" style="margin-top:10px;">
+          <b>Kurz gesagt:</b> Constraints sind Leitplanken.
+          Sie reduzieren Ausreißer – wenn sie kurz, klar und testbar sind.
+        </div>
 
-        <div class="quote">
-          <div class="quote-label">Prompt-Ausschnitt (original)</div>
-          <pre>Constraints:
+        <details class="mb-more">
+          <summary class="mb-more-summary">Mehr anzeigen</summary>
+
+          <div class="mb-grid">
+            <div class="mb-card">
+              <h4>Prompt-Ausschnitt</h4>
+              <pre>Constraints:
 – Natural anatomy
 – No accessories besides skateboard
 – Strong focus on movement & intensity.</pre>
-        </div>
+            </div>
 
-        <div class="mb-grid">
-          <div class="mb-card">
-            <h4>Was macht das?</h4>
-            <p>
-              Verhindert typische Ausreißer: Collars, Harness, seltsame Proportionen,
-              Zusatzobjekte. Stabilisiert das Ergebnis.
-            </p>
-          </div>
-          <div class="mb-card">
-            <h4>Stabilere Variante</h4>
-            <pre style="white-space:pre-wrap;margin-top:8px;">Constraints:
+            <div class="mb-card">
+              <h4>Was macht das?</h4>
+              <p>
+                Verhindert typische Ausreißer: Collars, Harness, seltsame Proportionen,
+                Zusatzobjekte. Stabilisiert das Ergebnis.
+              </p>
+            </div>
+
+            <div class="mb-card">
+              <h4>Typische Anpassungen</h4>
+              <ul>
+                <li>Konkreter statt allgemein („correct paws count“)</li>
+                <li>Negativ klar benennen („no collar, no harness“)</li>
+                <li>Identity-Anchor wiederholen (Markings identical)</li>
+              </ul>
+              <pre>Constraints:
 – Natural anatomy, correct paws count
 – No collar, no harness, no extra accessories
 – Only skateboard as prop
 – Keep fur markings identical to reference</pre>
+            </div>
+
+            <div class="mb-card">
+              <h4>Risiko</h4>
+              <p>
+                Zu viele Constraints (lange Listen) können sich widersprechen oder die Priorität verwässern.
+                Besser: kurz, hart, testbar.
+              </p>
+            </div>
           </div>
-          <div class="mb-card">
-            <h4>Erwarteter Effekt</h4>
-            <ul>
-              <li>weniger „Halluzinationen“</li>
-              <li>bessere Konsistenz über mehrere Runs</li>
-              <li>weniger Zufallsobjekte</li>
-            </ul>
-          </div>
-        </div>
+        </details>
 
         <div class="img-compare">
           <figure class="img-card">
@@ -1212,64 +1267,76 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
           </figure>
           <figure class="img-card">
             <img src="../assets/so-funktionierts/skateboard/constraints_strict.PNG" alt="Variante: stricter constraints" loading="lazy">
-            <figcaption>Variante: Strict (constraints_strict.jpg)</figcaption>
+            <figcaption>Variante: Strict (constraints_strict.PNG)</figcaption>
           </figure>
         </div>
       </article>
 
-		<article class="manual-block" style="margin-top:16px;">
-  <div class="mb-head">
-    <div>
-      <div class="mb-title">Was oft schiefgeht (und warum)</div>
-      <div class="mb-sub">Wenn du das erkennst, verschwindet 80% der Frustration.</div>
-    </div>
-  </div>
+      <article class="manual-block" style="margin-top:16px;">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title">Was oft schiefgeht (und warum)</div>
+            <div class="mb-sub">Wenn du das erkennst, verschwindet 80% der Frustration.</div>
+          </div>
+        </div>
 
-  <div class="mb-grid">
-    <div class="mb-card">
-      <h4>❌ Zu viel auf einmal</h4>
-      <p>
-        Wenn du mehrere Blöcke gleichzeitig änderst, weißt du nicht, was den Effekt ausgelöst hat.
-      </p>
-    </div>
-    <div class="mb-card">
-      <h4>❌ Fließtext-Overkill</h4>
-      <p>
-        Sehr lange Prompts können Prioritäten verwässern. Oft ist „klar + kurz“ stabiler.
-      </p>
-    </div>
-    <div class="mb-card">
-      <h4>❌ „Mehr Adjektive = besser“</h4>
-      <p>
-        Zu viele Stilwörter konkurrieren miteinander. Ergebnis: Drift, Chaos, KI-Poster-Look.
-      </p>
-    </div>
+        <div class="mb-grid">
+          <div class="mb-card">
+            <h4>❌ Zu viel auf einmal</h4>
+            <p>
+              Wenn du mehrere Blöcke gleichzeitig änderst, weißt du nicht, was den Effekt ausgelöst hat.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>❌ Fließtext-Overkill</h4>
+            <p>
+              Sehr lange Prompts können Prioritäten verwässern. Oft ist „klar + kurz“ stabiler.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>❌ „Mehr Adjektive = besser“</h4>
+            <p>
+              Zu viele Stilwörter konkurrieren miteinander. Ergebnis: Drift, Chaos, KI-Poster-Look.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>✅ So debugst du richtig</h4>
+            <ul>
+              <li>1 Block ändern</li>
+              <li>3 Runs generieren</li>
+              <li>Vergleichen → erst dann weiter</li>
+            </ul>
+          </div>
 
-    <div class="mb-card">
-      <h4>✅ So debugst du richtig</h4>
-      <ul>
-        <li>1 Block ändern</li>
-        <li>3 Runs generieren</li>
-        <li>Vergleichen → erst dann weiter</li>
-      </ul>
-    </div>
-    <div class="mb-card">
-      <h4>✅ Wenn’s „driftet“</h4>
-      <ul>
-        <li>Identität verstärken (kurz + wiederholt)</li>
-        <li>Kamera vereinfachen (kein Fisheye)</li>
-        <li>Constraints konkretisieren</li>
-      </ul>
-    </div>
-    <div class="mb-card">
-      <h4>✅ Sprachen-Realität</h4>
-      <p>
-        Deutsch funktioniert oft. Wenn etwas unklar wird, ist Englisch leichter zu „debuggen“,
-        weil viele Modelle darauf stärker trainiert sind.
-      </p>
-    </div>
-  </div>
-</article>
+          <div class="mb-card">
+            <h4>✅ Wenn’s „driftet“</h4>
+            <ul>
+              <li>Identität verstärken (kurz + wiederholt)</li>
+              <li>Kamera vereinfachen (kein Fisheye)</li>
+              <li>Constraints konkretisieren</li>
+            </ul>
+          </div>
+          <div class="mb-card">
+            <h4>✅ Sprachen-Realität</h4>
+            <p>
+              Deutsch funktioniert oft. Wenn etwas unklar wird, ist Englisch leichter zu „debuggen“,
+              weil viele Modelle darauf stärker trainiert sind.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>✅ Reihenfolge</h4>
+            <p>
+              Erst Identität stabilisieren, dann Kamera/Pose, dann Licht/Style, dann Constraints feintunen.
+            </p>
+          </div>
+          <div class="mb-card">
+            <h4>✅ Test-Disziplin</h4>
+            <p>
+              Gleicher Seed/Settings helfen – aber wichtiger ist: immer nur einen Hebel verändern.
+            </p>
+          </div>
+        </div>
+      </article>
 
       <div class="callout" style="margin-top:16px;">
         Minimal-Regel für Lernfortschritt: <b>Immer nur 1 Block ändern</b>, dann vergleichen.
@@ -1284,7 +1351,12 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
         <span>·</span>
         <a href="../privacy.html">Privacy</a>
       </div>
-      <div>current build: <span id="buildVersion" style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,0.9); cursor:pointer;">v0.1.how-prompts</span></div>
+      <div>
+        current build:
+        <span id="buildVersion" style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,0.9); cursor:pointer;">
+          v0.1.how-prompts
+        </span>
+      </div>
     </footer>
   </main>
 
