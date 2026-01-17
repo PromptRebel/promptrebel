@@ -2,15 +2,17 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+  <title>PromptRebel – KI-Labor: Prompts, Local LLMs, Agents & Experimente</title>
 
-  <!-- ✅ Title + Meta Description (größter Hebel, codex-treu) -->
-  <title>PromptRebel – KI-Labor für Prompts, lokale LLMs, Agents, Bild, Video, Audio & Tools</title>
-  <meta name="description" content="Persönliches KI-Labor: Prompt Debugging und Experimente mit Bild, Video, Audio/Musik, lokalen LLMs, Agents, Tools und Code. Kein Marketing – nur dokumentiertes Lernen.">
+  <!-- Primary SEO -->
+  <meta name="description" content="Persönliches KI-Labor: Prompt Debugging, lokale LLMs, Agents und Experimente mit Bild, Video, Audio, Tools und Code. Kein Marketing – nur dokumentiertes Lernen.">
+  <link rel="canonical" href="https://promptrebel.github.io/promptrebel/">
 
   <!-- Open Graph / Social Preview -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="PromptRebel – KI-Labor: Prompts, Local LLMs & Agents">
-  <meta property="og:description" content="Transparente Experimente mit Prompts (Bild/Video/Audio), lokalen LLMs und Agents. Kein Hype, keine Blackbox – nur nachvollziehbares Lernen.">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:title" content="PromptRebel – Local AI, Agents & Creative Experiments">
+  <meta property="og:description" content="Lokale KI, Agenten, Games & kreative Tools. Keine Hypes, keine Blackbox – echte Experimente von PromptRebel.">
   <meta property="og:url" content="https://promptrebel.github.io/promptrebel/">
   <meta property="og:image" content="https://promptrebel.github.io/promptrebel/assets/og/A20828B8-24DB-4FAD-92CF-851AD154D80D.jpeg">
   <meta property="og:image:width" content="1200">
@@ -18,8 +20,8 @@
 
   <!-- Optional: Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="PromptRebel – Prompts, Local LLMs & Agents">
-  <meta name="twitter:description" content="Prompt Debugging & Experimente: Bild, Video, Audio, lokale LLMs, Agents, Tools. Transparent statt Marketing.">
+  <meta name="twitter:title" content="PromptRebel – Local AI & Agents">
+  <meta name="twitter:description" content="Transparente KI-Experimente: lokale LLMs, Agenten, Tools & Games.">
   <meta name="twitter:image" content="https://promptrebel.github.io/promptrebel/assets/og/A20828B8-24DB-4FAD-92CF-851AD154D80D.jpeg">
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,47 +40,62 @@
       line-height: 1.6;
       padding-top: 64px;
     }
-
     a { color: inherit; text-decoration: none; }
 
+    /* Skip link */
+    .skip-link{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      top:-40px;
+      padding:6px 10px;
+      background:#0f172a;
+      color:#f9fafb;
+      border-radius:999px;
+      font-size:13px;
+      z-index:60;
+    }
+    .skip-link:focus-visible{
+      top:10px;
+      outline:2px solid #22d3ee;
+      outline-offset:2px;
+    }
+
     /* --- Hintergrund / Noise / Glows --- */
-    body::before{
-      content:"";
-      position:fixed;
-      inset:0;
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
       background:
         radial-gradient(circle at 10% 0%, rgba(236, 72, 153, 0.35), transparent 55%),
         radial-gradient(circle at 90% 100%, rgba(56, 189, 248, 0.35), transparent 55%);
-      z-index:-2;
+      z-index: -2;
     }
-    body::after{
-      content:"";
-      position:fixed;
-      inset:0;
-      opacity:0.22;
-      pointer-events:none;
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      opacity: 0.22;
+      pointer-events: none;
       background-image:
         linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-      background-size:3px 3px, 3px 3px;
-      mix-blend-mode:soft-light;
-      z-index:-1;
+      background-size: 3px 3px, 3px 3px;
+      mix-blend-mode: soft-light;
+      z-index: -1;
     }
 
-    .page{
-      max-width:1120px;
-      margin:0 auto;
-      padding:16px 16px 40px;
-    }
+    .page { max-width: 1120px; margin: 0 auto; padding: 16px 16px 40px; }
 
     /* --- Top-Navigation + Scroll-Progress --- */
     .nav{
       position:fixed;
       top:0; left:0; right:0;
       z-index:40;
-      backdrop-filter:blur(14px);
-      background:linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
-      border-bottom:1px solid rgba(148, 163, 184, 0.1);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
     }
     .nav-inner{
       max-width:1120px;
@@ -88,36 +105,36 @@
       align-items:center;
       justify-content:space-between;
       position:relative;
+      gap:10px;
     }
     .nav::after{
       content:"";
       position:absolute;
       left:0; right:0; bottom:0;
       height:2px;
-      background:linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
       transform-origin:left;
       transform:scaleX(var(--scroll));
-      transition:transform 0.1s linear;
+      transition:transform .1s linear;
       pointer-events:none;
     }
 
     .brand{
       font-size:22px;
       font-weight:800;
-      letter-spacing:0.05em;
+      letter-spacing:.05em;
       cursor:pointer;
-      position:relative;
       white-space:nowrap;
-      text-shadow:0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4);
+      text-shadow: 0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4);
     }
     .brand span.accent{
-      background:linear-gradient(135deg, #f472b6, #22d3ee);
+      background: linear-gradient(135deg, #f472b6, #22d3ee);
       -webkit-background-clip:text;
       color:transparent;
     }
-    .brand.glitch{ animation: brand-glitch 0.7s ease-out; }
+    .brand.glitch{ animation: brand-glitch .7s ease-out; }
     @keyframes brand-glitch{
-      0%{ text-shadow:0 0 0 rgba(236,72,153,0.9), 0 0 0 rgba(56,189,248,0.9); }
+      0% { text-shadow:0 0 0 rgba(236,72,153,0.9), 0 0 0 rgba(56,189,248,0.9); }
       30%{ text-shadow:2px 0 rgba(236,72,153,0.9), -2px 0 rgba(56,189,248,0.9); }
       60%{ text-shadow:-2px 0 rgba(236,72,153,0.7), 2px 0 rgba(56,189,248,0.7); }
       100%{ text-shadow:0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4); }
@@ -131,21 +148,26 @@
       left:0; bottom:-2px;
       width:0; height:2px;
       border-radius:999px;
-      background:linear-gradient(90deg, #f472b6, #22d3ee);
-      box-shadow:0 0 8px rgba(56, 189, 248, 0.8);
-      transition:width 0.25s ease;
+      background: linear-gradient(90deg, #f472b6, #22d3ee);
+      box-shadow:0 0 8px rgba(56,189,248,0.8);
+      transition:width .25s ease;
     }
     .nav-link:hover::after{ width:100%; }
+    .nav-link:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:3px;
+      border-radius:10px;
+    }
 
     /* --- Layout --- */
-    .section{ padding:40px 16px 8px; }
-    .section:first-of-type{ padding-top:28px; }
-    #projects, #about{ scroll-margin-top:80px; }
+    .section{ padding: 40px 16px 8px; }
+    .section:first-of-type{ padding-top: 28px; }
+    #projects, #about, #lab-notes{ scroll-margin-top: 80px; }
 
     @media (min-width:768px){
       .hero-layout{
         display:grid;
-        grid-template-columns:minmax(0, 3fr) minmax(0, 2.3fr);
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2.3fr);
         align-items:center;
         gap:32px;
       }
@@ -153,33 +175,34 @@
 
     /* --- Hero --- */
     .hero-title{
-      font-size:clamp(34px, 5vw, 52px);
-      font-weight:800;
-      letter-spacing:0.01em;
-      margin-bottom:10px;
-      text-shadow:0 0 14px rgba(236,72,153,0.6), 0 0 20px rgba(34,211,238,0.4);
+      font-size: clamp(34px, 5vw, 52px);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      margin-bottom: 10px;
+      text-shadow: 0 0 14px rgba(236,72,153,0.6), 0 0 20px rgba(34,211,238,0.4);
     }
     .hero-subline{
-      font-size:18px;
-      margin-bottom:14px;
-      color:#e5e7eb;
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #e5e7eb;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:10px;
     }
-    .hero-subline span.arrow{ margin-right:6px; }
-
-    /* ✅ Subline erweitert: Begriffe als dezente Beschriftung */
-    .hero-subline small{
-      display:block;
-      font-size:12px;
-      color:#9ca3af;
-      margin-top:6px;
-      letter-spacing:.02em;
+    .hero-subline span.arrow{ margin-right: 2px; }
+    .hero-subtags{
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #a5b4fc;
+      opacity: .95;
     }
-
     .hero-text{
-      font-size:15px;
-      color:#cbd5f5;
-      max-width:34rem;
-      margin-bottom:22px;
+      font-size: 15px;
+      color: #cbd5f5;
+      max-width: 34rem;
+      margin-bottom: 22px;
     }
 
     .hero-actions{
@@ -192,44 +215,48 @@
 
     .btn-primary{
       position:relative;
-      padding:11px 22px;
-      border-radius:999px;
-      border:1px solid rgba(148, 163, 184, 0.25);
-      background:radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.96));
-      box-shadow:0 18px 40px rgba(15, 23, 42, 0.9);
-      font-size:15px;
-      font-weight:600;
-      cursor:pointer;
-      color:#f9fafb;
+      padding: 11px 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.96));
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #f9fafb;
       display:inline-flex;
       align-items:center;
       gap:8px;
-      transition:transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
     }
     .btn-primary::before{
       content:"";
       position:absolute;
       inset:0;
       border-radius:inherit;
-      background:linear-gradient(135deg, rgba(236,72,153,0.7), rgba(56,189,248,0.7));
-      opacity:0.13;
+      background: linear-gradient(135deg, rgba(236,72,153,0.7), rgba(56,189,248,0.7));
+      opacity: 0.13;
       pointer-events:none;
-      transition:opacity 0.16s ease;
+      transition: opacity 0.16s ease;
     }
     .btn-primary:hover{
-      transform:translateY(-1px) scale(1.01);
-      box-shadow:0 22px 45px rgba(15, 23, 42, 0.95);
-      border-color:rgba(248, 250, 252, 0.25);
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 22px 45px rgba(15, 23, 42, 0.95);
+      border-color: rgba(248, 250, 252, 0.25);
     }
-    .btn-primary:hover::before{ opacity:0.22; }
+    .btn-primary:hover::before{ opacity: 0.22; }
     .btn-primary:active{
-      transform:translateY(1px) scale(0.99);
-      box-shadow:0 10px 28px rgba(15, 23, 42, 0.9);
+      transform: translateY(1px) scale(0.99);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.9);
+    }
+    .btn-primary:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:3px;
     }
 
     .btn-textlink{
-      font-size:14px;
-      color:#a5b4fc;
+      font-size: 14px;
+      color: #a5b4fc;
       cursor:pointer;
       border:none;
       background:none;
@@ -239,30 +266,36 @@
       gap:6px;
     }
     .btn-textlink span.underline{
-      text-decoration:underline;
-      text-underline-offset:3px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .btn-textlink:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:3px;
+      border-radius:10px;
     }
 
     .hero-note{
-      font-size:11px;
+      font-size: 11px;
       color:#9ca3af;
-      max-width:28rem;
+      max-width: 28rem;
     }
 
-    /* --- Active Experiments Card --- */
+    /* --- Glass Panel --- */
     .panel-glass{
-      border-radius:18px;
-      border:1px solid rgba(148, 163, 184, 0.18);
-      background:radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
-      box-shadow:0 18px 45px rgba(15, 23, 42, 0.95);
-      backdrop-filter:blur(18px);
-      padding:14px 16px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 14px 16px 12px;
     }
 
     .panel-header{
       font-size:12px;
-      letter-spacing:0.16em;
-      text-transform:uppercase;
+      letter-spacing: .16em;
+      text-transform: uppercase;
       color:#9ca3af;
       margin-bottom:6px;
       display:flex;
@@ -272,80 +305,80 @@
     .panel-header span.icon{ font-size:14px; color:#f97316; }
 
     .terminal{
-      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size:12px;
-      white-space:pre-line;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      white-space: pre-line;
       color:#e5e7eb;
     }
     .terminal .dim{ color:#6b7280; }
     .terminal .fail{
       color:#fecaca;
       text-shadow:0 0 8px #fb7185;
-      animation:glowRed 1.5s infinite alternate;
+      animation: glowRed 1.5s infinite alternate;
     }
     @keyframes glowRed{
-      from{ text-shadow:0 0 6px #fb7185; }
-      to{ text-shadow:0 0 14px #f97373; }
+      from { text-shadow: 0 0 6px #fb7185; }
+      to   { text-shadow: 0 0 14px #f97373; }
     }
 
     /* --- Projects Grid --- */
-    .section-title{ font-size:20px; font-weight:700; margin-bottom:10px; }
+    .section-title{
+      font-size: clamp(20px, 4.5vw, 24px);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
     .section-subtitle{
-      font-size:13px;
+      font-size: 13px;
       color:#9ca3af;
-      margin-bottom:18px;
-      max-width:40rem;
+      margin-bottom: 18px;
+      max-width: 40rem;
     }
 
     .projects-grid{ display:grid; gap:18px; }
     @media (min-width:768px){
-      .projects-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .projects-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     .card{
       --accent: rgba(236,72,153,0.9);
       position:relative;
-      border-radius:20px;
-      padding:16px 18px 14px;
-      border:1px solid rgba(148, 163, 184, 0.18);
-      background:radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.99));
-      box-shadow:0 18px 40px rgba(15, 23, 42, 0.96);
-      backdrop-filter:blur(18px);
+      border-radius: 20px;
+      padding: 16px 18px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.99));
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       overflow:hidden;
-      transition:transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
     }
-
     .card::before{
       content:"";
       position:absolute;
       inset:-1px;
-      border-radius:inherit;
-      background:radial-gradient(circle at top left, var(--accent), transparent 60%);
-      opacity:0.22;
+      border-radius: inherit;
+      background: radial-gradient(circle at top left, var(--accent), transparent 60%);
+      opacity: 0.22;
       pointer-events:none;
-      mix-blend-mode:screen;
+      mix-blend-mode: screen;
     }
-
     .card:hover{
-      transform:translateY(-3px);
-      box-shadow:0 26px 60px rgba(15, 23, 42, 0.98);
-      border-color:rgba(209, 213, 219, 0.3);
-      background:radial-gradient(circle at top left, rgba(15, 23, 42, 0.99), rgba(15, 23, 42, 1));
+      transform: translateY(-3px);
+      box-shadow: 0 26px 60px rgba(15, 23, 42, 0.98);
+      border-color: rgba(209, 213, 219, 0.3);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.99), rgba(15, 23, 42, 1));
     }
     .card:hover::before{
       inset:-2px;
-      border:1px solid var(--accent);
-      opacity:0.4;
-      animation:pulse 2s infinite;
-    }
-    .card:hover .card-title{
-      text-shadow:0 0 12px var(--accent);
-      transform:translateY(-2px);
+      border: 1px solid var(--accent);
+      opacity: 0.4;
+      animation: pulse 2s infinite;
     }
     @keyframes pulse{
-      0%{ opacity:0.15; }
-      50%{ opacity:0.45; }
-      100%{ opacity:0.15; }
+      0% { opacity: .15; }
+      50%{ opacity: .45; }
+      100%{ opacity: .15; }
     }
 
     .card-top{
@@ -354,11 +387,11 @@
       align-items:center;
       margin-bottom:10px;
     }
-    .card-icon{ font-size:18px; opacity:0.88; }
+    .card-icon{ font-size:18px; opacity:.88; }
     .card-tag{
       font-size:11px;
-      letter-spacing:0.16em;
-      text-transform:uppercase;
+      letter-spacing: .16em;
+      text-transform: uppercase;
       color:#cbd5e1;
     }
     .card-title{
@@ -366,55 +399,64 @@
       font-weight:700;
       margin-bottom:6px;
       color:#f9fafb;
-      text-shadow:0 0 8px var(--accent);
-      transition:text-shadow 0.16s ease, transform 0.16s ease;
+      text-shadow: 0 0 8px var(--accent);
+      transition: text-shadow 0.16s ease, transform 0.16s ease;
+    }
+    .card:hover .card-title{
+      text-shadow:0 0 12px var(--accent);
+      transform: translateY(-2px);
     }
     .card-text{ font-size:13px; color:#d1d5db; margin-bottom:12px; }
     .card-meta{
       display:flex;
-      justify-content:space-between;
+      justify-content: space-between;
       align-items:center;
       font-size:11px;
       color:#9ca3af;
+      gap:10px;
     }
     .card-chip{
-      border-radius:999px;
+      border-radius: 999px;
       padding:2px 8px;
-      border:1px solid rgba(148, 163, 184, 0.35);
+      border: 1px solid rgba(148, 163, 184, 0.35);
       font-size:10px;
       color:#e2e8f0;
-      opacity:0.9;
+      opacity:.9;
+      white-space:nowrap;
     }
     .card-link{
       font-size:13px;
-      text-decoration:underline;
-      text-underline-offset:3px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
       color:#e5e7eb;
+      white-space:nowrap;
+    }
+    .card-link:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:3px;
+      border-radius:10px;
     }
 
     /* --- About / Ethos --- */
     .about-layout{ display:grid; gap:20px; }
     @media (min-width:768px){
       .about-layout{
-        grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
         align-items:flex-start;
       }
     }
-
     .about-title{
       font-size:22px;
       margin-bottom:10px;
       color:#a5f3fc;
-      text-shadow:0 0 12px rgba(34, 211, 238, 0.7);
+      text-shadow: 0 0 12px rgba(34, 211, 238, 0.7);
     }
-
     .about-text p{
       font-size:14px;
       color:#e5e7eb;
       margin-bottom:10px;
-      max-width:36rem;
+      max-width: 36rem;
     }
-
     .link-back{
       display:inline-flex;
       align-items:center;
@@ -422,10 +464,14 @@
       font-size:13px;
       color:#a5b4fc;
       margin-top:8px;
-      text-decoration:underline;
-      text-underline-offset:3px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
     }
-
+    .link-back:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:3px;
+      border-radius:10px;
+    }
     .ethos-terminal{ margin-top:4px; }
     .ethos-terminal .terminal{ font-size:12px; }
 
@@ -433,7 +479,7 @@
     footer{
       margin-top:40px;
       padding-top:16px;
-      border-top:1px solid rgba(15, 23, 42, 0.9);
+      border-top: 1px solid rgba(15, 23, 42, 0.9);
       font-size:11px;
       color:#94a3b8;
       display:flex;
@@ -443,46 +489,71 @@
       align-items:center;
     }
     footer .center-links{ display:flex; gap:10px; }
-    footer a{ text-decoration:underline; text-underline-offset:3px; }
+    footer a{ text-decoration: underline; text-underline-offset: 3px; }
     .build-highlight{
       color:#22d3ee;
-      text-shadow:0 0 10px rgba(34,211,238,0.9);
+      text-shadow: 0 0 10px rgba(34,211,238,0.9);
       cursor:pointer;
     }
 
-    /* --- Retro Mode --- */
+    /* --- Retro / Easter Egg Mode --- */
     body.retro-mode::before{
       background:
         radial-gradient(circle at 0% 0%, rgba(236,72,153,0.9), transparent 55%),
         radial-gradient(circle at 100% 100%, rgba(56,189,248,0.9), transparent 60%);
     }
-    body.retro-mode::after{ opacity:0.3; }
-    body.retro-mode .page{ filter:contrast(1.05) saturate(1.2); }
-    body.retro-mode .brand{ animation:retro-scan 1.1s infinite alternate; }
+    body.retro-mode::after{ opacity: 0.3; }
+    body.retro-mode .page{ filter: contrast(1.05) saturate(1.2); }
+    body.retro-mode .brand{ animation: retro-scan 1.1s infinite alternate; }
     @keyframes retro-scan{
-      from{ text-shadow:0 0 6px rgba(248,250,252,0.9); }
-      to{ text-shadow:0 0 16px rgba(251,113,133,0.95); }
+      from { text-shadow: 0 0 6px rgba(248,250,252,0.9); }
+      to   { text-shadow: 0 0 16px rgba(251,113,133,0.95); }
     }
 
     /* --- Mobile Tweaks --- */
-    @media (max-width:767px){
-      body{ padding-top:60px; }
+    @media (max-width: 767px){
+      body{ padding-top: 60px; }
       .nav-inner{ gap:8px; }
-      .nav-links{ font-size:13px; gap:12px; }
-      .section{ padding-top:32px; }
-      .hero-actions{ flex-direction:column; align-items:flex-start; }
+      .nav-links{ font-size: 13px; gap:12px; }
+      .section{ padding-top: 32px; }
+      .hero-actions{ flex-direction: column; align-items:flex-start; }
       .btn-primary{ width:100%; justify-content:center; }
+    }
+
+    /* --- Mobile performance fallback for blur/glass --- */
+    @media (max-width: 767px) and (hover: none){
+      .nav,
+      .panel-glass,
+      .card{
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      .nav{
+        background: rgba(15, 23, 42, 0.92) !important;
+      }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 </head>
+
 <body>
+  <a href="#main" class="skip-link">Zum Inhalt springen</a>
+
   <!-- NAVIGATION -->
-  <header class="nav">
+  <header class="nav" aria-label="Top-Navigation">
     <div class="nav-inner">
-      <div id="brand" class="brand">
+      <div id="brand" class="brand" role="link" tabindex="0" aria-label="Zur Startseite">
         Prompt<span class="accent">Rebel</span>
       </div>
-      <nav class="nav-links">
+      <nav class="nav-links" aria-label="Hauptnavigation">
         <a href="#projects" class="nav-link">Projects</a>
         <a href="#about" class="nav-link">About</a>
         <a href="#lab-notes" class="nav-link">Lab Notes</a>
@@ -490,48 +561,46 @@
     </div>
   </header>
 
-  <main class="page">
+  <main class="page" id="main">
     <!-- HERO -->
     <section class="section" id="top">
       <div class="hero-layout">
         <div>
-          <h1 class="hero-title">PromptRebel</h1>
+          <h1 class="hero-title">PromptRebel <span style="font-weight:600; opacity:.85;">– KI-Labor</span></h1>
 
-          <!-- ✅ Subline: Stil bleibt, Begriffe kommen als “Beschriftung” -->
           <div class="hero-subline">
-            <span class="arrow">→</span>Create. Learn. Experiment.
-            <small>Prompts · Prompt Debugging · Local LLMs · Agents · Bild · Video · Audio · Tools</small>
+            <span class="arrow">→</span>
+            <span>Create. Learn. Experiment.</span>
+            <span class="hero-subtags">Prompts · Prompt Debugging · Local LLMs · Agents · Bild · Video · Audio · Tools</span>
           </div>
 
-          <!-- ✅ Hero-Text: gleiche Seele, konkreter Wortschatz -->
           <p class="hero-text">
-            Persönliches KI-Labor für <b>Prompts</b> und <b>Experimente</b> – von <b>Bild</b>, <b>Video</b> und <b>Audio/Musik</b>
-            bis zu <b>lokalen LLMs</b>, <b>Agents</b>, Tools und kleinen Micro-Apps.
+            Persönliches KI-Labor für strukturierte Prompts, lokale LLMs, Agents und kreative Experimente.
             Kein Marketing, keine Show – nur Neugier, Transparenz und dokumentiertes Lernen.
           </p>
 
           <div class="hero-actions">
-            <button class="btn-primary" id="btnExplore">
+            <button class="btn-primary" id="btnExplore" aria-label="Zum Projects Dashboard scrollen">
               <span>Explore Projects</span>
-              <span>↗</span>
+              <span aria-hidden="true">↗</span>
             </button>
-            <button class="btn-textlink" id="btnWhatIs">
+            <button class="btn-textlink" id="btnWhatIs" aria-label="Zum Abschnitt About scrollen">
               <span class="underline">What is PromptRebel?</span>
             </button>
           </div>
 
           <p class="hero-note">
-            Fertige Werke und laufende Tests – offen dokumentiert. Ziel: verstehen, vergleichen, iterieren (ohne Hype).
+            Fertige Werke und laufende Experimente – offen dokumentiert, damit andere lernen, testen und weiterbauen können.
           </p>
         </div>
 
         <!-- Active Experiments Panel -->
-        <aside class="panel-glass">
+        <aside class="panel-glass" aria-label="Aktive Experimente (dekorativ)">
           <div class="panel-header">
-            <span class="icon">⚡</span>
+            <span class="icon" aria-hidden="true">⚡</span>
             <span>ACTIVE EXPERIMENTS</span>
           </div>
-          <div id="experimentsTerminal" class="terminal">
+          <div id="experimentsTerminal" class="terminal" aria-hidden="true">
             <span class="dim">&gt; booting lab console…</span>
           </div>
         </aside>
@@ -541,116 +610,105 @@
     <!-- PROJECTS GRID -->
     <section class="section" id="projects">
       <h2 class="section-title">Projects Dashboard</h2>
-
-      <!-- ✅ Subtitle: “Klartext” statt generisch, ohne Marketing -->
       <p class="section-subtitle">
-        Ein Dashboard aus Experimenten und fertigen Ergebnissen: Prompt Autopsie &amp; Prompt Debugging,
-        Bild/Video/Audio, Tools/Micro-Apps, lokale LLMs und Agents. Manche Projekte sind abgeschlossen,
-        andere wachsen weiter – alles nachvollziehbar statt poliert.
+        Eine Sammlung von Experimenten und Projekten: Prompt Autopsie, Bild/Video/Audio, Micro-Apps, Tools &amp; Agents.
+        Manche sind abgeschlossen, andere wachsen weiter – alles bleibt nachvollziehbar.
       </p>
 
       <div class="projects-grid">
-        <!-- So funktionierts -->
-        <!-- ✅ ID FIX: card-how-title statt card-music-title -->
+        <!-- So funktioniert's -->
         <article class="card" style="--accent: rgba(244,114,182,0.9);" role="region" aria-labelledby="card-how-title">
           <div class="card-top">
-            <div class="card-icon">💡</div>
+            <div class="card-icon" aria-hidden="true">💡</div>
             <div class="card-tag">LAB</div>
           </div>
-          <h3 class="card-title" id="card-how-title">So funktioniert’s</h3>
+          <h3 class="card-title" id="card-how-title">So funktioniert's</h3>
           <p class="card-text">
-            🔥 Kein Zauber. Nur Struktur. Prompt Autopsie: Ich zerlege Beispiele in Bausteine,
-            zeige den Effekt einzelner Änderungen und erkläre typische Fehler (Drift, Overload, Constraints).
+            🔥 Kein Zauber. Nur Struktur. Prompt-Autopsie statt Vorlagen: Bausteine, Risiken, typische Anpassungen – mit klaren Effekten.
           </p>
           <div class="card-meta">
-            <span class="card-chip">prompt autopsy · debug</span>
-            <a href="so-funktionierts/index.html" class="card-link">View experiments →</a>
+            <span class="card-chip">autopsy · debugging</span>
+            <a href="so-funktionierts/index.html" class="card-link">Zur Prompt Autopsie →</a>
           </div>
         </article>
 
         <!-- Music & Audio -->
-        <!-- ✅ ID FIX: card-music-audio-title eindeutig -->
-        <article class="card" style="--accent: rgba(244,114,182,0.9);" role="region" aria-labelledby="card-music-audio-title">
+        <article class="card" style="--accent: rgba(244,114,182,0.9);" role="region" aria-labelledby="card-music-title">
           <div class="card-top">
-            <div class="card-icon">🎵</div>
-            <div class="card-tag">LAB</div>
+            <div class="card-icon" aria-hidden="true">🎵</div>
+            <div class="card-tag">AUDIO</div>
           </div>
-          <h3 class="card-title" id="card-music-audio-title">Music &amp; Audio</h3>
+          <h3 class="card-title" id="card-music-title">Music &amp; Audio</h3>
           <p class="card-text">
-            KI-Rap, Sound-Experimente, Loops und Voice-Tests: Prompt-to-Music, Text-to-Voice, Audio-Varianten.
-            Fertige Tracks neben Skizzen – inklusive Notizen, was funktioniert und was nicht.
+            KI-Rap, Sound-Experimente, Ambient-Loops und Voice/TTS – von fertigen Tracks bis zu Skizzen und Prompt-to-Music Tests.
           </p>
           <div class="card-meta">
-            <span class="card-chip">ai music · voice</span>
-            <a href="music/" class="card-link">View experiments →</a>
+            <span class="card-chip">prompt-to-music · voice</span>
+            <a href="music/" class="card-link">Zu Audio-Experimenten →</a>
           </div>
         </article>
 
         <!-- Video & Motion -->
         <article class="card" style="--accent: rgba(45,212,191,0.95);" role="region" aria-labelledby="card-video-title">
           <div class="card-top">
-            <div class="card-icon">🎬</div>
+            <div class="card-icon" aria-hidden="true">🎬</div>
             <div class="card-tag">VIDEO</div>
           </div>
           <h3 class="card-title" id="card-video-title">Video &amp; Motion</h3>
           <p class="card-text">
-            Kurzclips, Visualizer und Motion-Tests: Kamera, Tempo, Stil-Konsistenz.
-            Keine “Best Prompts” – eher: was passiert, wenn du genau einen Hebel drehst?
+            Motion-Prompts, Visualizer, kurze Clips und Tests zu Konsistenz &amp; Prompt Drift – von fertigen Videos bis zu Rohfassungen.
           </p>
           <div class="card-meta">
-            <span class="card-chip">ai video · motion</span>
-            <a href="coming-soon.html" class="card-link">View experiments →</a>
+            <span class="card-chip">motion · consistency</span>
+            <a href="coming-soon.html" class="card-link">Zu Video-Experimenten →</a>
           </div>
         </article>
 
         <!-- Visual Art & Covers -->
         <article class="card" style="--accent: rgba(56,189,248,0.9);" role="region" aria-labelledby="card-art-title">
           <div class="card-top">
-            <div class="card-icon">🎨</div>
-            <div class="card-tag">BETA</div>
+            <div class="card-icon" aria-hidden="true">🎨</div>
+            <div class="card-tag">VISUALS</div>
           </div>
           <h3 class="card-title" id="card-art-title">Visual Art &amp; Covers</h3>
           <p class="card-text">
-            Bild-Prompts, Stil-Studien und Cover-Experimente: Konsistenz, Look, Licht, Materialität.
-            Fokus auf Vergleichbarkeit statt “wow”.
+            Bild-Prompts, Cover-Designs und visuelle Tests: Stil, Licht, Kamera, Constraints – mit Fokus auf Reproduzierbarkeit und Vergleich.
           </p>
           <div class="card-meta">
-            <span class="card-chip">image prompts · style</span>
-            <a href="visuals/" class="card-link">View experiments →</a>
+            <span class="card-chip">image prompt · style</span>
+            <a href="visuals/" class="card-link">Zu Bild-Experimenten →</a>
           </div>
         </article>
 
         <!-- Tools & Micro-Apps -->
         <article class="card" style="--accent: rgba(192,132,252,0.95);" role="region" aria-labelledby="card-tools-title">
           <div class="card-top">
-            <div class="card-icon">🧩</div>
-            <div class="card-tag">TOOL</div>
+            <div class="card-icon" aria-hidden="true">🧩</div>
+            <div class="card-tag">TOOLS</div>
           </div>
           <h3 class="card-title" id="card-tools-title">Tools &amp; Micro-Apps</h3>
           <p class="card-text">
-            Kleine Tools und Micro-Apps zum Denken/Arbeiten: Prompt-Tools, Offline-Experimente,
-            lokale Workflows – und erste Agent-Spielereien, wenn’s Sinn macht.
+            Kleine Helfer, Micro-Apps, lokale/offline Ideen und erste Agent-Spielereien – pragmatisch, testbar, ohne Hype.
           </p>
           <div class="card-meta">
-            <span class="card-chip">tools · agents</span>
-            <a href="tools/" class="card-link">View experiments →</a>
+            <span class="card-chip">local · agents</span>
+            <a href="tools/" class="card-link">Zu Tools &amp; Agents →</a>
           </div>
         </article>
 
         <!-- Stories & Worlds -->
         <article class="card" style="--accent: rgba(129,140,248,0.95);" role="region" aria-labelledby="card-stories-title">
           <div class="card-top">
-            <div class="card-icon">📖</div>
-            <div class="card-tag">CONCEPTS</div>
+            <div class="card-icon" aria-hidden="true">📖</div>
+            <div class="card-tag">STORIES</div>
           </div>
           <h3 class="card-title" id="card-stories-title">Stories &amp; Worlds</h3>
           <p class="card-text">
-            Skripte, Hörbuch-Fragmente und Worldbuilding: Narrative Bausteine, Prompt-Strukturen,
-            Stil- und Tonalitäts-Tests – dokumentiert wie ein Labor-Logbuch.
+            Hörbuch-Fragmente, dystopische Texte, Worldbuilding und Skript-Experimente – dort, wo Prompting auf Narrative trifft.
           </p>
           <div class="card-meta">
             <span class="card-chip">worldbuilding · scripts</span>
-            <a href="coming-soon.html" class="card-link">View experiments →</a>
+            <a href="coming-soon.html" class="card-link">Zu Story-Experimenten →</a>
           </div>
         </article>
       </div>
@@ -658,23 +716,20 @@
 
     <!-- ABOUT / ETHOS -->
     <section class="section" id="about">
-      <div class="about-layout">
+      <known class="about-layout">
         <div class="about-text">
           <h2 class="about-title">What is PromptRebel?</h2>
-
-          <!-- ✅ About: gleiche Aussage, aber mit “Vokabular” statt Allgemeinplätzen -->
           <p>
-            PromptRebel ist ein persönliches KI-Labor und eine Haltung:
-            neugierig, transparent und respektvoll. Hier geht’s um <b>Verstehen</b> – nicht um Hype.
+            PromptRebel ist ein persönliches KI-Labor und eine Haltung: neugierig, transparent und respektvoll im Umgang mit KI.
+            Projekte entstehen aus Interesse – nicht aus Auftrag.
           </p>
           <p>
-            Ich dokumentiere Experimente zu <b>Prompts</b> (Bild/Video/Audio), <b>Prompt Debugging</b>,
-            <b>lokalen LLMs</b> und <b>Agents</b> – inklusive Fehlern, Umwegen und Lessons learned.
+            Fertige Ergebnisse und Experimente stehen nebeneinander. Fehler und Umwege werden nicht versteckt,
+            sondern als Teil des Lernprozesses gezeigt.
           </p>
           <p>
             Alles steht unter einer offenen Creative-Commons-Lizenz (CC&nbsp;BY-NC-SA&nbsp;4.0).
-            Du darfst lernen, remixen und weiterbauen – solange es nicht kommerziell ist
-            und du die Quelle nennst.
+            Du darfst lernen, remixen und weiterbauen – solange es nicht kommerziell ist und du die Quelle nennst.
           </p>
 
           <p style="margin-top: 18px; margin-bottom: 6px;">
@@ -688,16 +743,17 @@
           </p>
 
           <a href="#projects" class="link-back">
-            <span>→ Zurück zum Dashboard</span>
+            <span aria-hidden="true">→</span>
+            <span>Zurück zum Dashboard</span>
           </a>
         </div>
 
-        <aside class="panel-glass ethos-terminal" id="lab-notes">
+        <aside class="panel-glass ethos-terminal" id="lab-notes" aria-label="Lab Ethos (dekorativ)">
           <div class="panel-header">
-            <span class="icon">⌘</span>
+            <span class="icon" aria-hidden="true">⌘</span>
             <span>LAB ETHOS</span>
           </div>
-          <div class="terminal" id="ethosTerminal">
+          <div class="terminal" id="ethosTerminal" aria-hidden="true">
 promptrebel $ cat ethos.txt
 
 > mission: build weird, useful, honest AI things
@@ -709,7 +765,7 @@ promptrebel $ cat ethos.txt
 # honesty > perfection.
           </div>
         </aside>
-      </div>
+      </known>
     </section>
 
     <!-- FOOTER -->
@@ -733,27 +789,30 @@ promptrebel $ cat ethos.txt
       document.documentElement.style.setProperty("--scroll", ratio.toString());
     });
 
-    // --- Active Experiments Log ---
+    // --- Brand click + keyboard (home) ---
+    const brandEl = document.getElementById("brand");
+    brandEl.addEventListener("click", () => window.location.href = "./index.html");
+    brandEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") window.location.href = "./index.html";
+    });
+
+    // --- Active Experiments Log (decorative) ---
     const experimentsTerminal = document.getElementById("experimentsTerminal");
     const experimentLines = [
       "> generating dystopian rap…        [ok]",
-      "> training voxel assets…           [draft]",
-      "> glitching neon cover art…       [failed, retrying]",
-      "> compiling tiny agent v3…        [running]",
-      "> rendering ambient loop #7…      [ok]",
-      "> prompt mutation test 42…        [strange, but works]"
+      "> testing prompt drift…            [note]",
+      "> measuring consistency…           [running]",
+      "> compiling tiny agent v3…         [running]",
+      "> rendering ambient loop #7…       [ok]",
+      "> prompt mutation test 42…         [strange, but works]",
+      "> local llm sandbox…               [booting]"
     ];
 
-    let currentLines = [
-      "> compiling experiment data…       [booting]"
-    ];
+    let currentLines = ["> compiling experiment data…       [booting]"];
 
     function renderTerminal() {
       experimentsTerminal.innerHTML = currentLines
-        .map(line => {
-          const isFail = line.includes("failed");
-          return isFail ? `<span class="fail">${line}</span>` : line;
-        })
+        .map(line => line.includes("failed") ? `<span class="fail">${line}</span>` : line)
         .join("\n");
     }
 
@@ -770,17 +829,18 @@ promptrebel $ cat ethos.txt
     setInterval(pushLogLine, 4000 + Math.random() * 3000);
 
     // --- CTA-Scrolls ---
-    document.getElementById("btnExplore").addEventListener("click", () => {
+    const btnExplore = document.getElementById("btnExplore");
+    const btnWhatIs = document.getElementById("btnWhatIs");
+
+    btnExplore.addEventListener("click", () => {
       document.getElementById("projects").scrollIntoView({ behavior: "smooth" });
     });
 
-    document.getElementById("btnWhatIs").addEventListener("click", () => {
+    btnWhatIs.addEventListener("click", () => {
       document.getElementById("about").scrollIntoView({ behavior: "smooth" });
     });
 
     // --- Brand Glitch on Load + Easter Egg (3x Klick) ---
-    const brandEl = document.getElementById("brand");
-
     window.addEventListener("load", () => {
       brandEl.classList.add("glitch");
       setTimeout(() => brandEl.classList.remove("glitch"), 800);
@@ -807,9 +867,7 @@ promptrebel $ cat ethos.txt
 
     function triggerRetroMode() {
       document.body.classList.add("retro-mode");
-      setTimeout(() => {
-        document.body.classList.remove("retro-mode");
-      }, 12000);
+      setTimeout(() => document.body.classList.remove("retro-mode"), 12000);
     }
 
     // --- Footer Version-Spielerei ---
