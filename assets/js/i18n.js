@@ -2,8 +2,8 @@
    Static-site i18n (DE/EN) for PromptRebel
    - Switch via <select id="langSelect">
    - Persists in localStorage
-   - Fallback: if a key is missing, existing HTML text remains
-   - Supports:
+   - Optional: ?lang=en
+   - Applies:
      [data-i18n="key"]       -> textContent
      [data-i18n-html="key"]  -> innerHTML (trusted strings only)
      [data-i18n-attr="attr:key;attr2:key2"] -> set attributes
@@ -20,14 +20,19 @@
   // =========================
   // DICTIONARIES (FULL)
   // =========================
-  // Notes:
-  // - Strings used with data-i18n-html may contain <br/>, <b>, etc.
-  // - Keep translations pragmatic and clear; you can refine wording later.
   const I18N = {
     de: {
-      // ---- Global / UI ----
+      // ---- Page/meta ----
+      "page.title": "PromptRebel – So funktioniert’s · Prompts",
       "page.skip": "Zum Inhalt springen",
+
+      // ---- Global / UI ----
       "ui.language": "Sprache",
+      "ui.more": "Mehr anzeigen",
+      "ui.promptExcerpt": "Prompt-Ausschnitt",
+      "ui.whatItDoes": "Was macht das?",
+      "ui.typicalTweaks": "Typische Anpassungen",
+      "ui.risk": "Risiko",
 
       // ---- Nav ----
       "nav.main": "Hauptnavigation",
@@ -59,6 +64,22 @@
       "chip.style": "Style",
       "chip.constraints": "Constraints",
 
+      // ---- Right panel ----
+      "panel.nowLoading": "JETZT LÄDT · PROMPT-AUTOPSIE",
+      "panel.terminal":
+        "promptrebel:autopsy$ explain skateboard_prompt\n\n" +
+        "> INPUT:   reference photo + prompt blocks\n" +
+        "> OUTPUT:  consistent image variations\n\n" +
+        "Blocks:\n" +
+        "- identity transfer\n" +
+        "- camera / lens\n" +
+        "- pose & action\n" +
+        "- background\n" +
+        "- lighting\n" +
+        "- style\n" +
+        "- constraints\n\n" +
+        "<span class=\"dim\"># ändere nie alles auf einmal.</span>",
+
       // TLDR / Key / Tip
       "tldr.title": "TL;DR",
       "tldr.text":
@@ -73,9 +94,6 @@
 
       "tip.oneword":
         "Tipp: Du brauchst nicht „kreativ“ zu sein. Ändere nur ein Wort – und beobachte den Effekt.",
-
-      // ---- Panel header (optional, if you want to translate later) ----
-      // (Terminal content can remain as-is, not everything needs keys.)
 
       // ---- ORIGINAL PROMPT SECTION ----
       "orig.title": "Beispielprompt: Skateboard",
@@ -92,6 +110,7 @@
       "orig.img.reference.alt": "Referenz Foto",
 
       // ---- Language & structure callout ----
+      "langstruct.aria": "Hinweis zu Sprache und Prompt-Struktur",
       "langstruct.title": "Warum Englisch – und warum diese Struktur",
       "langstruct.lead":
         "Du musst Prompts nicht so schreiben wie ich. Das hier ist kein „richtig/falsch“ – sondern ein Weg, um Ergebnisse <b>reproduzierbarer</b> zu machen und Änderungen gezielt testen zu können.",
@@ -106,9 +125,12 @@
       "langstruct.card2.title": "2) Struktur ist ein Werkzeug",
       "langstruct.card2.p":
         "Ich schreibe in Blöcken (Motiv, Kamera, Licht, Stil, Constraints), damit ich nichts vergesse und <b>gezielt</b> einzelne Hebel drehen kann.",
-      "langstruct.card2.li1": "Du kannst denselben Inhalt auch als <b>Fließtext</b> schreiben.",
-      "langstruct.card2.li2": "Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich.",
-      "langstruct.card2.li3": "Für Lernfortschritt: <b>immer nur 1 Block pro Test ändern</b>.",
+      "langstruct.card2.li1":
+        "Du kannst denselben Inhalt auch als <b>Fließtext</b> schreiben.",
+      "langstruct.card2.li2":
+        "Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich.",
+      "langstruct.card2.li3":
+        "Für Lernfortschritt: <b>immer nur 1 Block pro Test ändern</b>.",
 
       "langstruct.kicker":
         "<b>Merksatz:</b> Das ist ein Weg – nicht der Weg. Ziel ist Verständnis, nicht Copy/Paste.",
@@ -121,27 +143,22 @@
       "b1.subtitle":
         "Dieser Block sorgt dafür, dass es <b>dein</b> Tier bleibt – und nicht irgendein generischer Hund.",
       "b1.mb.title": "Identity Transfer",
-      "b1.mb.sub": "Die wichtigste Regel: „Wie auf dem Referenzfoto“ – klar und wiederholt.",
+      "b1.mb.sub":
+        "Die wichtigste Regel: „Wie auf dem Referenzfoto“ – klar und wiederholt.",
       "b1.callout":
         "<b>Kurz gesagt:</b> Dieser Block entscheidet, ob es wirklich <b>dein</b> Hund bleibt (Fell, Muster, Proportionen) – oder ob das Modell zu „Random Dog“ driftet.",
-      "b1.more.summary": "Mehr anzeigen",
-
-      "b1.grid1.h": "Prompt-Ausschnitt",
-      "b1.grid2.h": "Was macht das?",
-      "b1.grid2.p":
-        "Verankert Fellfarben, Muster, Proportionen und den „Look“ am Referenzfoto. Ohne diesen Block driftet das Ergebnis schnell zu „Random Dog“.",
-      "b1.grid3.h": "Typische Anpassungen",
-      "b1.grid3.li1": "„dog“ → „animal“ (für jedes Tier)",
-      "b1.grid3.li2": "„captured mid-air“ → „standing / sitting“",
-      "b1.grid3.li3": "mehr Details zu Fell/Markings (wenn nötig)",
-      "b1.grid4.h": "Risiko",
-      "b1.grid4.p":
-        "Zu viel Zusatzbeschreibung kann das Referenzfoto „überschreiben“. Besser: kurz + eindeutig + wiederholbar.",
-
       "b1.img1.caption": "Original (Referenz stark)",
       "b1.img2.caption": "Variante: Identity zu schwach (identity_weak.PNG)",
       "b1.img1.alt": "Original (Identity Transfer aktiv)",
       "b1.img2.alt": "Variante: Identity schwach/unspezifisch",
+
+      "b1.grid2.p":
+        "Verankert Fellfarben, Muster, Proportionen und den „Look“ am Referenzfoto. Ohne diesen Block driftet das Ergebnis schnell zu „Random Dog“.",
+      "b1.grid3.li1": "„dog“ → „animal“ (für jedes Tier)",
+      "b1.grid3.li2": "„captured mid-air“ → „standing / sitting“",
+      "b1.grid3.li3": "mehr Details zu Fell/Markings (wenn nötig)",
+      "b1.grid4.p":
+        "Zu viel Zusatzbeschreibung kann das Referenzfoto „überschreiben“. Besser: kurz + eindeutig + wiederholbar.",
 
       // ---- BLOCK 2: CAMERA ----
       "b2.title": "Block 2: Kamera / Lens",
@@ -151,22 +168,18 @@
       "b2.mb.sub": "Ein einzelner Satz verändert die gesamte Bildphysik.",
       "b2.callout":
         "<b>Kurz gesagt:</b> Kamera-Wörter sind ein Look-Schalter. Fisheye = maximal dynamisch, aber anfälliger für anatomische Fehler.",
-      "b2.more.summary": "Mehr anzeigen",
-      "b2.grid1.h": "Prompt-Ausschnitt",
-      "b2.grid2.h": "Was macht das?",
-      "b2.grid2.p":
-        "Fisheye verstärkt Dynamik durch Verzerrung: Vordergrund riesig, Background gebogen. Stark für Action – riskant für Anatomie.",
-      "b2.grid3.h": "Typische Anpassungen",
-      "b2.grid3.li1": "„fisheye“ → „35mm documentary photo“ (stabiler)",
-      "b2.grid3.li2": "„extreme distortion“ → „no distortion“",
-      "b2.grid3.li3": "Low-angle beibehalten, aber Verzerrung rausnehmen",
-      "b2.grid4.h": "Risiko",
-      "b2.grid4.p":
-        "Extreme Linsen/Verzerrungen erhöhen die Fehlerquote (Pfoten, Board, Proportionen). Wenn es “driftet”: vereinfachen.",
       "b2.img1.caption": "Original: Fisheye",
       "b2.img2.caption": "Variante: 35mm (cam_35mm.PNG)",
       "b2.img1.alt": "Original: Fisheye",
       "b2.img2.alt": "Variante: 35mm, keine Verzerrung",
+
+      "b2.grid2.p":
+        "Fisheye verstärkt Dynamik durch Verzerrung: Vordergrund riesig, Background gebogen. Stark für Action – riskant für Anatomie.",
+      "b2.grid3.li1": "„fisheye“ → „35mm documentary photo“ (stabiler)",
+      "b2.grid3.li2": "„extreme distortion“ → „no distortion“",
+      "b2.grid3.li3": "Low-angle beibehalten, aber Verzerrung rausnehmen",
+      "b2.grid4.p":
+        "Extreme Linsen/Verzerrungen erhöhen die Fehlerquote (Pfoten, Board, Proportionen). Wenn es “driftet”: vereinfachen.",
 
       // ---- BLOCK 3: POSE ----
       "b3.title": "Block 3: Pose & Action",
@@ -176,22 +189,18 @@
       "b3.mb.sub": "Je genauer die Pose, desto weniger Drift – aber: nicht überladen.",
       "b3.callout":
         "<b>Kurz gesagt:</b> Pose-Details steuern Körperlogik. Je klarer „wo sind die Pfoten“, desto stabiler wird das Ergebnis – aber nicht überladen.",
-      "b3.more.summary": "Mehr anzeigen",
-      "b3.grid1.h": "Prompt-Ausschnitt",
-      "b3.grid2.h": "Was macht das?",
-      "b3.grid2.p":
-        "Erzwingt eine „Story Pose“ (High-five) + Stabilität (andere Pfoten am Board). Das gibt Bewegung und Fokus.",
-      "b3.grid3.h": "Typische Anpassungen",
-      "b3.grid3.li1": "High-five rausnehmen → stabilere Anatomie",
-      "b3.grid3.li2": "„ALL FOUR paws … visible contact“ hinzufügen",
-      "b3.grid3.li3": "Board-Logik konkretisieren (Kontaktflächen)",
-      "b3.grid4.h": "Risiko",
-      "b3.grid4.p":
-        "Zu viele Pose-Details können miteinander konkurrieren. Besser: klare Priorität + wenige, testbare Sätze.",
       "b3.img1.caption": "Original: High-five paw",
       "b3.img2.caption": "Variante: natürliche Pose (pose_natural.PNG)",
       "b3.img1.alt": "Original: High-five paw",
       "b3.img2.alt": "Variante: natürliche Pose",
+
+      "b3.grid2.p":
+        "Erzwingt eine „Story Pose“ (High-five) + Stabilität (andere Pfoten am Board). Das gibt Bewegung und Fokus.",
+      "b3.grid3.li1": "High-five rausnehmen → stabilere Anatomie",
+      "b3.grid3.li2": "„ALL FOUR paws … visible contact“ hinzufügen",
+      "b3.grid3.li3": "Board-Logik konkretisieren (Kontaktflächen)",
+      "b3.grid4.p":
+        "Zu viele Pose-Details können miteinander konkurrieren. Besser: klare Priorität + wenige, testbare Sätze.",
 
       // ---- BLOCK 4: BACKGROUND ----
       "b4.title": "Block 4: Hintergrund",
@@ -202,22 +211,18 @@
         "Busy Background + Motion Blur kann „Action“ verstärken – oder das Motiv schlucken.",
       "b4.callout":
         "<b>Kurz gesagt:</b> Hintergrund steuert Kontext + Lesbarkeit. „Busy“ erhöht Action – aber auch Fehler (Text, Logos, Chaos).",
-      "b4.more.summary": "Mehr anzeigen",
-      "b4.grid1.h": "Prompt-Ausschnitt",
-      "b4.grid2.h": "Was macht das?",
-      "b4.grid2.p":
-        "Urban + Motion Blur = Geschwindigkeit. Aber: zu viele Elemente erhöhen Fehlerquote (Texte, Schilder, Logos, Chaos).",
-      "b4.grid3.h": "Typische Anpassungen",
-      "b4.grid3.li1": "Hintergrund vereinfachen → Motiv bleibt klar",
-      "b4.grid3.li2": "„no text, no logos“ hinzufügen",
-      "b4.grid3.li3": "Motion Blur reduzieren",
-      "b4.grid4.h": "Risiko",
-      "b4.grid4.p":
-        "Komplexe Hintergründe ziehen Aufmerksamkeit ab und erzeugen Nebenobjekte. Wenn dein Ziel Vergleichbarkeit ist: “clean” gewinnt.",
       "b4.img1.caption": "Original: Urban",
       "b4.img2.caption": "Variante: Skatepark (bg_skatepark.PNG)",
       "b4.img1.alt": "Original: Urban motion blur",
       "b4.img2.alt": "Variante: Skatepark clean",
+
+      "b4.grid2.p":
+        "Urban + Motion Blur = Geschwindigkeit. Aber: zu viele Elemente erhöhen Fehlerquote (Texte, Schilder, Logos, Chaos).",
+      "b4.grid3.li1": "Hintergrund vereinfachen → Motiv bleibt klar",
+      "b4.grid3.li2": "„no text, no logos“ hinzufügen",
+      "b4.grid3.li3": "Motion Blur reduzieren",
+      "b4.grid4.p":
+        "Komplexe Hintergründe ziehen Aufmerksamkeit ab und erzeugen Nebenobjekte. Wenn dein Ziel Vergleichbarkeit ist: “clean” gewinnt.",
 
       // ---- BLOCK 5: LIGHTING ----
       "b5.title": "Block 5: Licht",
@@ -227,22 +232,18 @@
       "b5.mb.sub": "Wenn „epic“ zu viel ist: runterregeln, nicht löschen.",
       "b5.callout":
         "<b>Kurz gesagt:</b> Licht ist Stimmung. „Epic“ pusht Drama, „Natural“ pusht Glaubwürdigkeit.",
-      "b5.more.summary": "Mehr anzeigen",
-      "b5.grid1.h": "Prompt-Ausschnitt",
-      "b5.grid2.h": "Was macht das?",
-      "b5.grid2.p":
-        "„Epic cinematic“ pusht Kontrast und Highlights. Gut für Drama. Kann aber schnell „KI-Poster“ schreien.",
-      "b5.grid3.h": "Typische Anpassungen",
-      "b5.grid3.li1": "„soft natural daylight“ für Foto-Realismus",
-      "b5.grid3.li2": "Rim-Light reduzieren",
-      "b5.grid3.li3": "Highlights “realistic” setzen",
-      "b5.grid4.h": "Risiko",
-      "b5.grid4.p":
-        "Zu viel “epic” macht das Bild oft künstlich (übertriebene Kantenlichter, HDR-Look). Wenn es unnatürlich wirkt: “runterregeln”.",
       "b5.img1.caption": "Original: Epic",
       "b5.img2.caption": "Variante: Daylight (light_day.PNG)",
       "b5.img1.alt": "Original: Epic cinematic lighting",
       "b5.img2.alt": "Variante: Natural daylight",
+
+      "b5.grid2.p":
+        "„Epic cinematic“ pusht Kontrast und Highlights. Gut für Drama. Kann aber schnell „KI-Poster“ schreien.",
+      "b5.grid3.li1": "„soft natural daylight“ für Foto-Realismus",
+      "b5.grid3.li2": "Rim-Light reduzieren",
+      "b5.grid3.li3": "Highlights “realistic” setzen",
+      "b5.grid4.p":
+        "Zu viel “epic” macht das Bild oft künstlich (übertriebene Kantenlichter, HDR-Look). Wenn es unnatürlich wirkt: “runterregeln”.",
 
       // ---- BLOCK 6: STYLE ----
       "b6.title": "Block 6: Stil / Textur",
@@ -252,22 +253,18 @@
       "b6.mb.sub": "Körnung kann kaschieren – oder das Bild schmutzig machen.",
       "b6.callout":
         "<b>Kurz gesagt:</b> Style-Keywords ändern Textur/Materialität. Grain kann kaschieren – oder Details kaputt machen.",
-      "b6.more.summary": "Mehr anzeigen",
-      "b6.grid1.h": "Prompt-Ausschnitt",
-      "b6.grid2.h": "Was macht das?",
-      "b6.grid2.p":
-        "„film grain/gritty“ fügt Dreck/Körnung/Analog-Look hinzu. Das kann „real“ wirken, aber auch Details fressen.",
-      "b6.grid3.h": "Typische Anpassungen",
-      "b6.grid3.li1": "„clean, crisp“ für mehr Detail",
-      "b6.grid3.li2": "Grain komplett raus → Fellstruktur wird sichtbarer",
-      "b6.grid3.li3": "“realistic photo look” als Anker",
-      "b6.grid4.h": "Risiko",
-      "b6.grid4.p":
-        "Zu viele Stilwörter konkurrieren (gritty + glossy + dreamy + cinematic …). Ergebnis: Drift oder Chaos. Weniger ist oft stabiler.",
       "b6.img1.caption": "Original: Grain",
       "b6.img2.caption": "Variante: Clean (style_clean.PNG)",
       "b6.img1.alt": "Original: film grain gritty",
       "b6.img2.alt": "Variante: clean crisp",
+
+      "b6.grid2.p":
+        "„film grain/gritty“ fügt Dreck/Körnung/Analog-Look hinzu. Das kann „real“ wirken, aber auch Details fressen.",
+      "b6.grid3.li1": "„clean, crisp“ für mehr Detail",
+      "b6.grid3.li2": "Grain komplett raus → Fellstruktur wird sichtbarer",
+      "b6.grid3.li3": "“realistic photo look” als Anker",
+      "b6.grid4.p":
+        "Zu viele Stilwörter konkurrieren (gritty + glossy + dreamy + cinematic …). Ergebnis: Drift oder Chaos. Weniger ist oft stabiler.",
 
       // ---- BLOCK 7: CONSTRAINTS ----
       "b7.title": "Block 7: Constraints",
@@ -277,24 +274,21 @@
       "b7.mb.sub": "Kurz, klar, testbar. Keine Romane.",
       "b7.callout":
         "<b>Kurz gesagt:</b> Constraints sind Leitplanken. Sie reduzieren Ausreißer – wenn sie kurz, klar und testbar sind.",
-      "b7.more.summary": "Mehr anzeigen",
-      "b7.grid1.h": "Prompt-Ausschnitt",
-      "b7.grid2.h": "Was macht das?",
-      "b7.grid2.p":
-        "Verhindert typische Ausreißer: Collars, Harness, seltsame Proportionen, Zusatzobjekte. Stabilisiert das Ergebnis.",
-      "b7.grid3.h": "Typische Anpassungen",
-      "b7.grid3.li1": "Konkreter statt allgemein („correct paws count“)",
-      "b7.grid3.li2": "Negativ klar benennen („no collar, no harness“)",
-      "b7.grid3.li3": "Identity-Anchor wiederholen (Markings identical)",
-      "b7.grid4.h": "Risiko",
-      "b7.grid4.p":
-        "Zu viele Constraints (lange Listen) können sich widersprechen oder die Priorität verwässern. Besser: kurz, hart, testbar.",
       "b7.img1.caption": "Original: Basic Constraints",
       "b7.img2.caption": "Variante: Strict (constraints_strict.PNG)",
       "b7.img1.alt": "Original: Constraints basic",
       "b7.img2.alt": "Variante: stricter constraints",
 
-      // ---- Tool note / Soft vs Hard / Limits block (the big “implemented” block) ----
+      "b7.grid2.p":
+        "Verhindert typische Ausreißer: Collars, Harness, seltsame Proportionen, Zusatzobjekte. Stabilisiert das Ergebnis.",
+      "b7.grid3.li1": "Konkreter statt allgemein („correct paws count“)",
+      "b7.grid3.li2": "Negativ klar benennen („no collar, no harness“)",
+      "b7.grid3.li3": "Identity-Anchor wiederholen (Markings identical)",
+      "b7.grid4.p":
+        "Zu viele Constraints (lange Listen) können sich widersprechen oder die Priorität verwässern. Besser: kurz, hart, testbar.",
+
+      // ---- Tool note / Soft vs Hard / Limits block ----
+      "meta.aria": "Hinweis zu modellübergreifender Nutzung",
       "meta.title": "Hinweis zu Tools, Constraints & Grenzen der Methode",
       "meta.sub": "Die Logik bleibt gleich – die Stärke der Effekte kann variieren.",
       "meta.tools.title": "Hinweis zu Tools",
@@ -356,26 +350,28 @@
       "fails.good2.li1": "Identität verstärken (kurz + wiederholt)",
       "fails.good2.li2": "Kamera vereinfachen (kein Fisheye)",
       "fails.good2.li3": "Constraints konkretisieren",
-      "fails.good3.title": "✅ Sprachen-Realität",
-      "fails.good3.p":
-        "Deutsch funktioniert oft. Wenn etwas unklar wird, ist Englisch leichter zu „debuggen“, weil viele Modelle darauf stärker trainiert sind.",
       "fails.good4.title": "✅ Reihenfolge",
       "fails.good4.p":
         "Erst Identität stabilisieren, dann Kamera/Pose, dann Licht/Style, dann Constraints feintunen.",
-      "fails.good5.title": "✅ Test-Disziplin",
-      "fails.good5.p":
-        "Gleicher Seed/Settings helfen – aber wichtiger ist: immer nur einen Hebel verändern.",
       "fails.finalrule":
         "Minimal-Regel für Lernfortschritt: <b>Immer nur 1 Block ändern</b>, dann vergleichen.",
 
-      // ---- Footer (optional) ----
+      // ---- Footer ----
       "footer.build": "current build:",
     },
 
     en: {
-      // ---- Global / UI ----
+      // ---- Page/meta ----
+      "page.title": "PromptRebel – How it works · Prompts",
       "page.skip": "Skip to content",
+
+      // ---- Global / UI ----
       "ui.language": "Language",
+      "ui.more": "Show more",
+      "ui.promptExcerpt": "Prompt excerpt",
+      "ui.whatItDoes": "What it does",
+      "ui.typicalTweaks": "Common tweaks",
+      "ui.risk": "Risk",
 
       // ---- Nav ----
       "nav.main": "Main navigation",
@@ -407,6 +403,22 @@
       "chip.style": "Style",
       "chip.constraints": "Constraints",
 
+      // ---- Right panel ----
+      "panel.nowLoading": "NOW LOADING · PROMPT AUTOPSY",
+      "panel.terminal":
+        "promptrebel:autopsy$ explain skateboard_prompt\n\n" +
+        "> INPUT:   reference photo + prompt blocks\n" +
+        "> OUTPUT:  consistent image variations\n\n" +
+        "Blocks:\n" +
+        "- identity transfer\n" +
+        "- camera / lens\n" +
+        "- pose & action\n" +
+        "- background\n" +
+        "- lighting\n" +
+        "- style\n" +
+        "- constraints\n\n" +
+        "<span class=\"dim\"># never change everything at once.</span>",
+
       // TLDR / Key / Tip
       "tldr.title": "TL;DR",
       "tldr.text":
@@ -424,7 +436,8 @@
 
       // ---- ORIGINAL PROMPT SECTION ----
       "orig.title": "Example prompt: Skateboard",
-      "orig.subtitle": "This is the baseline. From here we change individual blocks on purpose.",
+      "orig.subtitle":
+        "This is the baseline. From here we change individual blocks on purpose.",
       "btn.copy": "Copy Prompt",
       "btn.copied": "Copied ✅",
       "orig.note":
@@ -436,6 +449,7 @@
       "orig.img.reference.alt": "Reference photo",
 
       // ---- Language & structure callout ----
+      "langstruct.aria": "Note on language and prompt structure",
       "langstruct.title": "Why English — and why this structure",
       "langstruct.lead":
         "You don’t have to write prompts like I do. This isn’t “right/wrong” — it’s a way to make results more <b>reproducible</b> and to test changes deliberately.",
@@ -443,7 +457,8 @@
       "langstruct.card1.p":
         "Many image and language models were trained heavily on English text. German often works — but English is usually <b>more precise</b>, <b>more consistent</b>, and easier to debug when a prompt “drifts”.",
       "langstruct.card1.li1": "<b>German can work</b> — especially for clear, simple prompts.",
-      "langstruct.card1.li2": "When pose/objects break, English is often easier to tighten up.",
+      "langstruct.card1.li2":
+        "When pose/objects break, English is often easier to tighten up.",
       "langstruct.card1.li3": "It’s not about language — it’s about <b>clarity</b>.",
 
       "langstruct.card2.title": "2) Structure is a tool",
@@ -467,24 +482,18 @@
       "b1.mb.sub": "Most important rule: “like the reference photo” — clear and repeated.",
       "b1.callout":
         "<b>In short:</b> This block decides whether it stays <b>your</b> dog (fur, markings, proportions) — or drifts into “random dog”.",
-      "b1.more.summary": "Show more",
-
-      "b1.grid1.h": "Prompt excerpt",
-      "b1.grid2.h": "What it does",
-      "b1.grid2.p":
-        "Anchors fur colors, markings, proportions and the overall “look” to the reference photo. Without this block, results drift quickly into “random dog”.",
-      "b1.grid3.h": "Common tweaks",
-      "b1.grid3.li1": "“dog” → “animal” (works for any animal)",
-      "b1.grid3.li2": "“captured mid-air” → “standing / sitting”",
-      "b1.grid3.li3": "Add more fur/marking detail (if needed)",
-      "b1.grid4.h": "Risk",
-      "b1.grid4.p":
-        "Too much extra description can overwrite the reference. Better: short + unambiguous + repeatable.",
-
       "b1.img1.caption": "Original (strong reference)",
       "b1.img2.caption": "Variant: identity too weak (identity_weak.PNG)",
       "b1.img1.alt": "Original (identity transfer active)",
       "b1.img2.alt": "Variant: identity weak/unspecific",
+
+      "b1.grid2.p":
+        "Anchors fur colors, markings, proportions and the overall “look” to the reference photo. Without this block, results drift quickly into “random dog”.",
+      "b1.grid3.li1": "“dog” → “animal” (works for any animal)",
+      "b1.grid3.li2": "“captured mid-air” → “standing / sitting”",
+      "b1.grid3.li3": "Add more fur/marking detail (if needed)",
+      "b1.grid4.p":
+        "Too much extra description can overwrite the reference. Better: short + unambiguous + repeatable.",
 
       // ---- BLOCK 2: CAMERA ----
       "b2.title": "Block 2: Camera / lens",
@@ -494,22 +503,18 @@
       "b2.mb.sub": "One sentence can change the entire image physics.",
       "b2.callout":
         "<b>In short:</b> Camera words are a look switch. Fisheye = maximum dynamism, but higher risk of anatomy errors.",
-      "b2.more.summary": "Show more",
-      "b2.grid1.h": "Prompt excerpt",
-      "b2.grid2.h": "What it does",
-      "b2.grid2.p":
-        "Fisheye boosts motion through distortion: huge foreground, curved background. Great for action — risky for anatomy.",
-      "b2.grid3.h": "Common tweaks",
-      "b2.grid3.li1": "“fisheye” → “35mm documentary photo” (more stable)",
-      "b2.grid3.li2": "“extreme distortion” → “no distortion”",
-      "b2.grid3.li3": "Keep low-angle but remove distortion",
-      "b2.grid4.h": "Risk",
-      "b2.grid4.p":
-        "Extreme lenses/distortion raise the error rate (paws, board, proportions). If it drifts: simplify.",
       "b2.img1.caption": "Original: fisheye",
       "b2.img2.caption": "Variant: 35mm (cam_35mm.PNG)",
       "b2.img1.alt": "Original: fisheye",
       "b2.img2.alt": "Variant: 35mm, no distortion",
+
+      "b2.grid2.p":
+        "Fisheye boosts motion through distortion: huge foreground, curved background. Great for action — risky for anatomy.",
+      "b2.grid3.li1": "“fisheye” → “35mm documentary photo” (more stable)",
+      "b2.grid3.li2": "“extreme distortion” → “no distortion”",
+      "b2.grid3.li3": "Keep low-angle but remove distortion",
+      "b2.grid4.p":
+        "Extreme lenses/distortion raise the error rate (paws, board, proportions). If it drifts: simplify.",
 
       // ---- BLOCK 3: POSE ----
       "b3.title": "Block 3: Pose & action",
@@ -519,22 +524,18 @@
       "b3.mb.sub": "The clearer the pose, the less drift — but don’t overload it.",
       "b3.callout":
         "<b>In short:</b> Pose details steer body logic. The clearer “where are the paws”, the more stable the result — but don’t overload it.",
-      "b3.more.summary": "Show more",
-      "b3.grid1.h": "Prompt excerpt",
-      "b3.grid2.h": "What it does",
-      "b3.grid2.p":
-        "Forces a “story pose” (high-five) + stability (other paws on the board). That creates motion and focus.",
-      "b3.grid3.h": "Common tweaks",
-      "b3.grid3.li1": "Remove high-five → more stable anatomy",
-      "b3.grid3.li2": "Add “ALL FOUR paws … visible contact”",
-      "b3.grid3.li3": "Specify board contact logic",
-      "b3.grid4.h": "Risk",
-      "b3.grid4.p":
-        "Too many pose details can compete. Better: clear priority + few testable sentences.",
       "b3.img1.caption": "Original: high-five paw",
       "b3.img2.caption": "Variant: natural pose (pose_natural.PNG)",
       "b3.img1.alt": "Original: high-five paw",
       "b3.img2.alt": "Variant: natural pose",
+
+      "b3.grid2.p":
+        "Forces a “story pose” (high-five) + stability (other paws on the board). That creates motion and focus.",
+      "b3.grid3.li1": "Remove high-five → more stable anatomy",
+      "b3.grid3.li2": "Add “ALL FOUR paws … visible contact”",
+      "b3.grid3.li3": "Specify board contact logic",
+      "b3.grid4.p":
+        "Too many pose details can compete. Better: clear priority + few testable sentences.",
 
       // ---- BLOCK 4: BACKGROUND ----
       "b4.title": "Block 4: Background",
@@ -545,22 +546,18 @@
         "Busy backgrounds + motion blur can boost “action” — or swallow the subject.",
       "b4.callout":
         "<b>In short:</b> Background controls context + readability. “Busy” increases action — but also errors (text, logos, chaos).",
-      "b4.more.summary": "Show more",
-      "b4.grid1.h": "Prompt excerpt",
-      "b4.grid2.h": "What it does",
-      "b4.grid2.p":
-        "Urban + motion blur = speed. But: too many elements increase the error rate (text, signs, logos, chaos).",
-      "b4.grid3.h": "Common tweaks",
-      "b4.grid3.li1": "Simplify background → keep subject readable",
-      "b4.grid3.li2": "Add “no text, no logos”",
-      "b4.grid3.li3": "Reduce motion blur",
-      "b4.grid4.h": "Risk",
-      "b4.grid4.p":
-        "Complex backgrounds steal attention and generate extra objects. If you want comparability: “clean” wins.",
       "b4.img1.caption": "Original: urban",
       "b4.img2.caption": "Variant: skatepark (bg_skatepark.PNG)",
       "b4.img1.alt": "Original: urban motion blur",
       "b4.img2.alt": "Variant: skatepark clean",
+
+      "b4.grid2.p":
+        "Urban + motion blur = speed. But: too many elements increase the error rate (text, signs, logos, chaos).",
+      "b4.grid3.li1": "Simplify background → keep subject readable",
+      "b4.grid3.li2": "Add “no text, no logos”",
+      "b4.grid3.li3": "Reduce motion blur",
+      "b4.grid4.p":
+        "Complex backgrounds steal attention and generate extra objects. If you want comparability: “clean” wins.",
 
       // ---- BLOCK 5: LIGHTING ----
       "b5.title": "Block 5: Lighting",
@@ -570,22 +567,18 @@
       "b5.mb.sub": "If “epic” is too much: dial it down, don’t delete it.",
       "b5.callout":
         "<b>In short:</b> Lighting is mood. “Epic” pushes drama, “natural” pushes believability.",
-      "b5.more.summary": "Show more",
-      "b5.grid1.h": "Prompt excerpt",
-      "b5.grid2.h": "What it does",
-      "b5.grid2.p":
-        "“Epic cinematic” boosts contrast and highlights. Great for drama — but can quickly scream “AI poster”.",
-      "b5.grid3.h": "Common tweaks",
-      "b5.grid3.li1": "Use “soft natural daylight” for photo realism",
-      "b5.grid3.li2": "Reduce rim light",
-      "b5.grid3.li3": "Set highlights to “realistic”",
-      "b5.grid4.h": "Risk",
-      "b5.grid4.p":
-        "Too much “epic” often looks artificial (overdone edge light, HDR vibe). If it feels unnatural: dial it down.",
       "b5.img1.caption": "Original: epic",
       "b5.img2.caption": "Variant: daylight (light_day.PNG)",
       "b5.img1.alt": "Original: epic cinematic lighting",
-      "b5.img2.alt": "Variant: natural daylight",
+      "b5.img2.alt": "Variant: Natural daylight",
+
+      "b5.grid2.p":
+        "“Epic cinematic” boosts contrast and highlights. Great for drama — but can quickly scream “AI poster”.",
+      "b5.grid3.li1": "Use “soft natural daylight” for photo realism",
+      "b5.grid3.li2": "Reduce rim light",
+      "b5.grid3.li3": "Set highlights to “realistic”",
+      "b5.grid4.p":
+        "Too much “epic” often looks artificial (overdone edge light, HDR vibe). If it feels unnatural: dial it down.",
 
       // ---- BLOCK 6: STYLE ----
       "b6.title": "Block 6: Style / texture",
@@ -594,22 +587,18 @@
       "b6.mb.sub": "Grain can hide problems — or make the image dirty.",
       "b6.callout":
         "<b>In short:</b> Style keywords change texture/materiality. Grain can hide issues — or destroy detail.",
-      "b6.more.summary": "Show more",
-      "b6.grid1.h": "Prompt excerpt",
-      "b6.grid2.h": "What it does",
-      "b6.grid2.p":
-        "“film grain/gritty” adds dirt/grain/analog vibe. It can feel “real” — but can also eat detail.",
-      "b6.grid3.h": "Common tweaks",
-      "b6.grid3.li1": "Use “clean, crisp” for more detail",
-      "b6.grid3.li2": "Remove grain → fur texture becomes clearer",
-      "b6.grid3.li3": "Use “realistic photo look” as an anchor",
-      "b6.grid4.h": "Risk",
-      "b6.grid4.p":
-        "Too many style words compete (gritty + glossy + dreamy + cinematic …). Result: drift or chaos. Less is often more stable.",
       "b6.img1.caption": "Original: grain",
       "b6.img2.caption": "Variant: clean (style_clean.PNG)",
       "b6.img1.alt": "Original: film grain gritty",
       "b6.img2.alt": "Variant: clean crisp",
+
+      "b6.grid2.p":
+        "“film grain/gritty” adds dirt/grain/analog vibe. It can feel “real” — but can also eat detail.",
+      "b6.grid3.li1": "Use “clean, crisp” for more detail",
+      "b6.grid3.li2": "Remove grain → fur texture becomes clearer",
+      "b6.grid3.li3": "Use “realistic photo look” as an anchor",
+      "b6.grid4.p":
+        "Too many style words compete (gritty + glossy + dreamy + cinematic …). Result: drift or chaos. Less is often more stable.",
 
       // ---- BLOCK 7: CONSTRAINTS ----
       "b7.title": "Block 7: Constraints",
@@ -619,24 +608,21 @@
       "b7.mb.sub": "Short, clear, testable. No novels.",
       "b7.callout":
         "<b>In short:</b> Constraints are guardrails. They reduce outliers — if they’re short, clear, and testable.",
-      "b7.more.summary": "Show more",
-      "b7.grid1.h": "Prompt excerpt",
-      "b7.grid2.h": "What it does",
-      "b7.grid2.p":
-        "Prevents typical outliers: collars, harnesses, weird proportions, extra objects. Stabilizes the result.",
-      "b7.grid3.h": "Common tweaks",
-      "b7.grid3.li1": "Be more concrete than general (“correct paws count”)",
-      "b7.grid3.li2": "Name negatives explicitly (“no collar, no harness”)",
-      "b7.grid3.li3": "Repeat the identity anchor (markings identical)",
-      "b7.grid4.h": "Risk",
-      "b7.grid4.p":
-        "Too many constraints (long lists) can contradict each other or blur priority. Better: short, hard, testable.",
       "b7.img1.caption": "Original: basic constraints",
       "b7.img2.caption": "Variant: strict (constraints_strict.PNG)",
       "b7.img1.alt": "Original: constraints basic",
       "b7.img2.alt": "Variant: stricter constraints",
 
+      "b7.grid2.p":
+        "Prevents typical outliers: collars, harnesses, weird proportions, extra objects. Stabilizes the result.",
+      "b7.grid3.li1": "Be more concrete than general (“correct paws count”)",
+      "b7.grid3.li2": "Name negatives explicitly (“no collar, no harness”)",
+      "b7.grid3.li3": "Repeat the identity anchor (markings identical)",
+      "b7.grid4.p":
+        "Too many constraints (long lists) can contradict each other or blur priority. Better: short, hard, testable.",
+
       // ---- Tool note / Soft vs Hard / Limits ----
+      "meta.aria": "Tool note (cross-model usage)",
       "meta.title": "Tool note, constraints & method limits",
       "meta.sub": "The logic stays the same — only the strength of effects can vary.",
       "meta.tools.title": "Tool note",
@@ -698,19 +684,13 @@
       "fails.good2.li1": "Strengthen identity (short + repeated)",
       "fails.good2.li2": "Simplify camera (no fisheye)",
       "fails.good2.li3": "Make constraints more concrete",
-      "fails.good3.title": "✅ Language reality",
-      "fails.good3.p":
-        "German often works. If things get fuzzy, English is easier to debug because many models were trained more strongly on it.",
       "fails.good4.title": "✅ Order",
       "fails.good4.p":
         "Stabilize identity first, then camera/pose, then lighting/style, then fine-tune constraints.",
-      "fails.good5.title": "✅ Test discipline",
-      "fails.good5.p":
-        "Same seed/settings can help — but more important is changing only one lever at a time.",
       "fails.finalrule":
         "Minimal rule for learning: <b>Change only 1 block</b>, then compare.",
 
-      // ---- Footer (optional) ----
+      // ---- Footer ----
       "footer.build": "current build:",
     },
   };
@@ -752,11 +732,22 @@
     document.documentElement.lang = lang;
   }
 
+  function setDocumentTitleFromKey(lang) {
+    const dict = getDict(lang);
+    const titleEl = document.querySelector("title[data-i18n]");
+    if (!titleEl) return;
+
+    const key = titleEl.getAttribute("data-i18n");
+    const val = dict[key];
+    if (val != null) document.title = val;
+  }
+
   function applyTextNodes(lang) {
     const dict = getDict(lang);
 
-    // data-i18n -> textContent
+    // data-i18n -> textContent (except <title>, handled separately)
     $all("[data-i18n]").forEach((el) => {
+      if (el.tagName === "TITLE") return;
       const key = el.getAttribute("data-i18n");
       const val = dict[key];
       if (val != null) el.textContent = val;
@@ -778,7 +769,11 @@
       const spec = el.getAttribute("data-i18n-attr");
       if (!spec) return;
 
-      const pairs = spec.split(";").map((s) => s.trim()).filter(Boolean);
+      const pairs = spec
+        .split(";")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
       pairs.forEach((pair) => {
         const idx = pair.indexOf(":");
         if (idx === -1) return;
@@ -805,6 +800,7 @@
 
     applyTextNodes(normalized);
     applyAttributes(normalized);
+    setDocumentTitleFromKey(normalized);
 
     localStorage.setItem(STORAGE_KEY, normalized);
     syncSelect(normalized);
