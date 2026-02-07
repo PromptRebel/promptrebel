@@ -1,90 +1,603 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="meta.title">PromptRebel – So funktioniert’s · Prompts</title>
 
-    <!-- i18n sets this dynamically -->
-    <title data-i18n="page.title">PromptRebel – So funktioniert’s · Prompts</title>
+  <style>
+    :root { --scroll: 0; }
 
-    <!-- Optional: your existing CSS -->
-    <link rel="stylesheet" href="assets/css/site.css" />
-  </head>
+    /* Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; scroll-behavior: smooth; }
 
-  <body>
-    <!-- Skip link -->
-    <a class="skip-link" href="#content" data-i18n="page.skip">Zum Inhalt springen</a>
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:#020617;
+      color:#e5e7eb;
+      line-height:1.6;
+      padding-top:64px;
+    }
+    a{ color: inherit; text-decoration: none; }
+    img{ max-width:100%; display:block; }
 
-    <!-- Header -->
-    <header class="site-header">
-      <div class="header-inner">
-        <a class="brand" href="index.html" aria-label="PromptRebel">PromptRebel</a>
+    /* Background glow + grid */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,0.35), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(56,189,248,0.35), transparent 55%);
+      z-index:-2;
+    }
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      opacity:.22;
+      pointer-events:none;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size:3px 3px, 3px 3px;
+      mix-blend-mode:soft-light;
+      z-index:-1;
+    }
 
-        <nav class="main-nav" data-i18n-attr="aria-label:nav.main" aria-label="Hauptnavigation">
-          <a href="projects.html" data-i18n="nav.projects">Projects</a>
-          <a href="about.html" data-i18n="nav.about">About</a>
-          <a href="lab.html" data-i18n="nav.lab">Lab Notes</a>
-        </nav>
+    .page{ max-width:1120px; margin:0 auto; padding:16px 16px 40px; }
 
-        <!-- Language switch -->
-        <div class="lang-switch">
-          <label for="langSelect" class="sr-only" data-i18n="ui.language">Sprache</label>
-          <select id="langSelect" aria-label="Language">
-            <option value="de">DE</option>
-            <option value="en">EN</option>
-          </select>
+    /* Skip link */
+    .skip-link{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      top:-48px;
+      padding:8px 12px;
+      background:#0f172a;
+      color:#f9fafb;
+      border-radius:999px;
+      font-size:13px;
+      z-index:60;
+      border:1px solid rgba(148,163,184,.22);
+    }
+    .skip-link:focus-visible{
+      top:10px;
+      outline:2px solid #22d3ee;
+      outline-offset:2px;
+    }
+
+    /* Nav + scroll progress */
+    .nav{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:40;
+      backdrop-filter:blur(14px);
+      background:linear-gradient(to bottom, rgba(15,23,42,.95), rgba(15,23,42,.6));
+      border-bottom:1px solid rgba(148,163,184,.1);
+    }
+    .nav-inner{
+      max-width:1120px;
+      margin:0 auto;
+      padding:10px 16px 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      position:relative;
+      gap:16px;
+    }
+    .nav::after{
+      content:"";
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height:2px;
+      background:linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin:left;
+      transform:scaleX(var(--scroll));
+      transition:transform .1s linear;
+      pointer-events:none;
+    }
+
+    .brand{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.05em;
+      white-space:nowrap;
+      text-shadow:0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4);
+      flex:0 0 auto;
+    }
+    .brand .accent{
+      background:linear-gradient(135deg, #f472b6, #22d3ee);
+      -webkit-background-clip:text;
+      color:transparent;
+    }
+    .brand.glitch{ animation: brand-glitch .7s ease-out; }
+    @keyframes brand-glitch{
+      0%{ text-shadow:0 0 0 rgba(236,72,153,.9), 0 0 0 rgba(56,189,248,.9); }
+      30%{ text-shadow:2px 0 rgba(236,72,153,.9), -2px 0 rgba(56,189,248,.9); }
+      60%{ text-shadow:-2px 0 rgba(236,72,153,.7), 2px 0 rgba(56,189,248,.7); }
+      100%{ text-shadow:0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4); }
+    }
+
+    .nav-links{ display:flex; gap:18px; font-size:14px; flex:1 1 auto; justify-content:center; }
+    .nav-link{ position:relative; padding-block:4px; }
+    .nav-link::after{
+      content:"";
+      position:absolute;
+      left:0; bottom:-2px;
+      width:0; height:2px;
+      border-radius:999px;
+      background:linear-gradient(90deg, #f472b6, #22d3ee);
+      box-shadow:0 0 8px rgba(56,189,248,.8);
+      transition:width .25s ease;
+    }
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after{ width:100%; }
+    .nav-link:focus-visible{ outline:none; }
+
+    .nav-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex:0 0 auto;
+    }
+    .lang-label{
+      font-size:12px;
+      color:#9ca3af;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    /* Buttons */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(15,23,42,.55);
+      color:#f8fafc;
+      font-size:13px;
+      cursor:pointer;
+      transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease, background .14s ease;
+      user-select:none;
+      appearance:none;
+      -webkit-appearance:none;
+    }
+    .btn:hover{
+      transform:translateY(-1px);
+      border-color:rgba(209,213,219,.4);
+      box-shadow:0 0 0 1px rgba(34,211,238,.18), 0 18px 40px rgba(15,23,42,.95);
+      background:rgba(15,23,42,.75);
+    }
+    .btn:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:2px;
+    }
+    #langSelect.btn{ padding:8px 10px; border-radius:14px; }
+
+    /* Sections */
+    .section{ padding:40px 0 8px; }
+    .section:first-of-type{ padding-top:28px; }
+
+    /* Breadcrumbs */
+    .breadcrumbs{
+      font-size:12px;
+      color:#9ca3af;
+      margin: 6px 0 18px;
+    }
+    .breadcrumbs a{ text-decoration:underline; text-underline-offset:3px; }
+    .breadcrumbs span[aria-hidden="true"]{ margin:0 6px; }
+
+    /* Hero */
+    .hero{ padding-top:8px; }
+    .hero-layout{ display:block; }
+    @media (min-width:768px){
+      .hero-layout{
+        display:grid;
+        grid-template-columns:minmax(0, 3fr) minmax(0, 2.2fr);
+        gap:32px;
+        align-items:start;
+      }
+    }
+
+    .category-label{
+      font-size:12px;
+      letter-spacing:.25em;
+      text-transform:uppercase;
+      color:#f9a8d4;
+      margin-bottom:6px;
+    }
+    .hero-title{
+      font-size:clamp(32px, 5vw, 46px);
+      font-weight:800;
+      margin-bottom:10px;
+      text-shadow:0 0 14px rgba(236,72,153,.6), 0 0 20px rgba(34,211,238,.4);
+    }
+    .hero-text-main{ font-size:15px; margin-bottom:8px; max-width:44rem; }
+    .hero-text-sub{ font-size:14px; color:#cbd5f5; margin-bottom:18px; max-width:44rem; }
+
+    /* Quick nav */
+    .chip-row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+    .chip{
+      border-radius:999px;
+      padding:6px 10px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(15,23,42,.45);
+      font-size:12px;
+      color:#dbeafe;
+      cursor:pointer;
+      transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+    }
+    .chip:hover{
+      transform:translateY(-1px);
+      border-color:rgba(34,211,238,.5);
+      box-shadow:0 0 0 1px rgba(34,211,238,.16);
+    }
+    .chip:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:2px;
+    }
+
+    /* Glass panels */
+    .panel-glass{
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background:radial-gradient(circle at top left, rgba(15,23,42,.9), rgba(15,23,42,.98));
+      box-shadow:0 18px 45px rgba(15,23,42,.95);
+      backdrop-filter:blur(18px);
+      padding:14px 16px 12px;
+    }
+    .panel-header{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#9ca3af;
+      margin-bottom:8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .panel-header .left{ display:flex; align-items:center; gap:8px; }
+    .panel-header .icon{ font-size:14px; color:#f97316; }
+
+    /* Terminal / prompt */
+    .terminal{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:12px;
+      white-space:pre-wrap;
+      color:#e5e7eb;
+    }
+    .terminal .dim{ color:#6b7280; }
+
+    /* Cards row */
+    .tri-row{
+      margin-top:18px;
+      display:grid;
+      gap:10px;
+    }
+    @media (min-width:900px){
+      .tri-row{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+
+    /* Generic card */
+    .card{
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(15,23,42,.55);
+      padding:14px 14px 12px;
+      box-shadow:0 18px 45px rgba(15,23,42,.92);
+      backdrop-filter:blur(14px);
+    }
+    .card h2{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#e2e8f0;
+      margin-bottom:8px;
+    }
+    .card p, .card li{
+      font-size:13px;
+      color:#e5e7eb;
+    }
+    .card ul{ padding-left:18px; margin-top:8px; }
+
+    /* Callout variants */
+    .callout{
+      margin-top:12px;
+      border-radius:18px;
+      border:1px solid rgba(34,211,238,.20);
+      background:rgba(34,211,238,.08);
+      padding:12px 12px 10px;
+      color:#e6f7ff;
+      font-size:13px;
+    }
+    .callout.tldr{
+      border-color: rgba(251,146,60,.28);
+      background: rgba(251,146,60,.09);
+    }
+    .callout.key{
+      border-color: rgba(236,72,153,.26);
+      background: rgba(236,72,153,.09);
+    }
+
+    /* Section headers */
+    .section-title{
+      font-size: clamp(20px, 4.5vw, 24px);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+    }
+    .section-subtitle{ font-size:13px; color:#9ca3af; margin-bottom:14px; max-width:46rem; }
+
+    /* Manual blocks */
+    .manual-block{
+      margin-top:14px;
+      padding:16px;
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,.16);
+      background:rgba(15,23,42,.45);
+      box-shadow:0 18px 45px rgba(15,23,42,.92);
+      backdrop-filter:blur(14px);
+    }
+    .mb-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .mb-title{
+      font-size: clamp(15px, 3.8vw, 17px);
+      font-weight:800;
+      letter-spacing:.01em;
+      text-shadow:0 0 14px rgba(34,211,238,.14);
+    }
+    .mb-sub{
+      font-size:12px;
+      color:#9ca3af;
+      margin-top:3px;
+      max-width:54rem;
+    }
+
+    /* Details ("Mehr anzeigen") */
+    details.mb-more{ margin-top: 10px; }
+    summary.mb-more-summary{
+      cursor: pointer;
+      user-select: none;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.30);
+      color: #dbeafe;
+      font-size: 13px;
+      list-style: none;
+      transition: background .2s ease, border-color .2s ease;
+    }
+    summary.mb-more-summary:hover{
+      background: rgba(15,23,42,.55);
+      border-color: rgba(34,211,238,.25);
+    }
+    summary.mb-more-summary:focus-visible{
+      outline: 2px solid #22d3ee;
+      outline-offset: 2px;
+    }
+    summary.mb-more-summary::-webkit-details-marker{ display:none; }
+    summary.mb-more-summary::before{
+      content:"▶";
+      display:inline-block;
+      margin-right:8px;
+      color:#22d3ee;
+      transform: translateY(1px);
+      transition: transform .2s ease;
+    }
+    details.mb-more[open] summary.mb-more-summary::before{
+      transform: rotate(90deg) translateY(-1px);
+    }
+
+    .more-grid{
+      margin-top:10px;
+      display:grid;
+      gap:10px;
+    }
+    @media (min-width:900px){
+      .more-grid{ grid-template-columns: 1.2fr 1.8fr; }
+    }
+    .more-col h4{
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#93c5fd;
+      margin: 10px 0 6px;
+    }
+    .snippet{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:12px;
+      white-space:pre-wrap;
+      color:#e5e7eb;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(2,6,23,.35);
+    }
+
+    /* Prompt box */
+    .prompt-box{
+      margin-top:12px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(15,23,42,.55);
+      overflow:hidden;
+    }
+    .prompt-actions{
+      display:flex;
+      justify-content:flex-end;
+      padding:10px 10px 0;
+      gap:10px;
+    }
+    .prompt{
+      padding:12px 12px 14px;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:12px;
+      white-space:pre-wrap;
+      color:#e5e7eb;
+    }
+    .note{
+      padding:0 12px 12px;
+      font-size:12px;
+      color:#9ca3af;
+    }
+
+    /* Image grids */
+    .img-grid{
+      margin-top:12px;
+      display:grid;
+      gap:10px;
+    }
+    @media (min-width:768px){
+      .img-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    figure.img-card{
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(15,23,42,.55);
+      overflow:hidden;
+    }
+    figure.img-card img{
+      width:100%;
+      height:auto;
+      background:#0b1220;
+    }
+    figure.img-card figcaption{
+      font-size:12px;
+      color:#cbd5e1;
+      padding:8px 10px;
+      border-top:1px solid rgba(148,163,184,.14);
+    }
+
+    /* Footer */
+    .footer{
+      margin-top:40px;
+      padding-top:16px;
+      border-top:1px solid rgba(15,23,42,.9);
+      font-size:11px;
+      color:#94a3b8;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .footer a{ text-decoration:underline; text-underline-offset:3px; }
+    .dim{ color:#6b7280; }
+
+    /* Mobile */
+    @media (max-width:767px){
+      body{ padding-top:60px; }
+      .nav-inner{ gap:8px; }
+      .nav-links{ font-size:13px; gap:12px; justify-content:flex-start; }
+      .chip{ padding:8px 12px; font-size:13px; }
+      .btn{ padding:12px 16px; }
+      .lang-label{ display:none; }
+      #langSelect.btn{ padding:8px 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation-duration:0.01ms !important;
+        transition-duration:0.01ms !important;
+        scroll-behavior:auto !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#content" class="skip-link" data-i18n="page.skip">Zum Inhalt springen</a>
+
+  <!-- Top Nav -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="index.html" aria-label="PromptRebel">
+        Prompt<span class="accent">Rebel</span>
+      </a>
+
+      <nav class="nav-links" data-i18n-attr="aria-label:nav.main" aria-label="Hauptnavigation">
+        <a class="nav-link" href="projects.html" data-i18n="nav.projects">Projects</a>
+        <a class="nav-link" href="about.html" data-i18n="nav.about">About</a>
+        <a class="nav-link" href="lab.html" data-i18n="nav.lab">Lab Notes</a>
+      </nav>
+
+      <div class="nav-right">
+        <span class="lang-label" data-i18n="ui.language">Sprache</span>
+        <select id="langSelect" class="btn" aria-label="Language">
+          <option value="de">DE</option>
+          <option value="en">EN</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main id="content" class="page">
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+      <a href="index.html" data-i18n="crumb.home">Home</a>
+      <span aria-hidden="true">/</span>
+      <a href="how.html" data-i18n="crumb.how">So funktioniert’s</a>
+      <span aria-hidden="true">/</span>
+      <span data-i18n="crumb.prompts">Prompts</span>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-layout">
+        <div>
+          <div class="category-label" data-i18n="how.category">So funktioniert’s</div>
+          <h1 class="hero-title" data-i18n="how.heroTitle">Prompts verstehen</h1>
+
+          <p class="hero-text-main" data-i18n-html="how.heroMain">
+            🔥 Kein Zauber. Nur Struktur.<br />
+            Wir zerlegen einen Prompt in klare Bausteine – und zeigen, was passiert, wenn du genau <b>eine</b> Stelle änderst.
+          </p>
+
+          <p class="hero-text-sub" data-i18n-html="how.heroSub">
+            Ziel: Du sollst Prompts nicht „glauben“, sondern <b>verstehen</b>.<br />
+            Du kannst danach denselben Aufbau auf eigene Ideen übertragen.
+          </p>
+
+          <div class="section-subtitle" style="margin-bottom:10px" data-i18n="how.quicknav">Schnellnavigation</div>
+          <div class="chip-row">
+            <a class="chip" href="#original" data-i18n="chip.original">Original</a>
+            <a class="chip" href="#b1" data-i18n="chip.identity">Identität</a>
+            <a class="chip" href="#b2" data-i18n="chip.camera">Kamera</a>
+            <a class="chip" href="#b3" data-i18n="chip.pose">Pose</a>
+            <a class="chip" href="#b4" data-i18n="chip.background">Hintergrund</a>
+            <a class="chip" href="#b5" data-i18n="chip.light">Licht</a>
+            <a class="chip" href="#b6" data-i18n="chip.style">Style</a>
+            <a class="chip" href="#b7" data-i18n="chip.constraints">Constraints</a>
+          </div>
         </div>
-      </div>
-    </header>
 
-    <!-- Main -->
-    <main id="content" class="page">
-      <!-- Breadcrumbs -->
-      <div class="breadcrumbs">
-        <a href="index.html" data-i18n="crumb.home">Home</a>
-        <span aria-hidden="true">/</span>
-        <a href="how.html" data-i18n="crumb.how">So funktioniert’s</a>
-        <span aria-hidden="true">/</span>
-        <span data-i18n="crumb.prompts">Prompts</span>
-      </div>
-
-      <!-- Hero -->
-      <section class="hero">
-        <div class="hero-inner">
-          <div class="hero-left">
-            <div class="kicker" data-i18n="how.category">So funktioniert’s</div>
-            <h1 data-i18n="how.heroTitle">Prompts verstehen</h1>
-            <p class="hero-main" data-i18n-html="how.heroMain">
-              🔥 Kein Zauber. Nur Struktur.<br />Wir zerlegen einen Prompt in klare Bausteine – und zeigen, was
-              passiert, wenn du genau <b>eine</b> Stelle änderst.
-            </p>
-            <p class="hero-sub" data-i18n-html="how.heroSub">
-              Ziel: Du sollst Prompts nicht „glauben“, sondern <b>verstehen</b>.<br />Du kannst danach denselben
-              Aufbau auf eigene Ideen übertragen.
-            </p>
-
-            <div class="quicknav">
-              <div class="quicknav-title" data-i18n="how.quicknav">Schnellnavigation</div>
-              <div class="chips">
-                <a class="chip" href="#original" data-i18n="chip.original">Original</a>
-                <a class="chip" href="#b1" data-i18n="chip.identity">Identität</a>
-                <a class="chip" href="#b2" data-i18n="chip.camera">Kamera</a>
-                <a class="chip" href="#b3" data-i18n="chip.pose">Pose</a>
-                <a class="chip" href="#b4" data-i18n="chip.background">Hintergrund</a>
-                <a class="chip" href="#b5" data-i18n="chip.light">Licht</a>
-                <a class="chip" href="#b6" data-i18n="chip.style">Style</a>
-                <a class="chip" href="#b7" data-i18n="chip.constraints">Constraints</a>
+        <aside>
+          <div class="panel-glass">
+            <div class="panel-header">
+              <div class="left">
+                <span class="icon">⚡</span>
+                <span data-i18n="panel.nowLoading">JETZT LÄDT · PROMPT-AUTOPSIE</span>
               </div>
             </div>
-          </div>
 
-          <!-- Right panel -->
-          <aside class="hero-right">
-            <div class="panel">
-              <div class="panel-head">
-                <div class="panel-title" data-i18n="panel.nowLoading">JETZT LÄDT · PROMPT-AUTOPSIE</div>
-              </div>
-              <pre class="terminal" data-i18n-html="panel.terminal">
+            <pre class="terminal" data-i18n-html="panel.terminal">
 promptrebel:autopsy$ explain skateboard_prompt
 
 &gt; INPUT:   reference photo + prompt blocks
@@ -100,593 +613,531 @@ Blocks:
 - constraints
 
 <span class="dim"># ändere nie alles auf einmal.</span>
-              </pre>
-            </div>
-          </aside>
-        </div>
-      </section>
+            </pre>
+          </div>
+        </aside>
+      </div>
+    </section>
 
-      <!-- TLDR / Key / Tip -->
-      <section class="tri-cards">
+    <!-- TL;DR / KEY / TIP -->
+    <section class="tri-row">
+      <div class="card callout tldr">
+        <h2 data-i18n="tldr.title">TL;DR</h2>
+        <p data-i18n-html="tldr.text">
+          Prompts sind keine Magie. Sie sind Bausteine (Identität, Kamera, Licht …).<br />
+          Änderst du <b>einen</b> Baustein, ändert sich das Bild meist <b>vorhersehbar</b>.
+        </p>
+        <ul>
+          <li data-i18n-html="tldr.b1"><b>1 Block ändern</b> → vergleichen</li>
+          <li data-i18n="tldr.b2">Rest gleich lassen → Ursache klar</li>
+          <li data-i18n="tldr.b3">Das Ziel ist Verständnis, nicht Perfektion</li>
+        </ul>
+      </div>
+
+      <div class="card callout key">
+        <h2 data-i18n="key.title">Wichtig</h2>
+        <p data-i18n-html="key.text">
+          Diese Seite verkauft kein „perfektes Prompt“.<br />
+          Sie zeigt dir die <b>Hebel</b> – damit du deinen eigenen Weg findest.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="tip.title">Tip</h2>
+        <p data-i18n="tip.oneword">
+          Tipp: Du brauchst nicht „kreativ“ zu sein. Ändere nur ein Wort – und beobachte den Effekt.
+        </p>
+      </div>
+    </section>
+
+    <!-- ORIGINAL -->
+    <section id="original" class="section">
+      <h2 class="section-title" data-i18n="orig.title">Beispielprompt: Skateboard</h2>
+      <p class="section-subtitle" data-i18n="orig.subtitle">
+        Das ist der Ausgangspunkt. Von hier aus ändern wir gezielt einzelne Bausteine.
+      </p>
+
+      <div class="prompt-box">
+        <div class="prompt-actions">
+          <button class="btn" type="button" data-copy="#promptOriginal" data-i18n="btn.copy">Copy Prompt</button>
+        </div>
+
+        <pre id="promptOriginal" class="prompt">[PLACE YOUR ORIGINAL PROMPT HERE]</pre>
+
+        <p class="note" data-i18n="orig.note">
+          Hinweis: Das Referenzfoto ist der „Identity Anchor“. Der Rest ist Szene/Styling.
+        </p>
+      </div>
+
+      <div class="img-grid">
+        <figure class="img-card">
+          <img src="assets/img/how/original.PNG" data-i18n-attr="alt:orig.img.original.alt" alt="Original Output" />
+          <figcaption data-i18n="orig.img.original.caption">Original Output (assets/…/original.PNG)</figcaption>
+        </figure>
+
+        <figure class="img-card">
+          <img src="assets/img/how/reference.PNG" data-i18n-attr="alt:orig.img.reference.alt" alt="Referenz Foto" />
+          <figcaption data-i18n="orig.img.reference.caption">Referenz Foto</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- WHY ENGLISH / STRUCTURE -->
+    <section class="section">
+      <h2 class="section-title" data-i18n="langstruct.title">Warum Englisch – und warum diese Struktur</h2>
+      <p class="section-subtitle" data-i18n-html="langstruct.lead">
+        Du musst Prompts nicht so schreiben wie ich. Das hier ist kein „richtig/falsch“ – sondern ein Weg, um Ergebnisse
+        <b>reproduzierbarer</b> zu machen und Änderungen gezielt testen zu können.
+      </p>
+
+      <div class="tri-row" style="margin-top:0">
         <div class="card">
-          <h2 data-i18n="tldr.title">TL;DR</h2>
-          <p data-i18n-html="tldr.text">
-            Prompts sind keine Magie. Sie sind Bausteine (Identität, Kamera, Licht …).<br />Änderst du <b>einen</b>
-            Baustein, ändert sich das Bild meist <b>vorhersehbar</b>.
+          <h2 data-i18n="langstruct.card1.title">1) Trainingsdaten-Realität</h2>
+          <p data-i18n="langstruct.card1.p">
+            Viele Bild- und Sprachmodelle wurden stark mit englischen Texten trainiert. Deutsch funktioniert oft –
+            aber Englisch ist meist präziser, konsistenter und leichter zu debuggen.
           </p>
           <ul>
-            <li data-i18n-html="tldr.b1"><b>1 Block ändern</b> → vergleichen</li>
-            <li data-i18n="tldr.b2">Rest gleich lassen → Ursache klar</li>
-            <li data-i18n="tldr.b3">Das Ziel ist Verständnis, nicht Perfektion</li>
+            <li data-i18n-html="langstruct.card1.li1"><b>Deutsch klappt auch</b> – vor allem bei klaren, einfachen Prompts.</li>
+            <li data-i18n="langstruct.card1.li2">Wenn Pose/Objekte kippen, ist Englisch oft leichter nachzuschärfen.</li>
+            <li data-i18n="langstruct.card1.li3">Es geht nicht um Sprache – sondern um Klarheit.</li>
           </ul>
         </div>
 
         <div class="card">
-          <h2 data-i18n="key.title">Wichtig</h2>
-          <p data-i18n-html="key.text">
-            Diese Seite verkauft kein „perfektes Prompt“.<br />Sie zeigt dir die <b>Hebel</b> – damit du deinen
-            eigenen Weg findest.
+          <h2 data-i18n="langstruct.card2.title">2) Struktur ist ein Werkzeug</h2>
+          <p data-i18n="langstruct.card2.p">
+            Ich schreibe in Blöcken (Motiv, Kamera, Licht, Stil, Constraints), damit ich nichts vergesse und gezielt einzelne Hebel drehen kann.
           </p>
+          <ul>
+            <li data-i18n="langstruct.card2.li1">Du kannst denselben Inhalt auch als Fließtext schreiben.</li>
+            <li data-i18n="langstruct.card2.li2">Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich.</li>
+            <li data-i18n="langstruct.card2.li3">Für Lernfortschritt: immer nur 1 Block pro Test ändern.</li>
+          </ul>
         </div>
+      </div>
 
-        <div class="card">
-          <h2>Tip</h2>
-          <p data-i18n="tip.oneword">
-            Tipp: Du brauchst nicht „kreativ“ zu sein. Ändere nur ein Wort – und beobachte den Effekt.
-          </p>
-        </div>
-      </section>
+      <div class="callout" style="margin-top:12px">
+        <p data-i18n-html="langstruct.kicker"><b>Merksatz:</b> Das ist ein Weg – nicht der Weg. Ziel ist Verständnis, nicht Copy/Paste.</p>
+      </div>
 
-      <!-- ORIGINAL -->
-      <section id="original" class="section">
-        <header class="section-head">
-          <h2 data-i18n="orig.title">Beispielprompt: Skateboard</h2>
-          <p data-i18n="orig.subtitle">
-            Das ist der Ausgangspunkt. Von hier aus ändern wir gezielt einzelne Bausteine.
-          </p>
-        </header>
-
-        <div class="prompt-box">
-          <div class="prompt-actions">
-            <button class="btn" type="button" data-copy="#promptOriginal" data-i18n="btn.copy">Copy Prompt</button>
+      <details class="mb-more">
+        <summary class="mb-more-summary" data-i18n="langstruct.details.summary">Optional: Wenn du lieber frei schreibst …</summary>
+        <div class="more-grid">
+          <div class="more-col">
+            <h4>Hinweis</h4>
+            <p data-i18n-html="langstruct.details.p">
+              Dann denk trotzdem an die üblichen Stellschrauben: <b>Motiv</b>, <b>Kamera</b>, <b>Licht</b>,
+              <b>Hintergrund</b>, <b>Stil</b>, <b>Constraints</b>. Wenn das enthalten ist, kommst du oft sehr weit –
+              auch ohne Block-Struktur.
+            </p>
           </div>
-
-          <pre id="promptOriginal" class="prompt">
-[PLACE YOUR ORIGINAL PROMPT HERE]
-          </pre>
-
-          <p class="note" data-i18n="orig.note">
-            Hinweis: Das Referenzfoto ist der „Identity Anchor“. Der Rest ist Szene/Styling.
-          </p>
+          <div class="more-col">
+            <h4>Mini-Check</h4>
+            <div class="snippet">Motiv → Kamera → Pose → Hintergrund → Licht → Stil → Constraints</div>
+          </div>
         </div>
+      </details>
+    </section>
+
+    <!-- BLOCK 1 -->
+    <section id="b1" class="section">
+      <h2 class="section-title" data-i18n="b1.title">Block 1: Identität (Referenzfoto)</h2>
+      <p class="section-subtitle" data-i18n="b1.subtitle">
+        Dieser Block sorgt dafür, dass es <b>dein</b> Tier bleibt – und nicht irgendein generischer Hund.
+      </p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title" data-i18n="b1.mb.title">Identity Transfer</div>
+            <div class="mb-sub" data-i18n="b1.mb.sub">Die wichtigste Regel: „Wie auf dem Referenzfoto“ – klar und wiederholt.</div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <p data-i18n-html="b1.callout"><b>Kurz gesagt:</b> Dieser Block entscheidet, ob es wirklich <b>dein</b> Hund bleibt – oder ob das Modell zu „Random Dog“ driftet.</p>
+        </div>
+
+        <details class="mb-more">
+          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+
+          <div class="more-grid">
+            <div class="more-col">
+              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <pre class="snippet">[PLACE IDENTITY EXCERPT HERE]</pre>
+            </div>
+
+            <div class="more-col">
+              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
+              <p data-i18n="b1.grid2.p">Verankert Fellfarben, Muster, Proportionen und den „Look“ am Referenzfoto.</p>
+
+              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <ul>
+                <li data-i18n="b1.grid3.li1">„dog“ → „animal“ (für jedes Tier)</li>
+                <li data-i18n="b1.grid3.li2">„captured mid-air“ → „standing / sitting“</li>
+                <li data-i18n="b1.grid3.li3">mehr Details zu Fell/Markings (wenn nötig)</li>
+              </ul>
+
+              <h4 data-i18n="ui.risk">Risiko</h4>
+              <p data-i18n="b1.grid4.p">Zu viel Zusatzbeschreibung kann das Referenzfoto „überschreiben“. Besser: kurz + eindeutig.</p>
+            </div>
+          </div>
+        </details>
 
         <div class="img-grid">
-          <figure>
-            <img src="assets/img/how/original.PNG" data-i18n-attr="alt:orig.img.original.alt" alt="Original Output" />
-            <figcaption data-i18n="orig.img.original.caption">Original Output (assets/…/original.PNG)</figcaption>
+          <figure class="img-card">
+            <img src="assets/img/how/identity_strong.PNG" data-i18n-attr="alt:b1.img1.alt" alt="Original" />
+            <figcaption data-i18n="b1.img1.caption">Original (Referenz stark)</figcaption>
           </figure>
-          <figure>
-            <img
-              src="assets/img/how/reference.PNG"
-              data-i18n-attr="alt:orig.img.reference.alt"
-              alt="Referenz Foto"
-            />
-            <figcaption data-i18n="orig.img.reference.caption">Referenz Foto</figcaption>
+          <figure class="img-card">
+            <img src="assets/img/how/identity_weak.PNG" data-i18n-attr="alt:b1.img2.alt" alt="Variante" />
+            <figcaption data-i18n="b1.img2.caption">Variante: Identity zu schwach</figcaption>
           </figure>
         </div>
-      </section>
+      </article>
+    </section>
 
-      <!-- WHY ENGLISH / STRUCTURE -->
-      <section class="section callout" data-i18n-attr="aria-label:langstruct.aria" aria-label="Hinweis zu Sprache und Prompt-Struktur">
-        <h2 data-i18n="langstruct.title">Warum Englisch – und warum diese Struktur</h2>
-        <p data-i18n-html="langstruct.lead">
-          Du musst Prompts nicht so schreiben wie ich. Das hier ist kein „richtig/falsch“ – sondern ein Weg, um
-          Ergebnisse <b>reproduzierbarer</b> zu machen und Änderungen gezielt testen zu können.
-        </p>
+    <!-- BLOCK 2 -->
+    <section id="b2" class="section">
+      <h2 class="section-title" data-i18n="b2.title">Block 2: Kamera / Lens</h2>
+      <p class="section-subtitle" data-i18n="b2.subtitle">Kamera ist ein „Look-Schalter“. Fisheye wirkt krass – aber ist fehleranfälliger.</p>
 
-        <div class="callout-grid">
-          <div class="card">
-            <h3 data-i18n="langstruct.card1.title">1) Trainingsdaten-Realität</h3>
-            <p data-i18n="langstruct.card1.p">
-              Viele Bild- und Sprachmodelle wurden stark mit englischen Texten trainiert. Deutsch funktioniert oft –
-              aber Englisch ist meist präziser, konsistenter und leichter zu debuggen.
-            </p>
-            <ul>
-              <li data-i18n-html="langstruct.card1.li1"><b>Deutsch klappt auch</b> – vor allem bei klaren, einfachen Prompts.</li>
-              <li data-i18n="langstruct.card1.li2">Wenn Pose/Objekte kippen, ist Englisch oft leichter nachzuschärfen.</li>
-              <li data-i18n="langstruct.card1.li3">Es geht nicht um Sprache – sondern um Klarheit.</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3 data-i18n="langstruct.card2.title">2) Struktur ist ein Werkzeug</h3>
-            <p data-i18n="langstruct.card2.p">
-              Ich schreibe in Blöcken (Motiv, Kamera, Licht, Stil, Constraints), damit ich nichts vergesse und gezielt
-              einzelne Hebel drehen kann.
-            </p>
-            <ul>
-              <li data-i18n="langstruct.card2.li1">Du kannst denselben Inhalt auch als Fließtext schreiben.</li>
-              <li data-i18n="langstruct.card2.li2">Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich.</li>
-              <li data-i18n="langstruct.card2.li3">Für Lernfortschritt: immer nur 1 Block pro Test ändern.</li>
-            </ul>
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title" data-i18n="b2.mb.title">Fisheye vs. realistischer Look</div>
+            <div class="mb-sub" data-i18n="b2.mb.sub">Ein einzelner Satz verändert die gesamte Bildphysik.</div>
           </div>
         </div>
 
-        <p class="kicker" data-i18n-html="langstruct.kicker">
-          <b>Merksatz:</b> Das ist ein Weg – nicht der Weg. Ziel ist Verständnis, nicht Copy/Paste.
-        </p>
+        <div class="callout">
+          <p data-i18n-html="b2.callout"><b>Kurz gesagt:</b> Kamera-Wörter sind ein Look-Schalter. Fisheye = maximal dynamisch, aber anfälliger für anatomische Fehler.</p>
+        </div>
 
-        <details class="details">
-          <summary data-i18n="langstruct.details.summary">Optional: Wenn du lieber frei schreibst …</summary>
-          <p data-i18n-html="langstruct.details.p">
-            Dann denk trotzdem an die üblichen Stellschrauben: <b>Motiv</b>, <b>Kamera</b>, <b>Licht</b>,
-            <b>Hintergrund</b>, <b>Stil</b>, <b>Constraints</b>. Wenn das enthalten ist, kommst du oft sehr weit –
-            auch ohne Block-Struktur.
-          </p>
+        <details class="mb-more">
+          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+
+          <div class="more-grid">
+            <div class="more-col">
+              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <pre class="snippet">[PLACE CAMERA EXCERPT HERE]</pre>
+            </div>
+
+            <div class="more-col">
+              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
+              <p data-i18n="b2.grid2.p">Fisheye verstärkt Dynamik durch Verzerrung: Vordergrund riesig, Background gebogen.</p>
+
+              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <ul>
+                <li data-i18n="b2.grid3.li1">„fisheye“ → „35mm documentary photo“ (stabiler)</li>
+                <li data-i18n="b2.grid3.li2">„extreme distortion“ → „no distortion“</li>
+                <li data-i18n="b2.grid3.li3">Low-angle beibehalten, aber Verzerrung rausnehmen</li>
+              </ul>
+
+              <h4 data-i18n="ui.risk">Risiko</h4>
+              <p data-i18n="b2.grid4.p">Extreme Linsen/Verzerrungen erhöhen die Fehlerquote (Pfoten, Board, Proportionen).</p>
+            </div>
+          </div>
         </details>
-      </section>
 
-      <!-- BLOCK TEMPLATE (re-used with different bX keys, but the “More” box headings are global ui.*) -->
-      <section id="b1" class="section block">
-        <header class="section-head">
-          <h2 data-i18n="b1.title">Block 1: Identität (Referenzfoto)</h2>
-          <p data-i18n="b1.subtitle">
-            Dieser Block sorgt dafür, dass es <b>dein</b> Tier bleibt – und nicht irgendein generischer Hund.
-          </p>
-        </header>
+        <div class="img-grid">
+          <figure class="img-card">
+            <img src="assets/img/how/cam_fisheye.PNG" data-i18n-attr="alt:b2.img1.alt" alt="Fisheye" />
+            <figcaption data-i18n="b2.img1.caption">Original: Fisheye</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="assets/img/how/cam_35mm.PNG" data-i18n-attr="alt:b2.img2.alt" alt="35mm" />
+            <figcaption data-i18n="b2.img2.caption">Variante: 35mm (cam_35mm.PNG)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
 
-        <article class="manual-block">
-          <div class="mb-head">
-            <div>
-              <div class="mb-title" data-i18n="b1.mb.title">Identity Transfer</div>
-              <div class="mb-sub" data-i18n="b1.mb.sub">
-                Die wichtigste Regel: „Wie auf dem Referenzfoto“ – klar und wiederholt.
-              </div>
+    <!-- BLOCK 3 -->
+    <section id="b3" class="section">
+      <h2 class="section-title" data-i18n="b3.title">Block 3: Pose & Action</h2>
+      <p class="section-subtitle" data-i18n="b3.subtitle">Action entsteht durch klare Körperlogik: Was macht welche Pfote – und warum?</p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title" data-i18n="b3.mb.title">Paw / Trick / Board</div>
+            <div class="mb-sub" data-i18n="b3.mb.sub">Je genauer die Pose, desto weniger Drift – aber: nicht überladen.</div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <p data-i18n-html="b3.callout"><b>Kurz gesagt:</b> Pose-Details steuern Körperlogik. Je klarer „wo sind die Pfoten“, desto stabiler.</p>
+        </div>
+
+        <details class="mb-more">
+          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+
+          <div class="more-grid">
+            <div class="more-col">
+              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <pre class="snippet">[PLACE POSE EXCERPT HERE]</pre>
+            </div>
+
+            <div class="more-col">
+              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
+              <p data-i18n="b3.grid2.p">Erzwingt eine „Story Pose“ (High-five) + Stabilität (andere Pfoten am Board).</p>
+
+              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <ul>
+                <li data-i18n="b3.grid3.li1">High-five rausnehmen → stabilere Anatomie</li>
+                <li data-i18n="b3.grid3.li2">„ALL FOUR paws … visible contact“ hinzufügen</li>
+                <li data-i18n="b3.grid3.li3">Board-Logik konkretisieren (Kontaktflächen)</li>
+              </ul>
+
+              <h4 data-i18n="ui.risk">Risiko</h4>
+              <p data-i18n="b3.grid4.p">Zu viele Pose-Details können miteinander konkurrieren. Besser: klare Priorität.</p>
             </div>
           </div>
+        </details>
 
-          <div class="callout">
-            <p data-i18n-html="b1.callout">
-              <b>Kurz gesagt:</b> Dieser Block entscheidet, ob es wirklich <b>dein</b> Hund bleibt – oder ob das Modell
-              zu „Random Dog“ driftet.
-            </p>
+        <div class="img-grid">
+          <figure class="img-card">
+            <img src="assets/img/how/pose_highfive.PNG" data-i18n-attr="alt:b3.img1.alt" alt="Pose" />
+            <figcaption data-i18n="b3.img1.caption">Original: High-five paw</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="assets/img/how/pose_natural.PNG" data-i18n-attr="alt:b3.img2.alt" alt="Pose natural" />
+            <figcaption data-i18n="b3.img2.caption">Variante: natürliche Pose (pose_natural.PNG)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK 4 -->
+    <section id="b4" class="section">
+      <h2 class="section-title" data-i18n="b4.title">Block 4: Hintergrund</h2>
+      <p class="section-subtitle" data-i18n="b4.subtitle">Hintergrund ist nicht Deko – er steuert Kontext, Tempo und Lesbarkeit.</p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title" data-i18n="b4.mb.title">Urban Street vs. Skatepark</div>
+            <div class="mb-sub" data-i18n="b4.mb.sub">Busy Background + Motion Blur kann „Action“ verstärken – oder das Motiv schlucken.</div>
           </div>
+        </div>
 
-          <details class="details">
-            <summary data-i18n="ui.more">Mehr anzeigen</summary>
+        <div class="callout">
+          <p data-i18n-html="b4.callout"><b>Kurz gesagt:</b> Hintergrund steuert Kontext + Lesbarkeit. „Busy“ erhöht Action – aber auch Fehler.</p>
+        </div>
 
-            <div class="more-grid">
-              <div class="more-col">
-                <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
-                <pre class="snippet">[PLACE IDENTITY EXCERPT HERE]</pre>
-              </div>
+        <details class="mb-more">
+          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
 
-              <div class="more-col">
-                <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-                <p data-i18n="b1.grid2.p">
-                  Verankert Fellfarben, Muster, Proportionen und den „Look“ am Referenzfoto.
-                </p>
-
-                <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
-                <ul>
-                  <li data-i18n="b1.grid3.li1">„dog“ → „animal“ (für jedes Tier)</li>
-                  <li data-i18n="b1.grid3.li2">„captured mid-air“ → „standing / sitting“</li>
-                  <li data-i18n="b1.grid3.li3">mehr Details zu Fell/Markings (wenn nötig)</li>
-                </ul>
-
-                <h4 data-i18n="ui.risk">Risiko</h4>
-                <p data-i18n="b1.grid4.p">
-                  Zu viel Zusatzbeschreibung kann das Referenzfoto „überschreiben“. Besser: kurz + eindeutig.
-                </p>
-              </div>
+          <div class="more-grid">
+            <div class="more-col">
+              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <pre class="snippet">[PLACE BACKGROUND EXCERPT HERE]</pre>
             </div>
-          </details>
 
-          <div class="img-grid">
-            <figure>
-              <img src="assets/img/how/identity_strong.PNG" data-i18n-attr="alt:b1.img1.alt" alt="Original" />
-              <figcaption data-i18n="b1.img1.caption">Original (Referenz stark)</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/img/how/identity_weak.PNG" data-i18n-attr="alt:b1.img2.alt" alt="Variante" />
-              <figcaption data-i18n="b1.img2.caption">Variante: Identity zu schwach</figcaption>
-            </figure>
-          </div>
-        </article>
-      </section>
+            <div class="more-col">
+              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
+              <p data-i18n="b4.grid2.p">Urban + Motion Blur = Geschwindigkeit. Aber: zu viele Elemente erhöhen Fehlerquote.</p>
 
-      <!-- BLOCK 2 -->
-      <section id="b2" class="section block">
-        <header class="section-head">
-          <h2 data-i18n="b2.title">Block 2: Kamera / Lens</h2>
-          <p data-i18n="b2.subtitle">
-            Kamera ist ein „Look-Schalter“. Fisheye wirkt krass – aber ist fehleranfälliger.
-          </p>
-        </header>
+              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <ul>
+                <li data-i18n="b4.grid3.li1">Hintergrund vereinfachen → Motiv bleibt klar</li>
+                <li data-i18n="b4.grid3.li2">„no text, no logos“ hinzufügen</li>
+                <li data-i18n="b4.grid3.li3">Motion Blur reduzieren</li>
+              </ul>
 
-        <article class="manual-block">
-          <div class="mb-head">
-            <div>
-              <div class="mb-title" data-i18n="b2.mb.title">Fisheye vs. realistischer Look</div>
-              <div class="mb-sub" data-i18n="b2.mb.sub">Ein einzelner Satz verändert die gesamte Bildphysik.</div>
+              <h4 data-i18n="ui.risk">Risiko</h4>
+              <p data-i18n="b4.grid4.p">Komplexe Hintergründe ziehen Aufmerksamkeit ab und erzeugen Nebenobjekte.</p>
             </div>
           </div>
+        </details>
 
-          <div class="callout">
-            <p data-i18n-html="b2.callout">
-              <b>Kurz gesagt:</b> Kamera-Wörter sind ein Look-Schalter. Fisheye = maximal dynamisch, aber anfälliger
-              für anatomische Fehler.
-            </p>
+        <div class="img-grid">
+          <figure class="img-card">
+            <img src="assets/img/how/bg_urban.PNG" data-i18n-attr="alt:b4.img1.alt" alt="Urban" />
+            <figcaption data-i18n="b4.img1.caption">Original: Urban</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="assets/img/how/bg_skatepark.PNG" data-i18n-attr="alt:b4.img2.alt" alt="Skatepark" />
+            <figcaption data-i18n="b4.img2.caption">Variante: Skatepark (bg_skatepark.PNG)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK 5 -->
+    <section id="b5" class="section">
+      <h2 class="section-title" data-i18n="b5.title">Block 5: Licht</h2>
+      <p class="section-subtitle" data-i18n="b5.subtitle">Licht ist „Emotion“. Es kann ein Bild retten oder komplett künstlich wirken lassen.</p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title" data-i18n="b5.mb.title">Epic Cinematic vs. Natural Daylight</div>
+            <div class="mb-sub" data-i18n="b5.mb.sub">Wenn „epic“ zu viel ist: runterregeln, nicht löschen.</div>
           </div>
+        </div>
 
-          <details class="details">
-            <summary data-i18n="ui.more">Mehr anzeigen</summary>
+        <div class="callout">
+          <p data-i18n-html="b5.callout"><b>Kurz gesagt:</b> Licht ist Stimmung. „Epic“ pusht Drama, „Natural“ pusht Glaubwürdigkeit.</p>
+        </div>
 
-            <div class="more-grid">
-              <div class="more-col">
-                <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
-                <pre class="snippet">[PLACE CAMERA EXCERPT HERE]</pre>
-              </div>
+        <details class="mb-more">
+          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
 
-              <div class="more-col">
-                <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-                <p data-i18n="b2.grid2.p">
-                  Fisheye verstärkt Dynamik durch Verzerrung: Vordergrund riesig, Background gebogen.
-                </p>
-
-                <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
-                <ul>
-                  <li data-i18n="b2.grid3.li1">„fisheye“ → „35mm documentary photo“ (stabiler)</li>
-                  <li data-i18n="b2.grid3.li2">„extreme distortion“ → „no distortion“</li>
-                  <li data-i18n="b2.grid3.li3">Low-angle beibehalten, aber Verzerrung rausnehmen</li>
-                </ul>
-
-                <h4 data-i18n="ui.risk">Risiko</h4>
-                <p data-i18n="b2.grid4.p">
-                  Extreme Linsen/Verzerrungen erhöhen die Fehlerquote (Pfoten, Board, Proportionen).
-                </p>
-              </div>
+          <div class="more-grid">
+            <div class="more-col">
+              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <pre class="snippet">[PLACE LIGHTING EXCERPT HERE]</pre>
             </div>
-          </details>
 
-          <div class="img-grid">
-            <figure>
-              <img src="assets/img/how/cam_fisheye.PNG" data-i18n-attr="alt:b2.img1.alt" alt="Fisheye" />
-              <figcaption data-i18n="b2.img1.caption">Original: Fisheye</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/img/how/cam_35mm.PNG" data-i18n-attr="alt:b2.img2.alt" alt="35mm" />
-              <figcaption data-i18n="b2.img2.caption">Variante: 35mm (cam_35mm.PNG)</figcaption>
-            </figure>
-          </div>
-        </article>
-      </section>
+            <div class="more-col">
+              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
+              <p data-i18n="b5.grid2.p">„Epic cinematic“ pusht Kontrast und Highlights. Gut für Drama. Kann aber schnell „KI-Poster“ schreien.</p>
 
-      <!-- BLOCK 3 -->
-      <section id="b3" class="section block">
-        <header class="section-head">
-          <h2 data-i18n="b3.title">Block 3: Pose & Action</h2>
-          <p data-i18n="b3.subtitle">
-            Action entsteht durch klare Körperlogik: Was macht welche Pfote – und warum?
-          </p>
-        </header>
+              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <ul>
+                <li data-i18n="b5.grid3.li1">„soft natural daylight“ für Foto-Realismus</li>
+                <li data-i18n="b5.grid3.li2">Rim-Light reduzieren</li>
+                <li data-i18n="b5.grid3.li3">Highlights “realistic” setzen</li>
+              </ul>
 
-        <article class="manual-block">
-          <div class="mb-head">
-            <div>
-              <div class="mb-title" data-i18n="b3.mb.title">Paw / Trick / Board</div>
-              <div class="mb-sub" data-i18n="b3.mb.sub">
-                Je genauer die Pose, desto weniger Drift – aber: nicht überladen.
-              </div>
+              <h4 data-i18n="ui.risk">Risiko</h4>
+              <p data-i18n="b5.grid4.p">Zu viel “epic” macht das Bild oft künstlich (HDR-Look).</p>
             </div>
           </div>
+        </details>
 
-          <div class="callout">
-            <p data-i18n-html="b3.callout">
-              <b>Kurz gesagt:</b> Pose-Details steuern Körperlogik. Je klarer „wo sind die Pfoten“, desto stabiler.
-            </p>
+        <div class="img-grid">
+          <figure class="img-card">
+            <img src="assets/img/how/light_epic.PNG" data-i18n-attr="alt:b5.img1.alt" alt="Epic" />
+            <figcaption data-i18n="b5.img1.caption">Original: Epic</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="assets/img/how/light_day.PNG" data-i18n-attr="alt:b5.img2.alt" alt="Daylight" />
+            <figcaption data-i18n="b5.img2.caption">Variante: Daylight (light_day.PNG)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK 6 -->
+    <section id="b6" class="section">
+      <h2 class="section-title" data-i18n="b6.title">Block 6: Stil / Textur</h2>
+      <p class="section-subtitle" data-i18n="b6.subtitle">Style-Keywords beeinflussen „Materialität“: Körnung, Schärfe, Look.</p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title" data-i18n="b6.mb.title">Film Grain vs. Clean</div>
+            <div class="mb-sub" data-i18n="b6.mb.sub">Körnung kann kaschieren – oder das Bild schmutzig machen.</div>
           </div>
+        </div>
 
-          <details class="details">
-            <summary data-i18n="ui.more">Mehr anzeigen</summary>
+        <div class="callout">
+          <p data-i18n-html="b6.callout"><b>Kurz gesagt:</b> Style-Keywords ändern Textur/Materialität. Grain kann kaschieren – oder Details kaputt machen.</p>
+        </div>
 
-            <div class="more-grid">
-              <div class="more-col">
-                <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
-                <pre class="snippet">[PLACE POSE EXCERPT HERE]</pre>
-              </div>
+        <details class="mb-more">
+          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
 
-              <div class="more-col">
-                <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-                <p data-i18n="b3.grid2.p">
-                  Erzwingt eine „Story Pose“ (High-five) + Stabilität (andere Pfoten am Board).
-                </p>
-
-                <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
-                <ul>
-                  <li data-i18n="b3.grid3.li1">High-five rausnehmen → stabilere Anatomie</li>
-                  <li data-i18n="b3.grid3.li2">„ALL FOUR paws … visible contact“ hinzufügen</li>
-                  <li data-i18n="b3.grid3.li3">Board-Logik konkretisieren (Kontaktflächen)</li>
-                </ul>
-
-                <h4 data-i18n="ui.risk">Risiko</h4>
-                <p data-i18n="b3.grid4.p">
-                  Zu viele Pose-Details können miteinander konkurrieren. Besser: klare Priorität.
-                </p>
-              </div>
+          <div class="more-grid">
+            <div class="more-col">
+              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <pre class="snippet">[PLACE STYLE EXCERPT HERE]</pre>
             </div>
-          </details>
 
-          <div class="img-grid">
-            <figure>
-              <img src="assets/img/how/pose_highfive.PNG" data-i18n-attr="alt:b3.img1.alt" alt="Pose" />
-              <figcaption data-i18n="b3.img1.caption">Original: High-five paw</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/img/how/pose_natural.PNG" data-i18n-attr="alt:b3.img2.alt" alt="Pose natural" />
-              <figcaption data-i18n="b3.img2.caption">Variante: natürliche Pose (pose_natural.PNG)</figcaption>
-            </figure>
-          </div>
-        </article>
-      </section>
+            <div class="more-col">
+              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
+              <p data-i18n="b6.grid2.p">„film grain/gritty“ fügt Dreck/Körnung/Analog-Look hinzu. Das kann „real“ wirken, aber auch Details fressen.</p>
 
-      <!-- BLOCK 4 -->
-      <section id="b4" class="section block">
-        <header class="section-head">
-          <h2 data-i18n="b4.title">Block 4: Hintergrund</h2>
-          <p data-i18n="b4.subtitle">Hintergrund ist nicht Deko – er steuert Kontext, Tempo und Lesbarkeit.</p>
-        </header>
+              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <ul>
+                <li data-i18n="b6.grid3.li1">„clean, crisp“ für mehr Detail</li>
+                <li data-i18n="b6.grid3.li2">Grain komplett raus → Fellstruktur wird sichtbarer</li>
+                <li data-i18n="b6.grid3.li3">“realistic photo look” als Anker</li>
+              </ul>
 
-        <article class="manual-block">
-          <div class="mb-head">
-            <div>
-              <div class="mb-title" data-i18n="b4.mb.title">Urban Street vs. Skatepark</div>
-              <div class="mb-sub" data-i18n="b4.mb.sub">
-                Busy Background + Motion Blur kann „Action“ verstärken – oder das Motiv schlucken.
-              </div>
+              <h4 data-i18n="ui.risk">Risiko</h4>
+              <p data-i18n="b6.grid4.p">Zu viele Stilwörter konkurrieren (gritty + glossy + dreamy …). Weniger ist oft stabiler.</p>
             </div>
           </div>
+        </details>
 
-          <div class="callout">
-            <p data-i18n-html="b4.callout">
-              <b>Kurz gesagt:</b> Hintergrund steuert Kontext + Lesbarkeit. „Busy“ erhöht Action – aber auch Fehler.
-            </p>
+        <div class="img-grid">
+          <figure class="img-card">
+            <img src="assets/img/how/style_grain.PNG" data-i18n-attr="alt:b6.img1.alt" alt="Grain" />
+            <figcaption data-i18n="b6.img1.caption">Original: Grain</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="assets/img/how/style_clean.PNG" data-i18n-attr="alt:b6.img2.alt" alt="Clean" />
+            <figcaption data-i18n="b6.img2.caption">Variante: Clean (style_clean.PNG)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK 7 -->
+    <section id="b7" class="section">
+      <h2 class="section-title" data-i18n="b7.title">Block 7: Constraints</h2>
+      <p class="section-subtitle" data-i18n="b7.subtitle">Constraints sind „Leitplanken“. Sie reduzieren Chaos – wenn sie konkret sind.</p>
+
+      <article class="manual-block">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title" data-i18n="b7.mb.title">Constraints (Rules)</div>
+            <div class="mb-sub" data-i18n="b7.mb.sub">Kurz, klar, testbar. Keine Romane.</div>
           </div>
+        </div>
 
-          <details class="details">
-            <summary data-i18n="ui.more">Mehr anzeigen</summary>
+        <div class="callout">
+          <p data-i18n-html="b7.callout"><b>Kurz gesagt:</b> Constraints sind Leitplanken. Sie reduzieren Ausreißer – wenn sie kurz, klar und testbar sind.</p>
+        </div>
 
-            <div class="more-grid">
-              <div class="more-col">
-                <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
-                <pre class="snippet">[PLACE BACKGROUND EXCERPT HERE]</pre>
-              </div>
+        <details class="mb-more">
+          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
 
-              <div class="more-col">
-                <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-                <p data-i18n="b4.grid2.p">Urban + Motion Blur = Geschwindigkeit. Aber: zu viele Elemente erhöhen Fehlerquote.</p>
-
-                <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
-                <ul>
-                  <li data-i18n="b4.grid3.li1">Hintergrund vereinfachen → Motiv bleibt klar</li>
-                  <li data-i18n="b4.grid3.li2">„no text, no logos“ hinzufügen</li>
-                  <li data-i18n="b4.grid3.li3">Motion Blur reduzieren</li>
-                </ul>
-
-                <h4 data-i18n="ui.risk">Risiko</h4>
-                <p data-i18n="b4.grid4.p">
-                  Komplexe Hintergründe ziehen Aufmerksamkeit ab und erzeugen Nebenobjekte.
-                </p>
-              </div>
+          <div class="more-grid">
+            <div class="more-col">
+              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <pre class="snippet">[PLACE CONSTRAINTS EXCERPT HERE]</pre>
             </div>
-          </details>
 
-          <div class="img-grid">
-            <figure>
-              <img src="assets/img/how/bg_urban.PNG" data-i18n-attr="alt:b4.img1.alt" alt="Urban" />
-              <figcaption data-i18n="b4.img1.caption">Original: Urban</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/img/how/bg_skatepark.PNG" data-i18n-attr="alt:b4.img2.alt" alt="Skatepark" />
-              <figcaption data-i18n="b4.img2.caption">Variante: Skatepark (bg_skatepark.PNG)</figcaption>
-            </figure>
-          </div>
-        </article>
-      </section>
+            <div class="more-col">
+              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
+              <p data-i18n="b7.grid2.p">Verhindert typische Ausreißer: Collars, Harness, seltsame Proportionen, Zusatzobjekte.</p>
 
-      <!-- BLOCK 5 -->
-      <section id="b5" class="section block">
-        <header class="section-head">
-          <h2 data-i18n="b5.title">Block 5: Licht</h2>
-          <p data-i18n="b5.subtitle">Licht ist „Emotion“. Es kann ein Bild retten oder komplett künstlich wirken lassen.</p>
-        </header>
+              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <ul>
+                <li data-i18n="b7.grid3.li1">Konkreter statt allgemein („correct paws count“)</li>
+                <li data-i18n="b7.grid3.li2">Negativ klar benennen („no collar, no harness“)</li>
+                <li data-i18n="b7.grid3.li3">Identity-Anchor wiederholen (Markings identical)</li>
+              </ul>
 
-        <article class="manual-block">
-          <div class="mb-head">
-            <div>
-              <div class="mb-title" data-i18n="b5.mb.title">Epic Cinematic vs. Natural Daylight</div>
-              <div class="mb-sub" data-i18n="b5.mb.sub">Wenn „epic“ zu viel ist: runterregeln, nicht löschen.</div>
+              <h4 data-i18n="ui.risk">Risiko</h4>
+              <p data-i18n="b7.grid4.p">Zu viele Constraints (lange Listen) können sich widersprechen. Besser: kurz, hart, testbar.</p>
             </div>
           </div>
+        </details>
 
-          <div class="callout">
-            <p data-i18n-html="b5.callout">
-              <b>Kurz gesagt:</b> Licht ist Stimmung. „Epic“ pusht Drama, „Natural“ pusht Glaubwürdigkeit.
-            </p>
-          </div>
+        <div class="img-grid">
+          <figure class="img-card">
+            <img src="assets/img/how/constraints_basic.PNG" data-i18n-attr="alt:b7.img1.alt" alt="Basic" />
+            <figcaption data-i18n="b7.img1.caption">Original: Basic Constraints</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="assets/img/how/constraints_strict.PNG" data-i18n-attr="alt:b7.img2.alt" alt="Strict" />
+            <figcaption data-i18n="b7.img2.caption">Variante: Strict (constraints_strict.PNG)</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
 
-          <details class="details">
-            <summary data-i18n="ui.more">Mehr anzeigen</summary>
-
-            <div class="more-grid">
-              <div class="more-col">
-                <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
-                <pre class="snippet">[PLACE LIGHTING EXCERPT HERE]</pre>
-              </div>
-
-              <div class="more-col">
-                <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-                <p data-i18n="b5.grid2.p">
-                  „Epic cinematic“ pusht Kontrast und Highlights. Gut für Drama. Kann aber schnell „KI-Poster“ schreien.
-                </p>
-
-                <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
-                <ul>
-                  <li data-i18n="b5.grid3.li1">„soft natural daylight“ für Foto-Realismus</li>
-                  <li data-i18n="b5.grid3.li2">Rim-Light reduzieren</li>
-                  <li data-i18n="b5.grid3.li3">Highlights “realistic” setzen</li>
-                </ul>
-
-                <h4 data-i18n="ui.risk">Risiko</h4>
-                <p data-i18n="b5.grid4.p">Zu viel “epic” macht das Bild oft künstlich (HDR-Look).</p>
-              </div>
-            </div>
-          </details>
-
-          <div class="img-grid">
-            <figure>
-              <img src="assets/img/how/light_epic.PNG" data-i18n-attr="alt:b5.img1.alt" alt="Epic" />
-              <figcaption data-i18n="b5.img1.caption">Original: Epic</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/img/how/light_day.PNG" data-i18n-attr="alt:b5.img2.alt" alt="Daylight" />
-              <figcaption data-i18n="b5.img2.caption">Variante: Daylight (light_day.PNG)</figcaption>
-            </figure>
-          </div>
-        </article>
-      </section>
-
-      <!-- BLOCK 6 -->
-      <section id="b6" class="section block">
-        <header class="section-head">
-          <h2 data-i18n="b6.title">Block 6: Stil / Textur</h2>
-          <p data-i18n="b6.subtitle">Style-Keywords beeinflussen „Materialität“: Körnung, Schärfe, Look.</p>
-        </header>
-
-        <article class="manual-block">
-          <div class="mb-head">
-            <div>
-              <div class="mb-title" data-i18n="b6.mb.title">Film Grain vs. Clean</div>
-              <div class="mb-sub" data-i18n="b6.mb.sub">Körnung kann kaschieren – oder das Bild schmutzig machen.</div>
-            </div>
-          </div>
-
-          <div class="callout">
-            <p data-i18n-html="b6.callout">
-              <b>Kurz gesagt:</b> Style-Keywords ändern Textur/Materialität. Grain kann kaschieren – oder Details kaputt machen.
-            </p>
-          </div>
-
-          <details class="details">
-            <summary data-i18n="ui.more">Mehr anzeigen</summary>
-
-            <div class="more-grid">
-              <div class="more-col">
-                <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
-                <pre class="snippet">[PLACE STYLE EXCERPT HERE]</pre>
-              </div>
-
-              <div class="more-col">
-                <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-                <p data-i18n="b6.grid2.p">
-                  „film grain/gritty“ fügt Dreck/Körnung/Analog-Look hinzu. Das kann „real“ wirken, aber auch Details fressen.
-                </p>
-
-                <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
-                <ul>
-                  <li data-i18n="b6.grid3.li1">„clean, crisp“ für mehr Detail</li>
-                  <li data-i18n="b6.grid3.li2">Grain komplett raus → Fellstruktur wird sichtbarer</li>
-                  <li data-i18n="b6.grid3.li3">“realistic photo look” als Anker</li>
-                </ul>
-
-                <h4 data-i18n="ui.risk">Risiko</h4>
-                <p data-i18n="b6.grid4.p">
-                  Zu viele Stilwörter konkurrieren (gritty + glossy + dreamy …). Weniger ist oft stabiler.
-                </p>
-              </div>
-            </div>
-          </details>
-
-          <div class="img-grid">
-            <figure>
-              <img src="assets/img/how/style_grain.PNG" data-i18n-attr="alt:b6.img1.alt" alt="Grain" />
-              <figcaption data-i18n="b6.img1.caption">Original: Grain</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/img/how/style_clean.PNG" data-i18n-attr="alt:b6.img2.alt" alt="Clean" />
-              <figcaption data-i18n="b6.img2.caption">Variante: Clean (style_clean.PNG)</figcaption>
-            </figure>
-          </div>
-        </article>
-      </section>
-
-      <!-- BLOCK 7 -->
-      <section id="b7" class="section block">
-        <header class="section-head">
-          <h2 data-i18n="b7.title">Block 7: Constraints</h2>
-          <p data-i18n="b7.subtitle">Constraints sind „Leitplanken“. Sie reduzieren Chaos – wenn sie konkret sind.</p>
-        </header>
-
-        <article class="manual-block">
-          <div class="mb-head">
-            <div>
-              <div class="mb-title" data-i18n="b7.mb.title">Constraints (Rules)</div>
-              <div class="mb-sub" data-i18n="b7.mb.sub">Kurz, klar, testbar. Keine Romane.</div>
-            </div>
-          </div>
-
-          <div class="callout">
-            <p data-i18n-html="b7.callout">
-              <b>Kurz gesagt:</b> Constraints sind Leitplanken. Sie reduzieren Ausreißer – wenn sie kurz, klar und testbar sind.
-            </p>
-          </div>
-
-          <details class="details">
-            <summary data-i18n="ui.more">Mehr anzeigen</summary>
-
-            <div class="more-grid">
-              <div class="more-col">
-                <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
-                <pre class="snippet">[PLACE CONSTRAINTS EXCERPT HERE]</pre>
-              </div>
-
-              <div class="more-col">
-                <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-                <p data-i18n="b7.grid2.p">
-                  Verhindert typische Ausreißer: Collars, Harness, seltsame Proportionen, Zusatzobjekte.
-                </p>
-
-                <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
-                <ul>
-                  <li data-i18n="b7.grid3.li1">Konkreter statt allgemein („correct paws count“)</li>
-                  <li data-i18n="b7.grid3.li2">Negativ klar benennen („no collar, no harness“)</li>
-                  <li data-i18n="b7.grid3.li3">Identity-Anchor wiederholen (Markings identical)</li>
-                </ul>
-
-                <h4 data-i18n="ui.risk">Risiko</h4>
-                <p data-i18n="b7.grid4.p">
-                  Zu viele Constraints (lange Listen) können sich widersprechen. Besser: kurz, hart, testbar.
-                </p>
-              </div>
-            </div>
-          </details>
-
-          <div class="img-grid">
-            <figure>
-              <img src="assets/img/how/constraints_basic.PNG" data-i18n-attr="alt:b7.img1.alt" alt="Basic" />
-              <figcaption data-i18n="b7.img1.caption">Original: Basic Constraints</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/img/how/constraints_strict.PNG" data-i18n-attr="alt:b7.img2.alt" alt="Strict" />
-              <figcaption data-i18n="b7.img2.caption">Variante: Strict (constraints_strict.PNG)</figcaption>
-            </figure>
-          </div>
-        </article>
-      </section>
-
-      <!-- TOOL NOTE / LIMITS -->
-      <section class="section manual-block" data-i18n-attr="aria-label:meta.aria" aria-label="Hinweis zu modellübergreifender Nutzung">
-        <div class="mb-head mb-grid-vertical">
+    <!-- TOOL NOTE / LIMITS -->
+    <section class="section">
+      <article class="manual-block">
+        <div class="mb-head">
           <div>
             <div class="mb-title" data-i18n="meta.title">Hinweis zu Tools, Constraints &amp; Grenzen der Methode</div>
             <div class="mb-sub" data-i18n="meta.sub">Die Logik bleibt gleich – die Stärke der Effekte kann variieren.</div>
@@ -694,191 +1145,166 @@ Blocks:
         </div>
 
         <div class="callout" role="note">
-          <div class="callout-title" data-i18n="meta.tools.title">Hinweis zu Tools</div>
-          <p class="callout-lead" data-i18n-html="meta.tools.lead">
-            Die gezeigte Methode funktioniert modellübergreifend, aber nicht jedes Bild-Tool reagiert gleich stark …
+          <p data-i18n-html="meta.tools.lead">
+            Die gezeigte Methode funktioniert modellübergreifend, aber nicht jedes Bild-Tool reagiert gleich stark auf dieselben Formulierungen.
+            Manche Modelle gewichten Kamera, Stil oder Referenzbilder stärker als andere.
+            <b>Die Logik bleibt identisch</b> – nur die Stärke der Effekte kann variieren.
           </p>
         </div>
 
-        <div class="callout-grid">
+        <div class="tri-row" style="margin-top:12px">
           <div class="card">
-            <h3 data-i18n="meta.softHard.card1.title">Soft vs. Hard Constraints</h3>
+            <h2 data-i18n="meta.softHard.card1.title">Soft vs. Hard Constraints</h2>
             <p data-i18n="meta.softHard.card1.p">
               Nicht alle Einschränkungen wirken gleich stark. Vage Formulierungen helfen – konkrete wirken zuverlässiger.
             </p>
           </div>
           <div class="card">
-            <h3 data-i18n="meta.softHard.card2.title">Wenn ein Modell Fehler macht …</h3>
+            <h2 data-i18n="meta.softHard.card2.title">Wenn ein Modell Fehler macht …</h2>
             <p data-i18n="meta.softHard.card2.p">
               … ersetze vage Begriffe durch konkrete Leitplanken. Das erhöht Kontrolle.
             </p>
           </div>
-        </div>
-
-        <div class="two-cols">
-          <div>
-            <h4 data-i18n="meta.soft.title">Soft Constraints (weich)</h4>
-            <ul>
-              <li data-i18n="meta.soft.li1">natural</li>
-              <li data-i18n="meta.soft.li2">realistic</li>
-              <li data-i18n="meta.soft.li3">clean</li>
-              <li data-i18n="meta.soft.li4">cinematic</li>
-            </ul>
-          </div>
-          <div>
-            <h4 data-i18n="meta.hard.title">Hard Constraints (konkret)</h4>
-            <ul>
-              <li data-i18n="meta.hard.li1">both eyes visible</li>
-              <li data-i18n="meta.hard.li2">2 arms visible</li>
-              <li data-i18n="meta.hard.li3">symmetrical face</li>
-              <li data-i18n="meta.hard.li4">no extra fingers</li>
-              <li data-i18n="meta.hard.li5">centered composition</li>
-            </ul>
+          <div class="card">
+            <h2>Merksatz</h2>
+            <p>Weniger = stabiler. Kurz, klar, testbar.</p>
           </div>
         </div>
 
-        <details class="details">
-          <summary data-i18n="meta.limits.summary">Wo diese Methode an Grenzen kommt</summary>
-          <p data-i18n="meta.limits.intro">
-            Die „nur einen Block ändern“-Logik bringt Kontrolle – aber nicht in jeder Situation.
-          </p>
-
-          <div class="limits-grid">
-            <div class="card">
+        <details class="mb-more">
+          <summary class="mb-more-summary" data-i18n="meta.limits.summary">Wo diese Methode an Grenzen kommt</summary>
+          <div class="more-grid">
+            <div class="more-col">
               <h4 data-i18n="meta.limits.1.title">1) Gekoppelte Parameter</h4>
-              <p data-i18n="meta.limits.1.p">
-                Kamera, Licht und Stil beeinflussen sich gegenseitig. Änderst du „dramatic lighting“, kann sich auch
-                Pose verändern.
-              </p>
-            </div>
-            <div class="card">
+              <p data-i18n="meta.limits.1.p">Kamera, Licht und Stil beeinflussen sich gegenseitig. Änderst du „dramatic lighting“, kann sich auch Pose verändern.</p>
+
               <h4 data-i18n="meta.limits.2.title">2) Stark stilisierte Modelle</h4>
-              <p data-i18n="meta.limits.2.p">
-                Manche Modelle priorisieren Stil stärker als Struktur. Ein dominanter Stil kann Anatomie übersteuern.
-              </p>
+              <p data-i18n="meta.limits.2.p">Manche Modelle priorisieren Stil stärker als Struktur. Ein dominanter Stil kann Anatomie übersteuern.</p>
             </div>
-            <div class="card">
+            <div class="more-col">
               <h4 data-i18n="meta.limits.3.title">3) Vage Prompts</h4>
-              <p data-i18n="meta.limits.3.p">
-                Wenn der Basisprompt zu offen ist, reagiert das Modell stärker auf Zufall. Erst Struktur, dann Tests.
-              </p>
-            </div>
-            <div class="card">
+              <p data-i18n="meta.limits.3.p">Wenn der Basisprompt zu offen ist, reagiert das Modell stärker auf Zufall. Erst Struktur, dann Tests.</p>
+
               <h4 data-i18n="meta.limits.4.title">4) Kein Ersatz für Iteration</h4>
               <p data-i18n-html="meta.limits.4.p">
-                Auch saubere A/B-Tests garantieren kein perfektes Bild. Sie helfen zu verstehen, warum etwas
-                funktioniert oder scheitert.<br /><br />Diese Methode macht Ergebnisse kontrollierbarer – nicht perfekt.
+                Auch saubere A/B-Tests garantieren kein perfektes Bild. Sie helfen zu verstehen, warum etwas funktioniert oder scheitert.<br /><br />
+                Diese Methode macht Ergebnisse kontrollierbarer – nicht perfekt.
               </p>
             </div>
           </div>
         </details>
-      </section>
+      </article>
+    </section>
 
-      <!-- WHAT OFTEN GOES WRONG -->
-      <section class="section">
-        <header class="section-head">
-          <h2 data-i18n="fails.title">Was oft schiefgeht (und warum)</h2>
-          <p data-i18n="fails.sub">Wenn du das erkennst, verschwindet 80% der Frustration.</p>
-        </header>
+    <!-- WHAT OFTEN GOES WRONG -->
+    <section class="section">
+      <h2 class="section-title" data-i18n="fails.title">Was oft schiefgeht (und warum)</h2>
+      <p class="section-subtitle" data-i18n="fails.sub">Wenn du das erkennst, verschwindet 80% der Frustration.</p>
 
-        <div class="callout-grid">
-          <div class="card">
-            <h3 data-i18n="fails.bad1.title">❌ Zu viel auf einmal</h3>
-            <p data-i18n="fails.bad1.p">
-              Wenn du mehrere Blöcke gleichzeitig änderst, weißt du nicht, was den Effekt ausgelöst hat.
-            </p>
-          </div>
-          <div class="card">
-            <h3 data-i18n="fails.bad2.title">❌ Fließtext-Overkill</h3>
-            <p data-i18n="fails.bad2.p">
-              Sehr lange Prompts können Prioritäten verwässern. Oft ist „klar + kurz“ stabiler.
-            </p>
-          </div>
-          <div class="card">
-            <h3 data-i18n="fails.bad3.title">❌ „Mehr Adjektive = besser“</h3>
-            <p data-i18n="fails.bad3.p">
-              Zu viele Stilwörter konkurrieren miteinander. Ergebnis: Drift, Chaos, KI-Poster-Look.
-            </p>
-          </div>
+      <div class="tri-row">
+        <div class="card">
+          <h2 data-i18n="fails.bad1.title">❌ Zu viel auf einmal</h2>
+          <p data-i18n="fails.bad1.p">Wenn du mehrere Blöcke gleichzeitig änderst, weißt du nicht, was den Effekt ausgelöst hat.</p>
         </div>
-
-        <div class="callout-grid">
-          <div class="card">
-            <h3 data-i18n="fails.good1.title">✅ So debugst du richtig</h3>
-            <ul>
-              <li data-i18n="fails.good1.li1">1 Block ändern</li>
-              <li data-i18n="fails.good1.li2">3 Runs generieren</li>
-              <li data-i18n="fails.good1.li3">Vergleichen → erst dann weiter</li>
-            </ul>
-          </div>
-          <div class="card">
-            <h3 data-i18n="fails.good2.title">✅ Wenn’s „driftet“</h3>
-            <ul>
-              <li data-i18n="fails.good2.li1">Identität verstärken (kurz + wiederholt)</li>
-              <li data-i18n="fails.good2.li2">Kamera vereinfachen (kein Fisheye)</li>
-              <li data-i18n="fails.good2.li3">Constraints konkretisieren</li>
-            </ul>
-          </div>
-          <div class="card">
-            <h3 data-i18n="fails.good4.title">✅ Reihenfolge</h3>
-            <p data-i18n="fails.good4.p">
-              Erst Identität stabilisieren, dann Kamera/Pose, dann Licht/Style, dann Constraints feintunen.
-            </p>
-          </div>
+        <div class="card">
+          <h2 data-i18n="fails.bad2.title">❌ Fließtext-Overkill</h2>
+          <p data-i18n="fails.bad2.p">Sehr lange Prompts können Prioritäten verwässern. Oft ist „klar + kurz“ stabiler.</p>
         </div>
+        <div class="card">
+          <h2 data-i18n="fails.bad3.title">❌ „Mehr Adjektive = besser“</h2>
+          <p data-i18n="fails.bad3.p">Zu viele Stilwörter konkurrieren miteinander. Ergebnis: Drift, Chaos, KI-Poster-Look.</p>
+        </div>
+      </div>
 
-        <p class="finalrule" data-i18n-html="fails.finalrule">
-          Minimal-Regel für Lernfortschritt: <b>Immer nur 1 Block ändern</b>, dann vergleichen.
-        </p>
-      </section>
-    </main>
+      <div class="tri-row" style="margin-top:10px">
+        <div class="card">
+          <h2 data-i18n="fails.good1.title">✅ So debugst du richtig</h2>
+          <ul>
+            <li data-i18n="fails.good1.li1">1 Block ändern</li>
+            <li data-i18n="fails.good1.li2">3 Runs generieren</li>
+            <li data-i18n="fails.good1.li3">Vergleichen → erst dann weiter</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2 data-i18n="fails.good2.title">✅ Wenn’s „driftet“</h2>
+          <ul>
+            <li data-i18n="fails.good2.li1">Identität verstärken (kurz + wiederholt)</li>
+            <li data-i18n="fails.good2.li2">Kamera vereinfachen (kein Fisheye)</li>
+            <li data-i18n="fails.good2.li3">Constraints konkretisieren</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2 data-i18n="fails.good4.title">✅ Reihenfolge</h2>
+          <p data-i18n="fails.good4.p">Erst Identität stabilisieren, dann Kamera/Pose, dann Licht/Style, dann Constraints feintunen.</p>
+        </div>
+      </div>
 
-    <footer class="site-footer">
-      <div class="footer-inner">
+      <div class="callout" style="margin-top:12px">
+        <p data-i18n-html="fails.finalrule"><b>Minimal-Regel:</b> Immer nur 1 Block ändern, dann vergleichen.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div>
         <span data-i18n="footer.build">current build:</span>
         <span class="dim">2026-02-07</span>
       </div>
+      <div>
+        <a href="index.html">Home</a> · <a href="how.html">So funktioniert’s</a>
+      </div>
     </footer>
+  </main>
 
-    <!-- Minimal copy button handler (optional) -->
-    <script>
-      (function () {
-        function copyTextFromSelector(sel) {
-          const el = document.querySelector(sel);
-          if (!el) return false;
-          const text = el.innerText || el.textContent || "";
-          navigator.clipboard.writeText(text);
-          return true;
-        }
+  <!-- JS kommt später (i18n + handlers). Du kannst hier einfach ersetzen/ergänzen. -->
+  <script>
+    (function () {
+      // Scroll progress bar (uses :root --scroll)
+      function onScroll() {
+        var doc = document.documentElement;
+        var scrollTop = doc.scrollTop || document.body.scrollTop;
+        var scrollHeight = (doc.scrollHeight || document.body.scrollHeight) - doc.clientHeight;
+        var progress = scrollHeight > 0 ? (scrollTop / scrollHeight) : 0;
+        doc.style.setProperty("--scroll", String(progress));
+      }
+      document.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
 
-        document.addEventListener("click", function (e) {
-          const btn = e.target.closest("[data-copy]");
-          if (!btn) return;
+      // Copy buttons (works now; later you can hook i18n label switch)
+      function copyTextFromSelector(sel) {
+        var el = document.querySelector(sel);
+        if (!el) return false;
+        var text = el.innerText || el.textContent || "";
+        if (!navigator.clipboard) return false;
+        navigator.clipboard.writeText(text);
+        return true;
+      }
 
-          const sel = btn.getAttribute("data-copy");
-          const ok = copyTextFromSelector(sel);
-          if (!ok) return;
+      document.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-copy]");
+        if (!btn) return;
+        var sel = btn.getAttribute("data-copy");
+        if (!sel) return;
 
-          // Toggle label via i18n (btn.copy / btn.copied)
-          const originalKey = btn.getAttribute("data-i18n") || "btn.copy";
-          btn.setAttribute("data-i18n", "btn.copied");
+        var ok = copyTextFromSelector(sel);
+        if (!ok) return;
 
-          // re-apply current language text immediately
-          if (window.PromptRebelI18n && typeof window.PromptRebelI18n.applyLang === "function") {
-            window.PromptRebelI18n.applyLang(window.PromptRebelI18n.getLang());
-          }
+        // Simple feedback (can be replaced by your i18n JS)
+        var old = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(function(){ btn.textContent = old; }, 900);
+      });
 
-          setTimeout(function () {
-            btn.setAttribute("data-i18n", originalKey);
-            if (window.PromptRebelI18n && typeof window.PromptRebelI18n.applyLang === "function") {
-              window.PromptRebelI18n.applyLang(window.PromptRebelI18n.getLang());
-            }
-          }, 900);
+      // Brand glitch on click (pure UI)
+      var brand = document.querySelector(".brand");
+      if (brand) {
+        brand.addEventListener("click", function () {
+          brand.classList.remove("glitch");
+          // force reflow
+          void brand.offsetWidth;
+          brand.classList.add("glitch");
         });
-      })();
-    </script>
-
-    <!-- Your i18n file (the one you pasted) -->
-    <script src="assets/js/i18n.js"></script>
-  </body>
+      }
+    })();
+  </script>
+</body>
 </html>
