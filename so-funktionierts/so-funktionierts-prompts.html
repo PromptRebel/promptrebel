@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title data-i18n="meta.title">PromptRebel – So funktioniert’s · Prompts</title>
+  <title data-i18n="page.title">PromptRebel – So funktioniert’s · Prompts</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -561,7 +561,7 @@
       .btn{ padding:12px 16px; }
 
       .nav-right{ gap:8px; }
-      .lang-label{ display:none; } /* keep it clean on mobile */
+      .lang-label{ display:none; }
       #langSelect.btn{ padding:8px 10px; }
     }
 
@@ -592,7 +592,7 @@
         Prompt<span class="accent">Rebel</span>
       </div>
 
-      <nav class="nav-links" aria-label="Hauptnavigation" data-i18n-attr="aria-label:nav.aria">
+      <nav class="nav-links" aria-label="Hauptnavigation" data-i18n-attr="aria-label:nav.main">
         <a href="../index.html#projects" class="nav-link" data-i18n="nav.projects">Projects</a>
         <a href="../index.html#about" class="nav-link" data-i18n="nav.about">About</a>
         <a href="../index.html#lab-notes" class="nav-link" data-i18n="nav.lab">Lab Notes</a>
@@ -601,7 +601,7 @@
       <!-- Language dropdown -->
       <div class="nav-right">
         <span class="lang-label" data-i18n="ui.language">Sprache</span>
-        <select id="langSelect" class="btn" aria-label="Language">
+        <select id="langSelect" class="btn" aria-label="Language" data-i18n-attr="aria-label:ui.language">
           <option value="de">DE</option>
           <option value="en">EN</option>
         </select>
@@ -626,16 +626,8 @@
             </span>
           </div>
 
-          <p class="hero-text-main" data-i18n-html="how.heroMain">
-            🔥 Kein Zauber. Nur Struktur.<br/>
-            Wir zerlegen einen Prompt in klare Bausteine – und zeigen,
-            was passiert, wenn du genau <b>eine</b> Stelle änderst.
-          </p>
-
-          <p class="hero-text-sub" data-i18n-html="how.heroSub">
-            Ziel: Du sollst Prompts nicht „glauben“, sondern <b>verstehen</b>.<br/>
-            Du kannst danach denselben Aufbau auf eigene Ideen übertragen.
-          </p>
+          <p class="hero-text-main" data-i18n-html="how.heroMain"></p>
+          <p class="hero-text-sub" data-i18n-html="how.heroSub"></p>
 
           <div class="chip-row" aria-label="Schnellnavigation" data-i18n-attr="aria-label:how.quicknav">
             <button class="chip" type="button" data-jump="#prompt-original" data-i18n="chip.original">Original</button>
@@ -650,28 +642,20 @@
 
           <div class="callout tldr">
             <h3 data-i18n="tldr.title">TL;DR</h3>
-            <p data-i18n-html="tldr.text">
-              Prompts sind keine Magie. Sie sind Bausteine (Identität, Kamera, Licht …).<br/>
-              Änderst du <b>einen</b> Baustein, ändert sich das Bild meist <b>vorhersehbar</b>.
-            </p>
+            <p data-i18n-html="tldr.text"></p>
             <ul class="bullets">
-              <li data-i18n-html="tldr.b1"><b>1 Block ändern</b> → vergleichen</li>
-              <li data-i18n="tldr.b2">Rest gleich lassen → Ursache klar</li>
-              <li data-i18n="tldr.b3">Das Ziel ist Verständnis, nicht Perfektion</li>
+              <li data-i18n-html="tldr.b1"></li>
+              <li data-i18n="tldr.b2"></li>
+              <li data-i18n="tldr.b3"></li>
             </ul>
           </div>
 
           <div class="callout key">
             <h3 data-i18n="key.title">Wichtig</h3>
-            <p data-i18n-html="key.text">
-              Diese Seite verkauft kein „perfektes Prompt“.<br/>
-              Sie zeigt dir die <b>Hebel</b> – damit du deinen eigenen Weg findest.
-            </p>
+            <p data-i18n-html="key.text"></p>
           </div>
 
-          <div class="callout" data-i18n="tip.oneword">
-            Tipp: Du brauchst nicht „kreativ“ zu sein. Ändere nur ein Wort – und beobachte den Effekt.
-          </div>
+          <div class="callout" data-i18n="tip.oneword"></div>
         </div>
 
         <!-- Terminal / quick summary -->
@@ -679,26 +663,10 @@
           <div class="panel-header">
             <div class="left">
               <span class="icon">🧪</span>
-              <span>NOW LOADING · PROMPT AUTOPSY</span>
+              <span data-i18n="panel.nowLoading">NOW LOADING · PROMPT AUTOPSY</span>
             </div>
           </div>
-          <div class="terminal">
-promptrebel:autopsy$ explain skateboard_prompt
-
-> INPUT:   reference photo + prompt blocks
-> OUTPUT:  consistent image variations
-
-Blocks:
-- identity transfer
-- camera / lens
-- pose & action
-- background
-- lighting
-- style
-- constraints
-
-<span class="dim"># ändere nie alles auf einmal.</span>
-          </div>
+          <div class="terminal" data-i18n-html="panel.terminal"></div>
         </aside>
       </div>
     </section>
@@ -706,15 +674,13 @@ Blocks:
     <!-- ORIGINAL PROMPT -->
     <section class="section" id="prompt-original" aria-labelledby="prompt-original-title">
       <h2 class="section-title" id="prompt-original-title" data-i18n="orig.title">Beispielprompt: Skateboard</h2>
-      <p class="section-subtitle" data-i18n="orig.subtitle">
-        Das ist der Ausgangspunkt. Von hier aus ändern wir gezielt einzelne Bausteine.
-      </p>
+      <p class="section-subtitle" data-i18n="orig.subtitle"></p>
 
       <div class="panel-glass">
         <div class="panel-header">
           <div class="left">
             <span class="icon">🧾</span>
-            <span>ORIGINAL PROMPT</span>
+            <span data-i18n="orig.header">ORIGINAL PROMPT</span>
           </div>
           <button class="btn primary" type="button" id="copyPromptBtn" data-i18n="btn.copy">Copy Prompt</button>
         </div>
@@ -739,9 +705,7 @@ Constraints:
 – No accessories besides skateboard
 – Strong focus on movement & intensity.</pre>
 
-        <p class="hero-note" style="margin-top:10px;" data-i18n="orig.note">
-          Hinweis: Das Referenzfoto ist der „Identity Anchor“. Der Rest ist Szene/Styling.
-        </p>
+        <p class="hero-note" style="margin-top:10px;" data-i18n="orig.note"></p>
       </div>
 
       <div class="img-compare" style="margin-top:14px;">
@@ -752,7 +716,7 @@ Constraints:
             loading="lazy"
             data-i18n-attr="alt:orig.img.original.alt"
           >
-          <figcaption data-i18n="orig.img.original.caption">Original Output (assets/…/original.PNG)</figcaption>
+          <figcaption data-i18n="orig.img.original.caption"></figcaption>
         </figure>
         <figure class="img-card">
           <img
@@ -761,115 +725,88 @@ Constraints:
             loading="lazy"
             data-i18n-attr="alt:orig.img.reference.alt"
           >
-          <figcaption data-i18n="orig.img.reference.caption">Referenz Foto</figcaption>
+          <figcaption data-i18n="orig.img.reference.caption"></figcaption>
         </figure>
       </div>
 
       <!-- Sprache & Struktur -->
       <div class="callout" role="note" aria-label="Hinweis zu Sprache und Prompt-Struktur" data-i18n-attr="aria-label:langstruct.aria">
-        <div class="callout-title" data-i18n="langstruct.title">Warum Englisch – und warum diese Struktur</div>
-        <div class="callout-lead" data-i18n-html="langstruct.lead">
-          Du musst Prompts nicht so schreiben wie ich. Das hier ist kein „richtig/falsch“ – sondern ein Weg,
-          um Ergebnisse <b>reproduzierbarer</b> zu machen und Änderungen gezielt testen zu können.
-        </div>
+        <div class="callout-title" data-i18n="langstruct.title"></div>
+        <div class="callout-lead" data-i18n-html="langstruct.lead"></div>
 
         <div class="callout-grid">
           <div class="callout-card">
-            <h4 data-i18n="langstruct.card1.title">1) Trainingsdaten-Realität</h4>
-            <p data-i18n-html="langstruct.card1.p">
-              Viele Bild- und Sprachmodelle wurden stark mit englischen Texten trainiert.
-              Deutsch funktioniert oft – aber Englisch ist meist <b>präziser</b>, <b>konsistenter</b>
-              und leichter zu debuggen, wenn ein Prompt „driftet“.
-            </p>
+            <h4 data-i18n="langstruct.card1.title"></h4>
+            <p data-i18n-html="langstruct.card1.p"></p>
             <ul>
-              <li data-i18n-html="langstruct.card1.li1"><b>Deutsch klappt auch</b> – vor allem bei klaren, einfachen Prompts.</li>
-              <li data-i18n="langstruct.card1.li2">Wenn Pose/Objekte kippen, ist Englisch oft leichter nachzuschärfen.</li>
-              <li data-i18n-html="langstruct.card1.li3">Es geht nicht um Sprache – sondern um <b>Klarheit</b>.</li>
+              <li data-i18n-html="langstruct.card1.li1"></li>
+              <li data-i18n="langstruct.card1.li2"></li>
+              <li data-i18n-html="langstruct.card1.li3"></li>
             </ul>
           </div>
 
           <div class="callout-card">
-            <h4 data-i18n="langstruct.card2.title">2) Struktur ist ein Werkzeug</h4>
-            <p data-i18n-html="langstruct.card2.p">
-              Ich schreibe in Blöcken (Motiv, Kamera, Licht, Stil, Constraints), damit ich nichts vergesse
-              und <b>gezielt</b> einzelne Hebel drehen kann.
-            </p>
+            <h4 data-i18n="langstruct.card2.title"></h4>
+            <p data-i18n-html="langstruct.card2.p"></p>
             <ul>
-              <li data-i18n-html="langstruct.card2.li1">Du kannst denselben Inhalt auch als <b>Fließtext</b> schreiben.</li>
-              <li data-i18n="langstruct.card2.li2">Wenn alle Infos drin sind, wird das Ergebnis oft ähnlich.</li>
-              <li data-i18n-html="langstruct.card2.li3">Für Lernfortschritt: <b>immer nur 1 Block pro Test ändern</b>.</li>
+              <li data-i18n-html="langstruct.card2.li1"></li>
+              <li data-i18n="langstruct.card2.li2"></li>
+              <li data-i18n-html="langstruct.card2.li3"></li>
             </ul>
           </div>
         </div>
 
-        <div class="callout-kicker" data-i18n-html="langstruct.kicker">
-          <b>Merksatz:</b> Das ist ein Weg – nicht der Weg. Ziel ist Verständnis, nicht Copy/Paste.
-        </div>
+        <div class="callout-kicker" data-i18n-html="langstruct.kicker"></div>
 
         <details class="callout-details">
-          <summary data-i18n="langstruct.details.summary">Optional: Wenn du lieber frei schreibst …</summary>
-          <p data-i18n-html="langstruct.details.p">
-            Dann denk trotzdem an die üblichen Stellschrauben:
-            <b>Motiv</b>, <b>Kamera</b>, <b>Licht</b>, <b>Hintergrund</b>, <b>Stil</b>, <b>Constraints</b>.
-            Wenn das enthalten ist, kommst du oft sehr weit – auch ohne Block-Struktur.
-          </p>
+          <summary data-i18n="langstruct.details.summary"></summary>
+          <p data-i18n-html="langstruct.details.p"></p>
         </details>
       </div>
     </section>
 
     <!-- BLOCK: IDENTITY -->
     <section class="section" id="block-identity" aria-labelledby="block-identity-title">
-      <h2 class="section-title" id="block-identity-title" data-i18n="b1.title">Block 1: Identität (Referenzfoto)</h2>
-      <p class="section-subtitle" data-i18n-html="b1.subtitle">
-        Dieser Block sorgt dafür, dass es <b>dein</b> Tier bleibt – und nicht irgendein generischer Hund.
-      </p>
+      <h2 class="section-title" id="block-identity-title" data-i18n="b1.title"></h2>
+      <p class="section-subtitle" data-i18n-html="b1.subtitle"></p>
 
       <article class="manual-block">
         <div class="mb-head">
           <div>
-            <div class="mb-title" data-i18n="b1.mb.title">Identity Transfer</div>
-            <div class="mb-sub" data-i18n-html="b1.mb.sub">Die wichtigste Regel: „Wie auf dem Referenzfoto“ – klar und wiederholt.</div>
+            <div class="mb-title" data-i18n="b1.mb.title"></div>
+            <div class="mb-sub" data-i18n-html="b1.mb.sub"></div>
           </div>
         </div>
 
-        <div class="callout" style="margin-top:10px;" data-i18n-html="b1.callout">
-          <b>Kurz gesagt:</b> Dieser Block entscheidet, ob es wirklich <b>dein</b> Hund bleibt
-          (Fell, Muster, Proportionen) – oder ob das Modell zu „Random Dog“ driftet.
-        </div>
+        <div class="callout" style="margin-top:10px;" data-i18n-html="b1.callout"></div>
 
         <details class="mb-more" open>
-          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+          <summary class="mb-more-summary" data-i18n="ui.more"></summary>
 
           <div class="mb-grid">
             <div class="mb-card">
-              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <h4 data-i18n="ui.promptExcerpt"></h4>
               <pre>The dog from the reference photo is captured mid-air while skateboarding.
 Reproduce its natural fur colors, markings, and body features exactly as in the reference photo.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-              <p data-i18n="b1.card.what">
-                Verankert Fellfarben, Muster, Proportionen und den „Look“ am Referenzfoto.
-                Ohne diesen Block driftet das Ergebnis schnell zu „Random Dog“.
-              </p>
+              <h4 data-i18n="ui.whatItDoes"></h4>
+              <p data-i18n="b1.card.what"></p>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <h4 data-i18n="ui.typicalTweaks"></h4>
               <ul>
-                <li data-i18n-html="b1.card.t1">„dog“ → „animal“ (für jedes Tier)</li>
-                <li data-i18n-html="b1.card.t2">„captured mid-air“ → „standing / sitting“</li>
-                <li data-i18n="b1.card.t3">mehr Details zu Fell/Markings (wenn nötig)</li>
+                <li data-i18n-html="b1.card.t1"></li>
+                <li data-i18n-html="b1.card.t2"></li>
+                <li data-i18n="b1.card.t3"></li>
               </ul>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.risk">Risiko</h4>
-              <p data-i18n="b1.card.risk">
-                Zu viel Zusatzbeschreibung kann das Referenzfoto „überschreiben“.
-                Besser: kurz + eindeutig + wiederholbar.
-              </p>
+              <h4 data-i18n="ui.risk"></h4>
+              <p data-i18n="b1.card.risk"></p>
             </div>
           </div>
         </details>
@@ -882,7 +819,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b1.img.left.alt"
             >
-            <figcaption data-i18n="b1.img.left.cap">Original (Referenz stark)</figcaption>
+            <figcaption data-i18n="b1.img.left.cap"></figcaption>
           </figure>
           <figure class="img-card">
             <img
@@ -891,7 +828,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b1.img.right.alt"
             >
-            <figcaption data-i18n="b1.img.right.cap">Variante: Identity zu schwach (identity_weak.PNG)</figcaption>
+            <figcaption data-i18n="b1.img.right.cap"></figcaption>
           </figure>
         </div>
       </article>
@@ -899,57 +836,46 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
 
     <!-- BLOCK: CAMERA -->
     <section class="section" id="block-camera" aria-labelledby="block-camera-title">
-      <h2 class="section-title" id="block-camera-title" data-i18n="b2.title">Block 2: Kamera / Lens</h2>
-      <p class="section-subtitle" data-i18n-html="b2.subtitle">
-        Kamera ist ein „Look-Schalter“. Fisheye wirkt krass – aber ist fehleranfälliger.
-      </p>
+      <h2 class="section-title" id="block-camera-title" data-i18n="b2.title"></h2>
+      <p class="section-subtitle" data-i18n-html="b2.subtitle"></p>
 
       <article class="manual-block">
         <div class="mb-head">
           <div>
-            <div class="mb-title" data-i18n="b2.mb.title">Fisheye vs. realistischer Look</div>
-            <div class="mb-sub" data-i18n="b2.mb.sub">Ein einzelner Satz verändert die gesamte Bildphysik.</div>
+            <div class="mb-title" data-i18n="b2.mb.title"></div>
+            <div class="mb-sub" data-i18n="b2.mb.sub"></div>
           </div>
         </div>
 
-        <div class="callout" style="margin-top:10px;" data-i18n-html="b2.callout">
-          <b>Kurz gesagt:</b> Kamera-Wörter sind ein Look-Schalter.
-          Fisheye = maximal dynamisch, aber anfälliger für anatomische Fehler.
-        </div>
+        <div class="callout" style="margin-top:10px;" data-i18n-html="b2.callout"></div>
 
         <details class="mb-more">
-          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+          <summary class="mb-more-summary" data-i18n="ui.more"></summary>
 
           <div class="mb-grid">
             <div class="mb-card">
-              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <h4 data-i18n="ui.promptExcerpt"></h4>
               <pre>– Camera angle: Low-angle fisheye perspective, extreme dramatic distortion.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-              <p data-i18n="b2.card.what">
-                Fisheye verstärkt Dynamik durch Verzerrung: Vordergrund riesig, Background gebogen.
-                Stark für Action – riskant für Anatomie.
-              </p>
+              <h4 data-i18n="ui.whatItDoes"></h4>
+              <p data-i18n="b2.card.what"></p>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <h4 data-i18n="ui.typicalTweaks"></h4>
               <ul>
-                <li data-i18n-html="b2.card.t1">„fisheye“ → „35mm documentary photo“ (stabiler)</li>
-                <li data-i18n-html="b2.card.t2">„extreme distortion“ → „no distortion“</li>
-                <li data-i18n="b2.card.t3">Low-angle beibehalten, aber Verzerrung rausnehmen</li>
+                <li data-i18n-html="b2.card.t1"></li>
+                <li data-i18n-html="b2.card.t2"></li>
+                <li data-i18n="b2.card.t3"></li>
               </ul>
               <pre>– Camera angle: 35mm documentary photo, low-angle, no distortion.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.risk">Risiko</h4>
-              <p data-i18n="b2.card.risk">
-                Extreme Linsen/Verzerrungen erhöhen die Fehlerquote (Pfoten, Board, Proportionen).
-                Wenn es “driftet”: vereinfachen.
-              </p>
+              <h4 data-i18n="ui.risk"></h4>
+              <p data-i18n="b2.card.risk"></p>
             </div>
           </div>
         </details>
@@ -962,7 +888,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b2.img.left.alt"
             >
-            <figcaption data-i18n="b2.img.left.cap">Original: Fisheye</figcaption>
+            <figcaption data-i18n="b2.img.left.cap"></figcaption>
           </figure>
           <figure class="img-card">
             <img
@@ -971,7 +897,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b2.img.right.alt"
             >
-            <figcaption data-i18n="b2.img.right.cap">Variante: 35mm (cam_35mm.PNG)</figcaption>
+            <figcaption data-i18n="b2.img.right.cap"></figcaption>
           </figure>
         </div>
       </article>
@@ -979,49 +905,41 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
 
     <!-- BLOCK: POSE -->
     <section class="section" id="block-pose" aria-labelledby="block-pose-title">
-      <h2 class="section-title" id="block-pose-title" data-i18n="b3.title">Block 3: Pose & Action</h2>
-      <p class="section-subtitle" data-i18n="b3.subtitle">
-        Action entsteht durch klare Körperlogik: Was macht welche Pfote – und warum?
-      </p>
+      <h2 class="section-title" id="block-pose-title" data-i18n="b3.title"></h2>
+      <p class="section-subtitle" data-i18n="b3.subtitle"></p>
 
       <article class="manual-block">
         <div class="mb-head">
           <div>
-            <div class="mb-title" data-i18n="b3.mb.title">Paw / Trick / Board</div>
-            <div class="mb-sub" data-i18n="b3.mb.sub">Je genauer die Pose, desto weniger Drift – aber: nicht überladen.</div>
+            <div class="mb-title" data-i18n="b3.mb.title"></div>
+            <div class="mb-sub" data-i18n="b3.mb.sub"></div>
           </div>
         </div>
 
-        <div class="callout" style="margin-top:10px;" data-i18n-html="b3.callout">
-          <b>Kurz gesagt:</b> Pose-Details steuern Körperlogik.
-          Je klarer „wo sind die Pfoten“, desto stabiler wird das Ergebnis – aber nicht überladen.
-        </div>
+        <div class="callout" style="margin-top:10px;" data-i18n-html="b3.callout"></div>
 
         <details class="mb-more">
-          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+          <summary class="mb-more-summary" data-i18n="ui.more"></summary>
 
           <div class="mb-grid">
             <div class="mb-card">
-              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <h4 data-i18n="ui.promptExcerpt"></h4>
               <pre>– One exaggerated paw reaches forward into the extreme foreground, as if giving a high-five.
 – All other paws are placed firmly on the skateboard.
 – The skateboard is tilted mid-trick, dynamic and realistic.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-              <p data-i18n="b3.card.what">
-                Erzwingt eine „Story Pose“ (High-five) + Stabilität (andere Pfoten am Board).
-                Das gibt Bewegung und Fokus.
-              </p>
+              <h4 data-i18n="ui.whatItDoes"></h4>
+              <p data-i18n="b3.card.what"></p>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <h4 data-i18n="ui.typicalTweaks"></h4>
               <ul>
-                <li data-i18n="b3.card.t1">High-five rausnehmen → stabilere Anatomie</li>
-                <li data-i18n-html="b3.card.t2">„ALL FOUR paws … visible contact“ hinzufügen</li>
-                <li data-i18n="b3.card.t3">Board-Logik konkretisieren (Kontaktflächen)</li>
+                <li data-i18n="b3.card.t1"></li>
+                <li data-i18n-html="b3.card.t2"></li>
+                <li data-i18n="b3.card.t3"></li>
               </ul>
               <pre>– The dog stands naturally on the skateboard.
 – ALL FOUR paws are placed firmly on the deck at the same time.
@@ -1031,11 +949,8 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.risk">Risiko</h4>
-              <p data-i18n="b3.card.risk">
-                Zu viele Pose-Details können miteinander konkurrieren.
-                Besser: klare Priorität + wenige, testbare Sätze.
-              </p>
+              <h4 data-i18n="ui.risk"></h4>
+              <p data-i18n="b3.card.risk"></p>
             </div>
           </div>
         </details>
@@ -1048,7 +963,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b3.img.left.alt"
             >
-            <figcaption data-i18n="b3.img.left.cap">Original: High-five paw</figcaption>
+            <figcaption data-i18n="b3.img.left.cap"></figcaption>
           </figure>
           <figure class="img-card">
             <img
@@ -1057,7 +972,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b3.img.right.alt"
             >
-            <figcaption data-i18n="b3.img.right.cap">Variante: natürliche Pose (pose_natural.PNG)</figcaption>
+            <figcaption data-i18n="b3.img.right.cap"></figcaption>
           </figure>
         </div>
       </article>
@@ -1065,57 +980,46 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
 
     <!-- BLOCK: BACKGROUND -->
     <section class="section" id="block-background" aria-labelledby="block-background-title">
-      <h2 class="section-title" id="block-background-title" data-i18n="b4.title">Block 4: Hintergrund</h2>
-      <p class="section-subtitle" data-i18n-html="b4.subtitle">
-        Hintergrund ist nicht Deko – er steuert Kontext, Tempo und Lesbarkeit.
-      </p>
+      <h2 class="section-title" id="block-background-title" data-i18n="b4.title"></h2>
+      <p class="section-subtitle" data-i18n-html="b4.subtitle"></p>
 
       <article class="manual-block">
         <div class="mb-head">
           <div>
-            <div class="mb-title" data-i18n="b4.mb.title">Urban Street vs. Skatepark</div>
-            <div class="mb-sub" data-i18n-html="b4.mb.sub">Busy Background + Motion Blur kann „Action“ verstärken – oder das Motiv schlucken.</div>
+            <div class="mb-title" data-i18n="b4.mb.title"></div>
+            <div class="mb-sub" data-i18n-html="b4.mb.sub"></div>
           </div>
         </div>
 
-        <div class="callout" style="margin-top:10px;" data-i18n-html="b4.callout">
-          <b>Kurz gesagt:</b> Hintergrund steuert Kontext + Lesbarkeit.
-          „Busy“ erhöht Action – aber auch Fehler (Text, Logos, Chaos).
-        </div>
+        <div class="callout" style="margin-top:10px;" data-i18n-html="b4.callout"></div>
 
         <details class="mb-more">
-          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+          <summary class="mb-more-summary" data-i18n="ui.more"></summary>
 
           <div class="mb-grid">
             <div class="mb-card">
-              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <h4 data-i18n="ui.promptExcerpt"></h4>
               <pre>Background: Urban street environment with motion blur.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-              <p data-i18n-html="b4.card.what">
-                Urban + Motion Blur = Geschwindigkeit. Aber: zu viele Elemente erhöhen Fehlerquote
-                (Texte, Schilder, Logos, Chaos).
-              </p>
+              <h4 data-i18n="ui.whatItDoes"></h4>
+              <p data-i18n-html="b4.card.what"></p>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <h4 data-i18n="ui.typicalTweaks"></h4>
               <ul>
-                <li data-i18n="b4.card.t1">Hintergrund vereinfachen → Motiv bleibt klar</li>
-                <li data-i18n-html="b4.card.t2">„no text, no logos“ hinzufügen</li>
-                <li data-i18n="b4.card.t3">Motion Blur reduzieren</li>
+                <li data-i18n="b4.card.t1"></li>
+                <li data-i18n-html="b4.card.t2"></li>
+                <li data-i18n="b4.card.t3"></li>
               </ul>
               <pre>Background: simple skatepark, clean shapes, no text, no logos, subtle motion blur.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.risk">Risiko</h4>
-              <p data-i18n-html="b4.card.risk">
-                Komplexe Hintergründe ziehen Aufmerksamkeit ab und erzeugen Nebenobjekte.
-                Wenn dein Ziel Vergleichbarkeit ist: “clean” gewinnt.
-              </p>
+              <h4 data-i18n="ui.risk"></h4>
+              <p data-i18n-html="b4.card.risk"></p>
             </div>
           </div>
         </details>
@@ -1128,7 +1032,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b4.img.left.alt"
             >
-            <figcaption data-i18n="b4.img.left.cap">Original: Urban</figcaption>
+            <figcaption data-i18n="b4.img.left.cap"></figcaption>
           </figure>
           <figure class="img-card">
             <img
@@ -1137,7 +1041,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b4.img.right.alt"
             >
-            <figcaption data-i18n="b4.img.right.cap">Variante: Skatepark (bg_skatepark.PNG)</figcaption>
+            <figcaption data-i18n="b4.img.right.cap"></figcaption>
           </figure>
         </div>
       </article>
@@ -1145,57 +1049,46 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
 
     <!-- BLOCK: LIGHTING -->
     <section class="section" id="block-light" aria-labelledby="block-light-title">
-      <h2 class="section-title" id="block-light-title" data-i18n="b5.title">Block 5: Licht</h2>
-      <p class="section-subtitle" data-i18n-html="b5.subtitle">
-        Licht ist „Emotion“. Es kann ein Bild retten oder komplett künstlich wirken lassen.
-      </p>
+      <h2 class="section-title" id="block-light-title" data-i18n="b5.title"></h2>
+      <p class="section-subtitle" data-i18n-html="b5.subtitle"></p>
 
       <article class="manual-block">
         <div class="mb-head">
           <div>
-            <div class="mb-title" data-i18n="b5.mb.title">Epic Cinematic vs. Natural Daylight</div>
-            <div class="mb-sub" data-i18n="b5.mb.sub">Wenn „epic“ zu viel ist: runterregeln, nicht löschen.</div>
+            <div class="mb-title" data-i18n="b5.mb.title"></div>
+            <div class="mb-sub" data-i18n="b5.mb.sub"></div>
           </div>
         </div>
 
-        <div class="callout" style="margin-top:10px;" data-i18n-html="b5.callout">
-          <b>Kurz gesagt:</b> Licht ist Stimmung.
-          „Epic“ pusht Drama, „Natural“ pusht Glaubwürdigkeit.
-        </div>
+        <div class="callout" style="margin-top:10px;" data-i18n-html="b5.callout"></div>
 
         <details class="mb-more">
-          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+          <summary class="mb-more-summary" data-i18n="ui.more"></summary>
 
           <div class="mb-grid">
             <div class="mb-card">
-              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <h4 data-i18n="ui.promptExcerpt"></h4>
               <pre>Lighting: Epic cinematic lighting.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-              <p data-i18n-html="b5.card.what">
-                „Epic cinematic“ pusht Kontrast und Highlights. Gut für Drama.
-                Kann aber schnell „KI-Poster“ schreien.
-              </p>
+              <h4 data-i18n="ui.whatItDoes"></h4>
+              <p data-i18n-html="b5.card.what"></p>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <h4 data-i18n="ui.typicalTweaks"></h4>
               <ul>
-                <li data-i18n-html="b5.card.t1">„soft natural daylight“ für Foto-Realismus</li>
-                <li data-i18n="b5.card.t2">Rim-Light reduzieren</li>
-                <li data-i18n="b5.card.t3">Highlights “realistic” setzen</li>
+                <li data-i18n-html="b5.card.t1"></li>
+                <li data-i18n="b5.card.t2"></li>
+                <li data-i18n="b5.card.t3"></li>
               </ul>
               <pre>Lighting: soft natural daylight, realistic highlights, no harsh rim light.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.risk">Risiko</h4>
-              <p data-i18n-html="b5.card.risk">
-                Zu viel “epic” macht das Bild oft künstlich (übertriebene Kantenlichter, HDR-Look).
-                Wenn es unnatürlich wirkt: “runterregeln”.
-              </p>
+              <h4 data-i18n="ui.risk"></h4>
+              <p data-i18n-html="b5.card.risk"></p>
             </div>
           </div>
         </details>
@@ -1208,7 +1101,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b5.img.left.alt"
             >
-            <figcaption data-i18n="b5.img.left.cap">Original: Epic</figcaption>
+            <figcaption data-i18n="b5.img.left.cap"></figcaption>
           </figure>
           <figure class="img-card">
             <img
@@ -1217,7 +1110,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b5.img.right.alt"
             >
-            <figcaption data-i18n="b5.img.right.cap">Variante: Daylight (light_day.PNG)</figcaption>
+            <figcaption data-i18n="b5.img.right.cap"></figcaption>
           </figure>
         </div>
       </article>
@@ -1225,57 +1118,46 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
 
     <!-- BLOCK: STYLE -->
     <section class="section" id="block-style" aria-labelledby="block-style-title">
-      <h2 class="section-title" id="block-style-title" data-i18n="b6.title">Block 6: Stil / Textur</h2>
-      <p class="section-subtitle" data-i18n-html="b6.subtitle">
-        Style-Keywords beeinflussen „Materialität“: Körnung, Schärfe, Look.
-      </p>
+      <h2 class="section-title" id="block-style-title" data-i18n="b6.title"></h2>
+      <p class="section-subtitle" data-i18n-html="b6.subtitle"></p>
 
       <article class="manual-block">
         <div class="mb-head">
           <div>
-            <div class="mb-title" data-i18n="b6.mb.title">Film Grain vs. Clean</div>
-            <div class="mb-sub" data-i18n="b6.mb.sub">Körnung kann kaschieren – oder das Bild schmutzig machen.</div>
+            <div class="mb-title" data-i18n="b6.mb.title"></div>
+            <div class="mb-sub" data-i18n="b6.mb.sub"></div>
           </div>
         </div>
 
-        <div class="callout" style="margin-top:10px;" data-i18n-html="b6.callout">
-          <b>Kurz gesagt:</b> Style-Keywords ändern Textur/Materialität.
-          Grain kann kaschieren – oder Details kaputt machen.
-        </div>
+        <div class="callout" style="margin-top:10px;" data-i18n-html="b6.callout"></div>
 
         <details class="mb-more">
-          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+          <summary class="mb-more-summary" data-i18n="ui.more"></summary>
 
           <div class="mb-grid">
             <div class="mb-card">
-              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <h4 data-i18n="ui.promptExcerpt"></h4>
               <pre>Visual style: analog film grain, gritty, energetic.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-              <p data-i18n-html="b6.card.what">
-                „film grain/gritty“ fügt Dreck/Körnung/Analog-Look hinzu. Das kann „real“ wirken,
-                aber auch Details fressen.
-              </p>
+              <h4 data-i18n="ui.whatItDoes"></h4>
+              <p data-i18n-html="b6.card.what"></p>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <h4 data-i18n="ui.typicalTweaks"></h4>
               <ul>
-                <li data-i18n-html="b6.card.t1">„clean, crisp“ für mehr Detail</li>
-                <li data-i18n-html="b6.card.t2">Grain komplett raus → Fellstruktur wird sichtbarer</li>
-                <li data-i18n-html="b6.card.t3">“realistic photo look” als Anker</li>
+                <li data-i18n-html="b6.card.t1"></li>
+                <li data-i18n-html="b6.card.t2"></li>
+                <li data-i18n-html="b6.card.t3"></li>
               </ul>
               <pre>Visual style: clean, crisp, natural texture, no film grain, realistic photo look.</pre>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.risk">Risiko</h4>
-              <p data-i18n-html="b6.card.risk">
-                Zu viele Stilwörter konkurrieren (gritty + glossy + dreamy + cinematic …).
-                Ergebnis: Drift oder Chaos. Weniger ist oft stabiler.
-              </p>
+              <h4 data-i18n="ui.risk"></h4>
+              <p data-i18n-html="b6.card.risk"></p>
             </div>
           </div>
         </details>
@@ -1288,7 +1170,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b6.img.left.alt"
             >
-            <figcaption data-i18n="b6.img.left.cap">Original: Grain</figcaption>
+            <figcaption data-i18n="b6.img.left.cap"></figcaption>
           </figure>
           <figure class="img-card">
             <img
@@ -1297,7 +1179,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b6.img.right.alt"
             >
-            <figcaption data-i18n="b6.img.right.cap">Variante: Clean (style_clean.PNG)</figcaption>
+            <figcaption data-i18n="b6.img.right.cap"></figcaption>
           </figure>
         </div>
       </article>
@@ -1305,30 +1187,25 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
 
     <!-- BLOCK: CONSTRAINTS -->
     <section class="section" id="block-constraints" aria-labelledby="block-constraints-title">
-      <h2 class="section-title" id="block-constraints-title" data-i18n="b7.title">Block 7: Constraints</h2>
-      <p class="section-subtitle" data-i18n-html="b7.subtitle">
-        Constraints sind „Leitplanken“. Sie reduzieren Chaos – wenn sie konkret sind.
-      </p>
+      <h2 class="section-title" id="block-constraints-title" data-i18n="b7.title"></h2>
+      <p class="section-subtitle" data-i18n-html="b7.subtitle"></p>
 
       <article class="manual-block">
         <div class="mb-head">
           <div>
-            <div class="mb-title" data-i18n="b7.mb.title">Constraints (Rules)</div>
-            <div class="mb-sub" data-i18n="b7.mb.sub">Kurz, klar, testbar. Keine Romane.</div>
+            <div class="mb-title" data-i18n="b7.mb.title"></div>
+            <div class="mb-sub" data-i18n="b7.mb.sub"></div>
           </div>
         </div>
 
-        <div class="callout" style="margin-top:10px;" data-i18n-html="b7.callout">
-          <b>Kurz gesagt:</b> Constraints sind Leitplanken.
-          Sie reduzieren Ausreißer – wenn sie kurz, klar und testbar sind.
-        </div>
+        <div class="callout" style="margin-top:10px;" data-i18n-html="b7.callout"></div>
 
         <details class="mb-more">
-          <summary class="mb-more-summary" data-i18n="ui.more">Mehr anzeigen</summary>
+          <summary class="mb-more-summary" data-i18n="ui.more"></summary>
 
           <div class="mb-grid">
             <div class="mb-card">
-              <h4 data-i18n="ui.promptExcerpt">Prompt-Ausschnitt</h4>
+              <h4 data-i18n="ui.promptExcerpt"></h4>
               <pre>Constraints:
 – Natural anatomy
 – No accessories besides skateboard
@@ -1336,19 +1213,16 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.whatItDoes">Was macht das?</h4>
-              <p data-i18n-html="b7.card.what">
-                Verhindert typische Ausreißer: Collars, Harness, seltsame Proportionen,
-                Zusatzobjekte. Stabilisiert das Ergebnis.
-              </p>
+              <h4 data-i18n="ui.whatItDoes"></h4>
+              <p data-i18n-html="b7.card.what"></p>
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.typicalTweaks">Typische Anpassungen</h4>
+              <h4 data-i18n="ui.typicalTweaks"></h4>
               <ul>
-                <li data-i18n-html="b7.card.t1">Konkreter statt allgemein („correct paws count“)</li>
-                <li data-i18n-html="b7.card.t2">Negativ klar benennen („no collar, no harness“)</li>
-                <li data-i18n-html="b7.card.t3">Identity-Anchor wiederholen (Markings identical)</li>
+                <li data-i18n-html="b7.card.t1"></li>
+                <li data-i18n-html="b7.card.t2"></li>
+                <li data-i18n-html="b7.card.t3"></li>
               </ul>
               <pre>Constraints:
 – Natural anatomy, correct paws count
@@ -1358,11 +1232,8 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
             </div>
 
             <div class="mb-card">
-              <h4 data-i18n="ui.risk">Risiko</h4>
-              <p data-i18n-html="b7.card.risk">
-                Zu viele Constraints (lange Listen) können sich widersprechen oder die Priorität verwässern.
-                Besser: kurz, hart, testbar.
-              </p>
+              <h4 data-i18n="ui.risk"></h4>
+              <p data-i18n-html="b7.card.risk"></p>
             </div>
           </div>
         </details>
@@ -1375,7 +1246,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b7.img.left.alt"
             >
-            <figcaption data-i18n="b7.img.left.cap">Original: Basic Constraints</figcaption>
+            <figcaption data-i18n="b7.img.left.cap"></figcaption>
           </figure>
           <figure class="img-card">
             <img
@@ -1384,106 +1255,79 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               loading="lazy"
               data-i18n-attr="alt:b7.img.right.alt"
             >
-            <figcaption data-i18n="b7.img.right.cap">Variante: Strict (constraints_strict.PNG)</figcaption>
+            <figcaption data-i18n="b7.img.right.cap"></figcaption>
           </figure>
         </div>
       </article>
 
-      <!-- ✅ IMPLEMENTIERT: Tool-Hinweis, Soft vs. Hard, Grenzen -->
+      <!-- Tool note / Soft vs Hard / Limits -->
       <article class="manual-block" style="margin-top:16px;">
         <div class="mb-head">
           <div>
-            <div class="mb-title" data-i18n="tools.title">Hinweis zu Tools, Constraints & Grenzen der Methode</div>
-            <div class="mb-sub" data-i18n="tools.sub">Die Logik bleibt gleich – die Stärke der Effekte kann variieren.</div>
+            <div class="mb-title" data-i18n="meta.title"></div>
+            <div class="mb-sub" data-i18n="meta.sub"></div>
           </div>
         </div>
 
-        <div class="callout" role="note" aria-label="Hinweis zu modellübergreifender Nutzung" data-i18n-attr="aria-label:tools.aria">
-          <div class="callout-title" data-i18n="tools.noteTitle">Hinweis zu Tools</div>
-          <p class="callout-lead" data-i18n-html="tools.lead">
-            Die gezeigte Methode funktioniert modellübergreifend, aber nicht jedes Bild-Tool reagiert gleich stark auf dieselben Formulierungen.
-            Manche Modelle gewichten Kamera, Stil oder Referenzbilder stärker als andere.
-            <b>Die Logik bleibt identisch</b> – nur die Stärke der Effekte kann variieren.
-          </p>
+        <div class="callout" role="note" aria-label="Hinweis zu modellübergreifender Nutzung" data-i18n-attr="aria-label:meta.aria">
+          <div class="callout-title" data-i18n="meta.tools.title"></div>
+          <p class="callout-lead" data-i18n-html="meta.tools.lead"></p>
 
           <div class="callout-grid">
             <div class="callout-card">
-              <h4 data-i18n="tools.softHardTitle">Soft vs. Hard Constraints</h4>
-              <p data-i18n="tools.softHardP">
-                Nicht alle Einschränkungen wirken gleich stark.
-                Vage Formulierungen helfen – konkrete wirken zuverlässiger.
-              </p>
+              <h4 data-i18n="meta.softHard.card1.title"></h4>
+              <p data-i18n="meta.softHard.card1.p"></p>
             </div>
 
             <div class="callout-card">
-              <h4 data-i18n="tools.whenModelFailsTitle">Wenn ein Modell Fehler macht …</h4>
-              <p data-i18n="tools.whenModelFailsP">
-                … ersetze vage Begriffe durch konkrete Leitplanken.
-                Das erhöht Kontrolle – besonders bei Anatomie, Symmetrie und Komposition.
-              </p>
+              <h4 data-i18n="meta.softHard.card2.title"></h4>
+              <p data-i18n="meta.softHard.card2.p"></p>
             </div>
           </div>
 
           <div class="callout-grid" style="margin-top:10px;">
             <div class="callout-card">
-              <h4 data-i18n="tools.softTitle">Soft Constraints (weich)</h4>
+              <h4 data-i18n="meta.soft.title"></h4>
               <ul>
-                <li>natural</li>
-                <li>realistic</li>
-                <li>clean</li>
-                <li>cinematic</li>
+                <li data-i18n="meta.soft.li1"></li>
+                <li data-i18n="meta.soft.li2"></li>
+                <li data-i18n="meta.soft.li3"></li>
+                <li data-i18n="meta.soft.li4"></li>
               </ul>
             </div>
 
             <div class="callout-card">
-              <h4 data-i18n="tools.hardTitle">Hard Constraints (konkret)</h4>
+              <h4 data-i18n="meta.hard.title"></h4>
               <ul>
-                <li>both eyes visible</li>
-                <li>2 arms visible</li>
-                <li>symmetrical face</li>
-                <li>no extra fingers</li>
-                <li>centered composition</li>
+                <li data-i18n="meta.hard.li1"></li>
+                <li data-i18n="meta.hard.li2"></li>
+                <li data-i18n="meta.hard.li3"></li>
+                <li data-i18n="meta.hard.li4"></li>
+                <li data-i18n="meta.hard.li5"></li>
               </ul>
             </div>
           </div>
 
           <details class="callout-details">
-            <summary data-i18n="tools.limitsSummary">Wo diese Methode an Grenzen kommt</summary>
+            <summary data-i18n="meta.limits.summary"></summary>
             <div style="margin-top:10px;">
-              <p style="margin-bottom:8px;" data-i18n-html="tools.limitsIntro">
-                Die „nur einen Block ändern“-Logik bringt Kontrolle – aber nicht in jeder Situation.
-              </p>
+              <p style="margin-bottom:8px;" data-i18n-html="meta.limits.intro"></p>
               <div class="mb-grid mb-grid-vertical">
                 <div class="mb-card">
-                  <h4 data-i18n="tools.l1t">1) Gekoppelte Parameter</h4>
-                  <p data-i18n-html="tools.l1p">
-                    Kamera, Licht und Stil beeinflussen sich gegenseitig.
-                    Änderst du z. B. „dramatic lighting“, kann sich auch Pose oder Anatomie verändern.
-                    Dann ist die Änderung nicht mehr vollständig isoliert.
-                  </p>
+                  <h4 data-i18n="meta.limits.1.title"></h4>
+                  <p data-i18n-html="meta.limits.1.p"></p>
                 </div>
                 <div class="mb-card">
-                  <h4 data-i18n="tools.l2t">2) Stark stilisierte Modelle</h4>
-                  <p data-i18n="tools.l2p">
-                    Manche Modelle priorisieren Stil stärker als Struktur.
-                    Ein dominanter Stil kann Kamera oder Anatomie übersteuern.
-                  </p>
+                  <h4 data-i18n="meta.limits.2.title"></h4>
+                  <p data-i18n="meta.limits.2.p"></p>
                 </div>
                 <div class="mb-card">
-                  <h4 data-i18n="tools.l3t">3) Vage Prompts</h4>
-                  <p data-i18n-html="tools.l3p">
-                    Wenn der Basisprompt zu offen ist, reagiert das Modell stärker auf Zufall.
-                    Erst klare Struktur → dann isolierte Tests.
-                  </p>
+                  <h4 data-i18n="meta.limits.3.title"></h4>
+                  <p data-i18n-html="meta.limits.3.p"></p>
                 </div>
                 <div class="mb-card">
-                  <h4 data-i18n="tools.l4t">4) Kein Ersatz für Iteration</h4>
-                  <p data-i18n-html="tools.l4p">
-                    Auch saubere A/B-Tests garantieren kein perfektes Bild.
-                    Sie helfen zu verstehen, warum etwas funktioniert oder scheitert.
-                    <br><br>
-                    Diese Methode macht Ergebnisse kontrollierbarer – nicht perfekt.
-                  </p>
+                  <h4 data-i18n="meta.limits.4.title"></h4>
+                  <p data-i18n-html="meta.limits.4.p"></p>
                 </div>
               </div>
             </div>
@@ -1491,75 +1335,61 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
         </div>
       </article>
 
+      <!-- What often goes wrong -->
       <article class="manual-block" style="margin-top:16px;">
         <div class="mb-head">
           <div>
-            <div class="mb-title" data-i18n="fails.title">Was oft schiefgeht (und warum)</div>
-            <div class="mb-sub" data-i18n="fails.sub">Wenn du das erkennst, verschwindet 80% der Frustration.</div>
+            <div class="mb-title" data-i18n="fails.title"></div>
+            <div class="mb-sub" data-i18n="fails.sub"></div>
           </div>
         </div>
 
         <div class="mb-grid">
           <div class="mb-card">
-            <h4 data-i18n="fails.c1t">❌ Zu viel auf einmal</h4>
-            <p data-i18n="fails.c1p">
-              Wenn du mehrere Blöcke gleichzeitig änderst, weißt du nicht, was den Effekt ausgelöst hat.
-            </p>
+            <h4 data-i18n="fails.bad1.title"></h4>
+            <p data-i18n="fails.bad1.p"></p>
           </div>
           <div class="mb-card">
-            <h4 data-i18n="fails.c2t">❌ Fließtext-Overkill</h4>
-            <p data-i18n="fails.c2p">
-              Sehr lange Prompts können Prioritäten verwässern. Oft ist „klar + kurz“ stabiler.
-            </p>
+            <h4 data-i18n="fails.bad2.title"></h4>
+            <p data-i18n="fails.bad2.p"></p>
           </div>
           <div class="mb-card">
-            <h4 data-i18n="fails.c3t">❌ „Mehr Adjektive = besser“</h4>
-            <p data-i18n="fails.c3p">
-              Zu viele Stilwörter konkurrieren miteinander. Ergebnis: Drift, Chaos, KI-Poster-Look.
-            </p>
+            <h4 data-i18n="fails.bad3.title"></h4>
+            <p data-i18n="fails.bad3.p"></p>
           </div>
           <div class="mb-card">
-            <h4 data-i18n="fails.c4t">✅ So debugst du richtig</h4>
+            <h4 data-i18n="fails.good1.title"></h4>
             <ul>
-              <li data-i18n="fails.c4l1">1 Block ändern</li>
-              <li data-i18n="fails.c4l2">3 Runs generieren</li>
-              <li data-i18n="fails.c4l3">Vergleichen → erst dann weiter</li>
+              <li data-i18n="fails.good1.li1"></li>
+              <li data-i18n="fails.good1.li2"></li>
+              <li data-i18n="fails.good1.li3"></li>
             </ul>
           </div>
 
           <div class="mb-card">
-            <h4 data-i18n="fails.c5t">✅ Wenn’s „driftet“</h4>
+            <h4 data-i18n="fails.good2.title"></h4>
             <ul>
-              <li data-i18n="fails.c5l1">Identität verstärken (kurz + wiederholt)</li>
-              <li data-i18n="fails.c5l2">Kamera vereinfachen (kein Fisheye)</li>
-              <li data-i18n="fails.c5l3">Constraints konkretisieren</li>
+              <li data-i18n="fails.good2.li1"></li>
+              <li data-i18n="fails.good2.li2"></li>
+              <li data-i18n="fails.good2.li3"></li>
             </ul>
           </div>
           <div class="mb-card">
-            <h4 data-i18n="fails.c6t">✅ Sprachen-Realität</h4>
-            <p data-i18n="fails.c6p">
-              Deutsch funktioniert oft. Wenn etwas unklar wird, ist Englisch leichter zu „debuggen“,
-              weil viele Modelle darauf stärker trainiert sind.
-            </p>
+            <h4 data-i18n="fails.good3.title"></h4>
+            <p data-i18n="fails.good3.p"></p>
           </div>
           <div class="mb-card">
-            <h4 data-i18n="fails.c7t">✅ Reihenfolge</h4>
-            <p data-i18n="fails.c7p">
-              Erst Identität stabilisieren, dann Kamera/Pose, dann Licht/Style, dann Constraints feintunen.
-            </p>
+            <h4 data-i18n="fails.good4.title"></h4>
+            <p data-i18n="fails.good4.p"></p>
           </div>
           <div class="mb-card">
-            <h4 data-i18n="fails.c8t">✅ Test-Disziplin</h4>
-            <p data-i18n="fails.c8p">
-              Gleicher Seed/Settings helfen – aber wichtiger ist: immer nur einen Hebel verändern.
-            </p>
+            <h4 data-i18n="fails.good5.title"></h4>
+            <p data-i18n="fails.good5.p"></p>
           </div>
         </div>
       </article>
 
-      <div class="callout" style="margin-top:16px;" data-i18n-html="b7.finalRule">
-        Minimal-Regel für Lernfortschritt: <b>Immer nur 1 Block ändern</b>, dann vergleichen.
-      </div>
+      <div class="callout" style="margin-top:16px;" data-i18n-html="fails.finalrule"></div>
     </section>
 
     <!-- FOOTER -->
@@ -1571,7 +1401,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
         <a href="../privacy.html" data-i18n="footer.privacy">Privacy</a>
       </div>
       <div>
-        <span data-i18n="footer.buildLabel">current build:</span>
+        <span data-i18n="footer.build">current build:</span>
         <span id="buildVersion" style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,0.9); cursor:pointer;">
           v0.1.how-prompts
         </span>
@@ -1579,7 +1409,6 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
     </footer>
   </main>
 
-  <!-- i18n engine (you said you already have/are adding this file) -->
   <script src="../assets/js/i18n.js" defer></script>
 
   <script>
@@ -1648,16 +1477,16 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
       document.documentElement.lang = window.PromptRebelI18n?.getLang?.() || document.documentElement.lang;
     });
 
-    // Bind language dropdown (works even if i18n.js also binds it; this is safe)
+    // Bind language dropdown
     const langSelect = document.getElementById("langSelect");
     if (langSelect) {
-      // initial UI sync
       const current = window.PromptRebelI18n?.getLang?.();
       if (current) langSelect.value = current;
 
       langSelect.addEventListener("change", () => {
         const next = langSelect.value;
-        if (window.PromptRebelI18n?.setLang) window.PromptRebelI18n.setLang(next);
+        if (window.PromptRebelI18n?.applyLang) window.PromptRebelI18n.applyLang(next);
+        else if (window.PromptRebelI18n?.setLang) window.PromptRebelI18n.setLang(next);
         else localStorage.setItem("pr_lang", next);
       });
     }
