@@ -300,11 +300,9 @@
       display:grid;
       gap:10px;
     }
-    /* 4 Karten -> 2x2 ab Tablet */
     @media (min-width:768px){
       .mb-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
-    /* optional: 4 in einer Reihe ab großem Desktop */
     @media (min-width:1100px){
       .mb-grid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
     }
@@ -335,10 +333,7 @@
       margin-top:8px;
     }
 
-    /* Collapsible "Mehr anzeigen" inside manual blocks */
-    details.mb-more{
-      margin-top: 10px;
-    }
+    details.mb-more{ margin-top: 10px; }
     summary.mb-more-summary{
       cursor: pointer;
       user-select: none;
@@ -388,13 +383,13 @@
       overflow:hidden;
     }
     .img-card img{
-  width:100%;
-  height:auto;
-  display:block;
-  background:#0b1220;
-  object-fit: unset;      /* wichtig */
-  aspect-ratio: auto;     /* wichtig */
-}
+      width:100%;
+      height:auto;
+      display:block;
+      background:#0b1220;
+      object-fit: unset;
+      aspect-ratio: auto;
+    }
     .img-card figcaption{
       font-size:12px;
       color:#cbd5e1;
@@ -413,7 +408,6 @@
       font-size:13px;
     }
 
-    /* Callout: structured */
     .callout-title{
       font-size:13px;
       font-weight:800;
@@ -489,7 +483,6 @@
       color:#e5e7eb;
     }
 
-    /* TL;DR / Key callouts */
     .callout.tldr{
       border-color: rgba(251,146,60,.28);
       background: rgba(251,146,60,.09);
@@ -510,9 +503,7 @@
       margin-top:8px;
       padding-left:18px;
     }
-    .callout .bullets li{
-      margin:4px 0;
-    }
+    .callout .bullets li{ margin:4px 0; }
 
     /* Footer */
     footer{
@@ -614,7 +605,7 @@
           <div class="callout tldr">
             <h3>TL;DR</h3>
             <p>
-              Prompts sind keine Magie. Sie sind Bausteine (Identität, Kamera, Pose, Licht …).<br/>
+              Prompts sind keine Magie. Sie sind Bausteine (Identität, Kamera, Licht …).<br/>
               Änderst du <b>einen</b> Baustein, ändert sich das Bild meist <b>vorhersehbar</b>.
             </p>
             <ul class="bullets">
@@ -1269,6 +1260,108 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
             <img src="../assets/so-funktionierts/skateboard/constraints_strict.PNG" alt="Variante: stricter constraints" loading="lazy">
             <figcaption>Variante: Strict (constraints_strict.PNG)</figcaption>
           </figure>
+        </div>
+      </article>
+
+      <!-- ✅ IMPLEMENTIERT: Tool-Hinweis, Soft vs. Hard, Grenzen -->
+      <article class="manual-block" style="margin-top:16px;">
+        <div class="mb-head">
+          <div>
+            <div class="mb-title">Hinweis zu Tools, Constraints & Grenzen der Methode</div>
+            <div class="mb-sub">Die Logik bleibt gleich – die Stärke der Effekte kann variieren.</div>
+          </div>
+        </div>
+
+        <div class="callout" role="note" aria-label="Hinweis zu modellübergreifender Nutzung">
+          <div class="callout-title">Hinweis zu Tools</div>
+          <p class="callout-lead">
+            Die gezeigte Methode funktioniert modellübergreifend, aber nicht jedes Bild-Tool reagiert gleich stark auf dieselben Formulierungen.
+            Manche Modelle gewichten Kamera, Stil oder Referenzbilder stärker als andere.
+            <b>Die Logik bleibt identisch</b> – nur die Stärke der Effekte kann variieren.
+          </p>
+
+          <div class="callout-grid">
+            <div class="callout-card">
+              <h4>Soft vs. Hard Constraints</h4>
+              <p>
+                Nicht alle Einschränkungen wirken gleich stark.
+                Vage Formulierungen helfen – konkrete wirken zuverlässiger.
+              </p>
+            </div>
+
+            <div class="callout-card">
+              <h4>Wenn ein Modell Fehler macht …</h4>
+              <p>
+                … ersetze vage Begriffe durch konkrete Leitplanken.
+                Das erhöht Kontrolle – besonders bei Anatomie, Symmetrie und Komposition.
+              </p>
+            </div>
+          </div>
+
+          <div class="callout-grid" style="margin-top:10px;">
+            <div class="callout-card">
+              <h4>Soft Constraints (weich)</h4>
+              <ul>
+                <li>natural</li>
+                <li>realistic</li>
+                <li>clean</li>
+                <li>cinematic</li>
+              </ul>
+            </div>
+
+            <div class="callout-card">
+              <h4>Hard Constraints (konkret)</h4>
+              <ul>
+                <li>both eyes visible</li>
+                <li>2 arms visible</li>
+                <li>symmetrical face</li>
+                <li>no extra fingers</li>
+                <li>centered composition</li>
+              </ul>
+            </div>
+          </div>
+
+          <details class="callout-details">
+            <summary>Wo diese Methode an Grenzen kommt</summary>
+            <div style="margin-top:10px;">
+              <p style="margin-bottom:8px;">
+                Die „nur einen Block ändern“-Logik bringt Kontrolle – aber nicht in jeder Situation.
+              </p>
+              <div class="mb-grid" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+                <div class="mb-card">
+                  <h4>1) Gekoppelte Parameter</h4>
+                  <p>
+                    Kamera, Licht und Stil beeinflussen sich gegenseitig.
+                    Änderst du z. B. „dramatic lighting“, kann sich auch Pose oder Anatomie verändern.
+                    Dann ist die Änderung nicht mehr vollständig isoliert.
+                  </p>
+                </div>
+                <div class="mb-card">
+                  <h4>2) Stark stilisierte Modelle</h4>
+                  <p>
+                    Manche Modelle priorisieren Stil stärker als Struktur.
+                    Ein dominanter Stil kann Kamera oder Anatomie übersteuern.
+                  </p>
+                </div>
+                <div class="mb-card">
+                  <h4>3) Vage Prompts</h4>
+                  <p>
+                    Wenn der Basisprompt zu offen ist, reagiert das Modell stärker auf Zufall.
+                    Erst klare Struktur → dann isolierte Tests.
+                  </p>
+                </div>
+                <div class="mb-card">
+                  <h4>4) Kein Ersatz für Iteration</h4>
+                  <p>
+                    Auch saubere A/B-Tests garantieren kein perfektes Bild.
+                    Sie helfen zu verstehen, warum etwas funktioniert oder scheitert.
+                    <br><br>
+                    Diese Methode macht Ergebnisse kontrollierbarer – nicht perfekt.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
       </article>
 
