@@ -313,6 +313,10 @@
       background:rgba(15,23,42,.55);
       padding:12px 12px 10px;
     }
+
+    .mb-grid-vertical{
+  grid-template-columns: 1fr !important;
+}
     .mb-card h4{
       font-size:12px;
       letter-spacing:.16em;
@@ -1327,7 +1331,7 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
               <p style="margin-bottom:8px;">
                 Die „nur einen Block ändern“-Logik bringt Kontrolle – aber nicht in jeder Situation.
               </p>
-              <div class="mb-grid" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+              <div class="mb-grid mb-grid-vertical">
                 <div class="mb-card">
                   <h4>1) Gekoppelte Parameter</h4>
                   <p>
