@@ -1,6 +1,6 @@
 /* assets/js/i18n.js
    Static-site i18n (DE/EN) for PromptRebel
-   - Switch via <select id="langSelect">
+   - Switch via <select id="langSelectFloating"> (optional zusätzlich: <select id="langSelect">)
    - Persists in localStorage
    - Optional: ?lang=en
    - Applies:
@@ -479,7 +479,8 @@
       "b1.subtitle":
         "This block keeps it <b>your</b> animal — instead of some generic dog.",
       "b1.mb.title": "Identity transfer",
-      "b1.mb.sub": "Most important rule: “like the reference photo” — clear and repeated.",
+      "b1.mb.sub":
+        "Most important rule: “like the reference photo” — clear and repeated.",
       "b1.callout":
         "<b>In short:</b> This block decides whether it stays <b>your</b> dog (fur, markings, proportions) — or drifts into “random dog”.",
       "b1.img1.caption": "Original (strong reference)",
@@ -788,10 +789,13 @@
     });
   }
 
+  // Sync BOTH dropdowns if present (floating + optional header)
   function syncSelect(lang) {
-    const sel = document.getElementById("langSelect");
-    if (!sel) return;
-    sel.value = lang;
+    const ids = ["langSelectFloating", "langSelect"];
+    ids.forEach((id) => {
+      const sel = document.getElementById(id);
+      if (sel) sel.value = lang;
+    });
   }
 
   function applyLang(lang) {
@@ -810,10 +814,15 @@
     );
   }
 
+  // Wire BOTH dropdowns if present
   function wireSelect() {
-    const sel = document.getElementById("langSelect");
-    if (!sel) return;
-    sel.addEventListener("change", (e) => applyLang(e.target.value));
+    const ids = ["langSelectFloating", "langSelect"];
+    ids.forEach((id) => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+
+      sel.addEventListener("change", (e) => applyLang(e.target.value));
+    });
   }
 
   // =========================
