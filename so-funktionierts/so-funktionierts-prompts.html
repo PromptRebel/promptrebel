@@ -529,6 +529,15 @@
     }
     .callout .bullets li{ margin:4px 0; }
 
+	  .translate-btn{
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 999;
+}
+@media (max-width:767px){
+  .translate-btn{ right:16px; bottom:16px; }
+}
     /* Footer */
     footer{
       margin-top:40px;
@@ -588,15 +597,6 @@
     <a href="../index.html#about" class="nav-link" data-i18n="nav.about">About</a>
     <a href="../index.html#lab-notes" class="nav-link" data-i18n="nav.lab">Lab Notes</a>
   </nav>
-
-  <!-- Language dropdown -->
-  <div class="nav-right">
-    <span class="lang-label" data-i18n="ui.language">Sprache</span>
-    <select id="langSelect" class="btn" aria-label="Language">
-      <option value="de">DE</option>
-      <option value="en">EN</option>
-    </select>
-  </div>
 </div>
 
 
@@ -1576,7 +1576,13 @@ Reproduce its natural fur colors, markings, and body features exactly as in the 
   </div>
 </footer>
 
-
+<!-- Floating Language -->
+<div class="translate-btn" aria-label="Language">
+  <select id="langSelectFloating" class="btn" aria-label="Language">
+    <option value="de">DE</option>
+    <option value="en">EN</option>
+  </select>
+</div>
 </main><!-- i18n engine (you said you already have/are adding this file) --><script src="../assets/js/i18n.js" defer></script><script>
     // Scroll progress
     window.addEventListener("scroll", () => {
