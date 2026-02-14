@@ -4,49 +4,236 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PromptRebel – Prompt Library</title>
-  <meta name="description" content="Lehrreiche Prompt-Bibliothek: strukturierte, funktionale Prompts mit Kontext, Ziel und Erwartung – inkl. Copy-Button." />
+  <meta name="description" content="Lehrreiche, funktionale Prompt-Bibliothek: Kontext, Ziel, Erwartung. Ausklappbar, Copy-Button inklusive. OR-Filter per Tags." />
+  <link rel="canonical" href="https://promptrebel.github.io/promptrebel/prompt-library/" />
 
   <style>
-    /* Basis (du kannst später deine globalen Styles importieren / übernehmen) */
+    :root { --scroll: 0; }
+
+    /* Reset / Basics */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; scroll-behavior: smooth; }
     body{
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:#020617;
       color:#e5e7eb;
       line-height:1.6;
-      margin:0;
-      padding:64px 0 40px;
+      padding-top:64px;
     }
     a{ color:inherit; text-decoration:none; }
 
-    .page{ max-width:1120px; margin:0 auto; padding:16px; }
+    /* Background glows + grid noise (wie Startseite) */
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(236, 72, 153, 0.35), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(56, 189, 248, 0.35), transparent 55%);
+      z-index:-2;
+    }
+    body::after{
+      content:"";
+      position:fixed; inset:0;
+      opacity:0.22;
+      pointer-events:none;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size:3px 3px, 3px 3px;
+      mix-blend-mode: soft-light;
+      z-index:-1;
+    }
 
+    .page{ max-width:1120px; margin:0 auto; padding:16px 16px 40px; }
+
+    /* Skip link */
+    .skip-link{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      top:-40px;
+      padding:6px 10px;
+      background:#0f172a;
+      color:#f9fafb;
+      border-radius:999px;
+      font-size:13px;
+      z-index:60;
+    }
+    .skip-link:focus-visible{
+      top:10px;
+      outline:2px solid #22d3ee;
+      outline-offset:2px;
+    }
+
+    /* Nav + Scroll progress */
+    .nav{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:40;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .nav-inner{
+      max-width:1120px;
+      margin:0 auto;
+      padding:10px 16px 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      position:relative;
+      gap:10px;
+    }
+    .nav::after{
+      content:"";
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height:2px;
+      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin:left;
+      transform:scaleX(var(--scroll));
+      transition:transform .1s linear;
+      pointer-events:none;
+    }
+    .brand{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.05em;
+      cursor:pointer;
+      white-space:nowrap;
+      text-shadow: 0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4);
+    }
+    .brand span.accent{
+      background: linear-gradient(135deg, #f472b6, #22d3ee);
+      -webkit-background-clip:text;
+      color:transparent;
+    }
+    .brand:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:3px;
+      border-radius:10px;
+    }
+    .nav-links{ display:flex; gap:18px; font-size:14px; }
+    .nav-link{ position:relative; padding-block:4px; }
+    .nav-link::after{
+      content:"";
+      position:absolute;
+      left:0; bottom:-2px;
+      width:0; height:2px;
+      border-radius:999px;
+      background: linear-gradient(90deg, #f472b6, #22d3ee);
+      box-shadow:0 0 8px rgba(56,189,248,0.8);
+      transition:width .25s ease;
+    }
+    .nav-link:hover::after{ width:100%; }
+    .nav-link:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:3px;
+      border-radius:10px;
+    }
+
+    /* Header */
     .header{
-      margin: 12px 0 18px;
+      padding: 28px 0 12px;
     }
     .title{
-      font-size: clamp(26px, 4vw, 38px);
+      font-size: clamp(30px, 4.5vw, 44px);
       font-weight: 800;
-      letter-spacing: .01em;
-      margin:0 0 6px;
-      text-shadow: 0 0 14px rgba(236,72,153,0.45), 0 0 18px rgba(34,211,238,0.25);
+      letter-spacing: 0.01em;
+      margin-bottom: 8px;
+      text-shadow: 0 0 14px rgba(236,72,153,0.6), 0 0 20px rgba(34,211,238,0.4);
     }
     .subtitle{
       font-size: 13px;
       color:#9ca3af;
       max-width: 60rem;
-      margin:0;
+      margin-bottom: 16px;
+    }
+
+    /* Filters panel */
+    .filters{
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 12px 14px 10px;
+      margin-bottom: 18px;
+    }
+    .filters-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 10px;
+      flex-wrap:wrap;
+    }
+    .filters-title{
+      font-size:12px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color:#9ca3af;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .filters-title .dot{
+      width:8px; height:8px;
+      border-radius:999px;
+      background: linear-gradient(135deg, #f472b6, #22d3ee);
+      box-shadow: 0 0 10px rgba(34,211,238,0.7);
+    }
+    .filters-hint{
+      font-size: 12px;
+      color:#9ca3af;
+    }
+
+    .chip-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+    .chip-btn{
+      border-radius:999px;
+      padding: 6px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(2, 6, 23, 0.25);
+      color:#e2e8f0;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+      white-space:nowrap;
+    }
+    .chip-btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(209, 213, 219, 0.45);
+      box-shadow: 0 10px 24px rgba(15,23,42,0.75);
+    }
+    .chip-btn[aria-pressed="true"]{
+      border-color: rgba(34,211,238,0.75);
+      box-shadow: 0 0 0 2px rgba(34,211,238,0.18), 0 0 14px rgba(34,211,238,0.25);
+      background: rgba(34,211,238,0.08);
+      color:#f9fafb;
+    }
+    .chip-btn:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:3px;
+    }
+    .chip-btn.reset{
+      border-color: rgba(236,72,153,0.45);
     }
 
     /* Grid */
-    .grid{
-      display:grid;
-      gap:18px;
-    }
+    .grid{ display:grid; gap:18px; }
     @media (min-width:768px){
       .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
-    /* Card im PromptRebel-Feeling */
+    /* Card (ähnlich Startseite) */
     .card{
       --accent: rgba(56,189,248,0.9);
       position:relative;
@@ -58,6 +245,7 @@
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
       overflow:hidden;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
     }
     .card::before{
       content:"";
@@ -65,12 +253,17 @@
       inset:-1px;
       border-radius: inherit;
       background: radial-gradient(circle at top left, var(--accent), transparent 60%);
-      opacity: 0.18;
+      opacity: 0.22;
       pointer-events:none;
       mix-blend-mode: screen;
     }
+    .card:hover{
+      transform: translateY(-3px);
+      box-shadow: 0 26px 60px rgba(15, 23, 42, 0.98);
+      border-color: rgba(209, 213, 219, 0.3);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.99), rgba(15, 23, 42, 1));
+    }
 
-    /* Kopf */
     .card-top{
       display:flex;
       justify-content:space-between;
@@ -81,18 +274,17 @@
     .card-title{
       font-size:18px;
       font-weight:800;
-      margin:0 0 2px;
+      margin:0 0 6px;
       color:#f9fafb;
       text-shadow: 0 0 8px var(--accent);
     }
     .card-meta{
       display:flex;
-      gap:8px;
       flex-wrap:wrap;
+      gap:8px;
       align-items:center;
-      margin-top:6px;
     }
-    .chip{
+    .tag{
       border-radius: 999px;
       padding:2px 8px;
       border: 1px solid rgba(148, 163, 184, 0.35);
@@ -102,18 +294,18 @@
       white-space:nowrap;
     }
 
-    /* Erklärung (fixe “Standardhöhe” durch Clamp) */
+    /* Erklärung: standardisierte “Kompakthöhe” */
     .explain{
       font-size:13px;
       color:#d1d5db;
       margin: 0 0 12px;
       display: -webkit-box;
-      -webkit-line-clamp: 4;       /* Standard: 4 Zeilen sichtbar */
+      -webkit-line-clamp: 4; /* Standard */
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    /* Details / Summary als “Prompt anzeigen” */
+    /* Details/Prompt */
     details{
       border-top: 1px solid rgba(148,163,184,0.14);
       padding-top: 12px;
@@ -132,11 +324,7 @@
     }
     summary::-webkit-details-marker{ display:none; }
 
-    /* Beim Öffnen: der Prompt-Block */
-    .prompt-wrap{
-      margin-top: 12px;
-      display:none;
-    }
+    .prompt-wrap{ margin-top:12px; display:none; }
     details[open] .prompt-wrap{ display:block; }
 
     pre{
@@ -151,8 +339,22 @@
       word-break: break-word;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
     }
+    pre code{
+      display:block;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
 
-    /* Copy-Button: nur sichtbar, wenn aufgeklappt */
+    /* Placeholder highlight inside prompt blocks */
+    mark.ph{
+      font-weight: 800;
+      padding: 0 4px;
+      border-radius: 6px;
+      border: 1px solid rgba(34,211,238,0.35);
+      background: rgba(34,211,238,0.12);
+      color: #eaffff;
+    }
+
     .actions{
       margin-top:10px;
       display:none;
@@ -177,56 +379,291 @@
       outline:2px solid #22d3ee;
       outline-offset:3px;
     }
-
     .status{
       font-size:12px;
       color:#9ca3af;
     }
 
-    /* Mobile Blur Fallback */
+    /* System note (für Kollegen wichtig, aber unaufgeregt) */
+    .rules{
+      font-size:12px;
+      color:#9ca3af;
+      margin: 14px 0 18px;
+      max-width: 70rem;
+    }
+    .rules strong{ color:#e5e7eb; font-weight:700; }
+
+    /* No results */
+    .no-results{
+      margin-top: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 14px 16px;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    /* Footer */
+    footer{
+      margin-top:40px;
+      padding-top:16px;
+      border-top: 1px solid rgba(15, 23, 42, 0.9);
+      font-size:11px;
+      color:#94a3b8;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
+    }
+    footer .center-links{ display:flex; gap:10px; }
+    footer a{ text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Mobile tweaks */
+    @media (max-width: 767px){
+      body{ padding-top: 60px; }
+      .nav-links{ font-size: 13px; gap:12px; }
+    }
+
+    /* Mobile performance fallback */
     @media (max-width: 767px) and (hover: none){
-      .card{
+      .nav, .filters, .card, .no-results{
         backdrop-filter:none !important;
         -webkit-backdrop-filter:none !important;
       }
+      .nav{ background: rgba(15, 23, 42, 0.92) !important; }
     }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Filter: versteckte Karten */
+    .is-hidden{ display:none !important; }
   </style>
 </head>
 
 <body>
-  <main class="page">
-    <header class="header">
+  <a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+  <header class="nav" aria-label="Top-Navigation">
+    <div class="nav-inner">
+      <div id="brand" class="brand" role="link" tabindex="0" aria-label="Zur Startseite">
+        Prompt<span class="accent">Rebel</span>
+      </div>
+      <nav class="nav-links" aria-label="Hauptnavigation">
+        <a href="../index.html#projects" class="nav-link">Projects</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../index.html#lab-notes" class="nav-link">Lab Notes</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page" id="main">
+    <section class="header">
       <h1 class="title">Prompt Library</h1>
       <p class="subtitle">
-        Lehrreiche, funktionale Prompts: immer mit Kontext, Ziel und Erwartung. Prompt-Text ist ausklappbar – Copy-Button erscheint nur bei Bedarf.
+        Lehrreiche, funktionale Prompts: Kontext, Ziel und erwarteter Output. Der Prompt ist ausklappbar; Copy-Button erscheint nur bei Bedarf.
+        Filter: OR – sobald du mehrere Tags auswählst, siehst du alles, was zu <em>mindestens einem</em> Tag passt.
       </p>
-    </header>
 
-    <section class="grid" aria-label="Prompt-Karten">
+      <p class="rules">
+        <strong>Lab Rules (kurz):</strong> Keine vertraulichen Daten, keine personenbezogenen Infos, keine internen Kunden-/Lieferantendetails einfügen.
+        KI-Ausgaben immer kurz prüfen.
+      </p>
 
-      <!-- CARD 1 -->
-      <article class="card" style="--accent: rgba(244,114,182,0.9);">
+      <div class="filters" aria-label="Filter">
+        <div class="filters-top">
+          <div class="filters-title">
+            <span class="dot" aria-hidden="true"></span>
+            <span>FILTER TAGS</span>
+          </div>
+          <div class="filters-hint"><span id="resultCount">–</span> Prompts sichtbar</div>
+        </div>
+
+        <div class="chip-row" role="toolbar" aria-label="Tag-Filter">
+          <button class="chip-btn" type="button" data-tag="work" aria-pressed="false">work</button>
+          <button class="chip-btn" type="button" data-tag="writing" aria-pressed="false">writing</button>
+          <button class="chip-btn" type="button" data-tag="email" aria-pressed="false">email</button>
+          <button class="chip-btn" type="button" data-tag="summary" aria-pressed="false">summary</button>
+          <button class="chip-btn" type="button" data-tag="structuring" aria-pressed="false">structuring</button>
+          <button class="chip-btn" type="button" data-tag="analysis" aria-pressed="false">analysis</button>
+          <button class="chip-btn" type="button" data-tag="debugging" aria-pressed="false">debugging</button>
+          <button class="chip-btn" type="button" data-tag="self" aria-pressed="false">self</button>
+          <button class="chip-btn reset" type="button" data-reset>reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="Prompt-Karten" id="cards">
+
+      <!-- 1: E-Mail umschreiben -->
+      <article class="card" style="--accent: rgba(34,211,238,0.95);" data-tags="work,writing,email,structuring">
         <div class="card-top">
           <div>
-            <h2 class="card-title">Selbstanalyse – Muster & blinde Flecken</h2>
+            <h2 class="card-title">E-Mail umschreiben – klar, freundlich, ohne Marketing</h2>
             <div class="card-meta">
-              <span class="chip">self-reflection</span>
-              <span class="chip">analysis</span>
-              <span class="chip">writing</span>
+              <span class="tag">work</span><span class="tag">email</span><span class="tag">writing</span><span class="tag">structuring</span>
             </div>
           </div>
         </div>
 
         <p class="explain">
-          Ziel: wiederkehrende Denk- und Verhaltensmuster sichtbar machen – ohne Coaching-Ton.
-          Erwartung: klare Hypothesen, Beispiele, Gegenthese und ein nüchternes Fazit, was wahrscheinlich stimmt vs. unklar bleibt.
+          <strong>Ziel:</strong> Rohtext in eine professionelle, ruhige E-Mail überführen – ohne Buzzwords, ohne Übertreibung.
+          <strong>Erwartung:</strong> finale Mail + Betreff + 3 Stichpunkte „Änderungen/Begründung“.
         </p>
 
         <details>
           <summary>Prompt anzeigen</summary>
-
           <div class="prompt-wrap">
-            <pre data-prompt>
+            <pre><code data-prompt>
+Aufgabe
+Formuliere aus dem folgenden Rohtext eine professionelle E-Mail.
+
+Regeln
+- Klar, freundlich, sachlich. Kein Marketing, keine Buzzwords, keine Übertreibung.
+- Keine neuen Fakten erfinden. Wenn Informationen fehlen: kurze Rückfrage-Liste am Ende.
+
+Outputformat
+1) Betreff:
+2) E-Mail:
+3) Änderungen (3 Bulletpoints):
+4) Offene Punkte / Rückfragen (falls nötig):
+
+Rohtext:
+[HIER EINFÜGEN]
+            </code></pre>
+
+            <div class="actions">
+              <button class="btn" type="button" data-copy>Copy Prompt</button>
+              <span class="status" data-status aria-live="polite"></span>
+            </div>
+          </div>
+        </details>
+      </article>
+
+      <!-- 2: Zusammenfassen + ToDos -->
+      <article class="card" style="--accent: rgba(244,114,182,0.9);" data-tags="work,summary,structuring,writing">
+        <div class="card-top">
+          <div>
+            <h2 class="card-title">Zusammenfassen – Kernpunkte & ToDos</h2>
+            <div class="card-meta">
+              <span class="tag">work</span><span class="tag">summary</span><span class="tag">structuring</span><span class="tag">writing</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="explain">
+          <strong>Ziel:</strong> Lange Mail/Notiz auf verwertbares Minimum reduzieren.
+          <strong>Erwartung:</strong> 3 Kernpunkte + ToDos inkl. Verantwortlich/Termin (falls erkennbar) + offene Fragen.
+        </p>
+
+        <details>
+          <summary>Prompt anzeigen</summary>
+          <div class="prompt-wrap">
+            <pre><code data-prompt>
+Aufgabe
+Fasse den folgenden Text so zusammen, dass er im Arbeitsalltag direkt nutzbar ist.
+
+Regeln
+- Keine neuen Informationen erfinden.
+- Wenn Termine/Verantwortliche nicht eindeutig sind: als "unklar" markieren.
+
+Outputformat
+1) Kernpunkte (max. 3 Bulletpoints)
+2) ToDos (Tabelle):
+   - Aufgabe | Verantwortlich | Termin | Status (klar/unklar)
+3) Offene Fragen (max. 5)
+
+Text:
+[HIER EINFÜGEN]
+            </code></pre>
+
+            <div class="actions">
+              <button class="btn" type="button" data-copy>Copy Prompt</button>
+              <span class="status" data-status aria-live="polite"></span>
+            </div>
+          </div>
+        </details>
+      </article>
+
+      <!-- 3: Prompt Debugging -->
+      <article class="card" style="--accent: rgba(192,132,252,0.95);" data-tags="debugging,analysis,structuring">
+        <div class="card-top">
+          <div>
+            <h2 class="card-title">Prompt Debugging – Diagnose & Fix-Varianten</h2>
+            <div class="card-meta">
+              <span class="tag">debugging</span><span class="tag">analysis</span><span class="tag">structuring</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="explain">
+          <strong>Ziel:</strong> Warum liefert das Modell Müll? Ursachen priorisieren, dann 3 verbesserte Prompt-Versionen liefern.
+          <strong>Erwartung:</strong> Diagnose + Fix A/B/C + Mini-Testplan.
+        </p>
+
+        <details>
+          <summary>Prompt anzeigen</summary>
+          <div class="prompt-wrap">
+            <pre><code data-prompt>
+Rolle
+Du bist Prompt-Debugger. Keine neuen Fakten erfinden – nur analysieren und verbessern.
+
+Input
+- Originalprompt:
+[HIER PROMPT]
+- Problem/Output (kurz):
+[HIER PROBLEM]
+- Ziel (was soll rauskommen?):
+[HIER ZIEL]
+
+Aufgabe
+1) Diagnose: 5–8 mögliche Ursachen, priorisiert.
+2) Fixes: 3 Prompt-Versionen:
+   A) minimaler Fix (kleinste Änderung)
+   B) strukturierter Fix (Rolle, Kontext, Outputformat)
+   C) strenger Fix (Constraints, Beispiele, Negatives)
+3) Testplan: 5 kurze Checks (A/B), um zu prüfen, ob es besser wird.
+            </code></pre>
+
+            <div class="actions">
+              <button class="btn" type="button" data-copy>Copy Prompt</button>
+              <span class="status" data-status aria-live="polite"></span>
+            </div>
+          </div>
+        </details>
+      </article>
+
+      <!-- 4: Selbstanalyse -->
+      <article class="card" style="--accent: rgba(56,189,248,0.9);" data-tags="self,analysis,writing">
+        <div class="card-top">
+          <div>
+            <h2 class="card-title">Selbstanalyse – Muster & blinde Flecken</h2>
+            <div class="card-meta">
+              <span class="tag">self</span><span class="tag">analysis</span><span class="tag">writing</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="explain">
+          <strong>Ziel:</strong> Wiederkehrende Muster sichtbar machen – ohne Coaching-Ton.
+          <strong>Erwartung:</strong> 3–5 Hypothesen mit Evidenz, Gegenhypothese, Unsicherheitsgrad + nüchternes Fazit.
+        </p>
+
+        <details>
+          <summary>Prompt anzeigen</summary>
+          <div class="prompt-wrap">
+            <pre><code data-prompt>
 Rolle
 Du bist ein nüchterner Analyst. Kein Coach, keine Motivation, keine Lebensratschläge.
 
@@ -239,108 +676,11 @@ Aufgabe
    - Evidenzstellen (Zitat oder paraphrasiert)
    - Gegenhypothese / alternative Erklärung
    - Unsicherheitsgrad (niedrig/mittel/hoch)
-3) Formuliere zum Schluss eine kurze Zusammenfassung: "Was ist wahrscheinlich wahr?" vs. "Was ist offen?"
+3) Zum Schluss: "Was ist wahrscheinlich wahr?" vs. "Was ist offen?"
 
 Text:
 [HIER DEIN TEXT]
-            </pre>
-
-            <div class="actions">
-              <button class="btn" type="button" data-copy>Copy Prompt</button>
-              <span class="status" data-status aria-live="polite"></span>
-            </div>
-          </div>
-        </details>
-      </article>
-
-      <!-- CARD 2 -->
-      <article class="card" style="--accent: rgba(56,189,248,0.9);">
-        <div class="card-top">
-          <div>
-            <h2 class="card-title">Text verbessern – Klarheit ohne „Marketing“</h2>
-            <div class="card-meta">
-              <span class="chip">writing</span>
-              <span class="chip">structuring</span>
-              <span class="chip">tone</span>
-            </div>
-          </div>
-        </div>
-
-        <p class="explain">
-          Ziel: einen Text präziser, verständlicher und ruhiger machen – ohne Buzzwords und ohne Übertreibungen.
-          Erwartung: 1) überarbeitete Version, 2) Liste der Änderungen mit Begründung, 3) markierte Stellen, wo Bedeutung unsicher war.
-        </p>
-
-        <details>
-          <summary>Prompt anzeigen</summary>
-
-          <div class="prompt-wrap">
-            <pre data-prompt>
-Aufgabe
-Überarbeite den folgenden Text so, dass er:
-- klarer, präziser und besser strukturiert ist,
-- keine Marketing-Sprache nutzt (keine Buzzwords, kein Hype),
-- den Inhalt nicht verfälscht.
-
-Output
-1) Überarbeitete Version
-2) Änderungsliste (Stichpunkte: was/warum)
-3) Offene Punkte: Stellen, wo der ursprüngliche Sinn unklar war (max. 5)
-
-Text:
-[HIER TEXT EINFÜGEN]
-            </pre>
-
-            <div class="actions">
-              <button class="btn" type="button" data-copy>Copy Prompt</button>
-              <span class="status" data-status aria-live="polite"></span>
-            </div>
-          </div>
-        </details>
-      </article>
-
-      <!-- CARD 3 -->
-      <article class="card" style="--accent: rgba(192,132,252,0.95);">
-        <div class="card-top">
-          <div>
-            <h2 class="card-title">Prompt Debugging – Warum liefert das Modell Müll?</h2>
-            <div class="card-meta">
-              <span class="chip">debugging</span>
-              <span class="chip">analysis</span>
-              <span class="chip">workflow</span>
-            </div>
-          </div>
-        </div>
-
-        <p class="explain">
-          Ziel: Ursachen finden, warum ein Prompt schlechte Ergebnisse liefert (Unklarheit, Zielkonflikt, fehlender Kontext, falsche Constraints).
-          Erwartung: Diagnose + konkrete Fixes + Minimal-Varianten zum Testen.
-        </p>
-
-        <details>
-          <summary>Prompt anzeigen</summary>
-
-          <div class="prompt-wrap">
-            <pre data-prompt>
-Rolle
-Du bist Prompt-Debugger. Keine neuen Inhalte erfinden, nur analysieren und verbessern.
-
-Input
-- Originalprompt:
-[HIER PROMPT]
-- Schlechtes Ergebnis (kurz beschrieben oder Beispiel):
-[HIER OUTPUT/PROBLEM]
-- Ziel (was eigentlich rauskommen soll):
-[HIER ZIEL]
-
-Aufgabe
-1) Diagnose: 5–8 mögliche Ursachen, priorisiert.
-2) Fixes: Schreibe 3 verbesserte Prompt-Versionen:
-   A) minimaler Fix (kleinste Änderung)
-   B) strukturierter Fix (Rolle, Kontext, Outputformat)
-   C) strenger Fix (Constraints, Beispiele, Negatives)
-3) Testplan: 5 kurze A/B-Checks, um zu prüfen, ob es besser wird.
-            </pre>
+            </code></pre>
 
             <div class="actions">
               <button class="btn" type="button" data-copy>Copy Prompt</button>
@@ -351,29 +691,83 @@ Aufgabe
       </article>
 
     </section>
+
+    <!-- No Results State -->
+    <div id="noResults" class="no-results is-hidden" role="status" aria-live="polite">
+      Keine Prompts gefunden. Entferne Filter oder klicke „reset“.
+    </div>
+
+    <footer>
+      <div>© PromptRebel | CC BY-NC-SA 4.0</div>
+      <div class="center-links">
+        <a href="../index.html">Home</a>
+        <span>·</span>
+        <a href="../privacy.html">Privacy</a>
+      </div>
+      <div>prompt-library build: <span style="color:#22d3ee; text-shadow:0 0 10px rgba(34,211,238,0.9);">v0.1</span></div>
+    </footer>
   </main>
 
   <script>
-    // Copy-Buttons: funktionieren unabhängig davon, wie viele Karten du später kopierst
+    // Scroll progress
+    window.addEventListener("scroll", () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+      document.documentElement.style.setProperty("--scroll", ratio.toString());
+    });
+
+    // Brand click/keyboard -> Home
+    const brandEl = document.getElementById("brand");
+    brandEl.addEventListener("click", () => window.location.href = "../index.html");
+    brandEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") window.location.href = "../index.html";
+    });
+
+    // Helpers: escape + placeholder highlight
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function highlightPlaceholders(){
+      const blocks = document.querySelectorAll("code[data-prompt]");
+      const re = /\[[^\]]{2,}\]/g; // alles in eckigen Klammern: [HIER ...], [TEXT], etc.
+
+      blocks.forEach(code => {
+        const raw = code.textContent;
+        const safe = escapeHtml(raw);
+        code.innerHTML = safe.replace(re, m => `<mark class="ph">${m}</mark>`);
+      });
+    }
+
+    // Run once on load
+    highlightPlaceholders();
+
+    // Copy buttons (delegated) -> copies plain text (textContent ignores markup)
     document.addEventListener("click", async (e) => {
       const btn = e.target.closest("[data-copy]");
       if (!btn) return;
 
       const card = btn.closest(".card");
-      const pre = card?.querySelector("pre[data-prompt]");
+      const code = card?.querySelector("code[data-prompt]");
       const status = card?.querySelector("[data-status]");
-      if (!pre) return;
+      if (!code) return;
 
-      const text = pre.textContent.trim();
+      const text = code.textContent.trim();
 
       try {
         await navigator.clipboard.writeText(text);
         if (status) status.textContent = "Copied.";
         setTimeout(() => { if (status) status.textContent = ""; }, 1200);
       } catch (err) {
-        // Fallback: markiert Text, falls Clipboard API blockiert ist
+        // Fallback: select text
         const range = document.createRange();
-        range.selectNodeContents(pre);
+        range.selectNodeContents(code);
         const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
@@ -381,6 +775,87 @@ Aufgabe
         setTimeout(() => { if (status) status.textContent = ""; }, 1600);
       }
     });
+
+    // OR Tag Filter + URL param support
+    const chips = Array.from(document.querySelectorAll("[data-tag]"));
+    const resetBtn = document.querySelector("[data-reset]");
+    const cards = Array.from(document.querySelectorAll("#cards .card"));
+    const resultCountEl = document.getElementById("resultCount");
+    const noResultsEl = document.getElementById("noResults");
+
+    const active = new Set();
+
+    function normalizeTag(t){ return String(t || "").trim().toLowerCase(); }
+
+    function setChipState(tag, isOn){
+      const chip = chips.find(c => normalizeTag(c.dataset.tag) === tag);
+      if (!chip) return;
+      chip.setAttribute("aria-pressed", isOn ? "true" : "false");
+    }
+
+    function applyFilter(){
+      const activeArr = Array.from(active);
+
+      let visible = 0;
+
+      for (const card of cards){
+        const tagStr = card.getAttribute("data-tags") || "";
+        const cardTags = tagStr.split(",").map(normalizeTag).filter(Boolean);
+
+        const show =
+          activeArr.length === 0
+            ? true
+            : activeArr.some(t => cardTags.includes(t)); // OR-Logik
+
+        card.classList.toggle("is-hidden", !show);
+        if (show) visible++;
+      }
+
+      if (resultCountEl) resultCountEl.textContent = String(visible);
+      if (noResultsEl) noResultsEl.classList.toggle("is-hidden", visible !== 0);
+
+      // URL updaten (ohne reload)
+      const params = new URLSearchParams(window.location.search);
+      if (activeArr.length === 0) {
+        params.delete("tag");
+      } else {
+        params.set("tag", activeArr.join(","));
+      }
+      const newUrl = `${window.location.pathname}${params.toString() ? "?" + params.toString() : ""}${window.location.hash || ""}`;
+      window.history.replaceState({}, "", newUrl);
+    }
+
+    function resetFilter(){
+      active.clear();
+      chips.forEach(c => c.setAttribute("aria-pressed","false"));
+      applyFilter();
+    }
+
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        const tag = normalizeTag(chip.dataset.tag);
+        if (!tag) return;
+
+        if (active.has(tag)) active.delete(tag);
+        else active.add(tag);
+
+        chip.setAttribute("aria-pressed", active.has(tag) ? "true" : "false");
+        applyFilter();
+      });
+    });
+
+    resetBtn?.addEventListener("click", resetFilter);
+
+    // init from URL: ?tag=work,email
+    (function initFromUrl(){
+      const params = new URLSearchParams(window.location.search);
+      const tagParam = params.get("tag");
+      if (tagParam) {
+        tagParam.split(",").map(normalizeTag).filter(Boolean).forEach(t => active.add(t));
+        Array.from(active).forEach(t => setChipState(t, true));
+      }
+      applyFilter();
+    })();
   </script>
 </body>
 </html>
