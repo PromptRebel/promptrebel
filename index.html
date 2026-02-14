@@ -768,22 +768,8 @@
 <p style="font-size: 12px; color: #9ca3af; margin-bottom: 14px;">
   (Öffentliche Notizen &amp; Experimente)
 </p>
-          <!-- AI Summary Widget Panel (unter Reddit) -->
-<div class="panel-glass" style="margin-top:16px;">
-  <div class="panel-header">
-    <span class="icon" aria-hidden="true">☍</span>
-    <span>ZUSAMMENFASSUNG</span>
-  </div>
-
-  <div style="display:flex; justify-content:center;">
-    <!-- AI Summary Widget Panel (PromptRebel Style, Gemini-Fix: erst kopieren, dann öffnen) -->
-<div class="panel-glass" style="margin-top:16px;">
-  <div class="panel-header">
-    <span class="icon" aria-hidden="true">☍</span>
-    <span>ZUSAMMENFASSUNG</span>
-  </div>
-
-  <div style="display:flex; justify-content:center;">
+         
+    
     <!-- AI Summary Widget - https://widget.ainauten.com -->
     <div style="text-align:center">
       <div id="aisw-k162ywcu2">
@@ -892,15 +878,16 @@
   // ✅ PROMPT angepasst: Ganze Seite, nicht nur #projects
   var p =
 "Erstelle eine strukturierte Zusammenfassung der gesamten Seite von {{domain}} unter {{url}}.\n\n"+
-"Wichtig:\n"+
-"- Betrachte die komplette Seite (alle Abschnitte), nicht nur einen Teil wie z. B. #projects.\n"+
+"Vorgehen:\n"+
+"1) Öffne die URL und lies die Seite (falls dein Tool/Webzugriff das erlaubt).\n"+
+"2) Wenn du keinen Zugriff auf den Inhalt bekommst: sag das in 1 Satz und fordere mich auf, den Inhalt (oder den HTML-Text) hier einzufügen. Erfinde nichts.\n\n"+
+"Regeln:\n"+
 "- Verwende ausschließlich Inhalte, die auf der Seite tatsächlich stehen.\n"+
 "- Keine Annahmen, keine Ergänzungen, keine Spekulation.\n"+
-"- Kein Marketing-Ton, keine Buzzwords, keine Übertreibungen.\n"+
 "- Sachlich, klar, strukturiert.\n\n"+
 "Gliederung:\n"+
 "1) Kernaussage\n"+
-"2) Wichtigste Abschnitte (mit kurzen Bulletpoints)\n"+
+"2) Wichtigste Abschnitte (Bulletpoints)\n"+
 "3) Relevante Ressourcen/Links/Tools (falls vorhanden)\n"+
 "4) Offene Fragen oder Unklarheiten\n\n"+
 "Quelle: {{domain}} ({{url}})";
