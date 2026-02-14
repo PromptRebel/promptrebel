@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptRebel – Prompt Library</title>
+  <meta name="description" content="Lehrreiche Prompt-Bibliothek: strukturierte, funktionale Prompts mit Kontext, Ziel und Erwartung – inkl. Copy-Button." />
+
+  <style>
+    /* Basis (du kannst später deine globalen Styles importieren / übernehmen) */
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:#020617;
+      color:#e5e7eb;
+      line-height:1.6;
+      margin:0;
+      padding:64px 0 40px;
+    }
+    a{ color:inherit; text-decoration:none; }
+
+    .page{ max-width:1120px; margin:0 auto; padding:16px; }
+
+    .header{
+      margin: 12px 0 18px;
+    }
+    .title{
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 800;
+      letter-spacing: .01em;
+      margin:0 0 6px;
+      text-shadow: 0 0 14px rgba(236,72,153,0.45), 0 0 18px rgba(34,211,238,0.25);
+    }
+    .subtitle{
+      font-size: 13px;
+      color:#9ca3af;
+      max-width: 60rem;
+      margin:0;
+    }
+
+    /* Grid */
+    .grid{
+      display:grid;
+      gap:18px;
+    }
+    @media (min-width:768px){
+      .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* Card im PromptRebel-Feeling */
+    .card{
+      --accent: rgba(56,189,248,0.9);
+      position:relative;
+      border-radius: 20px;
+      padding: 16px 18px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.99));
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius: inherit;
+      background: radial-gradient(circle at top left, var(--accent), transparent 60%);
+      opacity: 0.18;
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+
+    /* Kopf */
+    .card-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .card-title{
+      font-size:18px;
+      font-weight:800;
+      margin:0 0 2px;
+      color:#f9fafb;
+      text-shadow: 0 0 8px var(--accent);
+    }
+    .card-meta{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:6px;
+    }
+    .chip{
+      border-radius: 999px;
+      padding:2px 8px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      font-size:10px;
+      color:#e2e8f0;
+      opacity:.92;
+      white-space:nowrap;
+    }
+
+    /* Erklärung (fixe “Standardhöhe” durch Clamp) */
+    .explain{
+      font-size:13px;
+      color:#d1d5db;
+      margin: 0 0 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;       /* Standard: 4 Zeilen sichtbar */
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Details / Summary als “Prompt anzeigen” */
+    details{
+      border-top: 1px solid rgba(148,163,184,0.14);
+      padding-top: 12px;
+    }
+    summary{
+      list-style:none;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      color:#a5f3fc;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    summary::-webkit-details-marker{ display:none; }
+
+    /* Beim Öffnen: der Prompt-Block */
+    .prompt-wrap{
+      margin-top: 12px;
+      display:none;
+    }
+    details[open] .prompt-wrap{ display:block; }
+
+    pre{
+      margin:0;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(2, 6, 23, 0.55);
+      color:#e5e7eb;
+      font-size:12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    }
+
+    /* Copy-Button: nur sichtbar, wenn aufgeklappt */
+    .actions{
+      margin-top:10px;
+      display:none;
+      gap:10px;
+      align-items:center;
+    }
+    details[open] .actions{ display:flex; }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      border-radius:999px;
+      padding: 8px 12px;
+      font-size:12px;
+      font-weight:700;
+      color:#f9fafb;
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.85), rgba(15,23,42,0.98));
+      border: 1px solid rgba(148,163,184,0.25);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.85);
+    }
+    .btn:focus-visible{
+      outline:2px solid #22d3ee;
+      outline-offset:3px;
+    }
+
+    .status{
+      font-size:12px;
+      color:#9ca3af;
+    }
+
+    /* Mobile Blur Fallback */
+    @media (max-width: 767px) and (hover: none){
+      .card{
+        backdrop-filter:none !important;
+        -webkit-backdrop-filter:none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <header class="header">
+      <h1 class="title">Prompt Library</h1>
+      <p class="subtitle">
+        Lehrreiche, funktionale Prompts: immer mit Kontext, Ziel und Erwartung. Prompt-Text ist ausklappbar – Copy-Button erscheint nur bei Bedarf.
+      </p>
+    </header>
+
+    <section class="grid" aria-label="Prompt-Karten">
+
+      <!-- CARD 1 -->
+      <article class="card" style="--accent: rgba(244,114,182,0.9);">
+        <div class="card-top">
+          <div>
+            <h2 class="card-title">Selbstanalyse – Muster & blinde Flecken</h2>
+            <div class="card-meta">
+              <span class="chip">self-reflection</span>
+              <span class="chip">analysis</span>
+              <span class="chip">writing</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="explain">
+          Ziel: wiederkehrende Denk- und Verhaltensmuster sichtbar machen – ohne Coaching-Ton.
+          Erwartung: klare Hypothesen, Beispiele, Gegenthese und ein nüchternes Fazit, was wahrscheinlich stimmt vs. unklar bleibt.
+        </p>
+
+        <details>
+          <summary>Prompt anzeigen</summary>
+
+          <div class="prompt-wrap">
+            <pre data-prompt>
+Rolle
+Du bist ein nüchterner Analyst. Kein Coach, keine Motivation, keine Lebensratschläge.
+
+Material
+Nutze ausschließlich den folgenden Text. Erfinde nichts hinzu.
+
+Aufgabe
+1) Extrahiere wiederkehrende Muster (Denken, Entscheidungen, Emotionen, Arbeitsweise).
+2) Leite 3–5 Hypothesen ab, jeweils mit:
+   - Evidenzstellen (Zitat oder paraphrasiert)
+   - Gegenhypothese / alternative Erklärung
+   - Unsicherheitsgrad (niedrig/mittel/hoch)
+3) Formuliere zum Schluss eine kurze Zusammenfassung: "Was ist wahrscheinlich wahr?" vs. "Was ist offen?"
+
+Text:
+[HIER DEIN TEXT]
+            </pre>
+
+            <div class="actions">
+              <button class="btn" type="button" data-copy>Copy Prompt</button>
+              <span class="status" data-status aria-live="polite"></span>
+            </div>
+          </div>
+        </details>
+      </article>
+
+      <!-- CARD 2 -->
+      <article class="card" style="--accent: rgba(56,189,248,0.9);">
+        <div class="card-top">
+          <div>
+            <h2 class="card-title">Text verbessern – Klarheit ohne „Marketing“</h2>
+            <div class="card-meta">
+              <span class="chip">writing</span>
+              <span class="chip">structuring</span>
+              <span class="chip">tone</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="explain">
+          Ziel: einen Text präziser, verständlicher und ruhiger machen – ohne Buzzwords und ohne Übertreibungen.
+          Erwartung: 1) überarbeitete Version, 2) Liste der Änderungen mit Begründung, 3) markierte Stellen, wo Bedeutung unsicher war.
+        </p>
+
+        <details>
+          <summary>Prompt anzeigen</summary>
+
+          <div class="prompt-wrap">
+            <pre data-prompt>
+Aufgabe
+Überarbeite den folgenden Text so, dass er:
+- klarer, präziser und besser strukturiert ist,
+- keine Marketing-Sprache nutzt (keine Buzzwords, kein Hype),
+- den Inhalt nicht verfälscht.
+
+Output
+1) Überarbeitete Version
+2) Änderungsliste (Stichpunkte: was/warum)
+3) Offene Punkte: Stellen, wo der ursprüngliche Sinn unklar war (max. 5)
+
+Text:
+[HIER TEXT EINFÜGEN]
+            </pre>
+
+            <div class="actions">
+              <button class="btn" type="button" data-copy>Copy Prompt</button>
+              <span class="status" data-status aria-live="polite"></span>
+            </div>
+          </div>
+        </details>
+      </article>
+
+      <!-- CARD 3 -->
+      <article class="card" style="--accent: rgba(192,132,252,0.95);">
+        <div class="card-top">
+          <div>
+            <h2 class="card-title">Prompt Debugging – Warum liefert das Modell Müll?</h2>
+            <div class="card-meta">
+              <span class="chip">debugging</span>
+              <span class="chip">analysis</span>
+              <span class="chip">workflow</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="explain">
+          Ziel: Ursachen finden, warum ein Prompt schlechte Ergebnisse liefert (Unklarheit, Zielkonflikt, fehlender Kontext, falsche Constraints).
+          Erwartung: Diagnose + konkrete Fixes + Minimal-Varianten zum Testen.
+        </p>
+
+        <details>
+          <summary>Prompt anzeigen</summary>
+
+          <div class="prompt-wrap">
+            <pre data-prompt>
+Rolle
+Du bist Prompt-Debugger. Keine neuen Inhalte erfinden, nur analysieren und verbessern.
+
+Input
+- Originalprompt:
+[HIER PROMPT]
+- Schlechtes Ergebnis (kurz beschrieben oder Beispiel):
+[HIER OUTPUT/PROBLEM]
+- Ziel (was eigentlich rauskommen soll):
+[HIER ZIEL]
+
+Aufgabe
+1) Diagnose: 5–8 mögliche Ursachen, priorisiert.
+2) Fixes: Schreibe 3 verbesserte Prompt-Versionen:
+   A) minimaler Fix (kleinste Änderung)
+   B) strukturierter Fix (Rolle, Kontext, Outputformat)
+   C) strenger Fix (Constraints, Beispiele, Negatives)
+3) Testplan: 5 kurze A/B-Checks, um zu prüfen, ob es besser wird.
+            </pre>
+
+            <div class="actions">
+              <button class="btn" type="button" data-copy>Copy Prompt</button>
+              <span class="status" data-status aria-live="polite"></span>
+            </div>
+          </div>
+        </details>
+      </article>
+
+    </section>
+  </main>
+
+  <script>
+    // Copy-Buttons: funktionieren unabhängig davon, wie viele Karten du später kopierst
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-copy]");
+      if (!btn) return;
+
+      const card = btn.closest(".card");
+      const pre = card?.querySelector("pre[data-prompt]");
+      const status = card?.querySelector("[data-status]");
+      if (!pre) return;
+
+      const text = pre.textContent.trim();
+
+      try {
+        await navigator.clipboard.writeText(text);
+        if (status) status.textContent = "Copied.";
+        setTimeout(() => { if (status) status.textContent = ""; }, 1200);
+      } catch (err) {
+        // Fallback: markiert Text, falls Clipboard API blockiert ist
+        const range = document.createRange();
+        range.selectNodeContents(pre);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        if (status) status.textContent = "Copy blocked – text selected.";
+        setTimeout(() => { if (status) status.textContent = ""; }, 1600);
+      }
+    });
+  </script>
+</body>
+</html>
