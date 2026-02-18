@@ -340,149 +340,190 @@
       .projects-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
    
-  /* --- Feature Card: Build Logs (Blueprint / Reflection Layer) --- */
-.feature-card{
-  position:relative;
-  border-radius:22px;
-  padding:20px 22px 18px;
-  margin-bottom:22px;
-  overflow:hidden;
-
-  /* Blueprint Navy Base */
-  background:
-    linear-gradient(180deg, #0b1a2b 0%, #081421 100%);
-
-  /* Technischer Rahmen */
-  border:1px dashed rgba(96,165,250,0.28);
-  box-shadow:
-    inset 0 0 0 1px rgba(59,130,246,0.15),
-    0 20px 55px rgba(2,6,23,0.85);
-}
-
-/* Subtiler Blueprint Grid */
-.feature-card::after{
+   
+/* --- Feature Card: Build Logs (full width, blueprint-ish) --- */
+  .feature-card{
+    --accent: rgba(34,211,238,0.95);
+    position:relative;
+    border-radius: 22px;
+    padding: 18px 20px 16px;
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    background:
+      radial-gradient(circle at top left, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.995));
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    overflow:hidden;
+    margin-bottom: 18px;
+  }
+  .feature-card::before{
+    content:"";
+    position:absolute;
+    inset:-1px;
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at 18% 10%, var(--accent), transparent 52%);
+    opacity: 0.18;
+    pointer-events:none;
+    mix-blend-mode: screen;
+  }
+  .feature-card::after{
   content:"";
   position:absolute;
   inset:0;
   pointer-events:none;
 
+  /* blueprint grid + subgrid */
   background-image:
-    linear-gradient(rgba(59,130,246,0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59,130,246,0.12) 1px, transparent 1px),
-    linear-gradient(rgba(59,130,246,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59,130,246,0.06) 1px, transparent 1px);
+    linear-gradient(0deg, rgba(165,243,252,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(165,243,252,0.12) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(165,243,252,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(165,243,252,0.06) 1px, transparent 1px);
 
   background-size:
-    22px 22px, 22px 22px,
-    6px 6px, 6px 6px;
+    22px 22px, 22px 22px,   /* main grid */
+    6px 6px,   6px 6px;     /* sub grid */
 
-  opacity:.45;
+  opacity:.55;
+
+  /* WICHTIG: keine harte Maskierung mehr */
+  mask-image: none;
+
+  }
+
+  .feature-mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+  font-size: 11px;
+  color: rgba(165,243,252,0.75);
+  opacity:.95;
+  margin: 6px 0 12px;
 }
 
-/* Monospace Status-Zeile */
-.feature-mono{
-  font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size:11px;
-  letter-spacing:.08em;
-  color:rgba(147,197,253,0.85);
-  margin:8px 0 14px;
+  .feature-card{
+  border-style: dashed;
+  border-color: rgba(165,243,252,0.22);
 }
 
-/* Corner Blueprint Marks */
+.feature-card .feature-title{
+  letter-spacing: -0.02em;
+}
+
+/* Corner brackets */
 .feature-card .corner{
   position:absolute;
-  width:16px;
-  height:16px;
-  border:2px solid rgba(96,165,250,0.35);
+  width:14px; height:14px;
+  border:2px solid rgba(165,243,252,0.28);
+  opacity:.9;
 }
+.feature-card .c1{ top:14px; left:14px; border-right:0; border-bottom:0; border-radius:6px 0 0 0; }
+.feature-card .c2{ top:14px; right:14px; border-left:0; border-bottom:0; border-radius:0 6px 0 0; }
+.feature-card .c3{ bottom:14px; left:14px; border-right:0; border-top:0; border-radius:0 0 0 6px; }
+.feature-card .c4{ bottom:14px; right:14px; border-left:0; border-top:0; border-radius:0 0 6px 0; }
 
-.feature-card .c1{
-  top:16px; left:16px;
-  border-right:0; border-bottom:0;
-}
-.feature-card .c2{
-  top:16px; right:16px;
-  border-left:0; border-bottom:0;
-}
-.feature-card .c3{
-  bottom:16px; left:16px;
-  border-right:0; border-top:0;
-}
-.feature-card .c4{
-  bottom:16px; right:16px;
-  border-left:0; border-top:0;
-}
+  .feature-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .feature-kicker{
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#a5f3fc;
+    opacity:.95;
+  }
+  .feature-icon{
+    font-size:18px;
+    opacity:.9;
+  }
+  .feature-title{
+    font-size:20px;
+    font-weight:800;
+    letter-spacing:-0.01em;
+    margin-bottom:6px;
+    color:#f9fafb;
+    text-shadow: 0 0 10px rgba(34,211,238,0.35);
+  }
+  .feature-text{
+    font-size:13px;
+    color:#d1d5db;
+    max-width: 64rem;
+    margin-bottom: 12px;
+  }
+  .feature-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .feature-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+  }
+  .feature-chip{
+    border-radius:999px;
+    padding:3px 10px;
+    border:1px solid rgba(148,163,184,0.35);
+    font-size:11px;
+    color:#e2e8f0;
+    opacity:.95;
+    white-space:nowrap;
+    background: rgba(2, 6, 23, 0.25);
+  }
+  .feature-link{
+    font-size:13px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space:nowrap;
+  }
+  .feature-link:focus-visible{
+    outline:2px solid #22d3ee;
+    outline-offset:3px;
+    border-radius:10px;
+  }
 
-/* Layout */
-.feature-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin-bottom:10px;
-}
-
-.feature-kicker{
-  font-size:11px;
-  letter-spacing:.2em;
-  text-transform:uppercase;
-  color:#93c5fd;
+  /* Blueprint Corner Marks – subtil */
+.feature-card .corner{
+  position:absolute;
+  width:14px;
+  height:14px;
+  border:1.5px solid rgba(165,243,252,0.25);
   opacity:.9;
 }
 
-.feature-icon{
-  font-size:18px;
-  opacity:.85;
+.feature-card .c1{
+  top:14px;
+  left:14px;
+  border-right:0;
+  border-bottom:0;
 }
 
-/* Titel – kein Neon-Glow */
-.feature-title{
-  font-size:21px;
-  font-weight:800;
-  letter-spacing:-0.02em;
-  margin-bottom:8px;
-  color:#e0f2fe;
-  text-shadow:none;
+.feature-card .c2{
+  top:14px;
+  right:14px;
+  border-left:0;
+  border-bottom:0;
 }
 
-.feature-text{
-  font-size:13px;
-  color:#d1d5db;
-  max-width:64rem;
-  margin-bottom:14px;
+.feature-card .c3{
+  bottom:14px;
+  left:14px;
+  border-right:0;
+  border-top:0;
 }
 
-/* Chips technischer */
-.feature-chips{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  align-items:center;
+.feature-card .c4{
+  bottom:14px;
+  right:14px;
+  border-left:0;
+  border-top:0;
 }
 
-.feature-chip{
-  border-radius:999px;
-  padding:4px 11px;
-  font-size:11px;
-  letter-spacing:.04em;
-  border:1px solid rgba(96,165,250,0.35);
-  background:rgba(30,58,138,0.35);
-  color:#bfdbfe;
-}
-
-/* Link */
-.feature-link{
-  font-size:13px;
-  text-decoration:underline;
-  text-underline-offset:3px;
-  color:#e0f2fe;
-}
-
-.feature-link:focus-visible{
-  outline:2px solid rgba(96,165,250,0.6);
-  outline-offset:3px;
-  border-radius:10px;
-}
 
     .card{
       --accent: rgba(236,72,153,0.9);
@@ -761,6 +802,10 @@
 
       <!-- FEATURE: Build Logs (Meta-Ebene, full width) -->
 <article class="feature-card" style="--accent: rgba(34,211,238,0.95);" role="region" aria-labelledby="feature-buildlogs-title">
+  <div class="corner c1"></div>
+<div class="corner c2"></div>
+<div class="corner c3"></div>
+<div class="corner c4"></div>
   <span class="corner c1" aria-hidden="true"></span>
 <span class="corner c2" aria-hidden="true"></span>
 <span class="corner c3" aria-hidden="true"></span>
