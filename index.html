@@ -408,13 +408,18 @@
   letter-spacing: -0.02em;
 }
 
-/* Corner brackets */
+
+/* Corner marks */
 .feature-card .corner{
   position:absolute;
-  width:14px; height:14px;
-  border:2px solid rgba(165,243,252,0.28);
+  width:16px;
+  height:16px;
+  border:2px solid rgba(165,243,252,0.35);
   opacity:.9;
+  z-index:2;              /* wichtig: über dem Grid */
+  pointer-events:none;
 }
+
 .feature-card .c1{ top:14px; left:14px; border-right:0; border-bottom:0; border-radius:6px 0 0 0; }
 .feature-card .c2{ top:14px; right:14px; border-left:0; border-bottom:0; border-radius:0 6px 0 0; }
 .feature-card .c3{ bottom:14px; left:14px; border-right:0; border-top:0; border-radius:0 0 0 6px; }
@@ -488,13 +493,6 @@
   }
 
   /* Blueprint Corner Marks – subtil */
-.feature-card .corner{
-  position:absolute;
-  width:14px;
-  height:14px;
-  border:1.5px solid rgba(165,243,252,0.25);
-  opacity:.9;
-}
 
 .feature-card .c1{
   top:14px;
@@ -726,6 +724,13 @@
         scroll-behavior: auto !important;
       }
     }
+    @media (max-width: 767px){
+  .feature-card .corner{
+    width:18px;
+    height:18px;
+    border-color: rgba(165,243,252,0.42);
+  }
+}
   </style>
 </head>
 
@@ -802,10 +807,6 @@
 
       <!-- FEATURE: Build Logs (Meta-Ebene, full width) -->
 <article class="feature-card" style="--accent: rgba(34,211,238,0.95);" role="region" aria-labelledby="feature-buildlogs-title">
-  <div class="corner c1"></div>
-<div class="corner c2"></div>
-<div class="corner c3"></div>
-<div class="corner c4"></div>
   <span class="corner c1" aria-hidden="true"></span>
 <span class="corner c2" aria-hidden="true"></span>
 <span class="corner c3" aria-hidden="true"></span>
