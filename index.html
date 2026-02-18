@@ -367,18 +367,57 @@
     mix-blend-mode: screen;
   }
   .feature-card::after{
-    /* blueprint grid overlay */
-    content:"";
-    position:absolute;
-    inset:0;
-    background-image:
-      linear-gradient(0deg, rgba(165,243,252,0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(165,243,252,0.06) 1px, transparent 1px);
-    background-size: 18px 18px;
-    opacity: .35;
-    pointer-events:none;
-    mask-image: radial-gradient(circle at 25% 20%, rgba(0,0,0,1), rgba(0,0,0,0) 62%);
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+
+  /* blueprint grid + subgrid */
+  background-image:
+    linear-gradient(0deg, rgba(165,243,252,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(165,243,252,0.12) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(165,243,252,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(165,243,252,0.06) 1px, transparent 1px);
+
+  background-size:
+    22px 22px, 22px 22px,   /* main grid */
+    6px 6px,   6px 6px;     /* sub grid */
+
+  opacity: .55;
+
+  /* WICHTIG: keine harte Maskierung mehr */
+  mask-image: none;
+
   }
+
+  .feature-mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+  font-size: 11px;
+  color: rgba(165,243,252,0.75);
+  opacity:.95;
+  margin: 6px 0 12px;
+}
+
+  .feature-card{
+  border-style: dashed;
+  border-color: rgba(165,243,252,0.22);
+}
+
+.feature-card .feature-title{
+  letter-spacing: -0.02em;
+}
+
+/* Corner brackets */
+.feature-card .corner{
+  position:absolute;
+  width:14px; height:14px;
+  border:2px solid rgba(165,243,252,0.28);
+  opacity:.9;
+}
+.feature-card .c1{ top:14px; left:14px; border-right:0; border-bottom:0; border-radius:6px 0 0 0; }
+.feature-card .c2{ top:14px; right:14px; border-left:0; border-bottom:0; border-radius:0 6px 0 0; }
+.feature-card .c3{ bottom:14px; left:14px; border-right:0; border-top:0; border-radius:0 0 0 6px; }
+.feature-card .c4{ bottom:14px; right:14px; border-left:0; border-top:0; border-radius:0 0 6px 0; }
 
   .feature-top{
     display:flex;
@@ -725,6 +764,10 @@
 
       <!-- FEATURE: Build Logs (Meta-Ebene, full width) -->
 <article class="feature-card" style="--accent: rgba(34,211,238,0.95);" role="region" aria-labelledby="feature-buildlogs-title">
+  <span class="corner c1" aria-hidden="true"></span>
+<span class="corner c2" aria-hidden="true"></span>
+<span class="corner c3" aria-hidden="true"></span>
+<span class="corner c4" aria-hidden="true"></span>
   <div class="feature-top">
     <div>
       <div class="feature-kicker">REFLECTION LAYER</div>
@@ -737,6 +780,9 @@
     Dokumentierte Methodik hinter PromptRebel: Entscheidungen, Iterationen, Fehler, Fixes – ohne Show, ohne Hype.
     Kurz, scanbar, nachvollziehbar. Links führen zurück zu den jeweiligen Ergebnissen.
   </p>
+  <div class="feature-mono" aria-hidden="true">
+  buildlog: index · layer=reflection · status=beta · last_update=manual
+</div>
 
   <div class="feature-row">
     <div class="feature-chips" aria-label="Tags">
