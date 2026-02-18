@@ -383,7 +383,7 @@
     22px 22px, 22px 22px,   /* main grid */
     6px 6px,   6px 6px;     /* sub grid */
 
-  opacity: .55;
+  opacity: .45;  /* statt .55 */
 
   /* WICHTIG: keine harte Maskierung mehr */
   mask-image: none;
@@ -399,12 +399,13 @@
 }
 
   .feature-card{
-  border-style: dashed;
+  border-style: dotted; /*statt dashed; */
   border-color: rgba(165,243,252,0.22);
 }
 
 .feature-card .feature-title{
-  letter-spacing: -0.02em;
+  font-size: 10px;
+letter-spacing: .05em;/* statt letter-spacing: -0.02em; */
 }
 
 /* Corner brackets */
