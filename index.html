@@ -339,6 +339,114 @@
     @media (min-width:768px){
       .projects-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
+   
+  /* --- Feature Card: Build Logs (full width, blueprint-ish) --- */
+  .feature-card{
+    --accent: rgba(34,211,238,0.95);
+    position:relative;
+    border-radius: 22px;
+    padding: 18px 20px 16px;
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    background:
+      radial-gradient(circle at top left, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.995));
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    overflow:hidden;
+    margin-bottom: 18px;
+  }
+  .feature-card::before{
+    content:"";
+    position:absolute;
+    inset:-1px;
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at 18% 10%, var(--accent), transparent 52%);
+    opacity: 0.18;
+    pointer-events:none;
+    mix-blend-mode: screen;
+  }
+  .feature-card::after{
+    /* blueprint grid overlay */
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+      linear-gradient(0deg, rgba(165,243,252,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(165,243,252,0.06) 1px, transparent 1px);
+    background-size: 18px 18px;
+    opacity: .35;
+    pointer-events:none;
+    mask-image: radial-gradient(circle at 25% 20%, rgba(0,0,0,1), rgba(0,0,0,0) 62%);
+  }
+
+  .feature-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .feature-kicker{
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#a5f3fc;
+    opacity:.95;
+  }
+  .feature-icon{
+    font-size:18px;
+    opacity:.9;
+  }
+  .feature-title{
+    font-size:20px;
+    font-weight:800;
+    letter-spacing:-0.01em;
+    margin-bottom:6px;
+    color:#f9fafb;
+    text-shadow: 0 0 10px rgba(34,211,238,0.35);
+  }
+  .feature-text{
+    font-size:13px;
+    color:#d1d5db;
+    max-width: 64rem;
+    margin-bottom: 12px;
+  }
+  .feature-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .feature-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+  }
+  .feature-chip{
+    border-radius:999px;
+    padding:3px 10px;
+    border:1px solid rgba(148,163,184,0.35);
+    font-size:11px;
+    color:#e2e8f0;
+    opacity:.95;
+    white-space:nowrap;
+    background: rgba(2, 6, 23, 0.25);
+  }
+  .feature-link{
+    font-size:13px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space:nowrap;
+  }
+  .feature-link:focus-visible{
+    outline:2px solid #22d3ee;
+    outline-offset:3px;
+    border-radius:10px;
+  }
+
 
     .card{
       --accent: rgba(236,72,153,0.9);
@@ -614,6 +722,33 @@
         Eine Sammlung von Experimenten und Projekten: Prompt Autopsie, Bild/Video/Audio, Micro-Apps, Tools &amp; Agents.
         Manche sind abgeschlossen, andere wachsen weiter – alles bleibt nachvollziehbar.
       </p>
+
+      <!-- FEATURE: Build Logs (Meta-Ebene, full width) -->
+<article class="feature-card" style="--accent: rgba(34,211,238,0.95);" role="region" aria-labelledby="feature-buildlogs-title">
+  <div class="feature-top">
+    <div>
+      <div class="feature-kicker">REFLECTION LAYER</div>
+      <h3 class="feature-title" id="feature-buildlogs-title">Build Logs</h3>
+    </div>
+    <div class="feature-icon" aria-hidden="true">🧱</div>
+  </div>
+
+  <p class="feature-text">
+    Dokumentierte Methodik hinter PromptRebel: Entscheidungen, Iterationen, Fehler, Fixes – ohne Show, ohne Hype.
+    Kurz, scanbar, nachvollziehbar. Links führen zurück zu den jeweiligen Ergebnissen.
+  </p>
+
+  <div class="feature-row">
+    <div class="feature-chips" aria-label="Tags">
+      <span class="feature-chip">process</span>
+      <span class="feature-chip">iterations</span>
+      <span class="feature-chip">decisions</span>
+      <span class="feature-chip">lessons learned</span>
+    </div>
+
+    <a class="feature-link" href="build-logs/" aria-label="Zu den Build Logs">Zu den Build Logs →</a>
+  </div>
+</article>
 
      
       <div class="projects-grid">
