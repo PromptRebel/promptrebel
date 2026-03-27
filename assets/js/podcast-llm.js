@@ -1,7 +1,7 @@
 // assets/js/podcast-llm.js
 import { MLCEngine } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
 
-const DEFAULT_MODEL = "Qwen2-0.5B-Instruct-q4f16_1-MLC";
+const DEFAULT_MODEL = "SmolLM2-360M-Instruct-q4f16_1-MLC";
 const TEMPERATURE = 0.6;
 const MAX_TOKENS = 260;
 
