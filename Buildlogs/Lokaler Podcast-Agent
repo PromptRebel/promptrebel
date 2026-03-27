@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>PromptRebel – Build Log #01 · Lokaler Podcast-Agent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Build Log von PromptRebel: Wie ein lokaler KI-Podcast-Agent mit Ollama und XTTS auf schwacher Hardware entstand – inklusive Fehlern, Learnings und Setup." />
+
+  <style>
+    :root { --scroll: 0; }
+
+    /* Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; scroll-behavior: smooth; }
+
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:#020617;
+      color:#e5e7eb;
+      line-height:1.75;
+      padding-top:64px;
+    }
+    a{ color:inherit; text-decoration:none; }
+
+    /* Background */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,0.35), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(56,189,248,0.35), transparent 55%);
+      z-index:-2;
+    }
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      opacity:.22;
+      pointer-events:none;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size:3px 3px, 3px 3px;
+      mix-blend-mode:soft-light;
+      z-index:-1;
+    }
+
+    .page{ max-width: 940px; margin: 0 auto; padding: 16px 16px 56px; }
+
+    /* Skip link */
+    .skip-link{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      top:-40px;
+      padding:6px 10px;
+      background:#0f172a;
+      color:#f9fafb;
+      border-radius:999px;
+      font-size:13px;
+      z-index:60;
+    }
+    .skip-link:focus-visible{
+      top:10px;
+      outline:2px solid #22d3ee;
+      outline-offset:2px;
+    }
+
+    /* Nav */
+    .nav{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:40;
+      backdrop-filter:blur(14px);
+      background:linear-gradient(to bottom, rgba(15,23,42,.95), rgba(15,23,42,.6));
+      border-bottom:1px solid rgba(148,163,184,.1);
+    }
+    .nav-inner{
+      max-width:1120px;
+      margin:0 auto;
+      padding:10px 16px 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      position:relative;
+    }
+    .nav::after{
+      content:"";
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height:2px;
+      background:linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin:left;
+      transform:scaleX(var(--scroll));
+      transition:transform .1s linear;
+      pointer-events:none;
+    }
+
+    .brand{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.05em;
+      cursor:pointer;
+      white-space:nowrap;
+      text-shadow:0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4);
+    }
+    .brand span.accent{
+      background:linear-gradient(135deg, #f472b6, #22d3ee);
+      -webkit-background-clip:text;
+      color:transparent;
+    }
+
+    .nav-links{ display:flex; gap:18px; font-size:14px; }
+    .nav-link{
+      position:relative;
+      padding-block:4px;
+    }
+    .nav-link::after{
+      content:"";
+      position:absolute;
+      left:0; bottom:-2px;
+      width:0; height:2px;
+      border-radius:999px;
+      background:linear-gradient(90deg, #f472b6, #22d3ee);
+      box-shadow:0 0 8px rgba(56,189,248,.8);
+      transition:width .25s ease;
+    }
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after{ width:100%; }
+
+    /* Generic */
+    .section{ padding: 36px 16px 8px; }
+    .panel-glass{
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,.18);
+      background:radial-gradient(circle at top left, rgba(15,23,42,.90), rgba(15,23,42,.98));
+      box-shadow:0 18px 45px rgba(15,23,42,.95);
+      backdrop-filter:blur(18px);
+    }
+
+    /* Hero */
+    .hero{
+      padding-top: 22px;
+    }
+    .meta-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    .meta-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:6px 10px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(15,23,42,.45);
+      font-size:12px;
+      color:#dbeafe;
+    }
+    .meta-chip strong{
+      color:#f9a8d4;
+      font-weight:700;
+    }
+
+    .hero-card{
+      padding:22px 22px 18px;
+    }
+    .hero-kicker{
+      font-size:12px;
+      letter-spacing:.25em;
+      text-transform:uppercase;
+      color:#f9a8d4;
+      margin-bottom:8px;
+    }
+    .hero-title{
+      font-size:clamp(30px, 5vw, 50px);
+      line-height:1.12;
+      font-weight:800;
+      margin-bottom:14px;
+      text-shadow:0 0 14px rgba(236,72,153,.45), 0 0 20px rgba(34,211,238,.25);
+    }
+    .hero-title em{
+      font-style:normal;
+      color:#22d3ee;
+    }
+    .hero-subtitle{
+      font-size:16px;
+      color:#cbd5f5;
+      max-width:46rem;
+      margin-bottom:18px;
+      border-left:3px solid rgba(34,211,238,.55);
+      padding-left:14px;
+    }
+
+    .hero-grid{
+      display:grid;
+      gap:16px;
+      margin-top:20px;
+    }
+    @media (min-width:900px){
+      .hero-grid{
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1.15fr);
+      }
+    }
+
+    .hero-note{
+      padding:14px 16px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.16);
+      background:rgba(15,23,42,.45);
+      font-size:14px;
+      color:#e5e7eb;
+    }
+    .hero-note strong{ color:#f8fafc; }
+
+    .terminal-box{
+      padding:14px 16px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.16);
+      background:rgba(2,6,23,.52);
+    }
+    .terminal-head{
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#93c5fd;
+      margin-bottom:8px;
+    }
+    .terminal{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:12px;
+      white-space:pre-wrap;
+      color:#e5e7eb;
+      line-height:1.7;
+    }
+    .terminal .dim{ color:#6b7280; }
+    .terminal .ok{ color:#86efac; }
+    .terminal .warn{ color:#fca5a5; }
+
+    /* Content */
+    .content{
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .divider{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin:40px 0 26px;
+      color:#94a3b8;
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+    .divider::before,
+    .divider::after{
+      content:"";
+      height:1px;
+      flex:1;
+      background:rgba(148,163,184,.18);
+    }
+
+    h2{
+      font-size:clamp(22px, 3.5vw, 30px);
+      font-weight:800;
+      margin-bottom:14px;
+      color:#f8fafc;
+      text-shadow:0 0 10px rgba(34,211,238,.12);
+    }
+
+    p{
+      font-size:16px;
+      color:#d1d5db;
+      margin-bottom:20px;
+    }
+    p strong{ color:#f8fafc; }
+
+    .callout{
+      margin:24px 0;
+      border-radius:18px;
+      border:1px solid rgba(34,211,238,.20);
+      background:rgba(34,211,238,.08);
+      padding:14px 16px 12px;
+      color:#e6f7ff;
+    }
+    .callout-title{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#93c5fd;
+      margin-bottom:6px;
+    }
+
+    /* Specs */
+    .specs{
+      margin:28px 0;
+      padding:18px 18px 12px;
+    }
+    .specs-title{
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#9ca3af;
+      margin-bottom:10px;
+    }
+    .spec-row{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      padding:10px 0;
+      border-bottom:1px solid rgba(148,163,184,.12);
+      font-size:14px;
+    }
+    .spec-row:last-child{ border-bottom:none; }
+    .spec-key{
+      color:#94a3b8;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:13px;
+    }
+    .spec-val{
+      color:#f3f4f6;
+      text-align:right;
+    }
+    .spec-val.good{ color:#86efac; }
+
+    /* Log blocks */
+    .log-block{
+      margin:26px 0;
+      border-radius:16px;
+      padding:16px 18px 14px;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:13px;
+      line-height:1.75;
+    }
+    .log-label{
+      font-size:10px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+      opacity:.88;
+    }
+    .log-error{
+      background:rgba(127,29,29,.20);
+      border:1px solid rgba(239,68,68,.18);
+      border-left:3px solid #ef4444;
+      color:#fca5a5;
+    }
+    .log-error .log-label{ color:#f87171; }
+
+    .log-success{
+      background:rgba(20,83,45,.20);
+      border:1px solid rgba(34,197,94,.18);
+      border-left:3px solid #22c55e;
+      color:#86efac;
+    }
+    .log-success .log-label{ color:#4ade80; }
+
+    blockquote{
+      margin:28px 0;
+      padding:18px 18px 16px;
+      border-radius:18px;
+      border:1px solid rgba(236,72,153,.22);
+      background:rgba(236,72,153,.09);
+    }
+    blockquote p{
+      margin:0;
+      font-size:20px;
+      line-height:1.55;
+      color:#fbcfe8;
+    }
+
+    code{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:13px;
+      background:#0b1220;
+      border:1px solid rgba(148,163,184,.14);
+      padding:2px 8px;
+      border-radius:6px;
+      color:#bfdbfe;
+    }
+    pre{
+      margin:24px 0;
+      padding:18px 18px 16px;
+      border-radius:18px;
+      overflow-x:auto;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(2,6,23,.6);
+      box-shadow:0 18px 40px rgba(15,23,42,.6);
+    }
+    pre code{
+      background:none;
+      border:none;
+      padding:0;
+      color:#cbd5e1;
+      line-height:1.75;
+      font-size:13px;
+    }
+
+    /* Learnings / next steps */
+    .two-col{
+      display:grid;
+      gap:14px;
+      margin:22px 0;
+    }
+    @media (min-width:768px){
+      .two-col{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+    }
+
+    .info-card{
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(15,23,42,.50);
+      padding:16px 16px 14px;
+    }
+    .info-card h3{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#cbd5e1;
+      margin-bottom:8px;
+    }
+    .info-card ul{
+      padding-left:18px;
+    }
+    .info-card li{
+      font-size:14px;
+      color:#e5e7eb;
+      margin-bottom:8px;
+    }
+
+    /* Footer area */
+    .end-panel{
+      margin-top:40px;
+      padding:18px 18px 16px;
+    }
+    .end-title{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#f9a8d4;
+      margin-bottom:10px;
+    }
+    .end-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:12px;
+    }
+    .end-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(15,23,42,.42);
+      color:#e5e7eb;
+      font-size:13px;
+    }
+
+    footer{
+      margin-top:36px;
+      padding-top:16px;
+      border-top:1px solid rgba(148,163,184,.12);
+      font-size:11px;
+      color:#94a3b8;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
+    }
+    footer .center-links{ display:flex; gap:10px; }
+    footer a{ text-decoration:underline; text-underline-offset:3px; }
+
+    /* Mobile */
+    @media (max-width:767px){
+      body{ padding-top:60px; }
+      .nav-inner{ gap:8px; }
+      .nav-links{ font-size:13px; gap:12px; }
+      .section{ padding-top:30px; }
+      p{ font-size:15px; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation-duration:0.01ms !important;
+        transition-duration:0.01ms !important;
+        scroll-behavior:auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand" onclick="window.location.href='../index.html'">
+        Prompt<span class="accent">Rebel</span>
+      </div>
+      <nav class="nav-links" aria-label="Hauptnavigation">
+        <a href="../index.html#projects" class="nav-link">Projects</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../index.html#lab-notes" class="nav-link">Lab Notes</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page" id="main">
+    <section class="section hero">
+      <div class="meta-row">
+        <span class="meta-chip"><strong>Build Log</strong> #01</span>
+        <span class="meta-chip">März 2026</span>
+        <span class="meta-chip">local-first</span>
+        <span class="meta-chip">Ollama · XTTS</span>
+        <span class="meta-chip">Status: funktioniert</span>
+      </div>
+
+      <div class="panel-glass hero-card">
+        <div class="hero-kicker">Lab Notes</div>
+        <h1 class="hero-title">Ich habe fast alles hingeschmissen – <em>und dann lief es.</em></h1>
+        <p class="hero-subtitle">
+          Wie ein lokaler KI-Podcast-Agent auf schwacher Hardware entstanden ist.
+          Ohne GPU. Ohne Budget. Ohne API. Mit echtem Frust, echten Fehlern – und einem Moment,
+          in dem plötzlich zum ersten Mal eine Datei im Ordner lag.
+        </p>
+
+        <div class="hero-grid">
+          <div class="hero-note">
+            <strong>Was du hier bekommst:</strong><br>
+            kein Hochglanz-Case, sondern ein echter Build Log:
+            Ausgangslage, Fehler, Setup, Wendepunkt, Learnings und die nächsten Schritte.
+          </div>
+
+          <div class="terminal-box" aria-hidden="true">
+            <div class="terminal-head">build.log</div>
+            <div class="terminal">> hardware: surface go 2
+> stack: ollama + xtts_v2
+> budget: 0 €
+> cloud: none
+> mood: <span class="warn">frustrated</span> → <span class="ok">running</span>
+<span class="dim"># local-first, cloud-optional</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section content">
+      <p>
+        Ich bin kein Entwickler. Ich bin kein ITler. Und irgendwann saß ich vor einem Terminal,
+        das mir Dinge um die Ohren geworfen hat, die ich nicht mal sauber aussprechen konnte.
+      </p>
+
+      <p>
+        Transformers. Torch. Dependencies. Versionen, die angeblich nicht zusammenpassen.
+        Die Hälfte davon habe ich nicht wirklich verstanden. Aber ich habe weitergemacht.
+      </p>
+
+      <div class="divider"><span>die hardware</span></div>
+
+      <div class="panel-glass specs">
+        <div class="specs-title">Was ich verwendet habe</div>
+        <div class="spec-row">
+          <span class="spec-key">gerät</span>
+          <span class="spec-val">Microsoft Surface Go 2</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-key">prozessor</span>
+          <span class="spec-val">Intel Pentium Gold 4425Y · keine GPU</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-key">ram</span>
+          <span class="spec-val">8 GB</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-key">budget</span>
+          <span class="spec-val good">0 €</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-key">api-keys</span>
+          <span class="spec-val good">keine</span>
+        </div>
+      </div>
+
+      <p>
+        Das ist keine Hardware, die man vernünftigerweise für so ein Projekt empfehlen würde.
+        Es ist einfach das Gerät, das da war. Und genau deshalb war es interessant.
+      </p>
+
+      <div class="callout">
+        <div class="callout-title">Warum das überhaupt relevant ist</div>
+        Wenn so etwas auf schwacher Hardware funktioniert, verliert das Thema sofort einen Teil seines Elitismus.
+        Dann wird aus „nur für Spezialisten“ plötzlich „nachbaubar“.
+      </div>
+
+      <div class="divider"><span>der plan</span></div>
+
+      <h2>Was ich eigentlich bauen wollte</h2>
+
+      <p>
+        Ich liebe KI-generierte Podcasts. NotebookLM macht das beeindruckend gut – aber es ist
+        kein System, das sich so einfach in einen eigenen lokalen Workflow einbauen lässt.
+      </p>
+
+      <p>
+        Mein Ziel war simpel formuliert:
+        <strong>Thema oder URL rein, fertige Audio-Datei raus.</strong>
+        Vollautomatisch. Lokal. Kostenlos. Ohne Cloud-Zwang.
+      </p>
+
+      <p>
+        Genau das ist der Gedanke hinter PromptRebel:
+        <strong>local-first, cloud-optional.</strong>
+      </p>
+
+      <div class="divider"><span>die realität</span></div>
+
+      <h2>Dann kam die Dependency-Hölle</h2>
+
+      <p>
+        Der Plan klang einfach: XTTS-v2 installieren, Ollama dazu, Text generieren, vertonen, fertig.
+        In der Realität war es eine Stunde reines Chaos.
+      </p>
+
+      <p>
+        Fehler. Noch ein Fehler. Noch ein Fehler. Und keiner davon so formuliert,
+        dass man direkt denkt: Alles klar, das ist jetzt der nächste saubere Schritt.
+      </p>
+
+      <div class="log-block log-error">
+        <div class="log-label">Fehler #1</div>
+        ImportError: coqui-tts switched to a forked version of Coqui,<br>
+        but you still have the original package installed.<br>
+        Run: pip uninstall coqui → pip install coqui-tts
+      </div>
+
+      <p>Also gemacht. Nächster Fehler.</p>
+
+      <div class="log-block log-error">
+        <div class="log-label">Fehler #2</div>
+        ERROR: Could not find a version that satisfies<br>
+        the requirement coqui-tts==0.22.0<br>
+        (from versions: 0.24.1, 0.24.2, 0.24.3 ...)
+      </div>
+
+      <div class="log-block log-error">
+        <div class="log-label">Fehler #3</div>
+        PyTorch was not found. Models won't be available<br>
+        and only tokenizers, configuration and<br>
+        file/data utilities can be used.<br>
+        PyTorch &gt;= 2.4 is required but Found 2.1.0
+      </div>
+
+      <blockquote>
+        <p>„Irgendwann dachte ich nicht mehr, dass ich einen Fehler mache. Ich dachte: Das geht einfach nicht.“</p>
+      </blockquote>
+
+      <p>
+        Genau an diesem Punkt kippen viele Projekte. Nicht weil die Idee schlecht ist,
+        sondern weil die Reibung plötzlich größer ist als die Neugier.
+      </p>
+
+      <p>
+        Ich war kurz davor, alles wieder zu löschen. Neuer Versuch? Eigentlich keine Lust mehr.
+        Und dann habe ich es trotzdem noch einmal gemacht: neuer Ordner, saubere Umgebung, nochmal von vorn.
+      </p>
+
+      <div class="divider"><span>der moment</span></div>
+
+      <h2><code>python podcast.py</code></h2>
+
+      <p>Und dann lief der Befehl durch.</p>
+
+      <p>
+        Kein roter Text. Kein Absturz. Kein Dependency-Geschrei.
+        Nur ein laufender Prozess – und danach plötzlich eine Datei im Ordner.
+      </p>
+
+      <div class="log-block log-success">
+        <div class="log-label">Output</div>
+        === Generierter Text ===<br>
+        "Willkommen zu unserem Podcast über KI im Alltag..."<br><br>
+        → output.wav erstellt (00:02:07)<br>
+        → Prozess beendet. Keine Fehler.
+      </div>
+
+      <p>
+        Die Stimme war nicht perfekt. Aber das war völlig egal.
+        Denn das Entscheidende war nicht die Qualität im ersten Schritt.
+        Das Entscheidende war: <strong>Es hat funktioniert.</strong>
+      </p>
+
+      <p>
+        Und noch wichtiger: Ab diesem Moment hat es angefangen, Spaß zu machen.
+      </p>
+
+      <pre><code># Das macht das Skript – vollautomatisch
+
+# 1. Ollama generiert einen Text zum Thema
+ollama.run("llama3", prompt="Schreibe einen Podcast-Einstieg...")
+
+# 2. XTTS-v2 vertont ihn mit lokaler Stimme
+tts --model xtts_v2 --text [generierter text] --speaker_wav voice.wav
+
+# 3. Fertige output.wav liegt im Ordner</code></pre>
+
+      <p>
+        Kein API-Call. Keine Cloud. Keine laufenden Kosten.
+        Auf einem Pentium-Tablet, das niemand ernsthaft als KI-Maschine bezeichnen würde.
+      </p>
+
+      <div class="divider"><span>was ich gelernt habe</span></div>
+
+      <h2>Was das eigentlich zeigt</h2>
+
+      <p>
+        Ich verstehe bis heute nicht jeden einzelnen Fehler aus dieser Phase im Detail.
+        Aber ich habe gelernt, wie man durch so etwas durchkommt.
+      </p>
+
+      <p>
+        Das ist für mich der eigentliche Punkt:
+        <strong>Du musst nicht alles sofort verstehen. Du musst nur lange genug dranbleiben, bis ein System entsteht.</strong>
+      </p>
+
+      <div class="two-col">
+        <div class="info-card">
+          <h3>Was funktioniert hat</h3>
+          <ul>
+            <li>saubere neue Umgebung statt halb kaputtem Setup</li>
+            <li>kleine Schritte statt Komplettlösung auf einmal</li>
+            <li>lokaler Fokus statt sofortiger Cloud-Abhängigkeit</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <h3>Was ich mitgenommen habe</h3>
+          <ul>
+            <li>schwache Hardware heißt nicht automatisch „unmöglich“</li>
+            <li>Frust ist oft ein Build-Abschnitt, kein Endpunkt</li>
+            <li>funktionierend schlägt perfekt – vor allem am Anfang</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>
+        Und genau deshalb passt dieses Projekt so gut zu PromptRebel.
+        Nicht weil es perfekt ist. Sondern weil es dokumentiert, nachvollziehbar und nachbaubar ist.
+      </p>
+
+      <div class="divider"><span>nächste schritte</span></div>
+
+      <h2>Was als Nächstes kommt</h2>
+
+      <p>
+        Aktuell spricht der Agent noch im Monolog. Der nächste Schritt ist ein echtes Gespräch mit zwei Stimmen.
+        Danach kommt eine Fernbedienung per Messenger oder Bot – Thema schicken, fertige Audio-Datei zurückbekommen.
+      </p>
+
+      <p>
+        Alles lokal. Alles nachvollziehbar. Alles so gebaut, dass man es nicht nur bestaunen,
+        sondern wirklich nachbauen kann.
+      </p>
+
+      <div class="panel-glass end-panel">
+        <div class="end-title">Build Status</div>
+        <p style="margin-bottom:10px;">
+          Das hier ist kein perfektes System. Das ist ein funktionierendes System.
+          Und genau da beginnt der eigentliche Spaß.
+        </p>
+
+        <div class="end-links">
+          <a href="#" class="end-link">Download Guide →</a>
+          <a href="#" class="end-link">Nächster Build Log →</a>
+          <a href="../index.html#projects" class="end-link">Zurück zu PromptRebel →</a>
+        </div>
+
+        <footer>
+          <div>© PromptRebel | CC BY-NC-SA 4.0</div>
+          <div class="center-links">
+            <a href="../imprint.html">Imprint</a>
+            <span>·</span>
+            <a href="../privacy.html">Privacy</a>
+          </div>
+          <div>build log: v0.1</div>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    window.addEventListener("scroll", () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+      document.documentElement.style.setProperty("--scroll", ratio.toString());
+    });
+  </script>
+</body>
+</html>
