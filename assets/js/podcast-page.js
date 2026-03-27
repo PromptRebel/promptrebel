@@ -84,15 +84,13 @@ btnGenerate.addEventListener("click", async () => {
     latestScript = await llm.generate(prompt);
     updateSpeakButtons();
   } catch (error) {
-    console.error(error);
-    latestScript = "";
-    outputText.textContent = "Fehler bei der Skripterzeugung.";
-    statusEl.textContent = "Das Skript konnte nicht erzeugt werden.";
-    updateSpeakButtons();
-  } finally {
-    setBusy(false);
-    updateSpeakButtons();
-  }
+  console.error(error);
+  const msg = String(error?.message || error || "Unbekannter Fehler");
+  statusEl.textContent = `Modell konnte nicht geladen werden: ${msg}`;
+} finally {
+  setBusy(false);
+  updateSpeakButtons();
+}
 });
 
 btnSpeak.addEventListener("click", () => {
