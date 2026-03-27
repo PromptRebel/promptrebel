@@ -1,25 +1,41 @@
+// assets/js/podcast-tts.js
+
 export class PodcastTTS {
   constructor({ voiceSelectId, statusId }) {
     this.synth = window.speechSynthesis;
     this.voiceSelect = document.getElementById(voiceSelectId);
     this.statusEl = document.getElementById(statusId);
     this.voices = [];
-    this.currentUtterance = null;
+    this.currentText = "";
   }
 
   setStatus(message) {
     if (this.statusEl) this.statusEl.textContent = message;
   }
 
-  loadVoices() {
-    this.voices = this.synth.getVoices();
+  hasSupport() {
+    return "speechSynthesis" in window;
+  }
 
+  populateVoices() {
     if (!this.voiceSelect) return;
+
+    const voices = this.synth.getVoices();
+    this.voices = voices;
 
     this.voiceSelect.innerHTML = "";
 
-    const germanVoices = this.voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("de"));
-    const finalVoices = germanVoices.length ? germanVoices : this.voices;
+    if (!voices.length) {
+      const option = document.createElement("option");
+      option.textContent = "Keine Stimme gefunden";
+      option.value = "";
+      this.voiceSelect.appendChild(option);
+      this.voiceSelect.disabled = true;
+      return;
+    }
+
+    const germanVoices = voices.filter(v => v.lang?.toLowerCase().startsWith("de"));
+    const finalVoices = germanVoices.length ? germanVoices : voices;
 
     finalVoices.forEach((voice, index) => {
       const option = document.createElement("option");
@@ -29,36 +45,35 @@ export class PodcastTTS {
       this.voiceSelect.appendChild(option);
     });
 
-    if (finalVoices.length === 0) {
-      const option = document.createElement("option");
-      option.value = "";
-      option.textContent = "Keine Stimme gefunden";
-      this.voiceSelect.appendChild(option);
-    }
+    this.voiceSelect.disabled = false;
   }
 
   init() {
-    if (!("speechSynthesis" in window)) {
+    if (!this.hasSupport()) {
       this.setStatus("Dieser Browser unterstützt keine Sprachsynthese.");
       return false;
     }
 
-    this.loadVoices();
+    this.populateVoices();
 
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = () => this.loadVoices();
+    // wichtig: manche Browser liefern Stimmen erst später
+    if (typeof speechSynthesis.onvoiceschanged !== "undefined") {
+      speechSynthesis.onvoiceschanged = () => this.populateVoices();
     }
 
     return true;
   }
 
   speak(text) {
-    if (!text || !text.trim()) return;
+    if (!text?.trim()) {
+      this.setStatus("Kein Text zum Vorlesen vorhanden.");
+      return;
+    }
 
     this.stop();
 
     const utterance = new SpeechSynthesisUtterance(text.trim());
-    const selectedVoiceName = this.voiceSelect?.value;
+    const selectedVoiceName = this.voiceSelect?.value || "";
     const selectedVoice = this.voices.find(v => v.name === selectedVoiceName);
 
     if (selectedVoice) {
@@ -72,29 +87,28 @@ export class PodcastTTS {
     utterance.pitch = 1.0;
 
     utterance.onstart = () => this.setStatus("Wiedergabe läuft...");
+    utterance.onpause = () => this.setStatus("Wiedergabe pausiert.");
+    utterance.onresume = () => this.setStatus("Wiedergabe fortgesetzt.");
     utterance.onend = () => this.setStatus("Wiedergabe beendet.");
     utterance.onerror = () => this.setStatus("Fehler bei der Sprachwiedergabe.");
 
-    this.currentUtterance = utterance;
+    this.currentText = text.trim();
     this.synth.speak(utterance);
   }
 
   pause() {
     if (this.synth.speaking && !this.synth.paused) {
       this.synth.pause();
-      this.setStatus("Wiedergabe pausiert.");
     }
   }
 
   resume() {
     if (this.synth.paused) {
       this.synth.resume();
-      this.setStatus("Wiedergabe fortgesetzt.");
     }
   }
 
   stop() {
     this.synth.cancel();
-    this.setStatus("Wiedergabe gestoppt.");
   }
 }
