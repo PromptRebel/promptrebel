@@ -1,60 +1,130 @@
+// assets/js/podcast-llm.js
+import { MLCEngine } from "https://esm.run/@mlc-ai/web-llm@0.2.80";
+
+const DEFAULT_MODEL = "Qwen2-0.5B-Instruct-q4f16_1-MLC";
+const TEMPERATURE = 0.6;
+const MAX_TOKENS = 260;
+
 export class PodcastLLM {
-  constructor({ statusId, outputId }) {
+  constructor({ statusId, engineInfoId, outputId }) {
     this.statusEl = document.getElementById(statusId);
+    this.engineInfoEl = document.getElementById(engineInfoId);
     this.outputEl = document.getElementById(outputId);
-    this.isReady = false;
+
     this.engine = null;
+    this.ready = false;
+    this.loading = false;
+    this.modelName = DEFAULT_MODEL;
   }
 
   setStatus(message) {
     if (this.statusEl) this.statusEl.textContent = message;
   }
 
-  async init() {
+  setEngineInfo(message) {
+    if (this.engineInfoEl) this.engineInfoEl.textContent = message;
+  }
+
+  hasWebGPU() {
+    return !!navigator.gpu;
+  }
+
+  async loadModel() {
+    if (this.loading) return;
+    if (this.ready && this.engine) return;
+
+    if (!this.hasWebGPU()) {
+      this.setStatus("WebGPU nicht verfügbar. Nutze idealerweise Desktop Chrome oder Edge.");
+      throw new Error("WebGPU nicht verfügbar.");
+    }
+
+    this.loading = true;
+    this.setStatus("Initialisiere Modell ...");
+    this.setEngineInfo("Modell wird geladen ...");
+
     try {
-      this.setStatus("Text-Engine wird vorbereitet...");
+      const initProgressCallback = (progress) => {
+        const msg = typeof progress === "string" ? progress : JSON.stringify(progress);
+        this.setStatus(`Lade Modell: ${msg}`);
+      };
 
-      // Platzhalter für deine spätere echte Browser-KI.
-      // Hier später z.B. WebLLM oder Transformers.js initialisieren.
-      this.isReady = true;
+      this.engine = new MLCEngine({ initProgressCallback });
+      await this.engine.reload(this.modelName);
 
-      this.setStatus("Text-Engine bereit.");
-      return true;
+      this.ready = true;
+      this.setStatus("Modell bereit.");
+      this.setEngineInfo(`Modell: ${this.modelName}`);
     } catch (error) {
       console.error(error);
-      this.setStatus("Text-Engine konnte nicht geladen werden.");
-      return false;
+      this.engine = null;
+      this.ready = false;
+      this.setStatus("Fehler beim Laden des Modells.");
+      this.setEngineInfo("Modell: Ladefehler");
+      throw error;
+    } finally {
+      this.loading = false;
     }
   }
 
   async generate(prompt) {
-    if (!prompt || !prompt.trim()) {
-      throw new Error("Kein Eingabetext vorhanden.");
+    if (!this.ready || !this.engine) {
+      throw new Error("Modell nicht bereit.");
     }
 
-    this.setStatus("Skript wird erzeugt...");
+    const userPrompt = (prompt || "").trim();
+    if (!userPrompt) {
+      throw new Error("Kein Thema eingegeben.");
+    }
 
-    // Fallback / Mock für V1-Prototyp:
-    // Später ersetzen durch echte Modell-Inferenz.
-    const cleaned = prompt.trim();
-    const result =
-`Willkommen zu diesem kurzen Audio-Impuls.
+    this.setStatus("Erzeuge Skript ...");
 
-Heute geht es um: ${cleaned}.
+    const messages = [
+      {
+        role: "system",
+        content: [
+          "Du schreibst kurze, klar verständliche Mini-Podcast-Skripte auf Deutsch.",
+          "Regeln:",
+          "- Schreibe angenehm, natürlich und kompakt.",
+          "- Keine Begrüßungsfloskeln wie 'Hallo zusammen' am Anfang.",
+          "- Länge: ungefähr 130 bis 190 Wörter.",
+          "- Struktur: 1) Einstieg, 2) Kernidee, 3) kurzes Fazit.",
+          "- Nutze verständliche Sprache statt Fachjargon.",
+          "- Gib nur den finalen Sprechtext aus, ohne Überschrift und ohne Meta-Kommentare."
+        ].join("\n")
+      },
+      {
+        role: "user",
+        content: `Thema für ein kurzes Podcast-Skript: ${userPrompt}`
+      }
+    ];
 
-Wir betrachten das Thema in einer knappen, klaren Form.
-Zuerst die Ausgangslage, dann den eigentlichen Kern und zum Schluss ein kurzes Fazit.
+    const chunks = await this.engine.chat.completions.create({
+      messages,
+      temperature: TEMPERATURE,
+      stream: true,
+      max_tokens: MAX_TOKENS,
+    });
 
-Die zentrale Idee lautet:
-${cleaned} ist dann besonders interessant, wenn man es nicht nur oberflächlich betrachtet, sondern strukturiert einordnet.
+    let reply = "";
 
-Damit endet dieses Mini-Skript.`;
+    for await (const chunk of chunks) {
+      const delta = chunk.choices?.[0]?.delta?.content || "";
+      if (delta) {
+        reply += delta;
 
-    if (this.outputEl) {
-      this.outputEl.textContent = result;
+        if (this.outputEl) {
+          this.outputEl.textContent = reply.trim();
+        }
+      }
+    }
+
+    const finalText = reply.trim();
+
+    if (!finalText) {
+      throw new Error("Leere Modellantwort.");
     }
 
     this.setStatus("Skript erzeugt.");
-    return result;
+    return finalText;
   }
 }
