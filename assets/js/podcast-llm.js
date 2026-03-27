@@ -55,15 +55,18 @@ export class PodcastLLM {
       this.setStatus("Modell bereit.");
       this.setEngineInfo(`Modell: ${this.modelName}`);
     } catch (error) {
-      console.error(error);
-      this.engine = null;
-      this.ready = false;
-      this.setStatus("Fehler beim Laden des Modells.");
-      this.setEngineInfo("Modell: Ladefehler");
-      throw error;
-    } finally {
-      this.loading = false;
-    }
+  console.error("Model load error:", error);
+  this.engine = null;
+  this.ready = false;
+
+  const msg = String(error?.message || error || "Unbekannter Fehler");
+  this.setStatus(`Fehler beim Laden des Modells: ${msg}`);
+  this.setEngineInfo("Modell: Ladefehler");
+
+  throw error;
+} finally {
+  this.loading = false;
+}
   }
 
   async generate(prompt) {
