@@ -41,6 +41,8 @@ const aiTts = new PodcastAITTS({
 
 let latestScript = "";
 let latestWavBlob = null;
+let currentAudioUrl = null;
+
 let busyTextModel = false;
 let busyTextGeneration = false;
 let busyV2 = false;
@@ -76,11 +78,61 @@ function updateAllButtons() {
   updateV2Buttons();
 }
 
+function revokeCurrentAudioUrl() {
+  if (currentAudioUrl) {
+    URL.revokeObjectURL(currentAudioUrl);
+    currentAudioUrl = null;
+  }
+}
+
 function resetV2AudioState() {
   latestWavBlob = null;
+
+  if (audioPlayer) {
+    audioPlayer.pause();
+    audioPlayer.removeAttribute("src");
+    audioPlayer.load();
+  }
+
+  revokeCurrentAudioUrl();
   btnDownloadWav.disabled = true;
-  audioPlayer.removeAttribute("src");
-  audioPlayer.load();
+}
+
+function normalizeAudio(audio) {
+  if (!audio) {
+    throw new Error("Audio fehlt.");
+  }
+
+  let normalized = audio;
+
+  // Falls das Modell ein normales Array oder verschachtelte Arrays liefert
+  if (Array.isArray(normalized)) {
+    normalized = normalized.flat(Infinity);
+  }
+
+  // Falls TypedArray, aber nicht Float32Array
+  if (ArrayBuffer.isView(normalized) && !(normalized instanceof Float32Array)) {
+    normalized = new Float32Array(normalized);
+  }
+
+  // Falls normales Array
+  if (!(normalized instanceof Float32Array)) {
+    normalized = new Float32Array(normalized);
+  }
+
+  if (!normalized.length) {
+    throw new Error("Audio leer oder ungültig.");
+  }
+
+  // Sicherheits-Padding für problematische Längen
+  const remainder = normalized.length % 4;
+  if (remainder !== 0) {
+    const padded = new Float32Array(normalized.length + (4 - remainder));
+    padded.set(normalized);
+    normalized = padded;
+  }
+
+  return normalized;
 }
 
 promptInput.addEventListener("input", updateCharCount);
@@ -171,16 +223,31 @@ btnGenerateAudio.addEventListener("click", async () => {
   try {
     busyV2 = true;
     latestWavBlob = null;
+    resetV2AudioState();
     updateAllButtons();
 
+    v2StatusEl.textContent = "V2 Audio wird erzeugt ...";
+
     const out = await aiTts.generateAudio(latestScript);
-    latestWavBlob = float32ToWavBlob(out.audio, out.sampling_rate);
-    attachBlobToAudioPlayer(audioPlayer, latestWavBlob);
+
+    if (!out?.audio) {
+      throw new Error("Audio fehlt in der Modellantwort.");
+    }
+
+    if (!out?.sampling_rate) {
+      throw new Error("Sampling-Rate fehlt in der Modellantwort.");
+    }
+
+    const cleanAudio = normalizeAudio(out.audio);
+    latestWavBlob = float32ToWavBlob(cleanAudio, out.sampling_rate);
+
+    currentAudioUrl = attachBlobToAudioPlayer(audioPlayer, latestWavBlob);
 
     v2StatusEl.textContent = "V2 Audio erzeugt. Player und Download sind bereit.";
   } catch (error) {
     console.error(error);
     latestWavBlob = null;
+    revokeCurrentAudioUrl();
     v2StatusEl.textContent = `V2 Audiofehler: ${String(error?.message || error)}`;
   } finally {
     busyV2 = false;
