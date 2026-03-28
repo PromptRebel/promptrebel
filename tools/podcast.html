@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptRebel – Mini Web Podcast</title>
+  <style>
+    :root{
+      --bg:#020617;
+      --panel:#0f172a;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --accent:#22d3ee;
+      --accent-soft:rgba(34,211,238,.18);
+      --border:rgba(148,163,184,.18);
+      --danger:rgba(236,72,153,.35);
+      --success:rgba(34,197,94,.25);
+    }
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      background:linear-gradient(180deg, #020617 0%, #0b1120 100%);
+      color:var(--text);
+      font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .wrap{
+      max-width:980px;
+      margin:0 auto;
+      padding:36px 18px 60px;
+    }
+
+    .hero{
+      margin-bottom:22px;
+      padding:22px;
+      border:1px solid var(--border);
+      border-radius:22px;
+      background:rgba(15,23,42,.72);
+      backdrop-filter:blur(10px);
+      box-shadow:0 20px 60px rgba(2,6,23,.4);
+    }
+
+    .hero h1{
+      margin:0 0 8px;
+      font-size:clamp(1.7rem, 3vw, 2.4rem);
+    }
+
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:18px;
+    }
+
+    .card{
+      border:1px solid var(--border);
+      border-radius:22px;
+      background:rgba(15,23,42,.78);
+      padding:20px;
+      box-shadow:0 14px 38px rgba(2,6,23,.3);
+    }
+
+    .card-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+
+    .card-title{
+      margin:0;
+      font-size:1.2rem;
+    }
+
+    .card-icon{
+      font-size:1.5rem;
+      opacity:.9;
+    }
+
+    .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .tag{
+      font-size:.78rem;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:#cbd5e1;
+      background:rgba(2,6,23,.45);
+    }
+
+    .explain{
+      color:var(--muted);
+      line-height:1.55;
+      margin:0 0 14px;
+    }
+
+    .panel{
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:rgba(2,6,23,.36);
+      padding:14px;
+    }
+
+    textarea{
+      width:100%;
+      min-height:120px;
+      resize:vertical;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+      font:inherit;
+      line-height:1.5;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .small-note{
+      color:var(--muted);
+      font-size:.88rem;
+    }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid rgba(34,211,238,.28);
+      background:rgba(2,6,23,.45);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:600;
+    }
+
+    .btn:hover:not(:disabled){
+      border-color:rgba(34,211,238,.7);
+      box-shadow:0 0 0 4px var(--accent-soft);
+    }
+
+    .btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    .btn-danger{
+      border-color:var(--danger);
+    }
+
+    .btn-success{
+      border-color:rgba(34,197,94,.35);
+    }
+
+    select{
+      border:1px solid var(--border);
+      background:rgba(2,6,23,.45);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      min-width:240px;
+      max-width:100%;
+    }
+
+    .status{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(2,6,23,.3);
+      border:1px solid var(--border);
+      color:#a5f3fc;
+      min-height:46px;
+      display:flex;
+      align-items:center;
+    }
+
+    .output{
+      margin-top:14px;
+      padding:14px;
+      border-radius:16px;
+      background:rgba(2,6,23,.32);
+      border:1px solid var(--border);
+      white-space:pre-wrap;
+      line-height:1.6;
+      min-height:130px;
+    }
+
+    .subhead{
+      margin:18px 0 8px;
+      font-size:1rem;
+      color:#cbd5e1;
+    }
+
+    .audio-wrap{
+      margin-top:14px;
+      padding:14px;
+      border-radius:16px;
+      background:rgba(2,6,23,.32);
+      border:1px solid var(--border);
+    }
+
+    audio{
+      width:100%;
+      margin-top:8px;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>Mini Web Podcast Lab</h1>
+      <p>
+        Experimenteller lokaler Podcast-Generator. V1 erzeugt ein kurzes Skript im Browser und liest es mit der Systemstimme vor.
+        V2 erzeugt daraus zusätzlich eine lokale AI-Audiodatei im Browser inklusive WAV-Download.
+      </p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <h2 class="card-title">Lab V1 + V2: Podcast Generator</h2>
+            <div class="meta">
+              <span class="tag">Experimental</span>
+              <span class="tag">Transformers.js</span>
+              <span class="tag">WebGPU / WASM</span>
+              <span class="tag">SpeechSynthesis</span>
+              <span class="tag">AI Voice V2</span>
+            </div>
+          </div>
+          <div class="card-icon">🎙️</div>
+        </div>
+
+        <p class="explain">
+          Erst wird lokal ein kurzes Skript erzeugt. Danach kannst du entweder die Browser-Stimme nutzen (V1)
+          oder eine experimentelle AI-Stimme samt WAV-Download erzeugen (V2).
+        </p>
+
+        <div class="panel">
+          <textarea
+            id="podcastPrompt"
+            maxlength="600"
+            placeholder="Gib ein Thema ein, z. B. 'Warum lokale KI-Experimente spannend sind' ..."
+          ></textarea>
+
+          <div class="row">
+            <span id="promptCount" class="small-note">0 / 600</span>
+            <span id="engineInfo" class="small-note">Textmodell: noch nicht geladen</span>
+          </div>
+        </div>
+
+        <h3 class="subhead">V1 – Text + Browser Voice</h3>
+
+        <div class="actions">
+          <button class="btn" id="btnLoadModel">Textmodell laden</button>
+          <button class="btn" id="btnGenerate" disabled>Skript erzeugen</button>
+          <button class="btn" id="btnSpeak" disabled>▶ Vorlesen</button>
+          <button class="btn" id="btnPause" disabled>⏸ Pausieren</button>
+          <button class="btn" id="btnResume" disabled>↻ Fortsetzen</button>
+          <button class="btn btn-danger" id="btnStop" disabled>⏹ Stop</button>
+        </div>
+
+        <div class="row" style="margin-top:14px;">
+          <label for="voiceSelect" class="small-note">V1 Stimme:</label>
+          <select id="voiceSelect" disabled>
+            <option>Stimmen werden geladen...</option>
+          </select>
+        </div>
+
+        <div id="status" class="status">Bereit. Für den Start zuerst das Textmodell laden.</div>
+
+        <div id="outputText" class="output">Hier erscheint das erzeugte Skript.</div>
+
+        <h3 class="subhead">V2 – AI Voice + WAV Download</h3>
+
+        <div class="actions">
+          <button class="btn" id="btnLoadV2TTS">V2 Voice laden</button>
+          <button class="btn btn-success" id="btnGenerateAudio" disabled>V2 Audio erzeugen</button>
+          <button class="btn" id="btnDownloadWav" disabled>Download WAV</button>
+        </div>
+
+        <div id="v2Status" class="status">V2 bereit zum Laden.</div>
+
+        <div class="audio-wrap">
+          <div class="small-note">V2 Audioausgabe:</div>
+          <audio id="audioPlayer" controls preload="none"></audio>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script type="module" src="../assets/js/podcast-page.js"></script>
+</body>
+</html>
