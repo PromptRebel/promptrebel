@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>PromptRebel – Offenes KI-Labor für lokale KI, Prompts, Agents und Experimente</title>
+
+  <!-- Primary SEO -->
+  <meta name="description" content="PromptRebel ist ein offenes KI-Labor für lokale KI, Prompts, Agents und kreative Experimente. Keine Blackbox, kein Hype – nur dokumentierte Builds, Fehler, Entscheidungen und Ergebnisse.">
+  <link rel="canonical" href="https://promptrebel.github.io/promptrebel/">
+
+  <!-- Open Graph / Social Preview -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:title" content="PromptRebel – Offenes KI-Labor">
+  <meta property="og:description" content="Lokale KI, Prompts, Agents und dokumentierte Experimente. Transparent statt Blackbox.">
+  <meta property="og:url" content="https://promptrebel.github.io/promptrebel/">
+  <meta property="og:image" content="https://promptrebel.github.io/promptrebel/assets/og/A20828B8-24DB-4FAD-92CF-851AD154D80D.jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PromptRebel – Offenes KI-Labor">
+  <meta name="twitter:description" content="Lokale KI, Prompts, Agents und dokumentierte Experimente.">
+  <meta name="twitter:image" content="https://promptrebel.github.io/promptrebel/assets/og/A20828B8-24DB-4FAD-92CF-851AD154D80D.jpeg">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root{
+      --scroll: 0;
+      --bg: #020617;
+      --panel: rgba(15, 23, 42, 0.94);
+      --panel-strong: rgba(15, 23, 42, 0.985);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --line: rgba(148, 163, 184, 0.18);
+      --pink: #f472b6;
+      --cyan: #22d3ee;
+      --violet: #a78bfa;
+      --blue: #60a5fa;
+      --green: #2dd4bf;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
+      --radius: 20px;
+    }
+
+    *, *::before, *::after{ box-sizing:border-box; margin:0; padding:0; }
+    html, body{ height:100%; scroll-behavior:smooth; }
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding-top: 64px;
+    }
+    a{ color:inherit; text-decoration:none; }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,0.32), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(56,189,248,0.28), transparent 55%);
+      z-index:-2;
+    }
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      opacity:.2;
+      pointer-events:none;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 3px 3px, 3px 3px;
+      mix-blend-mode: soft-light;
+      z-index:-1;
+    }
+
+    .skip-link{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      top:-40px;
+      padding:6px 10px;
+      background:#0f172a;
+      color:#f9fafb;
+      border-radius:999px;
+      font-size:13px;
+      z-index:60;
+    }
+    .skip-link:focus-visible{
+      top:10px;
+      outline:2px solid var(--cyan);
+      outline-offset:2px;
+    }
+
+    .page{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px 16px 40px;
+    }
+
+    /* NAV */
+    .nav{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:40;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(15,23,42,0.96), rgba(15,23,42,0.65));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .nav-inner{
+      max-width:1120px;
+      margin:0 auto;
+      padding:10px 16px 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      position:relative;
+      gap:10px;
+    }
+    .nav::after{
+      content:"";
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height:2px;
+      background: linear-gradient(90deg, #ec4899, rgba(34,211,238,0), #22d3ee);
+      transform-origin:left;
+      transform:scaleX(var(--scroll));
+      transition:transform .1s linear;
+      pointer-events:none;
+    }
+
+    .brand{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.05em;
+      cursor:pointer;
+      white-space:nowrap;
+      text-shadow: 0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4);
+    }
+    .brand span.accent{
+      background: linear-gradient(135deg, var(--pink), var(--cyan));
+      -webkit-background-clip:text;
+      color:transparent;
+    }
+    .brand.glitch{ animation: brand-glitch .7s ease-out; }
+    @keyframes brand-glitch{
+      0% { text-shadow:0 0 0 rgba(236,72,153,0.9), 0 0 0 rgba(56,189,248,0.9); }
+      30%{ text-shadow:2px 0 rgba(236,72,153,0.9), -2px 0 rgba(56,189,248,0.9); }
+      60%{ text-shadow:-2px 0 rgba(236,72,153,0.7), 2px 0 rgba(56,189,248,0.7); }
+      100%{ text-shadow:0 0 8px rgba(236,72,153,0.6), 0 0 12px rgba(34,211,238,0.4); }
+    }
+
+    .nav-links{
+      display:flex;
+      gap:18px;
+      font-size:14px;
+    }
+    .nav-link{
+      position:relative;
+      padding-block:4px;
+    }
+    .nav-link::after{
+      content:"";
+      position:absolute;
+      left:0; bottom:-2px;
+      width:0; height:2px;
+      border-radius:999px;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+      box-shadow:0 0 8px rgba(56,189,248,0.8);
+      transition:width .25s ease;
+    }
+    .nav-link:hover::after{ width:100%; }
+    .nav-link:focus-visible{
+      outline:2px solid var(--cyan);
+      outline-offset:3px;
+      border-radius:10px;
+    }
+
+    /* Layout */
+    .section{ padding: 40px 16px 8px; }
+    .section:first-of-type{ padding-top: 28px; }
+    #start-here, #projects, #about, #lab-notes{ scroll-margin-top: 80px; }
+
+    @media (min-width:768px){
+      .hero-layout{
+        display:grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2.1fr);
+        align-items:center;
+        gap:32px;
+      }
+    }
+
+    /* Hero */
+    .hero-title{
+      font-size: clamp(34px, 5vw, 52px);
+      font-weight: 800;
+      letter-spacing: .01em;
+      margin-bottom: 12px;
+      text-shadow: 0 0 14px rgba(236,72,153,0.6), 0 0 20px rgba(34,211,238,0.4);
+    }
+    .hero-title .sub{
+      font-weight:600;
+      opacity:.85;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      margin-bottom:14px;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#a5b4fc;
+    }
+
+    .hero-text{
+      font-size: 16px;
+      color: #dbe4f0;
+      max-width: 42rem;
+      margin-bottom: 18px;
+    }
+    .hero-text strong{
+      color:#f8fafc;
+      font-weight:700;
+    }
+
+    .hero-points{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:20px;
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      align-items:center;
+      margin-bottom:8px;
+    }
+
+    .hero-note{
+      font-size: 11px;
+      color:#94a3b8;
+      max-width: 34rem;
+    }
+
+    .btn-primary,
+    .btn-secondary{
+      position:relative;
+      padding: 11px 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #f9fafb;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+    }
+    .btn-primary{
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.96));
+    }
+    .btn-primary::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      background: linear-gradient(135deg, rgba(236,72,153,0.7), rgba(56,189,248,0.7));
+      opacity:.14;
+      pointer-events:none;
+      transition: opacity .16s ease;
+    }
+
+    .btn-secondary{
+      background: rgba(15,23,42,0.65);
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover{
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 22px 45px rgba(15, 23, 42, 0.95);
+      border-color: rgba(248,250,252,0.25);
+    }
+    .btn-primary:hover::before{ opacity:.22; }
+    .btn-primary:active,
+    .btn-secondary:active{
+      transform: translateY(1px) scale(0.99);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.9);
+    }
+    .btn-primary:focus-visible,
+    .btn-secondary:focus-visible{
+      outline:2px solid var(--cyan);
+      outline-offset:3px;
+    }
+
+    /* Glass / Panels */
+    .panel-glass{
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 14px 16px 12px;
+    }
+
+    .panel-header{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#9ca3af;
+      margin-bottom:8px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .panel-header span.icon{
+      font-size:14px;
+      color:#f97316;
+    }
+
+    .terminal{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+      white-space:pre-line;
+      color:#e5e7eb;
+    }
+    .terminal .dim{ color:#6b7280; }
+    .terminal .fail{
+      color:#fecaca;
+      text-shadow:0 0 8px #fb7185;
+      animation: glowRed 1.5s infinite alternate;
+    }
+    @keyframes glowRed{
+      from { text-shadow: 0 0 6px #fb7185; }
+      to   { text-shadow: 0 0 14px #f97373; }
+    }
+
+    /* Badges */
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      padding:4px 10px;
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      border:1px solid rgba(148,163,184,0.3);
+      color:#e2e8f0;
+      background: rgba(2,6,23,0.32);
+      white-space:nowrap;
+    }
+    .badge.local{ border-color: rgba(34,211,238,0.35); color:#a5f3fc; }
+    .badge.open{ border-color: rgba(167,139,250,0.35); color:#ddd6fe; }
+    .badge.build{ border-color: rgba(45,212,191,0.35); color:#99f6e4; }
+    .badge.beta{ border-color: rgba(244,114,182,0.35); color:#fbcfe8; }
+    .badge.cloud{ border-color: rgba(96,165,250,0.35); color:#bfdbfe; }
+
+    /* Start Here */
+    .section-title{
+      font-size: clamp(20px, 4.5vw, 24px);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+    .section-subtitle{
+      font-size: 13px;
+      color:#9ca3af;
+      margin-bottom: 18px;
+      max-width: 44rem;
+    }
+
+    .path-grid{
+      display:grid;
+      gap:18px;
+    }
+    @media (min-width:768px){
+      .path-grid{
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .path-card,
+    .card{
+      --accent: rgba(236,72,153,0.9);
+      position:relative;
+      border-radius: 20px;
+      padding: 16px 18px 14px;
+      border: 1px solid rgba(148,163,184,0.18);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.95), rgba(15,23,42,0.99));
+      box-shadow: 0 18px 40px rgba(15,23,42,0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow:hidden;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+    }
+    .path-card::before,
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      background: radial-gradient(circle at top left, var(--accent), transparent 60%);
+      opacity:.2;
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+    .path-card:hover,
+    .card:hover{
+      transform: translateY(-3px);
+      box-shadow: 0 26px 60px rgba(15,23,42,0.98);
+      border-color: rgba(209,213,219,0.3);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.99), rgba(15,23,42,1));
+    }
+
+    .path-top,
+    .card-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .path-icon,
+    .card-icon{
+      font-size:18px;
+      opacity:.9;
+    }
+    .path-tag,
+    .card-tag{
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#cbd5e1;
+    }
+    .path-title,
+    .card-title{
+      font-size:18px;
+      font-weight:700;
+      margin-bottom:6px;
+      color:#f9fafb;
+      text-shadow: 0 0 8px var(--accent);
+    }
+    .path-text,
+    .card-text{
+      font-size:13px;
+      color:#d1d5db;
+      margin-bottom:12px;
+    }
+
+    .path-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:12px;
+    }
+
+    .mini-link{
+      font-size:12px;
+      color:#c7d2fe;
+      text-decoration:underline;
+      text-underline-offset:3px;
+    }
+    .mini-link:focus-visible,
+    .card-link:focus-visible,
+    .feature-link:focus-visible,
+    .footer-link:focus-visible,
+    .link-back:focus-visible{
+      outline:2px solid var(--cyan);
+      outline-offset:3px;
+      border-radius:10px;
+    }
+
+    .path-meta,
+    .card-meta{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-size:11px;
+      color:#9ca3af;
+      flex-wrap:wrap;
+    }
+
+    .chip,
+    .card-chip,
+    .feature-chip{
+      border-radius:999px;
+      padding:2px 8px;
+      border:1px solid rgba(148,163,184,0.35);
+      font-size:10px;
+      color:#e2e8f0;
+      opacity:.9;
+      white-space:nowrap;
+    }
+
+    .card-link,
+    .feature-link,
+    .link-back{
+      font-size:13px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      color:#e5e7eb;
+      white-space:nowrap;
+    }
+
+    /* Feature card */
+    .feature-card{
+      --accent: rgba(34,211,238,0.95);
+      position:relative;
+      border-radius: 22px;
+      padding: 18px 20px 16px;
+      border: 1px dashed rgba(165,243,252,0.22);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.92), rgba(15,23,42,0.995));
+      box-shadow: 0 22px 55px rgba(15,23,42,0.98);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow:hidden;
+      margin-bottom: 18px;
+    }
+    .feature-card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius: inherit;
+      background: radial-gradient(circle at 18% 10%, var(--accent), transparent 52%);
+      opacity: 0.18;
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+    .feature-card::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background-image:
+        linear-gradient(0deg, rgba(165,243,252,0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(165,243,252,0.12) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(165,243,252,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(165,243,252,0.06) 1px, transparent 1px);
+      background-size:
+        22px 22px, 22px 22px,
+        6px 6px, 6px 6px;
+      opacity:.55;
+      mask-image:none;
+    }
+    .corner{
+      position:absolute;
+      width:16px;
+      height:16px;
+      border:2px solid rgba(165,243,252,0.35);
+      opacity:.9;
+      z-index:2;
+      pointer-events:none;
+    }
+    .c1{ top:14px; left:14px; border-right:0; border-bottom:0; border-radius:6px 0 0 0; }
+    .c2{ top:14px; right:14px; border-left:0; border-bottom:0; border-radius:0 6px 0 0; }
+    .c3{ bottom:14px; left:14px; border-right:0; border-top:0; border-radius:0 0 0 6px; }
+    .c4{ bottom:14px; right:14px; border-left:0; border-top:0; border-radius:0 0 6px 0; }
+
+    .feature-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:10px;
+      position:relative;
+      z-index:3;
+    }
+    .feature-kicker{
+      font-size:11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:#a5f3fc;
+      opacity:.95;
+    }
+    .feature-icon{
+      font-size:18px;
+      opacity:.9;
+      position:relative;
+      z-index:3;
+    }
+    .feature-title{
+      font-size:20px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      margin-bottom:6px;
+      color:#f9fafb;
+      text-shadow: 0 0 10px rgba(34,211,238,0.35);
+    }
+    .feature-text{
+      font-size:13px;
+      color:#d1d5db;
+      max-width:64rem;
+      margin-bottom:12px;
+      position:relative;
+      z-index:3;
+    }
+    .feature-mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:11px;
+      color: rgba(165,243,252,0.75);
+      opacity:.95;
+      margin: 6px 0 12px;
+      position:relative;
+      z-index:3;
+    }
+    .feature-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      position:relative;
+      z-index:3;
+    }
+    .feature-chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+
+    /* Projects */
+    .projects-grid{
+      display:grid;
+      gap:18px;
+    }
+    @media (min-width:768px){
+      .projects-grid{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    /* About */
+    .about-layout{
+      display:grid;
+      gap:20px;
+    }
+    @media (min-width:768px){
+      .about-layout{
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        align-items:flex-start;
+      }
+    }
+
+    .about-title{
+      font-size:22px;
+      margin-bottom:10px;
+      color:#a5f3fc;
+      text-shadow: 0 0 12px rgba(34,211,238,0.55);
+    }
+    .about-text p{
+      font-size:14px;
+      color:#e5e7eb;
+      margin-bottom:10px;
+      max-width: 38rem;
+    }
+
+    .community-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:14px;
+      margin-bottom:14px;
+    }
+    .community-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,0.2);
+      background: rgba(15,23,42,0.55);
+      font-size:14px;
+      color:#a5f3fc;
+      box-shadow: 0 10px 24px rgba(15,23,42,0.55);
+    }
+    .community-link:hover{
+      transform: translateY(-1px);
+      border-color: rgba(165,243,252,0.25);
+    }
+    .community-link:focus-visible{
+      outline:2px solid var(--cyan);
+      outline-offset:3px;
+    }
+
+    .widget-wrap{
+      margin-top:18px;
+    }
+    .widget-note{
+      font-size:12px;
+      color:#9ca3af;
+      margin-top:10px;
+    }
+
+    .ethos-terminal .terminal{
+      font-size:12px;
+    }
+
+    /* Footer */
+    footer{
+      margin-top:40px;
+      padding-top:16px;
+      border-top:1px solid rgba(15,23,42,0.9);
+      font-size:11px;
+      color:#94a3b8;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .footer-links{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .footer-link{
+      text-decoration: underline;
+      text-underline-offset:3px;
+    }
+    .build-highlight{
+      color:var(--cyan);
+      text-shadow: 0 0 10px rgba(34,211,238,0.9);
+      cursor:pointer;
+    }
+
+    /* Retro */
+    body.retro-mode::before{
+      background:
+        radial-gradient(circle at 0% 0%, rgba(236,72,153,0.9), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.9), transparent 60%);
+    }
+    body.retro-mode::after{ opacity:.3; }
+    body.retro-mode .page{ filter: contrast(1.05) saturate(1.2); }
+    body.retro-mode .brand{ animation: retro-scan 1.1s infinite alternate; }
+    @keyframes retro-scan{
+      from { text-shadow: 0 0 6px rgba(248,250,252,0.9); }
+      to   { text-shadow: 0 0 16px rgba(251,113,133,0.95); }
+    }
+
+    /* Mobile */
+    @media (max-width:767px){
+      body{ padding-top:60px; }
+      .nav-inner{ gap:8px; }
+      .nav-links{ font-size:13px; gap:12px; }
+      .section{ padding-top:32px; }
+      .hero-actions{ flex-direction:column; align-items:flex-start; }
+      .btn-primary, .btn-secondary{ width:100%; justify-content:center; }
+      .feature-card .corner{
+        width:18px;
+        height:18px;
+        border-color: rgba(165,243,252,0.42);
+      }
+    }
+
+    @media (max-width:767px) and (hover:none){
+      .nav, .panel-glass, .card, .path-card, .feature-card{
+        backdrop-filter:none !important;
+        -webkit-backdrop-filter:none !important;
+      }
+      .nav{
+        background: rgba(15,23,42,0.92) !important;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation-duration:0.01ms !important;
+        transition-duration:0.01ms !important;
+        scroll-behavior:auto !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+  <header class="nav" aria-label="Top-Navigation">
+    <div class="nav-inner">
+      <div id="brand" class="brand" role="link" tabindex="0" aria-label="Zur Startseite">
+        Prompt<span class="accent">Rebel</span>
+      </div>
+      <nav class="nav-links" aria-label="Hauptnavigation">
+        <a href="#start-here" class="nav-link">Start</a>
+        <a href="#projects" class="nav-link">Experimente</a>
+        <a href="#about" class="nav-link">Über</a>
+        <a href="#lab-notes" class="nav-link">Ethos</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page" id="main">
+    <!-- HERO -->
+    <section class="section" id="top">
+      <div class="hero-layout">
+        <div>
+          <div class="eyebrow">local ai · prompts · agents · build logs</div>
+
+          <h1 class="hero-title">
+            PromptRebel <span class="sub">– Offenes KI-Labor</span>
+          </h1>
+
+          <p class="hero-text">
+            Lokale KI, Prompts, Agents und kreative Experimente –
+            <strong>dokumentiert statt inszeniert</strong>.
+            Keine Blackbox, keine Marketing-Sprache, kein Hype.
+            Nur Systeme, Fehler, Entscheidungen und Ergebnisse.
+          </p>
+
+          <div class="hero-points" aria-label="Kernmerkmale">
+            <span class="badge local">100% local first</span>
+            <span class="badge build">build logs</span>
+            <span class="badge open">offen dokumentiert</span>
+            <span class="badge beta">immer beta</span>
+          </div>
+
+          <div class="hero-actions">
+            <button class="btn-primary" id="btnStartHere" aria-label="Zum Einstieg scrollen">
+              <span>Start hier</span>
+              <span aria-hidden="true">↓</span>
+            </button>
+
+            <button class="btn-secondary" id="btnExplore" aria-label="Zu den Experimenten scrollen">
+              <span>Experimente ansehen</span>
+              <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+
+          <p class="hero-note">
+            Fertige Ergebnisse und laufende Builds stehen nebeneinander – damit andere lernen, testen und weiterbauen können.
+          </p>
+        </div>
+
+        <aside class="panel-glass" aria-label="Aktive Experimente (dekorativ)">
+          <div class="panel-header">
+            <span class="icon" aria-hidden="true">⚡</span>
+            <span>ACTIVE EXPERIMENTS</span>
+          </div>
+          <div id="experimentsTerminal" class="terminal" aria-hidden="true">
+            <span class="dim">&gt; booting lab console…</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- START HERE -->
+    <section class="section" id="start-here">
+      <h2 class="section-title">Drei Wege durch das Labor</h2>
+      <p class="section-subtitle">
+        Der Einstieg ist absichtlich nicht nach Medienformat sortiert, sondern nach dem, was du hier tun willst:
+        verstehen, bauen oder erkunden.
+      </p>
+
+      <div class="path-grid">
+        <article class="path-card" style="--accent: rgba(34,211,238,0.95);" role="region" aria-labelledby="path-learn-title">
+          <div class="path-top">
+            <div class="path-icon" aria-hidden="true">🧠</div>
+            <div class="path-tag">VERSTEHEN</div>
+          </div>
+          <h3 class="path-title" id="path-learn-title">Ich will KI verstehen</h3>
+          <p class="path-text">
+            Für alle, die nicht nur Ergebnisse sehen, sondern Prompt-Struktur, Denkfehler, Wirkung und Systematik nachvollziehen wollen.
+          </p>
+          <div class="path-links">
+            <a class="mini-link" href="prompt-library/">Prompt Library</a>
+            <a class="mini-link" href="so-funktionierts/index.html">Prompt Autopsie</a>
+          </div>
+          <div class="path-meta">
+            <span class="chip">learning · structure</span>
+            <span class="badge open">transparent</span>
+          </div>
+        </article>
+
+        <article class="path-card" style="--accent: rgba(192,132,252,0.95);" role="region" aria-labelledby="path-build-title">
+          <div class="path-top">
+            <div class="path-icon" aria-hidden="true">🛠️</div>
+            <div class="path-tag">BAUEN</div>
+          </div>
+          <h3 class="path-title" id="path-build-title">Ich will Systeme bauen</h3>
+          <p class="path-text">
+            Tools, lokale Agents, Micro-Apps und dokumentierte Build-Entscheidungen – pragmatisch, reproduzierbar und ohne Zaubertricks.
+          </p>
+          <div class="path-links">
+            <a class="mini-link" href="tools/">Tools & Agents</a>
+            <a class="mini-link" href="Buildlogs/lokaler-podcast-agent">Build Logs</a>
+          </div>
+          <div class="path-meta">
+            <span class="chip">local · practical</span>
+            <span class="badge local">cloud optional</span>
+          </div>
+        </article>
+
+        <article class="path-card" style="--accent: rgba(244,114,182,0.9);" role="region" aria-labelledby="path-explore-title">
+          <div class="path-top">
+            <div class="path-icon" aria-hidden="true">🔎</div>
+            <div class="path-tag">ERLEBEN</div>
+          </div>
+          <h3 class="path-title" id="path-explore-title">Ich will Experimente sehen</h3>
+          <p class="path-text">
+            Audio, Visuals, Welten, Skizzen und Tests – dort, wo technische Systeme in kreative Ergebnisse übergehen.
+          </p>
+          <div class="path-links">
+            <a class="mini-link" href="music/">Audio</a>
+            <a class="mini-link" href="visuals/">Visuals</a>
+            <a class="mini-link" href="coming-soon.html">Stories</a>
+          </div>
+          <div class="path-meta">
+            <span class="chip">creative · experimental</span>
+            <span class="badge beta">ongoing</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="section" id="projects">
+      <h2 class="section-title">Experiment-Index</h2>
+      <p class="section-subtitle">
+        Eine Sammlung aus funktionalen Tools, dokumentierten Builds und kreativen Experimenten.
+        Manche Bereiche sind stabil, andere bewusst im Zwischenzustand.
+      </p>
+
+      <article class="feature-card" style="--accent: rgba(34,211,238,0.95);" role="region" aria-labelledby="feature-buildlogs-title">
+        <span class="corner c1" aria-hidden="true"></span>
+        <span class="corner c2" aria-hidden="true"></span>
+        <span class="corner c3" aria-hidden="true"></span>
+        <span class="corner c4" aria-hidden="true"></span>
+
+        <div class="feature-top">
+          <div>
+            <div class="feature-kicker">REFLECTION LAYER</div>
+            <h3 class="feature-title" id="feature-buildlogs-title">Build Logs</h3>
+          </div>
+          <div class="feature-icon" aria-hidden="true">🧱</div>
+        </div>
+
+        <p class="feature-text">
+          Dokumentierte Methodik hinter PromptRebel: Entscheidungen, Iterationen, Fehler, Fixes und Umwege – nicht als Drama, sondern als nachvollziehbarer Teil des Bauprozesses.
+        </p>
+
+        <div class="feature-mono" aria-hidden="true">
+          buildlog: index · layer=reflection · status=beta · documentation=manual
+        </div>
+
+        <div class="feature-row">
+          <div class="feature-chips" aria-label="Tags">
+            <span class="feature-chip">process</span>
+            <span class="feature-chip">iterations</span>
+            <span class="feature-chip">decisions</span>
+            <span class="feature-chip">lessons learned</span>
+          </div>
+          <a class="feature-link" href="Buildlogs/lokaler-podcast-agent" aria-label="Zu den Build Logs">Zu den Build Logs →</a>
+        </div>
+      </article>
+
+      <div class="projects-grid">
+        <article class="card" style="--accent: rgba(34,211,238,0.95);" role="region" aria-labelledby="card-prompts-title">
+          <div class="card-top">
+            <div class="card-icon" aria-hidden="true">📚</div>
+            <div class="card-tag">PROMPTS</div>
+          </div>
+          <h3 class="card-title" id="card-prompts-title">Prompt Library</h3>
+          <p class="card-text">
+            Lehrreiche, funktionale Prompts mit Fokus auf Kontext, Ziel, Erwartung und Struktur. Copy-Button inklusive.
+          </p>
+          <div class="path-links" aria-label="Badges">
+            <span class="badge open">offen dokumentiert</span>
+          </div>
+          <div class="card-meta">
+            <span class="card-chip">toolkit · learning</span>
+            <a href="prompt-library/" class="card-link">Zur Prompt Library →</a>
+          </div>
+        </article>
+
+        <article class="card" style="--accent: rgba(244,114,182,0.9);" role="region" aria-labelledby="card-how-title">
+          <div class="card-top">
+            <div class="card-icon" aria-hidden="true">💡</div>
+            <div class="card-tag">ANALYSE</div>
+          </div>
+          <h3 class="card-title" id="card-how-title">Prompt Autopsie</h3>
+          <p class="card-text">
+            Kein Zauber. Nur Struktur. Bausteine, Risiken, Denkfehler und typische Anpassungen – mit klaren Effekten statt Mythen.
+          </p>
+          <div class="path-links" aria-label="Badges">
+            <span class="badge build">debugging</span>
+          </div>
+          <div class="card-meta">
+            <span class="card-chip">autopsy · reasoning</span>
+            <a href="so-funktionierts/index.html" class="card-link">Zur Prompt Autopsie →</a>
+          </div>
+        </article>
+
+        <article class="card" style="--accent: rgba(244,114,182,0.9);" role="region" aria-labelledby="card-music-title">
+          <div class="card-top">
+            <div class="card-icon" aria-hidden="true">🎵</div>
+            <div class="card-tag">AUDIO</div>
+          </div>
+          <h3 class="card-title" id="card-music-title">Music & Audio</h3>
+          <p class="card-text">
+            KI-Rap, Sound-Experimente, Ambient-Loops und Voice/TTS – von fertigen Ergebnissen bis zu rohen Testläufen.
+          </p>
+          <div class="path-links" aria-label="Badges">
+            <span class="badge beta">experimental</span>
+          </div>
+          <div class="card-meta">
+            <span class="card-chip">prompt-to-music · voice</span>
+            <a href="music/" class="card-link">Zu Audio-Experimenten →</a>
+          </div>
+        </article>
+
+        <article class="card" style="--accent: rgba(45,212,191,0.95);" role="region" aria-labelledby="card-video-title">
+          <div class="card-top">
+            <div class="card-icon" aria-hidden="true">🎬</div>
+            <div class="card-tag">VIDEO</div>
+          </div>
+          <h3 class="card-title" id="card-video-title">Video & Motion</h3>
+          <p class="card-text">
+            Motion-Prompts, Visualizer und Tests zu Konsistenz, Stiltreue und Prompt Drift – inklusive unfertiger Zwischenstände.
+          </p>
+          <div class="path-links" aria-label="Badges">
+            <span class="badge beta">coming soon</span>
+          </div>
+          <div class="card-meta">
+            <span class="card-chip">motion · consistency</span>
+            <a href="coming-soon.html" class="card-link">Zu Video-Experimenten →</a>
+          </div>
+        </article>
+
+        <article class="card" style="--accent: rgba(56,189,248,0.9);" role="region" aria-labelledby="card-art-title">
+          <div class="card-top">
+            <div class="card-icon" aria-hidden="true">🎨</div>
+            <div class="card-tag">VISUALS</div>
+          </div>
+          <h3 class="card-title" id="card-art-title">Visual Art & Covers</h3>
+          <p class="card-text">
+            Bild-Prompts, Cover-Designs und Stiltests mit Fokus auf Vergleichbarkeit, Reproduzierbarkeit und saubere Iteration.
+          </p>
+          <div class="path-links" aria-label="Badges">
+            <span class="badge cloud">tool dependent</span>
+          </div>
+          <div class="card-meta">
+            <span class="card-chip">image prompt · style</span>
+            <a href="visuals/" class="card-link">Zu Bild-Experimenten →</a>
+          </div>
+        </article>
+
+        <article class="card" style="--accent: rgba(192,132,252,0.95);" role="region" aria-labelledby="card-tools-title">
+          <div class="card-top">
+            <div class="card-icon" aria-hidden="true">🧩</div>
+            <div class="card-tag">TOOLS</div>
+          </div>
+          <h3 class="card-title" id="card-tools-title">Tools & Micro-Apps</h3>
+          <p class="card-text">
+            Kleine Helfer, lokale Web-Tools, erste Agent-Interfaces und pragmatische Micro-Apps – testbar und nachvollziehbar.
+          </p>
+          <div class="path-links" aria-label="Badges">
+            <span class="badge local">local first</span>
+            <span class="badge build">build log</span>
+          </div>
+          <div class="card-meta">
+            <span class="card-chip">local · agents</span>
+            <a href="tools/" class="card-link">Zu Tools & Agents →</a>
+          </div>
+        </article>
+
+        <article class="card" style="--accent: rgba(129,140,248,0.95);" role="region" aria-labelledby="card-stories-title">
+          <div class="card-top">
+            <div class="card-icon" aria-hidden="true">📖</div>
+            <div class="card-tag">STORIES</div>
+          </div>
+          <h3 class="card-title" id="card-stories-title">Stories & Worlds</h3>
+          <p class="card-text">
+            Hörbuch-Fragmente, dystopische Texte, Worldbuilding und narrative Versuche – dort, wo Sprache zu Atmosphäre wird.
+          </p>
+          <div class="path-links" aria-label="Badges">
+            <span class="badge beta">in progress</span>
+          </div>
+          <div class="card-meta">
+            <span class="card-chip">worldbuilding · scripts</span>
+            <a href="coming-soon.html" class="card-link">Zu Story-Experimenten →</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="section" id="about">
+      <div class="about-layout">
+        <div class="about-text">
+          <h2 class="about-title">Was ist PromptRebel?</h2>
+
+          <p>
+            PromptRebel ist ein persönliches KI-Labor und eine Haltung:
+            neugierig, transparent und kritisch im Umgang mit KI.
+            Projekte entstehen aus Interesse, nicht aus Marketinglogik.
+          </p>
+
+          <p>
+            Fertige Ergebnisse und unfertige Zwischenstände stehen bewusst nebeneinander.
+            Fehler und Umwege werden nicht versteckt, sondern als Teil des Bauprozesses sichtbar gemacht.
+          </p>
+
+          <p>
+            Der Kern ist <strong>lokale Souveränität</strong>:
+            so viel wie möglich lokal, so wenig Abhängigkeit wie nötig.
+            Wo Cloud- oder Fremdtools nötig sind, soll das sichtbar bleiben.
+          </p>
+
+          <p>
+            Inhalte stehen unter <strong>CC BY-NC-SA 4.0</strong>.
+            Lernen, remixen und weiterbauen ist ausdrücklich erlaubt –
+            solange es nicht kommerziell ist und die Quelle genannt wird.
+          </p>
+
+          <div class="community-links">
+            <a href="https://discord.gg/V9nhjwmpPk" target="_blank" rel="noopener noreferrer" class="community-link">
+              <span aria-hidden="true">↗</span>
+              <span>PromptRebel Lab auf Discord</span>
+            </a>
+
+            <a href="https://www.reddit.com/user/PromptRebel/" target="_blank" rel="noopener noreferrer" class="community-link">
+              <span aria-hidden="true">↗</span>
+              <span>PromptRebel auf Reddit</span>
+            </a>
+          </div>
+
+          <div class="widget-wrap">
+            <div style="text-align:center">
+              <div id="aisw-k162ywcu2">
+                <style>
+                  #aisw-k162ywcu2{
+                    font-family:var(--aisw-font, system-ui,-apple-system,sans-serif);
+                    display:inline-flex;
+                    flex-direction:column;
+                    align-items:center;
+                    gap:10px;
+                    background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
+                    border:1px solid rgba(148,163,184,0.18);
+                    box-shadow:0 18px 45px rgba(15,23,42,0.95);
+                    border-radius:18px;
+                    --aisw-backlink-pad:38px;
+                    padding:16px 24px var(--aisw-backlink-pad);
+                    position:relative
+                  }
+                  #aisw-k162ywcu2 .lbl{
+                    color:#a5f3fc;
+                    font-size:13px;
+                    font-weight:600;
+                    line-height:1.35;
+                    padding-top:1px
+                  }
+                  #aisw-k162ywcu2 .svcs{
+                    display:flex;
+                    gap:16px;
+                    flex-wrap:wrap;
+                    justify-content:center
+                  }
+                  #aisw-k162ywcu2 .svcs a{
+                    color:rgba(229,231,235,.55);
+                    transition:color .2s, transform .2s
+                  }
+                  #aisw-k162ywcu2 .svcs a:hover{
+                    color:#fff;
+                    transform:scale(1.1)
+                  }
+                  #aisw-k162ywcu2 .bl{
+                    position:absolute;
+                    bottom:10px;
+                    left:0;
+                    right:0;
+                    text-align:center
+                  }
+                  #aisw-k162ywcu2 .bl-inner{
+                    display:inline-flex;
+                    justify-content:center;
+                    gap:16px;
+                    font-size:9px;
+                    line-height:1.2;
+                    opacity:0;
+                    pointer-events:none;
+                    transition:opacity .2s
+                  }
+                  #aisw-k162ywcu2:hover .bl-inner{
+                    opacity:1;
+                    pointer-events:auto
+                  }
+                  #aisw-k162ywcu2 .bl a{
+                    color:rgba(148,163,184,.35);
+                    text-decoration:none
+                  }
+                  #aisw-k162ywcu2 .bl a:hover{
+                    color:rgba(148,163,184,.6)
+                  }
+                  #aisw-k162ywcu2 .bl a{
+                    display:inline-flex;
+                    align-items:center;
+                    gap:8px
+                  }
+                  #aisw-k162ywcu2 .svcs a:focus-visible{
+                    outline:2px solid currentColor;
+                    outline-offset:3px
+                  }
+                  @media (prefers-reduced-motion: reduce){
+                    #aisw-k162ywcu2 *, #aisw-k162ywcu2 *::before, #aisw-k162ywcu2 *::after{
+                      animation-duration:0.001ms !important;
+                      animation-iteration-count:1 !important;
+                      transition-duration:0.001ms !important;
+                    }
+                  }
+                </style>
+
+                <div class="lbl">Zusammenfassung mit deiner Lieblings-KI</div>
+                <div style="font-size:11px; color:#9ca3af; margin-top:-6px;">
+                  Hinweis: Bei Gemini wird der Prompt kopiert – bitte dort einfügen.
+                </div>
+
+                <div class="svcs">
+                  <a href="https://chatgpt.com/" data-svc="chatgpt" target="_blank" rel="noopener noreferrer" aria-label="Frag ChatGPT" style="display:flex;align-items:center;justify-content:center;color:inherit;">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="width:22px;height:22px;fill:currentColor">
+                      <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z"/>
+                    </svg>
+                  </a>
+
+                  <a href="https://claude.ai/new" data-svc="claude" target="_blank" rel="noopener noreferrer" aria-label="Frag Claude" style="display:flex;align-items:center;justify-content:center;color:inherit;">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="width:22px;height:22px;fill:currentColor">
+                      <path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/>
+                    </svg>
+                  </a>
+
+                  <a href="https://gemini.google.com/app" data-svc="gemini" target="_blank" rel="noopener noreferrer" aria-label="Frag Gemini" style="display:flex;align-items:center;justify-content:center;color:inherit;">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="width:22px;height:22px;fill:currentColor">
+                      <path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/>
+                    </svg>
+                  </a>
+
+                  <a href="https://www.perplexity.ai/search" data-svc="perplexity" target="_blank" rel="noopener noreferrer" aria-label="Frag Perplexity" style="display:flex;align-items:center;justify-content:center;color:inherit;">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="width:22px;height:22px;fill:currentColor">
+                      <path d="M22.3977 7.0896h-2.3106V.0676l-7.5094 6.3542V.1577h-1.1554v6.1966L4.4904 0v7.0896H1.6023v10.3976h2.8882V24l6.932-6.3591v6.2005h1.1554v-6.0469l6.9318 6.1807v-6.4879h2.8882V7.0896zm-3.4657-4.531v4.531h-5.355l5.355-4.531zm-13.2862.0676 4.8691 4.4634H5.6458V2.6262zM2.7576 16.332V8.245h7.8476l-6.1149 6.1147v1.9723H2.7576zm2.8882 5.0404v-3.8852h.0001v-2.6488l5.7763-5.7764v7.0111l-5.7764 5.2993zm12.7086.0248-5.7766-5.1509V9.0618l5.7766 5.7766v6.5588zm2.8882-5.0652h-1.733v-1.9723L13.3948 8.245h7.8478v8.087z"/>
+                    </svg>
+                  </a>
+
+                  <a href="https://grok.com/" data-svc="grok" target="_blank" rel="noopener noreferrer" aria-label="Frag Grok" style="display:flex;align-items:center;justify-content:center;color:inherit;">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="width:22px;height:22px;fill:currentColor">
+                      <path d="M9.34 14.85L17.17 9.07C17.55 8.79 18.1 8.9 18.28 9.34C19.24 11.66 18.81 14.44 16.89 16.36C15.0 18.28 12.32 18.7 9.88 17.74L7.23 18.98C11.05 21.58 15.68 20.95 18.57 18.04C20.86 15.75 21.58 12.62 20.91 9.79L20.92 9.8C19.96 5.65 21.16 3.99 23.62 0.6C23.67 0.52 23.73 0.44 23.78 0.35L20.55 3.59V3.58L9.34 14.85M7.73 16.25C5.0 13.64 5.47 9.59 7.8 7.25C9.52 5.52 12.35 4.82 14.83 5.86L17.48 4.63C17.0 4.28 16.39 3.91 15.68 3.65C12.51 2.34 8.7 3.0 6.12 5.58C3.64 8.06 2.86 11.89 4.2 15.14C5.2 17.58 3.56 19.31 1.9 21.05C1.32 21.67 0.73 22.28 0.26 22.94L7.73 16.25"/>
+                    </svg>
+                  </a>
+
+                  <a href="https://www.google.com/search" data-svc="google" target="_blank" rel="noopener noreferrer" aria-label="Frag Google" style="display:flex;align-items:center;justify-content:center;color:inherit;">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="width:22px;height:22px;fill:currentColor">
+                      <path d="M12 0C5.372 0 0 5.373 0 12s5.372 12 12 12c6.627 0 12-5.373 12-12S18.627 0 12 0zm.14 19.018c-3.868 0-7-3.14-7-7.018c0-3.878 3.132-7.018 7-7.018c1.89 0 3.47.697 4.682 1.829l-1.974 1.978v-.004c-.735-.702-1.667-1.062-2.708-1.062c-2.31 0-4.187 1.956-4.187 4.273c0 2.315 1.877 4.277 4.187 4.277c2.096 0 3.522-1.202 3.816-2.852H12.14v-2.737h6.585c.088.47.135.96.135 1.474c0 4.01-2.677 6.86-6.72 6.86z"/>
+                    </svg>
+                  </a>
+                </div>
+
+                <div class="bl">
+                  <div class="bl-inner">
+                    <a href="https://widget.ainauten.com" target="_blank" rel="nofollow noopener noreferrer">
+                      <span>Hol dir dein AI Summary Widget hier</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="widget-note">
+              Öffnet diese Seite in deiner KI. Bitte keine vertraulichen Daten eingeben.
+            </p>
+          </div>
+
+          <a href="#projects" class="link-back">
+            <span aria-hidden="true">→</span>
+            <span>Zum Experiment-Index</span>
+          </a>
+        </div>
+
+        <aside class="panel-glass ethos-terminal" id="lab-notes" aria-label="Lab Ethos (dekorativ)">
+          <div class="panel-header">
+            <span class="icon" aria-hidden="true">⌘</span>
+            <span>LAB ETHOS</span>
+          </div>
+          <div class="terminal" id="ethosTerminal" aria-hidden="true">
+promptrebel $ cat ethos.txt
+
+> mission: build weird, useful, honest AI things
+> status: always in beta
+> focus: local first, cloud optional
+> rules: learn fast, share openly, fake nothing
+
+# honesty > perfection
+# documentation > hype
+# open builds > black boxes
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <footer>
+      <div>© PromptRebel | CC BY-NC-SA 4.0</div>
+
+      <div class="footer-links">
+        <a href="imprint.html" class="footer-link">Impressum</a>
+        <span>·</span>
+        <a href="privacy.html" class="footer-link">Datenschutz</a>
+      </div>
+
+      <div>current build: <span id="buildVersion" class="build-highlight">v0.2</span> – experimental</div>
+    </footer>
+  </main>
+
+  <script>
+    // Scroll progress
+    window.addEventListener("scroll", () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+      document.documentElement.style.setProperty("--scroll", ratio.toString());
+    });
+
+    // Brand click + keyboard
+    const brandEl = document.getElementById("brand");
+    brandEl.addEventListener("click", () => window.location.href = "./index.html");
+    brandEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        window.location.href = "./index.html";
+      }
+    });
+
+    // Active experiments panel
+    const experimentsTerminal = document.getElementById("experimentsTerminal");
+    const experimentLines = [
+      "> generating dystopian rap…        [ok]",
+      "> testing prompt drift…            [note]",
+      "> measuring consistency…           [running]",
+      "> compiling tiny agent v3…         [running]",
+      "> rendering ambient loop #7…       [ok]",
+      "> prompt mutation test 42…         [strange, but works]",
+      "> local llm sandbox…               [booting]"
+    ];
+
+    let currentLines = ["> compiling experiment data…       [booting]"];
+
+    function renderTerminal() {
+      experimentsTerminal.innerHTML = currentLines
+        .map(line => line.includes("failed") ? `<span class="fail">${line}</span>` : line)
+        .join("\n");
+    }
+
+    function pushLogLine() {
+      if (Math.random() < 0.3) {
+        const newLine = experimentLines[Math.floor(Math.random() * experimentLines.length)];
+        currentLines.push(newLine);
+        if (currentLines.length > 6) currentLines.shift();
+        renderTerminal();
+      }
+    }
+
+    renderTerminal();
+    setInterval(pushLogLine, 4000 + Math.random() * 3000);
+
+    // CTA scrolls
+    const btnStartHere = document.getElementById("btnStartHere");
+    const btnExplore = document.getElementById("btnExplore");
+
+    btnStartHere.addEventListener("click", () => {
+      document.getElementById("start-here").scrollIntoView({ behavior: "smooth" });
+    });
+
+    btnExplore.addEventListener("click", () => {
+      document.getElementById("projects").scrollIntoView({ behavior: "smooth" });
+    });
+
+    // Brand glitch on load + easter egg
+    window.addEventListener("load", () => {
+      brandEl.classList.add("glitch");
+      setTimeout(() => brandEl.classList.remove("glitch"), 800);
+    });
+
+    let clickCount = 0;
+    let clickTimer = null;
+
+    brandEl.addEventListener("click", () => {
+      clickCount++;
+      if (!clickTimer) {
+        clickTimer = setTimeout(() => {
+          clickCount = 0;
+          clickTimer = null;
+        }, 600);
+      }
+      if (clickCount >= 3) {
+        clickCount = 0;
+        clearTimeout(clickTimer);
+        clickTimer = null;
+        triggerRetroMode();
+      }
+    });
+
+    function triggerRetroMode() {
+      document.body.classList.add("retro-mode");
+      setTimeout(() => document.body.classList.remove("retro-mode"), 12000);
+    }
+
+    // Footer version effect
+    const buildVersionEl = document.getElementById("buildVersion");
+    const versions = ["v0.2", "v0.3", "v0.7.1", "v1.0", "v∞"];
+
+    buildVersionEl.addEventListener("click", () => {
+      let i = 0;
+      const int = setInterval(() => {
+        buildVersionEl.textContent = versions[i++ % versions.length];
+        if (i > 10) {
+          clearInterval(int);
+          buildVersionEl.textContent = "v0.2";
+        }
+      }, 120);
+    });
+  </script>
+
+  <script>
+    (function(){
+      var w = document.getElementById("aisw-k162ywcu2");
+      if (!w) return;
+
+      var p =
+"Erstelle eine strukturierte Zusammenfassung der gesamten Seite von {{domain}} unter {{url}}.\n\n"+
+"Vorgehen:\n"+
+"1) Öffne die URL und lies die Seite, falls dein Tool/Webzugriff das erlaubt.\n"+
+"2) Wenn du keinen Zugriff auf den Inhalt bekommst: sage das in einem Satz und fordere mich auf, den Inhalt oder HTML-Text hier einzufügen. Erfinde nichts.\n\n"+
+"Regeln:\n"+
+"- Verwende ausschließlich Inhalte, die auf der Seite tatsächlich stehen.\n"+
+"- Keine Annahmen, keine Ergänzungen, keine Spekulation.\n"+
+"- Sachlich, klar, strukturiert.\n\n"+
+"Gliederung:\n"+
+"1) Kernaussage\n"+
+"2) Wichtigste Abschnitte\n"+
+"3) Relevante Ressourcen, Links oder Tools\n"+
+"4) Offene Fragen oder Unklarheiten\n\n"+
+"Quelle: {{domain}} ({{url}})";
+
+      var u = {
+        chatgpt:{b:"https://chatgpt.com/",p:"q"},
+        claude:{b:"https://claude.ai/new",p:"q"},
+        gemini:{b:"https://gemini.google.com/app"},
+        grok:{b:"https://grok.com/",p:"q"},
+        perplexity:{b:"https://www.perplexity.ai/search",p:"q"},
+        google:{b:"https://www.google.com/search",p:"q",e:"udm=50&aep=11"}
+      };
+
+      function baseUrl(){
+        return (location.href || "").split("#")[0];
+      }
+
+      function promptText(){
+        return p
+          .replace(/\{\{url\}\}/g, baseUrl() || "")
+          .replace(/\{\{domain\}\}/g, location.hostname || "")
+          .trim();
+      }
+
+      function buildUrl(s,q){
+        var c=u[s];
+        if(!c) return "";
+        if(!c.p) return c.b;
+        var url=c.b+"?"+c.p+"="+encodeURIComponent(q);
+        if(c.e) url+="&"+c.e;
+        return url;
+      }
+
+      function copyText(t){
+        try{
+          if(navigator.clipboard && window.isSecureContext){
+            return navigator.clipboard.writeText(t).then(function(){return true},function(){return false});
+          }
+        }catch(e){}
+        try{
+          var ta=document.createElement("textarea");
+          ta.value=t;
+          ta.setAttribute("readonly","");
+          ta.style.position="fixed";
+          ta.style.left="-9999px";
+          ta.style.top="0";
+          document.body.appendChild(ta);
+          ta.select();
+          var ok=document.execCommand("copy");
+          document.body.removeChild(ta);
+          return Promise.resolve(!!ok);
+        }catch(e2){
+          return Promise.resolve(false);
+        }
+      }
+
+      function ensureGemUi(){
+        if(window.__aiswGemUi) return window.__aiswGemUi;
+
+        var st=document.createElement("style");
+        st.textContent =
+          "#aisw-gto{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;font:13px/1.35 system-ui,-apple-system,\"Segoe UI\",sans-serif;padding:10px 12px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.25);z-index:2147483647;transition:opacity .25s;opacity:0;display:none}"+
+          "#aisw-gmo{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483646;display:none;align-items:center;justify-content:center;padding:20px}"+
+          "#aisw-gmo .box{width:min(640px,100%);background:#fff;color:#111;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);padding:14px}"+
+          "#aisw-gmo textarea{width:100%;min-height:160px;font:13px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid #e5e5e5;border-radius:10px;padding:10px}"+
+          "#aisw-gmo .row{display:flex;gap:10px;justify-content:flex-end;margin-top:10px}"+
+          "#aisw-gmo button{font:600 13px/1.2 system-ui,-apple-system,\"Segoe UI\",sans-serif;border:0;border-radius:10px;padding:10px 12px;cursor:pointer}"+
+          "#aisw-gmo button.copy{background:#111;color:#fff}"+
+          "#aisw-gmo button.close{background:#f3f3f3;color:#111}"+
+          "@media(prefers-color-scheme:dark){#aisw-gmo .box{background:#111;color:#f5f5f5}#aisw-gmo textarea{background:#0b0b0b;color:#f5f5f5;border-color:#2a2a2a}#aisw-gmo button.close{background:#222;color:#f5f5f5}}";
+
+        var toast=document.createElement("div");
+        toast.id="aisw-gto";
+        toast.setAttribute("role","status");
+        toast.setAttribute("aria-live","polite");
+
+        var modal=document.createElement("div");
+        modal.id="aisw-gmo";
+        modal.innerHTML =
+          "<div class='box' role='dialog' aria-modal='true'>"+
+            "<textarea spellcheck='false'></textarea>"+
+            "<div class='row'>"+
+              "<button class='close' type='button' data-close>Close</button>"+
+              "<button class='copy' type='button' data-copy>Copy</button>"+
+            "</div>"+
+          "</div>";
+
+        document.head.appendChild(st);
+        document.body.appendChild(toast);
+        document.body.appendChild(modal);
+
+        var ta=modal.querySelector("textarea");
+        function hide(){ modal.style.display="none"; }
+        modal.addEventListener("click",function(e){ if(e.target===modal) hide(); });
+        modal.querySelectorAll("[data-close]").forEach(function(el){ el.addEventListener("click",hide); });
+        document.addEventListener("keydown",function(e){ if(e.key==="Escape") hide(); });
+        modal.querySelector("[data-copy]").addEventListener("click",function(){
+          copyText(ta.value).then(function(ok){ showToast(ok ? "Copied" : "Copy blocked"); });
+        });
+
+        window.__aiswGemUi={toast:toast,modal:modal,ta:ta};
+        return window.__aiswGemUi;
+      }
+
+      function showToast(msg){
+        var ui=ensureGemUi();
+        ui.toast.textContent=msg;
+        ui.toast.style.display="block";
+        ui.toast.offsetHeight;
+        ui.toast.style.opacity="1";
+        clearTimeout(ui._t);
+        ui._t=setTimeout(function(){
+          ui.toast.style.opacity="0";
+          setTimeout(function(){ ui.toast.style.display="none"; },250);
+        },2500);
+      }
+
+      function showModal(q){
+        var ui=ensureGemUi();
+        ui.ta.value=q;
+        ui.modal.style.display="flex";
+        ui.ta.focus();
+        ui.ta.select();
+      }
+
+      function openGemini(q){
+        copyText(q).then(function(ok){
+          window.open(u.gemini.b,"_blank","noopener,noreferrer");
+          if(ok){
+            showToast("Prompt kopiert. In Gemini einfügen (Cmd/Ctrl+V)");
+          }else{
+            showToast("Kopieren blockiert. Bitte manuell kopieren");
+            showModal(q);
+          }
+        });
+      }
+
+      w.querySelectorAll("[data-svc]").forEach(function(a){
+        function sync(){
+          var svc=a.dataset.svc;
+          var q=promptText();
+          if(svc==="gemini"){
+            a.setAttribute("href",u.gemini.b);
+            return;
+          }
+          var url=buildUrl(svc,q);
+          if(url) a.setAttribute("href",url);
+        }
+
+        sync();
+
+        a.addEventListener("click",function(e){
+          var svc=a.dataset.svc;
+          var q=promptText();
+
+          if(svc==="gemini"){
+            e.preventDefault();
+            openGemini(q);
+            return;
+          }
+
+          var url=buildUrl(svc,q);
+          if(url) a.setAttribute("href",url);
+        });
+      });
+    })();
+  </script>
+
+  <script type="module" src="./assets/js/local-ai.js"></script>
+</body>
+</html>
