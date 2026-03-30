@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptRebel – Build Log #01 · Lokaler KI-Podcast-Agent</title>
+  <meta name="description" content="Vollständiger Build Log von PromptRebel: Wie ein lokaler KI-Podcast-Agent mit Python, Ollama, XTTS, Flask und Tailscale auf einem Surface Go 2 entstand – inklusive aller Befehle, Stolperstellen, Entscheidungen, Dateien und Learnings." />
+  <style>
+    :root {
+      --scroll: 0;
+      --bg: #020617;
+      --panel: rgba(15, 23, 42, 0.78);
+      --border: rgba(148, 163, 184, 0.16);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent-a: #f472b6;
+      --accent-b: #22d3ee;
+      --success: #86efac;
+      --warning: #fca5a5;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      padding-top: 64px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,.32), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(34,211,238,.28), transparent 55%);
+      z-index: -2;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      opacity: .18;
+      pointer-events: none;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 3px 3px, 3px 3px;
+      z-index: -1;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    code, pre { font-family: var(--mono); }
+
+    .skip-link {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -40px;
+      padding: 6px 10px;
+      background: #0f172a;
+      color: #f9fafb;
+      border-radius: 999px;
+      font-size: 13px;
+      z-index: 60;
+    }
+    .skip-link:focus-visible {
+      top: 10px;
+      outline: 2px solid var(--accent-b);
+      outline-offset: 2px;
+    }
+
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 40;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(15,23,42,.95), rgba(15,23,42,.6));
+      border-bottom: 1px solid rgba(148,163,184,.1);
+    }
+
+    .nav::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-a), rgba(34,211,238,0), var(--accent-b));
+      transform-origin: left;
+      transform: scaleX(var(--scroll));
+      transition: transform .1s linear;
+      pointer-events: none;
+    }
+
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 10px 16px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-shadow: 0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4);
+      white-space: nowrap;
+    }
+
+    .brand .accent {
+      background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      font-size: 14px;
+    }
+
+    .nav-link {
+      position: relative;
+      padding-block: 4px;
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0; bottom: -2px;
+      width: 0; height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+      box-shadow: 0 0 8px rgba(56,189,248,.8);
+      transition: width .25s ease;
+    }
+
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after { width: 100%; }
+
+    .page {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 18px 16px 64px;
+    }
+
+    .panel {
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(15,23,42,.90), rgba(15,23,42,.98));
+      box-shadow: 0 18px 45px rgba(15,23,42,.95);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero { padding-top: 22px; }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.45);
+      font-size: 12px;
+      color: #dbeafe;
+    }
+
+    .meta-chip strong { color: #f9a8d4; font-weight: 700; }
+
+    .hero-card { padding: 24px 24px 20px; }
+    .hero-kicker {
+      font-size: 12px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: #f9a8d4;
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1.12;
+      font-weight: 800;
+      margin-bottom: 14px;
+      text-shadow: 0 0 14px rgba(236,72,153,.45), 0 0 20px rgba(34,211,238,.25);
+    }
+
+    .hero-title em {
+      font-style: normal;
+      color: var(--accent-b);
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: #cbd5f5;
+      max-width: 56rem;
+      margin-bottom: 18px;
+      border-left: 3px solid rgba(34,211,238,.55);
+      padding-left: 14px;
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    @media (min-width: 920px) {
+      .hero-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr); }
+    }
+
+    .hero-note,
+    .terminal-box,
+    .specs,
+    .callout,
+    .info-card,
+    .build-case,
+    .end-panel,
+    .step-card {
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.16);
+      background: rgba(15,23,42,.45);
+      padding: 16px 18px 14px;
+    }
+
+    .hero-note { font-size: 14px; color: #e5e7eb; }
+    .hero-note strong { color: #f8fafc; }
+
+    .terminal-head,
+    .specs-title,
+    .callout-title,
+    .case-index,
+    .end-title,
+    .section-kicker,
+    .step-index,
+    .small-title {
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .terminal-head,
+    .callout-title,
+    .case-label,
+    .step-index,
+    .small-title { color: #93c5fd; }
+    .specs-title { color: #9ca3af; }
+    .case-index,
+    .end-title,
+    .section-kicker { color: #f9a8d4; }
+
+    .terminal {
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: #e5e7eb;
+      line-height: 1.7;
+    }
+
+    .terminal .dim { color: #6b7280; }
+    .terminal .ok { color: var(--success); }
+    .terminal .warn { color: var(--warning); }
+
+    .content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding-top: 36px;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 40px 0 26px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: rgba(148,163,184,.18);
+    }
+
+    h2 {
+      font-size: clamp(24px, 3.5vw, 34px);
+      font-weight: 800;
+      margin-bottom: 14px;
+      color: #f8fafc;
+      text-shadow: 0 0 10px rgba(34,211,238,.12);
+    }
+
+    h3 {
+      font-size: 22px;
+      line-height: 1.35;
+      color: #f8fafc;
+      margin-bottom: 4px;
+    }
+
+    h4 {
+      font-size: 18px;
+      line-height: 1.4;
+      color: #f8fafc;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #d1d5db;
+      margin-bottom: 20px;
+    }
+
+    p strong { color: #f8fafc; }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(148,163,184,.12);
+      font-size: 14px;
+    }
+
+    .spec-row:last-child { border-bottom: none; }
+    .spec-key {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .spec-val {
+      color: #f3f4f6;
+      text-align: right;
+    }
+    .spec-val.good { color: var(--success); }
+
+    .callout {
+      background: rgba(34,211,238,.08);
+      border-color: rgba(34,211,238,.20);
+      color: #e6f7ff;
+      margin: 24px 0;
+    }
+
+    .build-case {
+      margin: 26px 0;
+      padding: 18px 18px 14px;
+    }
+
+    .case-row {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 16px;
+      padding: 14px 0;
+      border-top: 1px solid rgba(148,163,184,.12);
+    }
+
+    .case-row:first-of-type { border-top: none; }
+
+    .case-label {
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+    }
+
+    .case-body {
+      color: #d1d5db;
+      font-size: 15px;
+    }
+
+    .raw-error,
+    .result-good,
+    blockquote,
+    pre {
+      margin: 14px 0;
+      border-radius: 16px;
+      overflow-x: auto;
+    }
+
+    .raw-error,
+    .result-good,
+    blockquote { padding: 16px 18px 14px; }
+
+    .raw-error {
+      background: rgba(127,29,29,.20);
+      border: 1px solid rgba(239,68,68,.18);
+      border-left: 3px solid #ef4444;
+      color: #fca5a5;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .result-good {
+      background: rgba(20,83,45,.20);
+      border: 1px solid rgba(34,197,94,.18);
+      border-left: 3px solid #22c55e;
+      color: #86efac;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    blockquote {
+      border: 1px solid rgba(236,72,153,.22);
+      background: rgba(236,72,153,.09);
+    }
+
+    blockquote p {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.55;
+      color: #fbcfe8;
+    }
+
+    code {
+      font-size: 13px;
+      background: #0b1220;
+      border: 1px solid rgba(148,163,184,.14);
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: #bfdbfe;
+    }
+
+    pre {
+      padding: 18px 18px 16px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(2,6,23,.6);
+      box-shadow: 0 18px 40px rgba(15,23,42,.6);
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #cbd5e1;
+      line-height: 1.75;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .two-col {
+      display: grid;
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    @media (min-width: 768px) {
+      .two-col { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+
+    .three-col {
+      display: grid;
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    @media (min-width: 900px) {
+      .three-col { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+
+    .info-card h4,
+    .step-card h4 {
+      font-size: 12px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+    }
+
+    .info-card ul,
+    .step-card ul { padding-left: 18px; }
+    .info-card li,
+    .step-card li {
+      font-size: 14px;
+      color: #e5e7eb;
+      margin-bottom: 8px;
+    }
+
+    .step-grid {
+      display: grid;
+      gap: 14px;
+      margin: 24px 0;
+    }
+
+    .end-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .end-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.42);
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+
+    footer {
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(148,163,184,.12);
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer .center-links { display: flex; gap: 10px; }
+    footer a { text-decoration: underline; text-underline-offset: 3px; }
+
+    @media (max-width: 767px) {
+      body { padding-top: 60px; }
+      .nav-inner { gap: 8px; }
+      .nav-links { font-size: 13px; gap: 12px; }
+      p { font-size: 15px; }
+      .case-row { grid-template-columns: 1fr; gap: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand">Prompt<span class="accent">Rebel</span></div>
+      <nav class="nav-links" aria-label="Hauptnavigation">
+        <a href="#overview" class="nav-link">Overview</a>
+        <a href="#setup" class="nav-link">Setup</a>
+        <a href="#cases" class="nav-link">Build Cases</a>
+        <a href="#files" class="nav-link">Files</a>
+        <a href="#learn" class="nav-link">Learnings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page" id="main">
+    <section class="hero" id="overview">
+      <div class="meta-row">
+        <span class="meta-chip"><strong>Build Log</strong> #01</span>
+        <span class="meta-chip">März 2026</span>
+        <span class="meta-chip">local-first</span>
+        <span class="meta-chip">Python · Ollama · XTTS · Flask · Tailscale</span>
+        <span class="meta-chip">Status: funktioniert</span>
+      </div>
+
+      <div class="panel hero-card">
+        <div class="hero-kicker">Lab Notes</div>
+        <h1 class="hero-title">Ich habe fast alles hingeschmissen – <em>und dann lief es.</em></h1>
+        <p class="hero-subtitle">
+          Wie ein lokaler KI-Podcast-Agent auf schwacher Hardware entstanden ist. Ohne GPU. Ohne Budget. Ohne API.
+          Mit echtem Frust, echten Fehlern, RAM-Grenzen, Architekturwechseln und schließlich einem kompletten End-to-End-Flow:
+          iPhone → WebUI → Surface → Ollama → XTTS → WAV.
+        </p>
+
+        <div class="hero-grid">
+          <div class="hero-note">
+            <strong>Was du hier bekommst:</strong><br>
+            keinen Hochglanz-Case, sondern eine vollständige Rekonstruktion des gesamten Baus:
+            Ausgangslage, Installationen, Deinstallationen, Befehle, Ordner, Umgebungen, Fehlermeldungen,
+            Debug-Autopsien, Entscheidungen, Ergebniszustände und die eigentlichen Learnings dahinter.
+          </div>
+          <div class="terminal-box" aria-hidden="true">
+            <div class="terminal-head">build.log</div>
+            <div class="terminal">> hardware: surface go 2
+> stack: python + ollama + xtts_v2 + flask + tailscale
+> budget: 0 €
+> cloud: none
+> runtime model: local-first
+> mood: <span class="warn">frustrated</span> → <span class="ok">running</span>
+<span class="dim"># promptrebel = nachbaubar vor perfekt</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <p>
+        Ich bin kein Entwickler. Ich bin kein ITler. Und irgendwann saß ich vor einem Terminal,
+        das mir Dinge um die Ohren geworfen hat, die ich nicht einmal sauber aussprechen konnte.
+      </p>
+      <p>
+        Transformers. Torch. Dependencies. Python-Pfade. Execution Policies. Webhooks. WAV-Parameter. Memory Errors.
+        Vieles davon habe ich am Anfang nicht verstanden. Aber ich habe jeden Stolperstein dokumentiert,
+        weil genau daraus die eigentliche Hilfe für andere entsteht.
+      </p>
+
+      <div class="divider"><span>ausgangslage</span></div>
+      <h2>Was überhaupt gebaut werden sollte</h2>
+      <p>
+        Das Ziel war von Anfang an nicht bloß eine einzelne Audio-Datei, sondern ein kompletter lokaler Workflow:
+        <strong>Thema oder später URL eingeben → Text lokal erzeugen → Stimme lokal erzeugen → fertige Podcast-Datei erhalten.</strong>
+      </p>
+      <p>
+        Wichtig dabei: keine laufenden API-Kosten, kein Cloud-Zwang, kein fertiger Baukasten, den man nur anklickt,
+        sondern ein eigenes System, das auf echter schwacher Hardware laufen kann und mit einer guten Anleitung von anderen reproduzierbar ist.
+      </p>
+
+      <div class="panel specs">
+        <div class="specs-title">Technische Ausgangslage</div>
+        <div class="spec-row"><span class="spec-key">gerät</span><span class="spec-val">Microsoft Surface Go 2</span></div>
+        <div class="spec-row"><span class="spec-key">modell</span><span class="spec-val">kleines Surface / Tablet-Format</span></div>
+        <div class="spec-row"><span class="spec-key">prozessor</span><span class="spec-val">Intel Pentium Gold 4425Y · keine GPU</span></div>
+        <div class="spec-row"><span class="spec-key">ram</span><span class="spec-val">8 GB</span></div>
+        <div class="spec-row"><span class="spec-key">budget</span><span class="spec-val good">0 €</span></div>
+        <div class="spec-row"><span class="spec-key">api-keys</span><span class="spec-val good">keine</span></div>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">Warum diese Hardware wichtig ist</div>
+        Das Gerät war nicht ideal. Genau deshalb war es relevant. Wenn so ein System auf einem Surface Go 2 zumindest funktional läuft,
+        dann ist die Architektur nicht elitär. Dann ist sie mit guter Anleitung nachbaubar – und auf stärkerer Hardware später erst recht.
+      </div>
+
+      <div class="divider"><span>kompletter setup-pfad</span></div>
+      <h2 id="setup">Der komplette Setup-Weg von null bis laufendem System</h2>
+      <p>
+        Dieser Abschnitt ist bewusst sehr konkret. Nicht als Marketingtext, sondern als echte Arbeitsanleitung.
+        Einige Schritte waren am Ende deutlich einfacher, als sie sich während des Builds angefühlt haben. Andere waren nur deshalb machbar,
+        weil die kritischen Stolperstellen vorher bekannt waren.
+      </p>
+
+      <div class="three-col">
+        <div class="step-card">
+          <div class="step-index">Phase 01</div>
+          <h4>Basis schaffen</h4>
+          <ul>
+            <li>Python 3.11.7 installieren</li>
+            <li>Build Tools für C++ installieren</li>
+            <li>Projektordner anlegen</li>
+            <li>virtuelle Umgebung aufbauen</li>
+          </ul>
+        </div>
+        <div class="step-card">
+          <div class="step-index">Phase 02</div>
+          <h4>XTTS + Ollama</h4>
+          <ul>
+            <li>PyTorch CPU passend installieren</li>
+            <li>TTS / XTTS installieren</li>
+            <li>Ollama installieren</li>
+            <li>erstes lokales Audio erzeugen</li>
+          </ul>
+        </div>
+        <div class="step-card">
+          <div class="step-index">Phase 03</div>
+          <h4>Service daraus machen</h4>
+          <ul>
+            <li>Flask-WebUI</li>
+            <li>Tailscale für Remote-Zugriff</li>
+            <li>Text- und Voice-Prozess trennen</li>
+            <li>Status- und Segmentlogik</li>
+          </ul>
+        </div>
+      </div>
+
+      <pre><code># 0. Arbeitsordner anlegen
+mkdir C:\xtts-clean
+cd C:\xtts-clean
+
+# 1. Virtuelle Umgebung erstellen
+py -3.11 -m venv .venv
+
+# 2. Falls PowerShell lokale Scripts blockiert
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+# 3. venv aktivieren (optional)
+.\.venv\Scripts\Activate.ps1
+
+# 4. pip in dieser venv aktualisieren
+.venv\Scripts\python.exe -m pip install --upgrade pip
+
+# 5. Torch CPU Build passend installieren
+.venv\Scripts\pip.exe install torch==2.4.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cpu
+
+# 6. XTTS / TTS installieren
+.venv\Scripts\pip.exe install TTS
+
+# 7. Falls nötig: Transformers sauber zurücksetzen
+.venv\Scripts\pip.exe uninstall -y transformers
+.venv\Scripts\pip.exe install "transformers&lt;4.57"
+
+# 8. Flask für die lokale Weboberfläche
+.venv\Scripts\pip.exe install flask</code></pre>
+
+      <p>
+        Zusätzlich wurden außerhalb von pip noch weitere Bausteine gebraucht:
+      </p>
+      <ul style="padding-left:18px; color:#d1d5db; margin-bottom:20px;">
+        <li><strong>Python 3.11.7</strong> als Installation auf dem System</li>
+        <li><strong>Visual Studio Build Tools</strong> mit Desktopentwicklung in C++</li>
+        <li><strong>Ollama</strong> als lokaler Textgenerator</li>
+        <li><strong>Tailscale</strong> auf Surface und iPhone</li>
+        <li><strong>voice.wav</strong> als Sprachreferenz für XTTS</li>
+      </ul>
+
+      <pre><code># Früher XTTS-Minimaltest direkt über die CLI
+C:\Users\excel\AppData\Local\Programs\Python\Python311\Scripts\tts.exe --model_name tts_models/multilingual/multi-dataset/xtts_v2 --text "Hallo, das ist mein erster selbst gebauter KI Podcast Agent." --language_idx de --speaker_wav C:\xtts-clean\voice.wav --out_path C:\xtts-clean\output.wav
+
+# Ollama-Test
+ollama run llama3
+
+# WebUI starten
+.venv\Scripts\python.exe webui.py</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">Wichtige Setup-Fakten aus der Praxis</div>
+        <ul style="padding-left:18px; margin-top:8px;">
+          <li>Die richtige Python-Version war kein Detail, sondern Grundvoraussetzung.</li>
+          <li>XTTS wirkte anfangs wie „nur installieren“, war in Wirklichkeit aber versions- und umgebungsabhängig.</li>
+          <li>Viele scheinbar große Fehler waren am Ende banale Dinge wie falscher Pfad, keine Internetverbindung, falsche Dateiendung oder fehlende Quotes.</li>
+        </ul>
+      </div>
+
+      <div class="divider"><span>build cases</span></div>
+      <h2 id="cases">Jeder relevante Widerstand als rekonstruierter Fall</h2>
+      <p>
+        Im Folgenden werden die wichtigsten Bruchstellen nicht als lose Fehlerliste gezeigt, sondern als Fallstudien.
+        Genau das macht aus einem chaotischen Build ein Modell, von dem andere wirklich profitieren können.
+      </p>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 01</div>
+        <h3>XTTS / Coqui Paketkonflikt: der erste echte Gegenstoß</h3>
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">XTTS ließ sich nicht sauber im bestehenden Python-Zustand starten. Alte und neue Paketlogik kollidierten direkt.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom / Fehlermeldung</div>
+          <div class="case-body"><div class="raw-error">ImportError: coqui-tts switched to a forked version of Coqui,<br>but you still have the original package installed.<br>Run: pip uninstall coqui → pip install coqui-tts</div></div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">Das System war nicht defekt, sondern logisch vermischt. Ein alter Paketstand und der neue Fork versuchten gleichzeitig, die gleiche Rolle zu spielen. Solche Konflikte wirken wie „mystische Python-Probleme“, sind aber oft schlicht Environment-Vermischungen.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Nicht weiter im kaputten Zustand herumflicken. Neuer Ordner. Neue venv. Sauberer Neustart statt Reparaturversuch.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">Der Weg war wieder kontrollierbar. Das Projekt hatte ein Fundament, statt nur einen angesammelten Paketfriedhof.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Wenn Python-Pakete sich gegenseitig hochschaukeln, ist ein neues Environment oft schneller und ehrlicher als zehn weitere Korrekturversuche.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 02</div>
+        <h3>Versionen, die „irgendwie“ installierbar, aber praktisch unbrauchbar waren</h3>
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">Torch, Transformers, TTS und Windows spielten nicht automatisch sauber zusammen. Formal installierte Pakete bedeuteten noch lange kein funktionierendes System.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom / Fehlermeldung</div>
+          <div class="case-body">
+            <div class="raw-error">ERROR: Could not find a version that satisfies the requirement coqui-tts==0.22.0<br>(from versions: 0.24.1, 0.24.2, 0.24.3 ...)</div>
+            <div class="raw-error">PyTorch was not found. Models won't be available<br>PyTorch &gt;= 2.4 is required but Found 2.1.0</div>
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">Der Engpass war keine einzelne falsche Zeile, sondern eine komplette Versionsmatrix. Gerade auf Windows und mit CPU-only Setup war relevant, Torch gezielt zu pinnen und Transformers nicht blind aktuell zu lassen.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Gezielte Versionen statt „letzte verfügbare“. Python 3.11.7. Torch CPU Build 2.4.0. Später explizite Eingriffe bei Transformers.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">XTTS wurde überhaupt erst ansprechbar. Das war noch keine stabile Pipeline, aber ein echter Durchbruch.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">In lokalen KI-Stacks ist Versionenkontrolle Teil der Architektur. Wer das ignoriert, baut Fehler bereits vor dem ersten echten Lauf ein.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 03</div>
+        <h3>Der Wendepunkt: zum ersten Mal sprach XTTS wirklich</h3>
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">Zwischen „es ist installiert“ und „es erzeugt wirklich eine Datei“ lag noch eine psychologisch kritische Lücke. Genau dort geben viele auf.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom / Fehlermeldung</div>
+          <div class="case-body">Es wirkte lange, als passiere nichts. Modell-Download, CLI, Voice-Referenz, Warten. Kein klarer Beweis, dass am Ende tatsächlich Audio entsteht.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">Das Problem war jetzt nicht mehr reine Installation, sondern Unsicherheit. Ist der Prozess nur lang? Hängt er? Ist die Referenzstimme korrekt? Die richtige Antwort war: eine brutal kleine Minimalprobe.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Ein einzelner deutscher Satz, eine lokale <code>voice.wav</code>, ein Ausgabeziel. Keine Pipeline, keine WebUI, keine Zusatzlogik.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">
+            XTTS erzeugte erstmals lokal eine echte Audio-Datei.
+            <div class="result-good">=== Generierter Text ===<br>"Hallo, das ist mein erster selbst gebauter KI Podcast Agent."<br><br>→ output.wav erstellt<br>→ Prozess beendet. Keine Fehler.</div>
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Vor jeder großen Pipeline braucht es einen gnadenlosen Minimaltest. Erst wenn ein einziger Satz zuverlässig spricht, lohnt sich jede weitere Automatisierung.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 04</div>
+        <h3>Von Terminal zu WebUI: der Agent sollte vom iPhone triggerbar sein</h3>
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">Ein funktionierendes Terminal-Skript war gut, aber noch kein praktischer Agent. Das Ziel war, vom iPhone aus ein Thema an das Surface zu schicken.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom / Fehlermeldung</div>
+          <div class="case-body">Telegram und n8n führten sofort in Webhook-, HTTPS- und Architekturprobleme. Lokal laufende Dienste sind nicht automatisch von außen triggerbar.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">Das eigentliche Problem war nicht „wie kommt Text an“, sondern die unnötige Komplexität eines Messenger- oder Webhook-Modells für ein eigentlich lokales Projekt. Die sauberere Lösung war eine Weboberfläche im selben Netzwerkraum wie das Surface – also per Tailscale.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Flask-WebUI auf dem Surface. Tailscale auf Surface und iPhone. Textfeld + Button statt Bot-Setup.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">Das iPhone konnte die lokale Oberfläche öffnen und den Podcast-Lauf remote starten. Kein Telegram-Zwang, keine öffentliche URL, kein Cloud-Service.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Nicht jede Eingabe braucht gleich Workflow-Automation oder Bots. Oft ist eine kleine lokale WebUI die robustere und verständlichere Lösung.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 05</div>
+        <h3>Die wirkliche Grenze hieß RAM</h3>
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">Sobald Textgenerierung, XTTS und WebUI zusammenspielten, war das eigentliche Problem nicht mehr Logik, sondern Speicherdruck.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom / Fehlermeldung</div>
+          <div class="case-body">
+            <div class="raw-error">RuntimeError: not enough memory</div>
+            <div class="raw-error">Zugriff auf Arbeitsspeicher konnte nicht durchgeführt werden</div>
+            Beobachtung parallel im Task-Manager: Ollama hielt nach Generierung noch rund 4.2 GB RAM belegt.
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">XTTS allein war nicht das Problem. Kritisch wurde die Kombination aus Windows, Hintergrundprozessen, Ollama im Speicher, Python und Torch/XTTS-Peaks. Genau diese Lastspitze brachte das Surface an die Grenze.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Textgenerierung und Sprachsynthese wurden in getrennte Python-Dateien aufgeteilt. Zusätzlich wurde Ollama nach der Textgenerierung aktiv beendet, um RAM freizugeben.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">Die Pipeline war nicht mehr monolithisch, sondern zweistufig. Das reduzierte die Peak-Last massiv und machte stabile Läufe realistisch.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Auf schwacher Hardware ist Prozessarchitektur oft wichtiger als reine Modellwahl. Lastspitzen entkoppeln schlägt häufig bloßes Hoffen auf „es wird schon laufen“.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 06</div>
+        <h3>Segmentierung statt Alles-auf-einmal</h3>
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">Ein kompletter Podcast-Text am Stück war für XTTS zu schwer. Der Gesamttext war nicht das Problem – die zu große Verarbeitungseinheit war es.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom / Fehlermeldung</div>
+          <div class="case-body">Crashs oder fehlerhafte Läufe beim Versuch, zu viel Text in einem Rutsch an XTTS zu geben.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">Lange Podcasts müssen nicht als ein TTS-Block gedacht werden. Besser: großer Gesamttext, aber kleine Segmente für die Sprachsynthese. Genau dieses Denken machte den späteren stabilen Build überhaupt erst möglich.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">TXT lesen → in Sätze zerlegen → jeden Satz einzeln vertonen → WAVs zusammenfügen. Dazu kamen Zwischenprüfungen, Debug-Ausgaben und harte Limits, die später schrittweise erhöht wurden.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">Die Sprachsynthese wurde kontrollierbar. Statt Alles-oder-nichts-Läufen entstand ein modularer Build, der auf dem Surface wirklich tragfähig war.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Lange Inhalte sollten auf schwacher Hardware nicht als großer TTS-Brocken gedacht werden, sondern als Liste kleiner, sauber zusammensetzbarer Segmente.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 07</div>
+        <h3>Piper als Zwischenweg – und warum XTTS trotzdem blieb</h3>
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">XTTS war hochwertig, aber fragil. Piper war leichter, aber nicht das eigentliche Ziel. Es musste geklärt werden, ob Stabilität oder Stimmqualität wichtiger ist.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom / Fehlermeldung</div>
+          <div class="case-body">Piper war zunächst leichter installierbar gedacht, brachte aber eigene kleinere Paketprobleme mit. XTTS hatte dafür weiter den besseren Qualitäts-Charakter.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">Piper war in Wahrheit kein vollwertiger Ersatz für die XTTS-Vision, sondern eher ein Stabilitätsanker. Die größere Erkenntnis war: die Segment- und Prozesslogik war der eigentliche Schlüssel, nicht der reine Modellwechsel.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">XTTS blieb Hauptpfad. Piper diente eher als technischer Vergleich und Fallback-Idee. Die eigentliche Optimierung konzentrierte sich wieder auf RAM-Freigabe, Segmentierung und Timing.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">XTTS lief schließlich sauber genug durch, sodass das System als lokaler Podcast-Agent funktionierte, ohne auf das hochwertigere Zielmodell verzichten zu müssen.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Ein leichteres Modell kann als Fallback sinnvoll sein. Aber manchmal liegt die eigentliche Lösung nicht im Modellwechsel, sondern in der Systemarchitektur drumherum.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 08</div>
+        <h3>Stabilität beweisen statt nur behaupten</h3>
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">Ein einziger erfolgreicher Lauf ist noch kein belastbarer Zustand. Die Frage war: läuft das System wiederholt, sauber und messbar?</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom / Fehlermeldung</div>
+          <div class="case-body">Keine Fehlermeldung mehr im klassischen Sinn – eher die Gefahr, vorschnell zu früh zu viel zu wollen, etwa direkt 20–30 Minuten Podcast auf Hardware, die gerade erst kurze Monologe sauber schafft.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">Ein funktionierender Lauf beweist nur Möglichkeit. Mehrere erfolgreiche Läufe mit Stoppuhr beweisen Reproduzierbarkeit. Genau deshalb wurde die Ausgabe schrittweise erhöht und jeweils mehrfach getestet.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Limits nicht sofort komplett aufheben, sondern moderat erhöhen. Beispiel: erst 4 Segmente, dann 8 Segmente und 140 Zeichen, mehrfach fehlerfrei. Erst danach wäre mehr Länge sinnvoll.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">Der Agent lief mehrfach komplett durch. Damit war nicht mehr nur ein Demo-Moment da, sondern ein funktionierender Build-Status.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Stabilität entsteht nicht durch Hoffnung, sondern durch kontrollierte Belastung. Erst klein stabil, dann größer.</div>
+        </div>
+      </section>
+
+      <div class="divider"><span>dateien & ordner</span></div>
+      <h2 id="files">Dateien, Ordner, Zuständigkeiten</h2>
+      <div class="two-col">
+        <div class="info-card">
+          <h4>Ordnerstruktur</h4>
+          <pre><code>C:\xtts-clean
+│
+├─ .venv\
+│  └─ Scripts\
+│     ├─ python.exe
+│     ├─ pip.exe
+│     └─ tts.exe
+│
+├─ generate_text.py
+├─ speak_text.py
+├─ webui.py
+├─ podcast.py                # frühe Zwischenstufe / Testphase
+├─ voice.wav                 # lokale Referenzstimme für XTTS
+├─ status.json               # Statusdatei für WebUI
+├─ segments\                # temporäre WAV-Segmente
+├─ output.wav                # frühe Testdatei
+├─ podcast_YYYYMMDD_HHMMSS.txt
+└─ podcast_YYYYMMDD_HHMMSS.wav</code></pre>
+        </div>
+        <div class="info-card">
+          <h4>Welche Datei macht was?</h4>
+          <ul>
+            <li><strong>generate_text.py</strong> erzeugt den Text mit Ollama, speichert TXT, beendet Ollama, startet die Vertonung.</li>
+            <li><strong>speak_text.py</strong> liest die TXT, segmentiert, vertont Satz für Satz mit XTTS und fügt die WAVs zusammen.</li>
+            <li><strong>webui.py</strong> stellt die lokale Oberfläche bereit, startet den Build und zeigt Status / Fortschritt / Ergebnis.</li>
+            <li><strong>voice.wav</strong> ist die XTTS-Referenzstimme.</li>
+            <li><strong>status.json</strong> ist die Kommunikation zwischen Build-Prozess und Oberfläche.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider"><span>echte befehle</span></div>
+      <h2>Alle relevanten Befehle aus dem Build</h2>
+      <pre><code># Ordner anlegen
+mkdir C:\xtts-clean
+cd C:\xtts-clean
+
+# virtuelle Umgebung
+py -3.11 -m venv .venv
+
+# PowerShell Script-Ausführung erlauben (nur User)
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+# venv aktivieren
+.\.venv\Scripts\Activate.ps1
+
+# pip aktualisieren
+.venv\Scripts\python.exe -m pip install --upgrade pip
+
+# Torch CPU gezielt installieren
+.venv\Scripts\pip.exe install torch==2.4.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cpu
+
+# XTTS / TTS
+.venv\Scripts\pip.exe install TTS
+
+# Transformers ggf. zurücksetzen
+.venv\Scripts\pip.exe uninstall -y transformers
+.venv\Scripts\pip.exe install "transformers&lt;4.57"
+
+# Flask installieren
+.venv\Scripts\pip.exe install flask
+
+# späterer Piper-Test
+.venv\Scripts\pip.exe install piper-tts
+.venv\Scripts\pip.exe install pathvalidate
+
+# XTTS Minimaltest
+C:\Users\excel\AppData\Local\Programs\Python\Python311\Scripts\tts.exe --model_name tts_models/multilingual/multi-dataset/xtts_v2 --text "Hallo, das ist mein erster selbst gebauter KI Podcast Agent." --language_idx de --speaker_wav C:\xtts-clean\voice.wav --out_path C:\xtts-clean\output.wav
+
+# Ollama Test
+ollama run llama3
+
+# Textgenerator
+.venv\Scripts\python.exe generate_text.py "KI im Alltag"
+
+# Vertonung
+.venv\Scripts\python.exe speak_text.py
+
+# WebUI
+.venv\Scripts\python.exe webui.py
+
+# Tailscale-IP anzeigen
+tailscale ip -4
+
+# Ollama bewusst beenden, um RAM freizugeben
+taskkill /IM ollama.exe /F</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">Wirklich relevante Stolperstellen aus der Praxis</div>
+        <ul style="padding-left:18px; margin-top:8px;">
+          <li>Mehrfach war der Fehler schlicht: Internet war nicht aktiv.</li>
+          <li>Dateien wurden unter Windows versehentlich ohne echte <code>.py</code>-Endung gespeichert.</li>
+          <li>PowerShell-Execution-Policy blockierte anfangs npm/npx und andere Skripte.</li>
+          <li>XTTS wirkte manchmal kaputt, obwohl in Wahrheit nur der Speicherpeak zu hoch war.</li>
+          <li>Telegram/n8n war nicht der saubere Weg für diesen lokalen Workflow.</li>
+          <li>Wenn das Surface in echten Standby geht, ist der Dienst weg. Bildschirm aus ist okay, Standby nicht.</li>
+          <li>Browser offen halten ist nicht nötig – der laufende Python-/Flask-Prozess ist entscheidend.</li>
+        </ul>
+      </div>
+
+      <div class="divider"><span>workflow heute</span></div>
+      <h2>Was der fertige Workflow heute wirklich macht</h2>
+      <pre><code># 1. iPhone öffnet die WebUI über Tailscale
+# 2. Thema wird im Browser eingegeben
+# 3. webui.py startet generate_text.py
+# 4. generate_text.py ruft Ollama auf
+# 5. Ollama generiert den Podcast-Text
+# 6. Der Text wird als podcast_*.txt gespeichert
+# 7. Ollama wird beendet, um RAM freizugeben
+# 8. generate_text.py startet speak_text.py
+# 9. speak_text.py liest die TXT-Datei
+# 10. Der Text wird in Segmente zerlegt
+# 11. XTTS vertont jedes Segment einzeln
+# 12. Alle Segmente werden zu einer finalen WAV zusammengefügt
+# 13. status.json wird laufend aktualisiert
+# 14. Die WebUI zeigt: startet / läuft / Fortschritt / fertig</code></pre>
+
+      <div class="divider"><span>learnings</span></div>
+      <h2 id="learn">Was davon übertragbar ist</h2>
+      <div class="two-col">
+        <div class="info-card">
+          <h4>Was wirklich funktioniert hat</h4>
+          <ul>
+            <li>saubere neue Umgebung statt Reparatur im Altzustand</li>
+            <li>Minimaltests vor jeder größeren Pipeline</li>
+            <li>Trennung von Textgenerierung und Sprachsynthese</li>
+            <li>Ollama nach Nutzung beenden</li>
+            <li>segmentweise XTTS-Verarbeitung</li>
+            <li>lokale WebUI statt vorschnell Bots / Workflows</li>
+            <li>schrittweises Hochfahren statt Vollgas von Anfang an</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4>Was andere daraus mitnehmen können</h4>
+          <ul>
+            <li>schwache Hardware heißt nicht automatisch „unmöglich“</li>
+            <li>viele „große“ Fehler sind am Ende konkrete, kleine Dinge</li>
+            <li>Frust ist oft ein Build-Abschnitt, kein Endpunkt</li>
+            <li>funktionierend schlägt perfekt, vor allem in frühen Phasen</li>
+            <li>geteilte Stolperstellen sind oft wertvoller als perfekte Ergebnisse</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>
+        Genau deshalb passt dieses Projekt zu PromptRebel. Nicht weil es elegant angefangen hat.
+        Sondern weil es dokumentiert, ehrlich und reproduzierbar geworden ist.
+      </p>
+
+      <div class="divider"><span>nächste schritte</span></div>
+      <h2>Was als Nächstes kommen kann</h2>
+      <ul style="padding-left:18px; color:#d1d5db; margin-bottom:22px;">
+        <li>längere Monologe mit kontrolliert erhöhten Segment-Limits</li>
+        <li>zwei Stimmen statt Monolog</li>
+        <li>Audio direkt im Browser abspielen / Download vereinfachen</li>
+        <li>Queue-System bei mehreren Jobs</li>
+        <li>später URL → Podcast statt nur Thema → Podcast</li>
+      </ul>
+
+      <div class="panel end-panel">
+        <div class="end-title">Build Status</div>
+        <p style="margin-bottom:10px;">
+          Das hier ist kein perfektes System. Das ist ein funktionierendes System.
+          Und genau da beginnt der eigentliche Spaß.
+        </p>
+        <div class="end-links">
+          <a href="#" class="end-link">Download Guide →</a>
+          <a href="#" class="end-link">Nächster Build Log →</a>
+          <a href="#overview" class="end-link">Zurück zum Anfang →</a>
+        </div>
+
+        <footer>
+          <div>© PromptRebel | CC BY-NC-SA 4.0</div>
+          <div class="center-links">
+            <a href="#">Imprint</a>
+            <span>·</span>
+            <a href="#">Privacy</a>
+          </div>
+          <div>build log: v1.1</div>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    window.addEventListener("scroll", () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+      document.documentElement.style.setProperty("--scroll", ratio.toString());
+    });
+  </script>
+</body>
+</html>
