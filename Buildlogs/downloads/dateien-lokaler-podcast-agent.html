@@ -1,1 +1,1127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dateien – Lokaler Podcast Agent | PromptRebel</title>
+  <meta name="description" content="Kopierbare Dateien für den lokalen Podcast Agenten von PromptRebel: webui.py, generate_text.py und speak_text.py.">
 
+  <style>
+    :root{
+      --bg: #020617;
+      --panel: rgba(15, 23, 42, 0.95);
+      --panel-strong: rgba(15, 23, 42, 0.985);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --line: rgba(148, 163, 184, 0.18);
+      --cyan: #22d3ee;
+      --pink: #f472b6;
+      --green: #34d399;
+      --red: #f87171;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
+      --radius: 18px;
+    }
+
+    *{ box-sizing: border-box; margin: 0; padding: 0; }
+    html, body{ min-height: 100%; }
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 28px 16px 48px;
+    }
+
+    body::before{
+      content:"";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,0.28), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(56,189,248,0.24), transparent 55%);
+      z-index: -2;
+    }
+
+    body::after{
+      content:"";
+      position: fixed;
+      inset: 0;
+      opacity: .18;
+      pointer-events: none;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 3px 3px, 3px 3px;
+      mix-blend-mode: soft-light;
+      z-index: -1;
+    }
+
+    .page{
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .topbar{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 22px;
+    }
+
+    .brand{
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-shadow: 0 0 8px rgba(236,72,153,0.55), 0 0 12px rgba(34,211,238,0.35);
+    }
+
+    .brand .accent{
+      background: linear-gradient(135deg, var(--pink), var(--cyan));
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:#cbd5e1;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-size: 14px;
+    }
+
+    .hero{
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.92), rgba(15,23,42,0.985));
+      box-shadow: var(--shadow);
+      padding: 22px 20px 18px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(34,211,238,0.22), transparent 48%);
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+
+    .kicker{
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #a5f3fc;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1{
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1.12;
+      margin-bottom: 12px;
+      text-shadow: 0 0 12px rgba(236,72,153,0.35), 0 0 18px rgba(34,211,238,0.22);
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero p{
+      color:#dbe4f0;
+      max-width: 58rem;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chip{
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(148,163,184,0.28);
+      color:#e2e8f0;
+      background: rgba(2,6,23,0.3);
+      white-space: nowrap;
+    }
+
+    .chip.cyan{ border-color: rgba(34,211,238,0.35); color:#a5f3fc; }
+    .chip.green{ border-color: rgba(52,211,153,0.35); color:#bbf7d0; }
+    .chip.pink{ border-color: rgba(244,114,182,0.35); color:#fbcfe8; }
+
+    .note-box{
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .note-title{
+      font-size: 13px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color:#a5f3fc;
+      margin-bottom: 10px;
+    }
+
+    .note-box p{
+      color:#d1d5db;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .note-box ol{
+      margin-left: 18px;
+      color:#d1d5db;
+      font-size: 14px;
+    }
+
+    .files{
+      display:grid;
+      gap: 22px;
+    }
+
+    .file-card{
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.94), rgba(15,23,42,0.99));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .file-card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      background: radial-gradient(circle at top left, rgba(34,211,238,0.14), transparent 60%);
+      opacity: .9;
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+
+    .file-header{
+      position: relative;
+      z-index: 1;
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid rgba(148,163,184,0.16);
+    }
+
+    .file-title-wrap{
+      min-width: 0;
+    }
+
+    .file-tag{
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color:#cbd5e1;
+      margin-bottom: 4px;
+    }
+
+    .file-title{
+      font-size: 20px;
+      font-weight: 800;
+      color:#f8fafc;
+      word-break: break-word;
+    }
+
+    .file-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .copy-btn{
+      border: 1px solid rgba(148,163,184,0.24);
+      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(15,23,42,1));
+      color:#f9fafb;
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor:pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .copy-btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(248,250,252,0.28);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.6);
+    }
+
+    .copy-btn:focus-visible{
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+    }
+
+    .copy-btn.copied{
+      border-color: rgba(52,211,153,0.45);
+      color: #bbf7d0;
+    }
+
+    .file-meta{
+      position: relative;
+      z-index: 1;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(148,163,184,0.14);
+      background: rgba(2,6,23,0.18);
+      display:grid;
+      gap:8px;
+    }
+
+    .meta-row{
+      font-size: 13px;
+      color:#cbd5e1;
+      word-break: break-word;
+    }
+
+    .meta-label{
+      color:#94a3b8;
+      margin-right: 6px;
+    }
+
+    .code-wrap{
+      position: relative;
+      z-index: 1;
+    }
+
+    pre{
+      margin: 0;
+      padding: 18px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.55;
+      color:#e5e7eb;
+      background: transparent;
+    }
+
+    code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      white-space: pre;
+      display:block;
+    }
+
+    .status-toast{
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      background: rgba(2,6,23,0.94);
+      color:#f8fafc;
+      border: 1px solid rgba(148,163,184,0.24);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+      z-index: 50;
+    }
+
+    .status-toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-2px);
+    }
+
+    .footer{
+      margin-top: 26px;
+      font-size: 12px;
+      color:#94a3b8;
+      text-align:center;
+    }
+
+    @media (max-width: 767px){
+      body{
+        padding: 20px 12px 38px;
+      }
+
+      .file-header{
+        align-items:flex-start;
+      }
+
+      .file-actions{
+        width: 100%;
+      }
+
+      .copy-btn{
+        width: 100%;
+        justify-content: center;
+      }
+
+      pre{
+        font-size: 12px;
+        padding: 14px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand">Prompt<span class="accent">Rebel</span></div>
+      <a class="back-link" href="../lokaler-podcast-agent.html">← Zurück zum Build Log</a>
+    </div>
+
+    <section class="hero">
+      <div class="kicker">Setup Files</div>
+      <h1>Dateien – Lokaler Podcast Agent</h1>
+      <p>
+        Hier liegen die zentralen Python-Dateien des lokalen Podcast-Agenten direkt als kopierbare Blöcke.
+        Ziel ist nicht nur Lesen, sondern sauberes Nachbauen: Datei anlegen, Code kopieren, speichern, testen.
+      </p>
+      <div class="chips" aria-label="Eigenschaften">
+        <span class="chip cyan">copy ready</span>
+        <span class="chip green">reproduzierbar</span>
+        <span class="chip pink">manual build</span>
+      </div>
+    </section>
+
+    <section class="note-box">
+      <div class="note-title">Empfohlene Reihenfolge</div>
+      <p>Diese Reihenfolge ist sinnvoll, damit die Dateien logisch aufeinander aufbauen:</p>
+      <ol>
+        <li><strong>webui.py</strong> anlegen</li>
+        <li><strong>generate_text.py</strong> ergänzen oder ersetzen</li>
+        <li><strong>speak_text.py</strong> mit Fortschrittsschreiben anpassen</li>
+      </ol>
+      <p style="margin-top:10px;">
+        Wichtig: Die Pfade im Code sind auf <code>C:\xtts-clean</code> ausgelegt. Wenn dein lokales Setup anders heißt, musst du diese Stellen anpassen.
+      </p>
+    </section>
+
+    <section class="files">
+
+      <!-- webui.py -->
+      <article class="file-card">
+        <div class="file-header">
+          <div class="file-title-wrap">
+            <div class="file-tag">Datei 1</div>
+            <div class="file-title">webui.py</div>
+          </div>
+          <div class="file-actions">
+            <button class="copy-btn" data-copy-target="code-webui">Code kopieren</button>
+          </div>
+        </div>
+
+        <div class="file-meta">
+          <div class="meta-row"><span class="meta-label">Speicherort:</span> C:\xtts-clean\webui.py</div>
+          <div class="meta-row"><span class="meta-label">Zweck:</span> Lokale Flask-Weboberfläche mit Start-Button, Statusanzeige und Audio-Player</div>
+        </div>
+
+        <div class="code-wrap">
+<pre><code id="code-webui">from flask import Flask, request, jsonify
+import subprocess
+from pathlib import Path
+import json
+
+app = Flask(__name__)
+
+BASE_DIR = Path(r"C:\xtts-clean")
+PYTHON_EXE = BASE_DIR / ".venv" / "Scripts" / "python.exe"
+STATUS_FILE = BASE_DIR / "status.json"
+
+HTML = """
+&lt;!DOCTYPE html&gt;
+&lt;html lang="de"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;PromptRebel Podcast&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            background: #111;
+            color: #eee;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .box {
+            max-width: 520px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 24px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #0f0f0f;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #2d7ef7;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 24px;
+            padding: 16px;
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 8px;
+            text-align: left;
+            white-space: pre-line;
+        }
+        .ok { color: #5cb87a; }
+        .err { color: #e05c5c; }
+        .muted { color: #aaa; }
+        audio {
+            width: 100%;
+            margin-top: 16px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="box"&gt;
+        &lt;h1&gt;🎙️ PromptRebel Podcast&lt;/h1&gt;
+        &lt;form id="podcastForm"&gt;
+            &lt;input id="thema" name="thema" placeholder="Thema eingeben..." /&gt;
+            &lt;button id="startBtn" type="submit"&gt;Start&lt;/button&gt;
+        &lt;/form&gt;
+
+        &lt;div class="status" id="statusBox"&gt;Bereit.&lt;/div&gt;
+        &lt;audio id="player" controls style="display:none;"&gt;&lt;/audio&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+        const form = document.getElementById("podcastForm");
+        const startBtn = document.getElementById("startBtn");
+        const statusBox = document.getElementById("statusBox");
+        const player = document.getElementById("player");
+
+        let pollTimer = null;
+
+        function renderStatus(data) {
+            let text = "";
+            let cls = "";
+
+            if (!data || !data.state) {
+                statusBox.textContent = "Kein Status verfügbar.";
+                statusBox.className = "status muted";
+                return;
+            }
+
+            if (data.state === "idle") {
+                text = "Bereit.";
+                cls = "muted";
+            } else if (data.state === "running") {
+                text = "Läuft gerade…\\n";
+                if (data.topic) text += "Thema: " + data.topic + "\\n";
+                if (data.stage) text += "Schritt: " + data.stage + "\\n";
+                if (data.progress) text += "Fortschritt: " + data.progress + "\\n";
+                if (data.message) text += "Info: " + data.message;
+                cls = "muted";
+            } else if (data.state === "done") {
+                text = "Fertig ✅\\n";
+                if (data.topic) text += "Thema: " + data.topic + "\\n";
+                if (data.output_file) text += "Datei: " + data.output_file;
+                cls = "ok";
+
+                if (data.output_url) {
+                    player.src = data.output_url + "?t=" + Date.now();
+                    player.style.display = "block";
+                }
+            } else if (data.state === "error") {
+                text = "Fehler ❌\\n";
+                if (data.stage) text += "Schritt: " + data.stage + "\\n";
+                if (data.message) text += data.message;
+                cls = "err";
+            }
+
+            statusBox.textContent = text;
+            statusBox.className = "status " + cls;
+        }
+
+        async function pollStatus() {
+            try {
+                const res = await fetch("/status");
+                const data = await res.json();
+                renderStatus(data);
+
+                if (data.state === "done" || data.state === "error" || data.state === "idle") {
+                    startBtn.disabled = false;
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+            } catch (e) {
+                statusBox.textContent = "Status konnte nicht geladen werden.";
+                statusBox.className = "status err";
+                startBtn.disabled = false;
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const thema = document.getElementById("thema").value.trim();
+            if (!thema) return;
+
+            startBtn.disabled = true;
+            player.style.display = "none";
+            statusBox.textContent = "Startet…";
+            statusBox.className = "status muted";
+
+            await fetch("/start", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ thema })
+            });
+
+            if (!pollTimer) {
+                pollTimer = setInterval(pollStatus, 2000);
+            }
+            pollStatus();
+        });
+
+        pollStatus();
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"""
+
+
+def write_status(data: dict) -&gt; None:
+    STATUS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def read_status() -&gt; dict:
+    if not STATUS_FILE.exists():
+        return {"state": "idle"}
+    try:
+        return json.loads(STATUS_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {"state": "error", "message": "status.json konnte nicht gelesen werden."}
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return HTML
+
+
+@app.route("/start", methods=["POST"])
+def start():
+    data = request.get_json(silent=True) or {}
+    thema = (data.get("thema") or "KI im Alltag").strip()
+
+    current = read_status()
+    if current.get("state") == "running":
+        return jsonify({"ok": False, "message": "Es läuft bereits ein Job."}), 409
+
+    write_status({
+        "state": "running",
+        "topic": thema,
+        "stage": "Start",
+        "progress": "0%",
+        "message": "Job wurde gestartet."
+    })
+
+    subprocess.Popen([
+        str(PYTHON_EXE),
+        str(BASE_DIR / "generate_text.py"),
+        thema
+    ])
+
+    return jsonify({"ok": True})
+
+
+@app.route("/status", methods=["GET"])
+def status():
+    return jsonify(read_status())
+
+
+@app.route("/latest-audio", methods=["GET"])
+def latest_audio():
+    import glob
+    from flask import send_file
+
+    wavs = sorted(glob.glob(str(BASE_DIR / "podcast_*.wav")))
+    if not wavs:
+        return ("Keine Audio-Datei gefunden.", 404)
+
+    latest = max(wavs, key=lambda p: Path(p).stat().st_mtime)
+    return send_file(latest, mimetype="audio/wav")
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=3000)</code></pre>
+        </div>
+      </article>
+
+      <!-- generate_text.py -->
+      <article class="file-card">
+        <div class="file-header">
+          <div class="file-title-wrap">
+            <div class="file-tag">Datei 2</div>
+            <div class="file-title">generate_text.py</div>
+          </div>
+          <div class="file-actions">
+            <button class="copy-btn" data-copy-target="code-generate">Code kopieren</button>
+          </div>
+        </div>
+
+        <div class="file-meta">
+          <div class="meta-row"><span class="meta-label">Speicherort:</span> C:\xtts-clean\generate_text.py</div>
+          <div class="meta-row"><span class="meta-label">Zweck:</span> Erzeugt Podcast-Text über Ollama, schreibt Status und startet anschließend speak_text.py</div>
+        </div>
+
+        <div class="code-wrap">
+<pre><code id="code-generate">import datetime
+import subprocess
+import sys
+import time
+import json
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\xtts-clean")
+OUTPUT_DIR = BASE_DIR
+OLLAMA_MODEL = "llama3"
+STATUS_FILE = BASE_DIR / "status.json"
+
+
+def write_status(data: dict) -&gt; None:
+    STATUS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def get_topic() -&gt; str:
+    if len(sys.argv) &gt; 1:
+        return " ".join(sys.argv[1:]).strip()
+    return "KI im Alltag"
+
+
+def generate_text(topic: str) -&gt; str:
+    prompt = f"""
+Schreibe einen natürlich gesprochenen Podcast-Monolog auf Deutsch zum Thema: {topic}.
+
+Regeln:
+- genau ein Sprecher
+- 8 bis 10 kurze Sätze
+- maximal 140 Wörter
+- nur deutsche Wörter
+- keine englischen Wörter
+- keine fremdsprachigen Zeichen
+- keine Überschrift
+- keine Rollenbezeichnungen
+- keine Aufzählungen
+- keine Klammern
+- keine Emojis
+- gut vorlesbar
+- sachlich und klar
+""".strip()
+
+    result = subprocess.run(
+        ["ollama", "run", OLLAMA_MODEL],
+        input=prompt,
+        text=True,
+        capture_output=True,
+        encoding="utf-8",
+        errors="ignore",
+        check=False,
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(f"Ollama-Fehler:\\n{result.stderr}")
+
+    text = " ".join(result.stdout.strip().split())
+    if not text:
+        raise RuntimeError("Ollama hat keinen Text zurückgegeben.")
+
+    return text
+
+
+def main() -&gt; None:
+    topic = get_topic()
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    write_status({
+        "state": "running",
+        "topic": topic,
+        "stage": "Textgenerierung",
+        "progress": "10%",
+        "message": "Ollama erzeugt den Text."
+    })
+
+    text = generate_text(topic)
+
+    txt_path = OUTPUT_DIR / f"podcast_{timestamp}.txt"
+    txt_path.write_text(text, encoding="utf-8")
+
+    write_status({
+        "state": "running",
+        "topic": topic,
+        "stage": "Text gespeichert",
+        "progress": "35%",
+        "message": f"TXT gespeichert: {txt_path.name}"
+    })
+
+    subprocess.run(["taskkill", "/IM", "ollama.exe", "/F"], capture_output=True)
+
+    write_status({
+        "state": "running",
+        "topic": topic,
+        "stage": "RAM freigeben",
+        "progress": "45%",
+        "message": "Ollama wurde beendet."
+    })
+
+    time.sleep(3)
+
+    write_status({
+        "state": "running",
+        "topic": topic,
+        "stage": "Vertonung startet",
+        "progress": "50%",
+        "message": "speak_text.py wird gestartet."
+    })
+
+    subprocess.run([
+        str(BASE_DIR / ".venv" / "Scripts" / "python.exe"),
+        str(BASE_DIR / "speak_text.py"),
+        str(txt_path)
+    ], check=True)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        write_status({
+            "state": "error",
+            "stage": "generate_text.py",
+            "message": str(e)
+        })
+        raise</code></pre>
+        </div>
+      </article>
+
+      <!-- speak_text.py -->
+      <article class="file-card">
+        <div class="file-header">
+          <div class="file-title-wrap">
+            <div class="file-tag">Datei 3</div>
+            <div class="file-title">speak_text.py</div>
+          </div>
+          <div class="file-actions">
+            <button class="copy-btn" data-copy-target="code-speak">Code kopieren</button>
+          </div>
+        </div>
+
+        <div class="file-meta">
+          <div class="meta-row"><span class="meta-label">Speicherort:</span> C:\xtts-clean\speak_text.py</div>
+          <div class="meta-row"><span class="meta-label">Zweck:</span> Vertont den Text per XTTS, schreibt Fortschritt in status.json und baut die WAV-Datei zusammen</div>
+        </div>
+
+        <div class="code-wrap">
+<pre><code id="code-speak">import gc
+import json
+import re
+import shutil
+import subprocess
+import sys
+import time
+import wave
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\xtts-clean")
+TTS_EXE = BASE_DIR / ".venv" / "Scripts" / "tts.exe"
+VOICE_WAV = BASE_DIR / "voice.wav"
+OUTPUT_DIR = BASE_DIR
+SEGMENTS_DIR = BASE_DIR / "segments"
+STATUS_FILE = BASE_DIR / "status.json"
+
+TTS_MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"
+LANGUAGE = "de"
+
+MAX_SENTENCES = 8
+MAX_CHARS_PER_SENTENCE = 140
+
+
+def write_status(data: dict) -&gt; None:
+    STATUS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def get_latest_txt() -&gt; Path:
+    txt_files = sorted(
+        BASE_DIR.glob("podcast_*.txt"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True
+    )
+    if not txt_files:
+        raise FileNotFoundError("Keine podcast_*.txt Datei gefunden.")
+    return txt_files[0]
+
+
+def split_into_sentences(text: str) -&gt; list[str]:
+    parts = re.split(r"(?&lt;=[.!?])\s+", text)
+    sentences = []
+
+    for part in parts:
+        sentence = " ".join(part.split()).strip()
+        if not sentence:
+            continue
+
+        if len(sentence) &gt; MAX_CHARS_PER_SENTENCE:
+            chunks = re.findall(rf".{{1,{MAX_CHARS_PER_SENTENCE}}}(?:\s|$)", sentence)
+            for chunk in chunks:
+                chunk = chunk.strip()
+                if chunk:
+                    sentences.append(chunk)
+        else:
+            sentences.append(sentence)
+
+    return sentences[:MAX_SENTENCES]
+
+
+def synthesize_sentence(sentence: str, out_file: Path) -&gt; None:
+    cmd = [
+        str(TTS_EXE),
+        "--model_name", TTS_MODEL,
+        "--text", sentence,
+        "--language_idx", LANGUAGE,
+        "--speaker_wav", str(VOICE_WAV),
+        "--out_path", str(out_file),
+    ]
+
+    result = subprocess.run(
+        cmd,
+        text=True,
+        capture_output=True,
+        encoding="utf-8",
+        errors="ignore",
+        check=False,
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"XTTS-Fehler bei {out_file.name}\\n\\n"
+            f"Returncode: {result.returncode}\\n\\n"
+            f"TEXT: {sentence}\\n\\n"
+            f"STDERR:\\n{result.stderr}\\n\\n"
+            f"STDOUT:\\n{result.stdout}"
+        )
+
+    if not out_file.exists():
+        raise RuntimeError(f"Keine WAV erzeugt: {out_file}")
+
+    if out_file.stat().st_size == 0:
+        raise RuntimeError(f"WAV ist leer: {out_file}")
+
+
+def concatenate_wavs(segment_files: list[Path], final_output: Path) -&gt; None:
+    if not segment_files:
+        raise RuntimeError("Keine WAV-Segmente zum Zusammenfügen vorhanden.")
+
+    with wave.open(str(segment_files[0]), "rb") as first:
+        params = first.getparams()
+        frames = [first.readframes(first.getnframes())]
+
+    for wav_file in segment_files[1:]:
+        with wave.open(str(wav_file), "rb") as w:
+            current_params = w.getparams()
+
+            if (
+                current_params.nchannels != params.nchannels
+                or current_params.sampwidth != params.sampwidth
+                or current_params.framerate != params.framerate
+                or current_params.comptype != params.comptype
+            ):
+                raise RuntimeError(
+                    f"WAV-Parameter passen nicht zusammen: {wav_file.name}\\n"
+                    f"Erwartet: channels={params.nchannels}, width={params.sampwidth}, "
+                    f"rate={params.framerate}, comptype={params.comptype}\\n"
+                    f"Gefunden: channels={current_params.nchannels}, width={current_params.sampwidth}, "
+                    f"rate={current_params.framerate}, comptype={current_params.comptype}"
+                )
+
+            frames.append(w.readframes(w.getnframes()))
+
+    with wave.open(str(final_output), "wb") as out:
+        out.setparams(params)
+        for data in frames:
+            out.writeframes(data)
+
+
+def main() -&gt; None:
+    if not TTS_EXE.exists():
+        raise FileNotFoundError(f"TTS nicht gefunden: {TTS_EXE}")
+    if not VOICE_WAV.exists():
+        raise FileNotFoundError(f"voice.wav nicht gefunden: {VOICE_WAV}")
+
+    txt_path = Path(sys.argv[1]) if len(sys.argv) &gt; 1 else get_latest_txt()
+    if not txt_path.exists():
+        raise FileNotFoundError(f"TXT-Datei nicht gefunden: {txt_path}")
+
+    text = txt_path.read_text(encoding="utf-8").strip()
+    if not text:
+        raise RuntimeError("TXT-Datei ist leer.")
+
+    timestamp = txt_path.stem.replace("podcast_", "")
+    final_output = OUTPUT_DIR / f"podcast_{timestamp}.wav"
+
+    if SEGMENTS_DIR.exists():
+        shutil.rmtree(SEGMENTS_DIR)
+    SEGMENTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    sentences = split_into_sentences(text)
+    if not sentences:
+        raise RuntimeError("Keine Sätze zum Vertonen gefunden.")
+
+    gc.collect()
+    time.sleep(5)
+
+    total = len(sentences)
+    segment_files = []
+
+    for i, sentence in enumerate(sentences, start=1):
+        progress = 50 + int((i / total) * 40)
+
+        write_status({
+            "state": "running",
+            "stage": "Vertonung",
+            "progress": f"{progress}%",
+            "message": f"Segment {i}/{total}",
+        })
+
+        segment_path = SEGMENTS_DIR / f"segment_{i:03d}.wav"
+        synthesize_sentence(sentence, segment_path)
+        segment_files.append(segment_path)
+
+        gc.collect()
+        time.sleep(1)
+
+    write_status({
+        "state": "running",
+        "stage": "Zusammenfügen",
+        "progress": "95%",
+        "message": "Segmente werden zusammengebaut."
+    })
+
+    concatenate_wavs(segment_files, final_output)
+
+    if not final_output.exists():
+        raise RuntimeError("Finale WAV wurde nicht erstellt.")
+
+    shutil.rmtree(SEGMENTS_DIR, ignore_errors=True)
+
+    write_status({
+        "state": "done",
+        "stage": "Fertig",
+        "progress": "100%",
+        "message": "Podcast wurde erfolgreich erstellt.",
+        "output_file": final_output.name,
+        "output_url": "/latest-audio"
+    })
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        write_status({
+            "state": "error",
+            "stage": "speak_text.py",
+            "message": str(e)
+        })
+        raise</code></pre>
+        </div>
+      </article>
+
+    </section>
+
+    <div class="footer">
+      PromptRebel · Build Support Files · Copy, save, test.
+    </div>
+  </div>
+
+  <div class="status-toast" id="statusToast" aria-live="polite"></div>
+
+  <script>
+    async function copyCodeFromElement(id, button) {
+      const el = document.getElementById(id);
+      const toast = document.getElementById("statusToast");
+      if (!el) return;
+
+      const text = el.innerText;
+
+      try {
+        await navigator.clipboard.writeText(text);
+
+        const original = button.textContent;
+        button.textContent = "Kopiert ✓";
+        button.classList.add("copied");
+
+        toast.textContent = "Code in die Zwischenablage kopiert.";
+        toast.classList.add("show");
+
+        setTimeout(() => {
+          button.textContent = original;
+          button.classList.remove("copied");
+          toast.classList.remove("show");
+        }, 1800);
+      } catch (err) {
+        toast.textContent = "Kopieren fehlgeschlagen. Bitte manuell markieren und kopieren.";
+        toast.classList.add("show");
+
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2400);
+      }
+    }
+
+    document.querySelectorAll("[data-copy-target]").forEach((button) => {
+      button.addEventListener("click", () => {
+        copyCodeFromElement(button.getAttribute("data-copy-target"), button);
+      });
+    });
+  </script>
+</body>
+</html>
