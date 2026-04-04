@@ -2,11 +2,13 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>PromptRebel – Hörbücher & Spoken Stories</title>
+  <title>PromptRebel – Hörbücher</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="KI-vertonte Hörbücher, Spoken Stories und Audio-Experimente von PromptRebel.">
 
   <style>
+    :root { --scroll: 0; }
+
     /* --- Reset / Basics --- */
     *, *::before, *::after {
       box-sizing: border-box;
@@ -24,32 +26,13 @@
       background: #020617;
       color: #e5e7eb;
       line-height: 1.6;
+      padding-top: 64px;
     }
 
     a {
       color: inherit;
       text-decoration: none;
     }
-    
-.video-wrapper {
-  position: relative;
-  width: 100%;
-  padding-bottom: 56.25%; /* 16:9 */
-  height: 0;
-  overflow: hidden;
-  border-radius: 18px;
-  box-shadow: 0 20px 60px rgba(15,23,42,0.95);
-}
-
-.video-wrapper iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
 
     /* --- Hintergrund / Noise / Glows --- */
     body::before {
@@ -79,7 +62,7 @@
     .page {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 88px 16px 40px;
+      padding: 16px 16px 40px;
     }
 
     /* --- Scroll-Progress-Bar --- */
@@ -203,36 +186,126 @@
     }
 
     /* --- Layout-Helfer --- */
-    .section {
-      padding: 32px 16px 8px;
+    .section { padding: 40px 16px 8px; }
+    .section:first-of-type { padding-top: 28px; }
+
+    @media (min-width:768px){
+      .hero-layout{
+        display:grid;
+        grid-template-columns:minmax(0, 3fr) minmax(0, 2.2fr);
+        gap:32px;
+        align-items:center;
+      }
     }
 
-    .section:first-of-type {
-      padding-top: 8px;
+    /* --- Hero --- */
+    .category-label{
+      font-size:12px;
+      letter-spacing:.25em;
+      text-transform:uppercase;
+      color:#f9a8d4;
+      margin-bottom:6px;
     }
 
-    /* --- Seitenkopf --- */
-    .page-kicker {
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      font-size: 11px;
-      color: #9ca3af;
-      margin-bottom: 6px;
+    .hero-title{
+      font-size:clamp(32px, 5vw, 46px);
+      font-weight:800;
+      margin-bottom:10px;
+      text-shadow:0 0 14px rgba(236,72,153,.6), 0 0 20px rgba(34,211,238,.4);
     }
 
-    .page-title {
-      font-size: 32px;
-      line-height: 1.1;
-      font-weight: 800;
-      margin-bottom: 18px;
-      text-shadow: 0 0 20px rgba(15,23,42,1);
+    .hero-breadcrumbs{
+      font-size:12px;
+      color:#9ca3af;
+      margin-bottom:16px;
     }
 
+    .hero-breadcrumbs a{
+      text-decoration:underline;
+      text-underline-offset:3px;
+    }
+
+    .hero-text-main{
+      font-size:15px;
+      margin-bottom:10px;
+      max-width:44rem;
+    }
+
+    .hero-text-sub{
+      font-size:14px;
+      color:#cbd5f5;
+      margin-bottom:14px;
+      max-width:44rem;
+    }
+
+    .hero-feature{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      margin-top:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(15,23,42,.6);
+      font-weight:900;
+      letter-spacing:.02em;
+      box-shadow:0 18px 45px rgba(15,23,42,.6);
+    }
+
+    .hero-feature .hot{
+      color:#f97316;
+    }
+
+    .hero-feature .text{
+      color:#f9fafb;
+      text-shadow:0 0 12px rgba(236,72,153,.22), 0 0 16px rgba(34,211,238,.18);
+    }
+
+    /* --- Panel / Terminal --- */
+    .panel-glass{
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background:radial-gradient(circle at top left, rgba(15,23,42,.9), rgba(15,23,42,.98));
+      box-shadow:0 18px 45px rgba(15,23,42,.95);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+      padding:14px 16px 12px;
+    }
+
+    .panel-header{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#9ca3af;
+      margin-bottom:6px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .panel-header span.icon{
+      font-size:14px;
+      color:#f97316;
+    }
+
+    .terminal{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:12px;
+      white-space:pre-line;
+      color:#e5e7eb;
+    }
+
+    .terminal .dim{
+      color:#6b7280;
+    }
+
+    /* --- Audio Switch --- */
     .audio-switch {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       margin-bottom: 22px;
+      margin-top: 18px;
     }
 
     .audio-switch-link {
@@ -256,22 +329,7 @@
         0 0 30px rgba(56,189,248,0.9);
     }
 
-    /* --- Intro --- */
-    .intro-text {
-      max-width: 42rem;
-      font-size: 15px;
-      color: #e5e7eb;
-      margin-bottom: 8px;
-    }
-
-    .intro-sub {
-      max-width: 40rem;
-      font-size: 13px;
-      color: #9ca3af;
-      margin-bottom: 24px;
-    }
-
-    /* --- Hörbuch-Grid --- */
+    /* --- Story Grid --- */
     .story-grid {
       display: flex;
       flex-direction: column;
@@ -320,8 +378,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(to top, rgba(2,6,23,0.52), rgba(2,6,23,0.08));
+      background: linear-gradient(to top, rgba(2,6,23,0.52), rgba(2,6,23,0.08));
       pointer-events: none;
     }
 
@@ -330,16 +387,15 @@
       z-index: 1;
     }
 
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
+    .story-cover.video {
       padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+      background: none;
+      min-height: auto;
+      display: block;
+    }
+
+    .story-cover.video::before {
+      display: none;
     }
 
     .story-meta-top {
@@ -414,6 +470,26 @@
       outline-offset: 3px;
     }
 
+    /* --- Video Wrapper --- */
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(15,23,42,0.95);
+    }
+
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
     /* --- Footer --- */
     footer {
       margin-top: 40px;
@@ -470,6 +546,8 @@
 
     /* --- Mobile Tweaks --- */
     @media (max-width: 767px) {
+      body { padding-top: 60px; }
+
       .nav-inner {
         gap: 8px;
       }
@@ -480,15 +558,24 @@
       }
 
       .page {
-        padding-top: 84px;
+        padding-top: 16px;
       }
 
-      .page-title {
-        font-size: 26px;
+      .section {
+        padding-top: 32px;
+      }
+
+      .hero-layout {
+        display: block;
+      }
+
+      .panel-glass {
+        margin-top: 20px;
       }
     }
   </style>
 </head>
+
 <body>
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
 
@@ -509,78 +596,113 @@
   <div class="scroll-progress" id="scrollProgress"></div>
 
   <main class="page" id="main">
+    <!-- HERO -->
     <section class="section">
-      <p class="page-kicker">Category · Audio</p>
-      <h1 class="page-title">Hörbücher & Spoken Stories</h1>
-<div class="hero-breadcrumbs">
-            <span><a href="../index.html">Home</a> · So funktioniert’s</span>
+      <div class="hero-layout">
+        <div>
+          <div class="category-label">Category</div>
+          <h1 class="hero-title">Hörbücher</h1>
+
+          <div class="hero-breadcrumbs">
+            <span><a href="../index.html">Home</a> · Hörbücher</span>
           </div>
-      
 
-      <p class="intro-text">
-        Hier liegen vertonte Geschichten, Hörbuch-Experimente und narrative Audioformate.
-        Nicht als Musik gedacht, sondern als gesprochene Welt, Text und Stimme.
-      </p>
+          <p class="hero-text-main">
+            Hier liegen vertonte Geschichten, Hörbuch-Experimente und narrative Audioformate.
+            Nicht als Musik gedacht, sondern als gesprochene Welt, Text und Stimme.
+          </p>
 
-      <p class="intro-sub">
-        Manche Projekte sind vollständig, andere bewusst fragmentarisch. Entscheidend ist nicht Perfektion,
-        sondern dokumentiertes Storytelling mit KI, TTS und reproduzierbaren Workflows.
-      </p>
+          <p class="hero-text-sub">
+            Manche Projekte sind vollständig, andere bewusst fragmentarisch.
+            Entscheidend ist nicht Perfektion, sondern dokumentiertes Storytelling mit KI,
+            TTS und reproduzierbaren Workflows.
+          </p>
 
+          <div class="hero-feature" aria-label="Key message">
+            <span class="hot">🎧</span>
+            <span class="text">Gesprochene Geschichten. Dokumentiert statt mystifiziert.</span>
+          </div>
+
+          <nav class="audio-switch" aria-label="Audiobereiche">
+            <a href="audiobooks.html" class="audio-switch-link active">Hörbücher</a>
+            <a href="../music/albums.html" class="audio-switch-link">Alben & EPs</a>
+            <a href="../music/singles.html" class="audio-switch-link">Singles & Themes</a>
+          </nav>
+        </div>
+
+        <aside class="panel-glass" aria-label="Audio Stories Terminal">
+          <div class="panel-header">
+            <span class="icon">📖</span>
+            <span>promptrebel:audio$</span>
+          </div>
+          <div class="terminal">
+load --format=spoken-story --mode=clarity
+
+> category: hörbücher
+> focus: text, stimme, struktur
+> output: hören, lesen, nachvollziehen
+
+<span class="dim"># erstes artefakt: LUMI und der Mond</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- STORIES -->
+    <section class="section">
       <div class="story-grid">
 
-        <article class="album-card">
-  
-  <!-- Cover durch Player ersetzt -->
-  <div class="album-cover" style="padding:0; background:none;">
+        <!-- STORY 1 -->
+        <article class="story-card">
+          <div class="story-cover video">
+            <div class="video-wrapper">
+              <iframe 
+                src="https://www.youtube.com/embed/hMUn2y3baxk"
+                title="LUMI und der Mond"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+              </iframe>
+            </div>
+          </div>
 
-    <div class="video-wrapper">
-      <iframe 
-        src="https://www.youtube.com/embed/hMUn2y3baxk"
-        title="Hörbuch – Gipfel der Stille"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen>
-      </iframe>
-    </div>
+          <div>
+            <div class="story-meta-top">
+              <span>2026 · Hörbuch · KI-generiert</span>
+              <span class="story-type">Audio</span>
+            </div>
 
-  </div>
+            <h2 class="story-title">LUMI und der Mond</h2>
 
-  <!-- Textbereich -->
-  <div>
-    <div class="album-meta-top">
-      <span>2026 · Hörbuch · KI-generiert</span>
-      <span class="album-type">AUDIO</span>
-    </div>
+            <p class="story-description">
+              Ein experimentelles KI-Hörbuch über Lumi, den Fuchs im Blaubeertal,
+              der den Mond fangen will. Erstellt als Test, wie weit sich Narrative,
+              Stimme und Struktur mit KI verbinden lassen.
+            </p>
 
-    <h2 class="album-title">LUMI und der Mond</h2>
+            <div class="story-meta-bottom">
+              <div class="story-tag-row">
+                <span class="story-tag">hörbuch</span>
+                <span class="story-tag">story</span>
+                <span class="story-tag">ki-generiert</span>
+                <span class="story-tag">notebooklm</span>
+                <span class="story-tag">tts</span>
+                <span class="story-tag">experiment</span>
+              </div>
 
-    <p class="album-description">
-      Ein experimentelles KI-Hörbuch über Lumi, den Fuchs im Blaubeertal,
-      der den Mond fangen will. Erstellt als Test, wie weit sich Narrative,
-      Stimme und Struktur mit KI verbinden lassen.
-    </p>
+              <div class="story-links-row">
+                <a class="story-link"
+                   href="https://youtu.be/hMUn2y3baxk"
+                   target="_blank"
+                   rel="noopener">
+                  YouTube →
+                </a>
+              </div>
+            </div>
+          </div>
+        </article>
 
-    <div class="album-meta-bottom">
-      <div class="album-tag-row">
-        <span class="album-tag">hörbuch</span>
-        <span class="album-tag">story</span>
-        <span class="album-tag">ki-generiert</span>
-      </div>
-
-      <div class="album-links-row">
-        <a class="album-link"
-           href="https://youtu.be/hMUn2y3baxk"
-           target="_blank"
-           rel="noopener">
-          
-        </a>
-      </div>
-    </div>
-  </div>
-
-</article>
-        <!-- STORY 2: PLATZHALTER -->
+        <!-- STORY 2 -->
         <article class="story-card">
           <div class="story-cover">
             <span>Next<br>Spoken<br>World</span>
@@ -623,7 +745,7 @@
           </div>
         </article>
 
-        <!-- STORY 3: PLATZHALTER -->
+        <!-- STORY 3 -->
         <article class="story-card">
           <div class="story-cover">
             <span>Future<br>Audio<br>Lab</span>
@@ -672,9 +794,9 @@
     <footer>
       <div>© PromptRebel | CC BY-NC-SA 4.0</div>
       <div class="center-links">
-        <a href="#">Imprint</a>
+        <a href="../imprint.html">Imprint</a>
         <span>·</span>
-        <a href="#">Privacy</a>
+        <a href="../privacy.html">Privacy</a>
       </div>
       <div>current build: <span id="buildVersion" class="build-highlight">v0.1.audio-stories</span> – spoken stories index</div>
     </footer>
@@ -696,6 +818,10 @@
     window.addEventListener("load", () => {
       brandEl.classList.add("glitch");
       setTimeout(() => brandEl.classList.remove("glitch"), 800);
+    });
+
+    brandEl.addEventListener("click", () => {
+      window.location.href = "../index.html";
     });
 
     let clickCount = 0;
