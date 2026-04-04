@@ -720,15 +720,9 @@ load --format=spoken-story --mode=clarity
               </div>
 
               <div class="story-links-row">
-                <span class="story-link" onclick="event.preventDefault(); window.location.href='../coming-soon.html';">
-                  Listen →
-                </span>
-                <span class="story-link" onclick="event.preventDefault(); window.location.href='../coming-soon.html';">
-                  Text →
-                </span>
-                <span class="story-link" onclick="event.preventDefault(); window.location.href='../coming-soon.html';">
-                  Details →
-                </span>
+                <a class="story-link" href="../coming-soon.html">Listen →</a>
+                <a class="story-link" href="../coming-soon.html">Text →</a>
+                <a class="story-link" href="../coming-soon.html">Details →</a>
               </div>
             </div>
           </div>
@@ -763,15 +757,9 @@ load --format=spoken-story --mode=clarity
               </div>
 
               <div class="story-links-row">
-                <span class="story-link" onclick="event.preventDefault(); window.location.href='../coming-soon.html';">
-                  Listen →
-                </span>
-                <span class="story-link" onclick="event.preventDefault(); window.location.href='../coming-soon.html';">
-                  Text →
-                </span>
-                <span class="story-link" onclick="event.preventDefault(); window.location.href='../coming-soon.html';">
-                  Details →
-                </span>
+                <a class="story-link" href="../coming-soon.html">Listen →</a>
+                <a class="story-link" href="../coming-soon.html">Text →</a>
+                <a class="story-link" href="../coming-soon.html">Details →</a>
               </div>
             </div>
           </div>
@@ -791,70 +779,72 @@ load --format=spoken-story --mode=clarity
     </footer>
   </main>
 
-  <script>
-    // --- Scroll-Progress ---
-    const scrollBar = document.getElementById("scrollProgress");
-    window.addEventListener("scroll", () => {
-      const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - window.innerHeight;
-      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
-      scrollBar.style.transform = `scaleX(${ratio})`;
-    });
+<script>
+  // --- Scroll-Progress ---
+  const scrollBar = document.getElementById("scrollProgress");
+  window.addEventListener("scroll", () => {
+    const doc = document.documentElement;
+    const scrollable = doc.scrollHeight - window.innerHeight;
+    const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+    scrollBar.style.transform = `scaleX(${ratio})`;
+  });
 
-    // --- Brand Glitch on Load + Easter Egg ---
-    const brandEl = document.getElementById("brand");
+  // --- Brand Glitch on Load + Easter Egg / Home ---
+  const brandEl = document.getElementById("brand");
 
-    window.addEventListener("load", () => {
-      brandEl.classList.add("glitch");
-      setTimeout(() => brandEl.classList.remove("glitch"), 800);
-    });
+  window.addEventListener("load", () => {
+    brandEl.classList.add("glitch");
+    setTimeout(() => brandEl.classList.remove("glitch"), 800);
+  });
 
-    brandEl.addEventListener("click", () => {
-      window.location.href = "../index.html";
-    });
+  let clickCount = 0;
+  let clickTimer = null;
 
-    let clickCount = 0;
-    let clickTimer = null;
+  brandEl.addEventListener("click", () => {
+    clickCount++;
 
-    brandEl.addEventListener("click", () => {
-      clickCount++;
-      if (!clickTimer) {
-        clickTimer = setTimeout(() => {
-          clickCount = 0;
-          clickTimer = null;
-        }, 600);
-      }
-      if (clickCount >= 3) {
+    if (!clickTimer) {
+      clickTimer = setTimeout(() => {
+        if (clickCount === 1) {
+          window.location.href = "../index.html";
+        }
+
         clickCount = 0;
-        clearTimeout(clickTimer);
         clickTimer = null;
-        triggerRetroMode();
-      }
-    });
-
-    function triggerRetroMode() {
-      document.body.classList.add("retro-mode");
-      setTimeout(() => {
-        document.body.classList.remove("retro-mode");
-      }, 12000);
+      }, 600);
     }
 
-    // --- Footer-Version-Click ---
-    const buildVersionEl = document.getElementById("buildVersion");
-    buildVersionEl.addEventListener("click", () => {
-      const versions = [
-        "v0.1.audio-stories",
-        "v0.2.audio-stories",
-        "v0.6.9.audio-stories",
-        "v1.0.audio-stories",
-        "v∞.audio-stories"
-      ];
-      let i = 0;
-      const int = setInterval(() => {
-        buildVersionEl.textContent = versions[i++ % versions.length];
-        if (i > 10) clearInterval(int);
-      }, 120);
-    });
-  </script>
+    if (clickCount >= 3) {
+      clearTimeout(clickTimer);
+      clickTimer = null;
+      clickCount = 0;
+      triggerRetroMode();
+    }
+  });
+
+  function triggerRetroMode() {
+    document.body.classList.add("retro-mode");
+    setTimeout(() => {
+      document.body.classList.remove("retro-mode");
+    }, 12000);
+  }
+
+  // --- Footer-Version-Click ---
+  const buildVersionEl = document.getElementById("buildVersion");
+  buildVersionEl.addEventListener("click", () => {
+    const versions = [
+      "v0.1.audio-stories",
+      "v0.2.audio-stories",
+      "v0.6.9.audio-stories",
+      "v1.0.audio-stories",
+      "v∞.audio-stories"
+    ];
+    let i = 0;
+    const int = setInterval(() => {
+      buildVersionEl.textContent = versions[i++ % versions.length];
+      if (i > 10) clearInterval(int);
+    }, 120);
+  });
+</script>
 </body>
 </html>
