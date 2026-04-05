@@ -102,15 +102,7 @@
       pointer-events: none;
     }
 
-    .nav-inner {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 10px 16px 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
+    
 
     .brand {
       font-size: 22px;
@@ -126,26 +118,103 @@
       color: transparent;
     }
 
-    .nav-links { display: flex; gap: 18px; font-size: 14px; }
+    .nav-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 10px 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: relative;
+}
 
-    .nav-link {
-      position: relative;
-      padding-block: 4px;
-    }
+.nav-links {
+  display: flex;
+  gap: 18px;
+  font-size: 14px;
+}
 
-    .nav-link::after {
-      content: "";
-      position: absolute;
-      left: 0; bottom: -2px;
-      width: 0; height: 2px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
-      box-shadow: 0 0 8px rgba(56,189,248,.8);
-      transition: width .25s ease;
-    }
+.nav-link {
+  position: relative;
+  padding-block: 4px;
+}
 
-    .nav-link:hover::after,
-    .nav-link:focus-visible::after { width: 100%; }
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -2px;
+  width: 0; height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+  box-shadow: 0 0 8px rgba(56,189,248,.8);
+  transition: width .25s ease;
+}
+
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  width: 100%;
+}
+
+.nav-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(148,163,184,.18);
+  background: rgba(15,23,42,.45);
+  box-shadow: 0 10px 24px rgba(15,23,42,.45);
+  padding: 0;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.nav-toggle-line {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  transition: transform .22s ease, opacity .22s ease;
+}
+
+.nav-toggle.is-open .nav-toggle-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle.is-open .nav-toggle-line:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle.is-open .nav-toggle-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.mobile-nav {
+  display: none;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 16px 12px;
+}
+
+.mobile-nav.open {
+  display: grid;
+  gap: 8px;
+}
+
+.mobile-nav-link {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(148,163,184,.16);
+  background: rgba(15,23,42,.45);
+  color: #e5e7eb;
+  font-size: 15px;
+  box-shadow: 0 10px 24px rgba(15,23,42,.35);
+}
 
     .page {
       max-width: 1040px;
@@ -586,12 +655,33 @@
     footer a { text-decoration: underline; text-underline-offset: 3px; }
 
     @media (max-width: 767px) {
-      body { padding-top: 60px; }
-      .nav-inner { gap: 8px; }
-      .nav-links { font-size: 13px; gap: 12px; }
-      p { font-size: 15px; }
-      .case-row { grid-template-columns: 1fr; gap: 8px; }
-    }
+  body { padding-top: 60px; }
+
+  .nav-inner {
+    gap: 8px;
+  }
+
+  .brand {
+    font-size: 20px;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  p {
+    font-size: 15px;
+  }
+
+  .case-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -606,17 +696,39 @@
   <a href="#main" class="skip-link">Zum Inhalt springen</a>
 
   <header class="nav">
-    <div class="nav-inner">
-      <div class="brand">Prompt<span class="accent">Rebel</span></div>
-      <nav class="nav-links" aria-label="Hauptnavigation">
-        <a href="#overview" class="nav-link">Overview</a>
-        <a href="#architektur" class="nav-link">Architektur</a>
-        <a href="#cases" class="nav-link">Build Cases</a>
-        <a href="#files" class="nav-link">Files</a>
-        <a href="#learn" class="nav-link">Learnings</a>
-      </nav>
-    </div>
-  </header>
+  <div class="nav-inner">
+    <div class="brand">Prompt<span class="accent">Rebel</span></div>
+
+    <nav class="nav-links" aria-label="Hauptnavigation">
+      <a href="#overview" class="nav-link">Overview</a>
+      <a href="#architektur" class="nav-link">Architektur</a>
+      <a href="#cases" class="nav-link">Build Cases</a>
+      <a href="#files" class="nav-link">Files</a>
+      <a href="#learn" class="nav-link">Learnings</a>
+    </nav>
+
+    <button
+      class="nav-toggle"
+      id="navToggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="mobileNav"
+      aria-label="Menü öffnen"
+    >
+      <span class="nav-toggle-line"></span>
+      <span class="nav-toggle-line"></span>
+      <span class="nav-toggle-line"></span>
+    </button>
+  </div>
+
+  <nav id="mobileNav" class="mobile-nav" aria-label="Mobile Hauptnavigation">
+    <a href="#overview" class="mobile-nav-link">Overview</a>
+    <a href="#architektur" class="mobile-nav-link">Architektur</a>
+    <a href="#cases" class="mobile-nav-link">Build Cases</a>
+    <a href="#files" class="mobile-nav-link">Files</a>
+    <a href="#learn" class="mobile-nav-link">Learnings</a>
+  </nav>
+</header>
 
   <main class="page" id="main">
     <section class="hero" id="overview">
@@ -1197,12 +1309,33 @@ SpeakerEmbeddings: URL not found or format mismatch
   </main>
 
   <script>
-    window.addEventListener("scroll", () => {
-      const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - window.innerHeight;
-      const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
-      document.documentElement.style.setProperty("--scroll", ratio.toString());
+  window.addEventListener("scroll", () => {
+    const doc = document.documentElement;
+    const scrollable = doc.scrollHeight - window.innerHeight;
+    const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+    document.documentElement.style.setProperty("--scroll", ratio.toString());
+  });
+
+  const navToggle = document.getElementById("navToggle");
+  const mobileNav = document.getElementById("mobileNav");
+
+  if (navToggle && mobileNav) {
+    navToggle.addEventListener("click", () => {
+      const isOpen = mobileNav.classList.toggle("open");
+      navToggle.classList.toggle("is-open", isOpen);
+      navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      navToggle.setAttribute("aria-label", isOpen ? "Menü schließen" : "Menü öffnen");
     });
-  </script>
+
+    mobileNav.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => {
+        mobileNav.classList.remove("open");
+        navToggle.classList.remove("is-open");
+        navToggle.setAttribute("aria-expanded", "false");
+        navToggle.setAttribute("aria-label", "Menü öffnen");
+      });
+    });
+  }
+</script>
 </body>
 </html>
