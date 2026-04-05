@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PromptRebel – Build Log #02 · Web Podcast Generator</title>
-  <meta name="description" content="Build Log #02: Wie ein lokaler KI-Podcast-Agent vom Surface in den Browser wanderte. Transformers.js, SpeechSynthesis, HuggingFace-Fehler, Speaker-Embeddings-Crash und am Ende: Audio aus dem Browser. Ohne Server. Ohne API." />
+  <meta
+    name="description"
+    content="Build Log #02: Wie ein lokaler KI-Podcast-Agent vom Surface in den Browser wanderte. Transformers.js, SpeechSynthesis, HuggingFace-Fehler, Speaker-Embeddings-Crash und am Ende: Audio aus dem Browser. Ohne Server. Ohne API."
+  />
+
   <style>
     :root {
       --scroll: 0;
@@ -22,563 +25,581 @@
       --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-```
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; scroll-behavior: smooth; }
-
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.75;
-  padding-top: 64px;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(236,72,153,.32), transparent 55%),
-    radial-gradient(circle at 90% 100%, rgba(34,211,238,.28), transparent 55%);
-  z-index: -2;
-}
-
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  opacity: .18;
-  pointer-events: none;
-  background-image:
-    linear-gradient(0deg, rgba(255,255,255,.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-  background-size: 3px 3px, 3px 3px;
-  z-index: -1;
-}
-
-a { color: inherit; text-decoration: none; }
-code, pre { font-family: var(--mono); }
-
-.skip-link {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: -40px;
-  padding: 6px 10px;
-  background: #0f172a;
-  color: #f9fafb;
-  border-radius: 999px;
-  font-size: 13px;
-  z-index: 60;
-}
-.skip-link:focus-visible { top: 10px; outline: 2px solid var(--accent-b); outline-offset: 2px; }
-
-.nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 40;
-  backdrop-filter: blur(14px);
-  background: linear-gradient(to bottom, rgba(15,23,42,.95), rgba(15,23,42,.6));
-  border-bottom: 1px solid rgba(148,163,184,.1);
-}
-
-.nav::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent-a), rgba(34,211,238,0), var(--accent-b));
-  transform-origin: left;
-  transform: scaleX(var(--scroll));
-  transition: transform .1s linear;
-  pointer-events: none;
-}
-
-.nav-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 10px 16px 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.brand {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: .05em;
-  text-shadow: 0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4);
-  white-space: nowrap;
-}
-
-.brand .accent {
-  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
-.nav-links { display: flex; gap: 18px; font-size: 14px; }
-
-.nav-link {
-  position: relative;
-  padding-block: 4px;
-}
-
-.nav-link::after {
-  content: "";
-  position: absolute;
-  left: 0; bottom: -2px;
-  width: 0; height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
-  box-shadow: 0 0 8px rgba(56,189,248,.8);
-  transition: width .25s ease;
-}
-
-.nav-link:hover::after,
-.nav-link:focus-visible::after { width: 100%; }
-
-.page {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 18px 16px 64px;
-}
-
-.panel {
-  border-radius: 22px;
-  border: 1px solid var(--border);
-  background: radial-gradient(circle at top left, rgba(15,23,42,.90), rgba(15,23,42,.98));
-  box-shadow: 0 18px 45px rgba(15,23,42,.95);
-  backdrop-filter: blur(18px);
-}
-
-.hero { padding-top: 22px; }
-.meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.meta-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 999px;
-  padding: 6px 10px;
-  border: 1px solid rgba(148,163,184,.22);
-  background: rgba(15,23,42,.45);
-  font-size: 12px;
-  color: #dbeafe;
-}
-
-.meta-chip strong { color: #f9a8d4; font-weight: 700; }
-
-.hero-card { padding: 24px 24px 20px; }
-.hero-kicker {
-  font-size: 12px;
-  letter-spacing: .25em;
-  text-transform: uppercase;
-  color: #f9a8d4;
-  margin-bottom: 8px;
-}
-
-.hero-title {
-  font-size: clamp(30px, 5vw, 52px);
-  line-height: 1.12;
-  font-weight: 800;
-  margin-bottom: 14px;
-  text-shadow: 0 0 14px rgba(236,72,153,.45), 0 0 20px rgba(34,211,238,.25);
-}
-
-.hero-title em { font-style: normal; color: var(--accent-b); }
-
-.hero-subtitle {
-  font-size: 16px;
-  color: #cbd5f5;
-  max-width: 56rem;
-  margin-bottom: 18px;
-  border-left: 3px solid rgba(34,211,238,.55);
-  padding-left: 14px;
-}
-
-.hero-grid {
-  display: grid;
-  gap: 16px;
-  margin-top: 20px;
-}
-
-@media (min-width: 920px) {
-  .hero-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr); }
-}
-
-.hero-note,
-.terminal-box,
-.specs,
-.callout,
-.info-card,
-.build-case,
-.end-panel,
-.step-card {
-  border-radius: 18px;
-  border: 1px solid rgba(148,163,184,.16);
-  background: rgba(15,23,42,.45);
-  padding: 16px 18px 14px;
-}
-
-.hero-note { font-size: 14px; color: #e5e7eb; }
-.hero-note strong { color: #f8fafc; }
-
-.terminal-head,
-.specs-title,
-.callout-title,
-.case-index,
-.end-title,
-.section-kicker,
-.step-index,
-.small-title {
-  font-size: 11px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.terminal-head,
-.callout-title,
-.case-label,
-.step-index,
-.small-title { color: #93c5fd; }
-.specs-title { color: #9ca3af; }
-.case-index, .end-title, .section-kicker { color: #f9a8d4; }
-
-.terminal {
-  font-family: var(--mono);
-  font-size: 12px;
-  white-space: pre-wrap;
-  color: #e5e7eb;
-  line-height: 1.7;
-}
-
-.terminal .dim { color: #6b7280; }
-.terminal .ok { color: var(--success); }
-.terminal .warn { color: var(--warning); }
-
-.content {
-  max-width: 900px;
-  margin: 0 auto;
-  padding-top: 36px;
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 40px 0 26px;
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-}
-
-.divider::before,
-.divider::after {
-  content: "";
-  height: 1px;
-  flex: 1;
-  background: rgba(148,163,184,.18);
-}
-
-h2 {
-  font-size: clamp(24px, 3.5vw, 34px);
-  font-weight: 800;
-  margin-bottom: 14px;
-  color: #f8fafc;
-  text-shadow: 0 0 10px rgba(34,211,238,.12);
-}
-
-h3 {
-  font-size: 22px;
-  line-height: 1.35;
-  color: #f8fafc;
-  margin-bottom: 4px;
-}
-
-h4 {
-  font-size: 18px;
-  line-height: 1.4;
-  color: #f8fafc;
-  margin-bottom: 8px;
-}
-
-p {
-  font-size: 16px;
-  color: #d1d5db;
-  margin-bottom: 20px;
-}
-
-p strong { color: #f8fafc; }
-
-.spec-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(148,163,184,.12);
-  font-size: 14px;
-}
-
-.spec-row:last-child { border-bottom: none; }
-.spec-key { color: var(--muted); font-family: var(--mono); font-size: 13px; }
-.spec-val { color: #f3f4f6; text-align: right; }
-.spec-val.good { color: var(--success); }
-.spec-val.warn { color: var(--warning); }
-
-.callout {
-  background: rgba(34,211,238,.08);
-  border-color: rgba(34,211,238,.20);
-  color: #e6f7ff;
-  margin: 24px 0;
-}
-
-.callout-pink {
-  background: rgba(236,72,153,.08);
-  border-color: rgba(236,72,153,.22);
-  color: #fde8f4;
-  margin: 24px 0;
-  border-radius: 18px;
-  border: 1px solid rgba(236,72,153,.22);
-  padding: 16px 18px 14px;
-}
-
-.callout-pink .callout-title { color: #f9a8d4; }
-
-.build-case {
-  margin: 26px 0;
-  padding: 18px 18px 14px;
-}
-
-.case-row {
-  display: grid;
-  grid-template-columns: 190px 1fr;
-  gap: 16px;
-  padding: 14px 0;
-  border-top: 1px solid rgba(148,163,184,.12);
-}
-
-.case-row:first-of-type { border-top: none; }
-
-.case-label {
-  font-size: 12px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  font-family: var(--mono);
-}
-
-.case-body { color: #d1d5db; font-size: 15px; }
-
-.raw-error,
-.result-good,
-blockquote,
-pre {
-  margin: 14px 0;
-  border-radius: 16px;
-  overflow-x: auto;
-}
-
-.raw-error, .result-good, blockquote { padding: 16px 18px 14px; }
-
-.raw-error {
-  background: rgba(127,29,29,.20);
-  border: 1px solid rgba(239,68,68,.18);
-  border-left: 3px solid #ef4444;
-  color: #fca5a5;
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.result-good {
-  background: rgba(20,83,45,.20);
-  border: 1px solid rgba(34,197,94,.18);
-  border-left: 3px solid #22c55e;
-  color: #86efac;
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-blockquote {
-  border: 1px solid rgba(236,72,153,.22);
-  background: rgba(236,72,153,.09);
-}
-
-blockquote p {
-  margin: 0;
-  font-size: 20px;
-  line-height: 1.55;
-  color: #fbcfe8;
-}
-
-code {
-  font-size: 13px;
-  background: #0b1220;
-  border: 1px solid rgba(148,163,184,.14);
-  padding: 2px 8px;
-  border-radius: 6px;
-  color: #bfdbfe;
-}
-
-pre {
-  padding: 18px 18px 16px;
-  border: 1px solid rgba(148,163,184,.14);
-  background: rgba(2,6,23,.6);
-  box-shadow: 0 18px 40px rgba(15,23,42,.6);
-}
-
-pre code {
-  background: none;
-  border: none;
-  padding: 0;
-  color: #cbd5e1;
-  line-height: 1.75;
-  font-size: 13px;
-  white-space: pre-wrap;
-}
-
-.two-col {
-  display: grid;
-  gap: 14px;
-  margin: 22px 0;
-}
-
-@media (min-width: 768px) {
-  .two-col { grid-template-columns: repeat(2, minmax(0,1fr)); }
-}
-
-.three-col {
-  display: grid;
-  gap: 14px;
-  margin: 22px 0;
-}
-
-@media (min-width: 900px) {
-  .three-col { grid-template-columns: repeat(3, minmax(0,1fr)); }
-}
-
-.info-card h4, .step-card h4 {
-  font-size: 12px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: #cbd5e1;
-  margin-bottom: 8px;
-}
-
-.info-card ul, .step-card ul { padding-left: 18px; }
-.info-card li, .step-card li {
-  font-size: 14px;
-  color: #e5e7eb;
-  margin-bottom: 8px;
-}
-
-.arch-compare {
-  display: grid;
-  gap: 14px;
-  margin: 22px 0;
-}
-
-@media (min-width: 768px) {
-  .arch-compare { grid-template-columns: repeat(2, minmax(0,1fr)); }
-}
-
-.arch-card {
-  border-radius: 18px;
-  border: 1px solid rgba(148,163,184,.16);
-  background: rgba(15,23,42,.45);
-  padding: 16px 18px 14px;
-}
-
-.arch-card.green {
-  border-color: rgba(34,197,94,.22);
-  background: rgba(20,83,45,.12);
-}
-
-.arch-card.red {
-  border-color: rgba(239,68,68,.20);
-  background: rgba(127,29,29,.10);
-}
-
-.arch-card h4 {
-  font-size: 12px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-
-.arch-card.green h4 { color: #86efac; }
-.arch-card.red h4 { color: #fca5a5; }
-
-.arch-card ul { padding-left: 16px; }
-.arch-card li {
-  font-size: 14px;
-  color: #d1d5db;
-  margin-bottom: 6px;
-}
-
-.end-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.end-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(148,163,184,.22);
-  background: rgba(15,23,42,.42);
-  color: #e5e7eb;
-  font-size: 13px;
-}
-
-footer {
-  margin-top: 36px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(148,163,184,.12);
-  font-size: 11px;
-  color: var(--muted);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: space-between;
-  align-items: center;
-}
-
-footer .center-links { display: flex; gap: 10px; }
-footer a { text-decoration: underline; text-underline-offset: 3px; }
-
-@media (max-width: 767px) {
-  body { padding-top: 60px; }
-  .nav-inner { gap: 8px; }
-  .nav-links { font-size: 13px; gap: 12px; }
-  p { font-size: 15px; }
-  .case-row { grid-template-columns: 1fr; gap: 8px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-```
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      padding-top: 64px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(236,72,153,.32), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(34,211,238,.28), transparent 55%);
+      z-index: -2;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      opacity: .18;
+      pointer-events: none;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 3px 3px, 3px 3px;
+      z-index: -1;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    code, pre { font-family: var(--mono); }
+
+    .skip-link {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -40px;
+      padding: 6px 10px;
+      background: #0f172a;
+      color: #f9fafb;
+      border-radius: 999px;
+      font-size: 13px;
+      z-index: 60;
+    }
+
+    .skip-link:focus-visible {
+      top: 10px;
+      outline: 2px solid var(--accent-b);
+      outline-offset: 2px;
+    }
+
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 40;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(15,23,42,.95), rgba(15,23,42,.6));
+      border-bottom: 1px solid rgba(148,163,184,.1);
+    }
+
+    .nav::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-a), rgba(34,211,238,0), var(--accent-b));
+      transform-origin: left;
+      transform: scaleX(var(--scroll));
+      transition: transform .1s linear;
+      pointer-events: none;
+    }
+
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 10px 16px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-shadow: 0 0 8px rgba(236,72,153,.6), 0 0 12px rgba(34,211,238,.4);
+      white-space: nowrap;
+    }
+
+    .brand .accent {
+      background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .nav-links { display: flex; gap: 18px; font-size: 14px; }
+
+    .nav-link {
+      position: relative;
+      padding-block: 4px;
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0; bottom: -2px;
+      width: 0; height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+      box-shadow: 0 0 8px rgba(56,189,248,.8);
+      transition: width .25s ease;
+    }
+
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after { width: 100%; }
+
+    .page {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 18px 16px 64px;
+    }
+
+    .panel {
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(15,23,42,.90), rgba(15,23,42,.98));
+      box-shadow: 0 18px 45px rgba(15,23,42,.95);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero { padding-top: 22px; }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.45);
+      font-size: 12px;
+      color: #dbeafe;
+    }
+
+    .meta-chip strong { color: #f9a8d4; font-weight: 700; }
+
+    .hero-card { padding: 24px 24px 20px; }
+
+    .hero-kicker {
+      font-size: 12px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: #f9a8d4;
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1.12;
+      font-weight: 800;
+      margin-bottom: 14px;
+      text-shadow: 0 0 14px rgba(236,72,153,.45), 0 0 20px rgba(34,211,238,.25);
+    }
+
+    .hero-title em { font-style: normal; color: var(--accent-b); }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: #cbd5f5;
+      max-width: 56rem;
+      margin-bottom: 18px;
+      border-left: 3px solid rgba(34,211,238,.55);
+      padding-left: 14px;
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    @media (min-width: 920px) {
+      .hero-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr); }
+    }
+
+    .hero-note,
+    .terminal-box,
+    .specs,
+    .callout,
+    .info-card,
+    .build-case,
+    .end-panel,
+    .step-card {
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.16);
+      background: rgba(15,23,42,.45);
+      padding: 16px 18px 14px;
+    }
+
+    .hero-note { font-size: 14px; color: #e5e7eb; }
+    .hero-note strong { color: #f8fafc; }
+
+    .terminal-head,
+    .specs-title,
+    .callout-title,
+    .case-index,
+    .end-title,
+    .section-kicker,
+    .step-index,
+    .small-title {
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .terminal-head,
+    .callout-title,
+    .case-label,
+    .step-index,
+    .small-title { color: #93c5fd; }
+
+    .specs-title { color: #9ca3af; }
+    .case-index, .end-title, .section-kicker { color: #f9a8d4; }
+
+    .terminal {
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: #e5e7eb;
+      line-height: 1.7;
+    }
+
+    .terminal .dim { color: #6b7280; }
+    .terminal .ok { color: var(--success); }
+    .terminal .warn { color: var(--warning); }
+
+    .content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding-top: 36px;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 40px 0 26px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: rgba(148,163,184,.18);
+    }
+
+    h2 {
+      font-size: clamp(24px, 3.5vw, 34px);
+      font-weight: 800;
+      margin-bottom: 14px;
+      color: #f8fafc;
+      text-shadow: 0 0 10px rgba(34,211,238,.12);
+    }
+
+    h3 {
+      font-size: 22px;
+      line-height: 1.35;
+      color: #f8fafc;
+      margin-bottom: 4px;
+    }
+
+    h4 {
+      font-size: 18px;
+      line-height: 1.4;
+      color: #f8fafc;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #d1d5db;
+      margin-bottom: 20px;
+    }
+
+    p strong { color: #f8fafc; }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(148,163,184,.12);
+      font-size: 14px;
+    }
+
+    .spec-row:last-child { border-bottom: none; }
+
+    .spec-key {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .spec-val { color: #f3f4f6; text-align: right; }
+    .spec-val.good { color: var(--success); }
+    .spec-val.warn { color: var(--warning); }
+
+    .callout {
+      background: rgba(34,211,238,.08);
+      border-color: rgba(34,211,238,.20);
+      color: #e6f7ff;
+      margin: 24px 0;
+    }
+
+    .callout-pink {
+      background: rgba(236,72,153,.08);
+      border-color: rgba(236,72,153,.22);
+      color: #fde8f4;
+      margin: 24px 0;
+      border-radius: 18px;
+      border: 1px solid rgba(236,72,153,.22);
+      padding: 16px 18px 14px;
+    }
+
+    .callout-pink .callout-title { color: #f9a8d4; }
+
+    .build-case {
+      margin: 26px 0;
+      padding: 18px 18px 14px;
+    }
+
+    .case-row {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 16px;
+      padding: 14px 0;
+      border-top: 1px solid rgba(148,163,184,.12);
+    }
+
+    .case-row:first-of-type { border-top: none; }
+
+    .case-label {
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+    }
+
+    .case-body {
+      color: #d1d5db;
+      font-size: 15px;
+    }
+
+    .raw-error,
+    .result-good,
+    blockquote,
+    pre {
+      margin: 14px 0;
+      border-radius: 16px;
+      overflow-x: auto;
+    }
+
+    .raw-error,
+    .result-good,
+    blockquote { padding: 16px 18px 14px; }
+
+    .raw-error {
+      background: rgba(127,29,29,.20);
+      border: 1px solid rgba(239,68,68,.18);
+      border-left: 3px solid #ef4444;
+      color: #fca5a5;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .result-good {
+      background: rgba(20,83,45,.20);
+      border: 1px solid rgba(34,197,94,.18);
+      border-left: 3px solid #22c55e;
+      color: #86efac;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    blockquote {
+      border: 1px solid rgba(236,72,153,.22);
+      background: rgba(236,72,153,.09);
+    }
+
+    blockquote p {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.55;
+      color: #fbcfe8;
+    }
+
+    code {
+      font-size: 13px;
+      background: #0b1220;
+      border: 1px solid rgba(148,163,184,.14);
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: #bfdbfe;
+    }
+
+    pre {
+      padding: 18px 18px 16px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(2,6,23,.6);
+      box-shadow: 0 18px 40px rgba(15,23,42,.6);
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #cbd5e1;
+      line-height: 1.75;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .two-col {
+      display: grid;
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    @media (min-width: 768px) {
+      .two-col { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+
+    .three-col {
+      display: grid;
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    @media (min-width: 900px) {
+      .three-col { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+
+    .info-card h4, .step-card h4 {
+      font-size: 12px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+    }
+
+    .info-card ul, .step-card ul { padding-left: 18px; }
+
+    .info-card li, .step-card li {
+      font-size: 14px;
+      color: #e5e7eb;
+      margin-bottom: 8px;
+    }
+
+    .arch-compare {
+      display: grid;
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    @media (min-width: 768px) {
+      .arch-compare { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+
+    .arch-card {
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.16);
+      background: rgba(15,23,42,.45);
+      padding: 16px 18px 14px;
+    }
+
+    .arch-card.green {
+      border-color: rgba(34,197,94,.22);
+      background: rgba(20,83,45,.12);
+    }
+
+    .arch-card.red {
+      border-color: rgba(239,68,68,.20);
+      background: rgba(127,29,29,.10);
+    }
+
+    .arch-card h4 {
+      font-size: 12px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .arch-card.green h4 { color: #86efac; }
+    .arch-card.red h4 { color: #fca5a5; }
+
+    .arch-card ul { padding-left: 16px; }
+
+    .arch-card li {
+      font-size: 14px;
+      color: #d1d5db;
+      margin-bottom: 6px;
+    }
+
+    .end-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .end-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.42);
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+
+    footer {
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(148,163,184,.12);
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer .center-links { display: flex; gap: 10px; }
+    footer a { text-decoration: underline; text-underline-offset: 3px; }
+
+    @media (max-width: 767px) {
+      body { padding-top: 60px; }
+      .nav-inner { gap: 8px; }
+      .nav-links { font-size: 13px; gap: 12px; }
+      p { font-size: 15px; }
+      .case-row { grid-template-columns: 1fr; gap: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -607,577 +628,572 @@ footer a { text-decoration: underline; text-underline-offset: 3px; }
         <span class="meta-chip">Status: funktioniert</span>
       </div>
 
-```
-  <div class="panel hero-card">
-    <div class="hero-kicker">Lab Notes</div>
-    <h1 class="hero-title">Der Agent zieht um – <em>vom Surface in den Browser.</em></h1>
-    <p class="hero-subtitle">
-      Build Log #01 endete mit einem funktionierenden Podcast-Agenten auf dem Surface Go 2.
-      Dieser hier beginnt mit der nächsten Frage: Geht das auch direkt im Browser?
-      Kein Server. Kein Python. Kein Tailscale. Nur HTML, JavaScript und ein Nutzer, der auf „Absenden" drückt.
-    </p>
+      <div class="panel hero-card">
+        <div class="hero-kicker">Lab Notes</div>
+        <h1 class="hero-title">Der Agent zieht um – <em>vom Surface in den Browser.</em></h1>
+        <p class="hero-subtitle">
+          Build Log #01 endete mit einem funktionierenden Podcast-Agenten auf dem Surface Go 2.
+          Dieser hier beginnt mit der nächsten Frage: Geht das auch direkt im Browser?
+          Kein Server. Kein Python. Kein Tailscale. Nur HTML, JavaScript und ein Nutzer, der auf „Absenden“ drückt.
+        </p>
 
-    <div class="hero-grid">
-      <div class="hero-note">
-        <strong>Was du hier bekommst:</strong><br>
-        Die vollständige Entscheidungsgeschichte dahinter. Warum GitHub Pages tatsächlich reicht.
-        Warum V1 und V2 zwei komplett verschiedene Ansätze brauchen.
-        Welcher HuggingFace-Fehler fast alles gestoppt hätte. Und warum „es erzeugt Audio" der wichtigere Satz war
-        als „die Stimme klingt gut".
+        <div class="hero-grid">
+          <div class="hero-note">
+            <strong>Was du hier bekommst:</strong><br>
+            Die vollständige Entscheidungsgeschichte dahinter. Warum GitHub Pages tatsächlich reicht.
+            Warum V1 und V2 zwei komplett verschiedene Ansätze brauchen.
+            Welcher HuggingFace-Fehler fast alles gestoppt hätte. Und warum „es erzeugt Audio“ der wichtigere Satz war
+            als „die Stimme klingt gut“.
+          </div>
+
+          <div class="terminal-box" aria-hidden="true">
+            <div class="terminal-head">build.log</div>
+            <div class="terminal">
+&gt; host: github pages (static only)
+&gt; runtime: browser des nutzers
+&gt; v1: speechsynthesis + kleiner llm
+&gt; v2: transformers.js + ki-tts
+&gt; budget: 0 €
+&gt; server: <span class="ok">keiner</span>
+&gt; mood: <span class="warn">skeptisch</span> → <span class="ok">Audio erzeugt 🥳</span>
+&gt; <span class="dim"># kein backend = keine Ausrede</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="terminal-box" aria-hidden="true">
-        <div class="terminal-head">build.log</div>
-        <div class="terminal">> host: github pages (static only)
-```
+    </section>
 
-> runtime: browser des nutzers
-> v1: web speech api + kleiner llm
-> v2: transformers.js + ki-tts
-> budget: 0 €
-> server: <span class="ok">keiner</span>
-> mood: <span class="warn">skeptisch</span> → <span class="ok">Audio erzeugt 🥳</span>
-> <span class="dim"># kein backend = keine Ausrede</span></div>
-> </div>
-> </div>
-> </div>
-> </section>
+    <section class="content">
+      <p>
+        Der Podcast-Agent auf dem Surface lief. Und sofort war die nächste Frage da:
+        Könnte das auch jemand anderes nutzen? Ohne bei mir daheim ins Netzwerk zu müssen?
+        Ohne Tailscale? Ohne dass mein Surface läuft?
+      </p>
+      <p>
+        Ich bin kein Servermensch. Ich miete keine Infrastruktur. Ich will keinen VPS, der monatlich
+        Geld kostet und dann doch irgendwann ausfällt. Die Frage war also:
+        <strong>Geht das auch im Browser?</strong> Und wenn ja – wie weit?
+      </p>
 
-```
-<section class="content">
-  <p>
-    Der Podcast-Agent auf dem Surface lief. Und sofort war die nächste Frage da:
-    Könnte das auch jemand anderes nutzen? Ohne bei mir daheim ins Netzwerk zu müssen?
-    Ohne Tailscale? Ohne dass mein Surface läuft?
-  </p>
-  <p>
-    Ich bin kein Servermensch. Ich miete keine Infrastruktur. Ich will keinen VPS, der monatlich
-    Geld kostet und dann doch irgendwann ausfällt. Die Frage war also:
-    <strong>Geht das auch im Browser?</strong> Und wenn ja – wie weit?
-  </p>
+      <div class="divider"><span>ausgangslage</span></div>
+      <h2>Die Ausgangslage: Surface funktioniert, aber es ist nur mein Surface</h2>
+      <p>
+        Nach Build Log #01 stand fest: der Podcast-Agent funktioniert. Textgenerierung mit Ollama,
+        Sprachsynthese mit XTTS, Flask-WebUI, Tailscale – alles lokal auf dem Surface Go 2.
+        Das war echte Infrastruktur. Und genau das war auch das Problem.
+      </p>
+      <p>
+        Ein Agent, der nur läuft wenn mein Surface an ist, mein Flask-Server oben ist und
+        Tailscale verbunden ist, ist kein Tool für andere. Das ist ein Demo für mich selbst.
+        Für PromptRebel als öffentliche GitHub-Page brauchte es etwas anderes.
+      </p>
 
-  <div class="divider"><span>ausgangslage</span></div>
-  <h2>Die Ausgangslage: Surface funktioniert, aber es ist nur mein Surface</h2>
-  <p>
-    Nach Build Log #01 stand fest: der Podcast-Agent funktioniert. Textgenerierung mit Ollama,
-    Sprachsynthese mit XTTS, Flask-WebUI, Tailscale – alles lokal auf dem Surface Go 2.
-    Das war echte Infrastruktur. Und genau das war auch das Problem.
-  </p>
-  <p>
-    Ein Agent, der nur läuft wenn mein Surface an ist, mein Flask-Server oben ist und
-    Tailscale verbunden ist, ist kein Tool für andere. Das ist ein Demo für mich selbst.
-    Für PromptRebel als öffentliche GitHub-Page brauchte es etwas anderes.
-  </p>
+      <blockquote>
+        <p>„Wäre natürlich klasse, wenn ich das auch auf meiner PromptRebel GitHub Page irgendwie etablieren könnte. Also funktionsfähig etablieren.“</p>
+      </blockquote>
 
-  <blockquote>
-    <p>„Wäre natürlich klasse, wenn ich das auch auf meiner PromptRebel GitHub Page
-    irgendwie etablieren könnte. Also funktionsfähig etablieren."</p>
-  </blockquote>
-
-  <div class="panel specs">
-    <div class="specs-title">Neue Ausgangslage / Zielzustand</div>
-    <div class="spec-row"><span class="spec-key">hosting</span><span class="spec-val">GitHub Pages (statisch)</span></div>
-    <div class="spec-row"><span class="spec-key">server</span><span class="spec-val good">keiner</span></div>
-    <div class="spec-row"><span class="spec-key">api-keys</span><span class="spec-val good">keine</span></div>
-    <div class="spec-row"><span class="spec-key">inferenz</span><span class="spec-val">im Browser des Nutzers</span></div>
-    <div class="spec-row"><span class="spec-key">modell-download</span><span class="spec-val warn">einmalig, lokal gecacht</span></div>
-    <div class="spec-row"><span class="spec-key">voraussetzung nutzer</span><span class="spec-val">nur ein Browser</span></div>
-  </div>
-
-  <div class="callout">
-    <div class="callout-title">Die entscheidende Erkenntnis zu GitHub Pages</div>
-    GitHub Pages ist statisches Hosting. Kein Python, kein Node, keine Hintergrundprozesse.
-    Was gut geht: Eingabefelder, Buttons, clientseitige Logik, kleine Modelle über WebGPU/WASM,
-    Ergebnisse im Browser anzeigen oder als Download erzeugen.
-    Was nicht geht: Ollama starten, XTTS serverseitig rendern, Jobs im Hintergrund queueen, API-Keys verstecken.
-    Das ist kein Limit. Das ist die Architekturvorgabe.
-  </div>
-
-  <div class="divider"><span>architekturentscheidung</span></div>
-  <h2 id="architektur">Drei Wege – und warum nur einer übrig blieb</h2>
-  <p>
-    Die erste echte Entscheidung war keine technische, sondern eine philosophische:
-    Welche Architektur passt zu PromptRebel?
-  </p>
-
-  <div class="three-col">
-    <div class="step-card">
-      <div class="step-index">Option A</div>
-      <h4>Alles im Browser</h4>
-      <ul>
-        <li>GitHub Pages als Hülle</li>
-        <li>Browser macht die Arbeit</li>
-        <li>WebGPU / Transformers.js</li>
-        <li>Kein Server, keine Kosten</li>
-      </ul>
-    </div>
-    <div class="step-card">
-      <div class="step-index">Option B</div>
-      <h4>GitHub Pages + Backend</h4>
-      <ul>
-        <li>Frontend öffentlich</li>
-        <li>Inferenz auf externem Server</li>
-        <li>VPS / Modal / Replicate</li>
-        <li>Kosten, Wartung, Abhängigkeit</li>
-      </ul>
-    </div>
-    <div class="step-card">
-      <div class="step-index">Option C</div>
-      <h4>GitHub Pages + lokaler Companion</h4>
-      <ul>
-        <li>Surface als lokaler API-Endpunkt</li>
-        <li>CORS-Probleme vorprogrammiert</li>
-        <li>Nur wenn mein Surface läuft</li>
-        <li>Nicht für andere nutzbar</li>
-      </ul>
-    </div>
-  </div>
-
-  <p>
-    Die Entscheidung war schnell klar. Option B kostet Geld und schafft Abhängigkeiten.
-    Option C ist genau das, was schon mit Tailscale existiert – also kein Fortschritt.
-    <strong>Option A war die einzige, die zur PromptRebel-Idee passt:</strong>
-    transparent, reproduzierbar, ohne Server, ohne Budget, ohne Blackbox.
-  </p>
-
-  <div class="arch-compare">
-    <div class="arch-card green">
-      <h4>Was im Browser geht</h4>
-      <ul>
-        <li>Eingabefelder, Buttons, Player, UI</li>
-        <li>kleine LLMs über Transformers.js / WebGPU</li>
-        <li>Browser-eigene Sprachsynthese (Web Speech API)</li>
-        <li>echtes KI-TTS über Transformers.js (experimentell)</li>
-        <li>WAV-Export aus Modell-Output</li>
-        <li>Modell-Download + lokaler Cache</li>
-      </ul>
-    </div>
-    <div class="arch-card red">
-      <h4>Was nicht geht (ohne Backend)</h4>
-      <ul>
-        <li>Ollama / Python / XTTS starten</li>
-        <li>Jobs im Hintergrund verarbeiten</li>
-        <li>API-Keys verstecken</li>
-        <li>große Audiodateien persistent speichern</li>
-        <li>hochwertige lange Podcast-Produktion für alle Geräte</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="divider"><span>v1 vs v2 – zwei ansätze</span></div>
-  <h2>V1 und V2: nicht zwei Versionen derselben Sache</h2>
-  <p>
-    Schon früh war klar: V1 und V2 sind keine Iterationen desselben Konzepts.
-    Sie sind zwei grundlegend verschiedene technische Ansätze.
-    Das ist keine Kleinigkeit – das ist der eigentliche Architekturkern.
-  </p>
-
-  <div class="two-col">
-    <div class="info-card">
-      <h4>V1 – Browser-TTS</h4>
-      <ul>
-        <li>Kleiner LLM im Browser generiert Text</li>
-        <li>Web Speech API liest vor (<code>speechSynthesis.speak()</code>)</li>
-        <li>Keine Audiodatei, nur Vorlesefunktion</li>
-        <li>Kein KI-Modell für Stimme nötig</li>
-        <li>Stimme = Betriebssystem-Stimme des Nutzers</li>
-        <li>Download: nicht zuverlässig möglich</li>
-      </ul>
-    </div>
-    <div class="info-card">
-      <h4>V2 – KI-TTS im Browser</h4>
-      <ul>
-        <li>Kleiner LLM im Browser generiert Text</li>
-        <li>Transformers.js lädt echtes TTS-Modell</li>
-        <li>Modell erzeugt rohe Audiodaten</li>
-        <li>WAV-Download aus Blob möglich</li>
-        <li>Stimme konsistenter, KI-generiert</li>
-        <li>Deutlich schwerer, RAM-intensiver</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="callout-pink">
-    <div class="callout-title">Der wichtige Unterschied bei Downloads</div>
-    V1 <em>spricht</em>. V2 <em>erzeugt Audiodaten</em>. Nur letzteres ist wirklich download-freundlich.
-    Die Web Speech API gibt dir Kontrolle über die Vorlesefunktion – aber keine fertige Audiodatei.
-    Wenn das TTS-Modell in V2 selbst die Audiodaten liefert, kann man daraus im Browser
-    einen Blob bauen und als WAV anbieten. Das ist kein Detail, das ist der Unterschied zwischen
-    „Vorlesen-Button" und „Download-Button".
-  </div>
-
-  <div class="divider"><span>build cases</span></div>
-  <h2 id="cases">Jeder relevante Widerstand als rekonstruierter Fall</h2>
-
-  <section class="build-case panel">
-    <div class="case-index">Build Case 01</div>
-    <h3>GitHub Pages als Host: Grenze verstehen, bevor man dagegen baut</h3>
-    <div class="case-row">
-      <div class="case-label">Widerstand</div>
-      <div class="case-body">Die Idee war: Podcast-Agent auf der GitHub-Page. Die Frage dahinter: Kann GitHub Pages das überhaupt?</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Rohes Symptom</div>
-      <div class="case-body">Keine Fehlermeldung – aber die Vorstellung war falsch. GitHub Pages kann kein Python, kein Ollama, kein XTTS. Es ist statisches Hosting. Wer das nicht weiß, baut gegen eine Wand.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Debug-Autopsie</div>
-      <div class="case-body">Das eigentliche Missverständnis war nicht die Technik, sondern die Annahme, GitHub Pages wäre ein Server. Es ist eine Dateiauslieferung. Die Schlussfolgerung: Alles, was nicht in einer statischen Datei oder im Browser passiert, geht nicht.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Entscheidung</div>
-      <div class="case-body">Kein Server. Kein Backend. Alles läuft im Browser des Nutzers – und das ist kein Kompromiss, sondern die PromptRebel-Idee in ihrer reinsten Form.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Ergebnis</div>
-      <div class="case-body">Klare Architektur. GitHub Pages als Hülle. Browser als Recheneinheit. Kein Widerspruch mehr.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Übertragbare Lehre</div>
-      <div class="case-body">Grenzen verstehen ist keine Niederlage. Wer weiß, was eine Plattform nicht kann, trifft bessere Architekturentscheidungen als wer es einfach versucht.</div>
-    </div>
-  </section>
-
-  <section class="build-case panel">
-    <div class="case-index">Build Case 02</div>
-    <h3>Apple blockiert WebGPU – oder doch nicht?</h3>
-    <div class="case-row">
-      <div class="case-label">Widerstand</div>
-      <div class="case-body">Der WebGPU-Chatbot auf PromptRebel lief auf dem Surface und dem PC, aber nicht auf dem iPhone. Die Annahme: Apple blockt das grundsätzlich.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Rohes Symptom</div>
-      <div class="case-body">Kein Laden des Chatbots im iPhone-Browser. Kein Fehler, einfach kein Start.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Debug-Autopsie</div>
-      <div class="case-body">Die Annahme „Apple blockiert WebGPU generell" war zum Zeitpunkt des Builds bereits veraltet. WebKit hat WebGPU-Unterstützung für Safari auf macOS, iOS, iPadOS und visionOS angekündigt und ausgerollt. Das eigentliche Problem lag wahrscheinlich an iOS-/Safari-Version, Geräte-Limit oder Modell-Kompatibilität – nicht an einem generellen Apple-Block.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Entscheidung</div>
-      <div class="case-body">iPhone-Kompatibilität als bekannte Einschränkung offen kommunizieren, nicht als Architekturproblem behandeln. Der Nutzer auf mobilen Geräten bekommt einen klaren Hinweis.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Ergebnis</div>
-      <div class="case-body">Kein Rabbit Hole um Apple-Workarounds. Klare Nutzerkommunikation statt technischer Vernebelung.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Übertragbare Lehre</div>
-      <div class="case-body">„Das Ding blockiert das" ist selten die vollständige Wahrheit. Bevor man eine Architekturentscheidung auf einer Annahme aufbaut, lohnt sich ein kurzer Gegencheck.</div>
-    </div>
-  </section>
-
-  <section class="build-case panel">
-    <div class="case-index">Build Case 03</div>
-    <h3>V1 Download-Button: die Brücke, die es nicht gibt</h3>
-    <div class="case-row">
-      <div class="case-label">Widerstand</div>
-      <div class="case-body">V1 sollte vorlesen und einen Download-Button haben. Klingt einfach. War es nicht.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Rohes Symptom</div>
-      <div class="case-body">Kein Crash, kein Fehler – nur die Erkenntnis, dass der geplante Download-Button technisch nicht sauber existiert. Die Web Speech API gibt dir keine fertige Audiodatei.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Debug-Autopsie</div>
-      <div class="case-body">
-        <code>speechSynthesis.speak()</code> steuert den Browser-Vorleseprozess. Aber zwischen dieser API und „hier ist dein WAV-Download" gibt es keinen standardisierten, browserübergreifenden Pfad. MediaRecorder kann Audio-Streams aufnehmen – aber nicht direkt den speechSynthesis-Stream, zumindest nicht zuverlässig über alle Browser hinweg.
+      <div class="panel specs">
+        <div class="specs-title">Neue Ausgangslage / Zielzustand</div>
+        <div class="spec-row"><span class="spec-key">hosting</span><span class="spec-val">GitHub Pages (statisch)</span></div>
+        <div class="spec-row"><span class="spec-key">server</span><span class="spec-val good">keiner</span></div>
+        <div class="spec-row"><span class="spec-key">api-keys</span><span class="spec-val good">keine</span></div>
+        <div class="spec-row"><span class="spec-key">inferenz</span><span class="spec-val">im Browser des Nutzers</span></div>
+        <div class="spec-row"><span class="spec-key">modell-download</span><span class="spec-val warn">einmalig, lokal gecacht</span></div>
+        <div class="spec-row"><span class="spec-key">voraussetzung nutzer</span><span class="spec-val">kompatibler Browser + ausreichend Gerät</span></div>
       </div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Entscheidung</div>
-      <div class="case-body">V1 ohne Download planen. Vorlesen-Button, Stop/Pause/Fortsetzen – das ist realistisch. Download-Button erst bei V2, wo das TTS-Modell selbst die Audiodaten liefert und man daraus einen Blob bauen kann.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Ergebnis</div>
-      <div class="case-body">Sauberere V1-Architektur. Kein halbfertiger Download-Hack. V2 bekommt den Download, weil V2 ihn verdient – weil das Modell selbst die Daten liefert.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Übertragbare Lehre</div>
-      <div class="case-body">Nicht jede Funktion, die sich einfach anfühlt, ist einfach zu bauen. Eine Brücke zwischen zwei APIs zu wollen heißt nicht, dass diese Brücke existiert.</div>
-    </div>
-  </section>
 
-  <section class="build-case panel">
-    <div class="case-index">Build Case 04</div>
-    <h3>HuggingFace Xet Bridge – der Infrastruktur-Crash, der fast alles gestoppt hätte</h3>
-    <div class="case-row">
-      <div class="case-label">Widerstand</div>
-      <div class="case-body">V2 sollte ein echtes TTS-Modell im Browser laden. Stattdessen: Ladefehler, keine Audioerzeugung, keine klare Fehlermeldung. Das Modell schien nicht da zu sein, obwohl die URL stimmte.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Rohes Symptom / Fehlermeldung</div>
-      <div class="case-body">
-        <div class="raw-error">Failed to load resource: HuggingFace Xet Bridge
-```
-
-TypeError: Cannot read properties of undefined (reading ‘audio’)
-SpeakerEmbeddings: URL not found or format mismatch</div>
-</div>
-</div>
-<div class="case-row">
-<div class="case-label">Debug-Autopsie</div>
-<div class="case-body">
-HuggingFace hatte seine interne Infrastruktur geändert – der sogenannte Xet Bridge, eine CDN-Zwischenschicht für Modelldateien. Modelle, die früher über direkte URLs erreichbar waren, lieferten plötzlich Fehler oder leere Responses. Dazu kamen veraltete Speaker-Embedding-URLs in der Pipeline-Konfiguration: <code>podcast-ai-tts.js</code> referenzierte eine alte Pfadstruktur für die Sprecherreferenz-Datei, die HuggingFace nach dem Infrastrukturwechsel nicht mehr auslieferte.
-</div>
-</div>
-<div class="case-row">
-<div class="case-label">Entscheidung</div>
-<div class="case-body">Nur <code>podcast-ai-tts.js</code> ersetzen – nicht die ganze Seite umbauen. Neue Speaker-Embeddings-URL. Harte Neuladen im Browser. V2 Voice zuerst laden, dann Audio erzeugen.</div>
-</div>
-<div class="case-row">
-<div class="case-label">Ergebnis</div>
-<div class="case-body">
-<div class="result-good">=== V2 Audio Pipeline ===
-
-> Speaker Embeddings: geladen ✓
-> Modell: initialisiert ✓
-> Text → TTS → Audio: verarbeitet ✓
-> → audio.wav erzeugt
-> → Download-Button aktiv
-> Prozess beendet. Keine Fehler.</div>
-> </div>
-> </div>
-> <div class="case-row">
-> <div class="case-label">Übertragbare Lehre</div>
-> <div class="case-body">Externe Infrastruktur ändert sich ohne Ankündigung. Wenn ein Modell plötzlich nicht mehr lädt, obwohl sich nichts am eigenen Code geändert hat, ist der erste Verdacht: URL, CDN oder Infrastrukturwechsel auf der anderen Seite. Nicht der eigene Code.</div>
-> </div>
-> </section>
-
-```
-  <section class="build-case panel">
-    <div class="case-index">Build Case 05</div>
-    <h3>Sprache gemischt, Skript abgeschnitten – und trotzdem der Durchbruch</h3>
-    <div class="case-row">
-      <div class="case-label">Widerstand</div>
-      <div class="case-body">V2 erzeugte Audio. Aber: die Sprache klang englisch-deutsch gemischt, und das Skript wurde nicht vollständig gesprochen. Zwei klare Probleme, direkt nach dem ersten Erfolg.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Rohes Symptom</div>
-      <div class="case-body">Hörbar englische Aussprache bei deutschem Text. Audio endet nach einem Teil des Skripts. Kein Crash – aber kein vollständiges Ergebnis.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Debug-Autopsie</div>
-      <div class="case-body">
-        Zwei getrennte Probleme mit zwei getrennten Ursachen:<br><br>
-        <strong>Sprachmix:</strong> Das verwendete Modell (<code>speecht5_tts</code>) ist kein deutsches Spezialmodell. Dass die Aussprache bei deutschem Input schief klingt, ist Modell-bedingt, nicht Architektur-bedingt.<br><br>
-        <strong>Abschneiden:</strong> TTS-Modelle kommen mit zu langem Input schlecht zurecht. Das ist kein Fehler, sondern ein Längen-/Stabilitätsproblem. Lösung: Chunking – Text in kleinere Segmente aufteilen, nacheinander vertonen, zusammenfügen. Exakt dasselbe Pattern wie bei XTTS auf dem Surface in Build Log #01.
+      <div class="callout">
+        <div class="callout-title">Die entscheidende Erkenntnis zu GitHub Pages</div>
+        GitHub Pages ist statisches Hosting. Kein Python, kein Node, keine Hintergrundprozesse.
+        Was gut geht: Eingabefelder, Buttons, clientseitige Logik, kleine Modelle über WebGPU/WASM,
+        Ergebnisse im Browser anzeigen oder als Download erzeugen.
+        Was nicht geht: Ollama starten, XTTS serverseitig rendern, Jobs im Hintergrund queueen, API-Keys verstecken.
+        Das ist kein Limit. Das ist die Architekturvorgabe.
       </div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Entscheidung</div>
-      <div class="case-body">Zuerst Pipeline stabilisieren, nicht Perfektion jagen. Text künstlich kürzen (300–400 Zeichen), testen ob vollständig gesprochen wird. Erst wenn kurze Texte stabil laufen: Chunking einbauen für längere Inhalte.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Ergebnis</div>
-      <div class="case-body">
-        Der eigentliche Satz danach: <strong>„Es wird eine Audio erzeugt 🥳 – die Sprache ist zwar englisch-deutsch gemischt und beinhaltet nicht das komplette Skript aber – es funktioniert technisch und architektonisch!!!!"</strong>
-        <br><br>Kein vollständiger Podcast. Aber ein bewiesenes Konzept. Text läuft lokal im Browser. TTS läuft lokal im Browser. Audio-Player läuft. WAV-Download läuft. Die Gesamtpipeline funktioniert.
+
+      <div class="divider"><span>architekturentscheidung</span></div>
+      <h2 id="architektur">Drei Wege – und warum nur einer übrig blieb</h2>
+      <p>
+        Die erste echte Entscheidung war keine technische, sondern eine philosophische:
+        Welche Architektur passt zu PromptRebel?
+      </p>
+
+      <div class="three-col">
+        <div class="step-card">
+          <div class="step-index">Option A</div>
+          <h4>Alles im Browser</h4>
+          <ul>
+            <li>GitHub Pages als Hülle</li>
+            <li>Browser macht die Arbeit</li>
+            <li>WebGPU / Transformers.js</li>
+            <li>Kein Server, keine Kosten</li>
+          </ul>
+        </div>
+
+        <div class="step-card">
+          <div class="step-index">Option B</div>
+          <h4>GitHub Pages + Backend</h4>
+          <ul>
+            <li>Frontend öffentlich</li>
+            <li>Inferenz auf externem Server</li>
+            <li>VPS / Modal / Replicate</li>
+            <li>Kosten, Wartung, Abhängigkeit</li>
+          </ul>
+        </div>
+
+        <div class="step-card">
+          <div class="step-index">Option C</div>
+          <h4>GitHub Pages + lokaler Companion</h4>
+          <ul>
+            <li>Surface als lokaler API-Endpunkt</li>
+            <li>CORS-Probleme vorprogrammiert</li>
+            <li>Nur wenn mein Surface läuft</li>
+            <li>Nicht für andere nutzbar</li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Übertragbare Lehre</div>
-      <div class="case-body">Stimme ist kein Architekturproblem. Länge ist kein Architekturproblem. Beides ist eine Qualitäts- und Konfigurationsfrage, die man angehen kann, sobald die Pipeline bewiesen ist. Erst beweisen, dann optimieren.</div>
-    </div>
-  </section>
 
-  <section class="build-case panel">
-    <div class="case-index">Build Case 06</div>
-    <h3>„Ist das was Besonderes?" – Die ehrlichste Frage im ganzen Build</h3>
-    <div class="case-row">
-      <div class="case-label">Widerstand</div>
-      <div class="case-body">NotebookLM hatte das Projekt als „etwas Großes, eine Neuheit" beschrieben. Die Gegenfrage war direkter: Ist es das wirklich? Oder redet man sich da etwas schön?</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Rohes Symptom</div>
-      <div class="case-body">Kein technischer Fehler. Eine ehrliche Unsicherheit darüber, was der eigentliche Wert des Projekts ist.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Debug-Autopsie</div>
-      <div class="case-body">
-        Die nüchterne Einordnung: Technisch gesehen ist ein kleiner LLM + TTS + WAV-Export im Browser bekannte Technik. Es gibt ähnliches in Varianten – Research, Demos, GitHub-Projekte.<br><br>
-        Aber: Der eigentliche Wert liegt woanders. Zero-Barrier-Zugang (keine Anmeldung, keine API, keine Installation). Alles lokal (kein Server, keine Datenabgabe, keine Kosten). Reproduzierbarkeit: copy – paste – läuft. Didaktischer Wert: zeigen wie es funktioniert, nicht nur dass es funktioniert.<br><br>
-        Und am wichtigsten: es wurde umgesetzt. Die meisten bleiben bei „interessant, aber zu kompliziert".
+      <p>
+        Die Entscheidung war schnell klar. Option B kostet Geld und schafft Abhängigkeiten.
+        Option C ist genau das, was schon mit Tailscale existiert – also kein Fortschritt.
+        <strong>Option A war die einzige, die zur PromptRebel-Idee passt:</strong>
+        transparent, reproduzierbar, ohne Server, ohne Budget, ohne Blackbox.
+      </p>
+
+      <div class="arch-compare">
+        <div class="arch-card green">
+          <h4>Was im Browser geht</h4>
+          <ul>
+            <li>Eingabefelder, Buttons, Player, UI</li>
+            <li>kleine LLMs über Transformers.js / WebGPU</li>
+            <li>Browser-eigene Sprachsynthese (Web Speech API)</li>
+            <li>echtes KI-TTS über Transformers.js (experimentell)</li>
+            <li>WAV-Export aus Modell-Output</li>
+            <li>Modell-Download + lokaler Cache</li>
+          </ul>
+        </div>
+
+        <div class="arch-card red">
+          <h4>Was nicht geht (ohne Backend)</h4>
+          <ul>
+            <li>Ollama / Python / XTTS starten</li>
+            <li>Jobs im Hintergrund verarbeiten</li>
+            <li>API-Keys verstecken</li>
+            <li>große Audiodateien persistent speichern</li>
+            <li>hochwertige lange Podcast-Produktion für alle Geräte</li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Entscheidung</div>
-      <div class="case-body">Keine Revolution behaupten. Aber auch keine unnötige Selbstverkleinerung. Das Projekt ist, was es ist: ein funktionierender Local-AI-Prototyp, ein Beweis dass sowas im Browser geht, ein Baustein auf dem man weiter aufbaut.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Ergebnis</div>
-      <div class="case-body">Klares Selbstbild ohne Hype und ohne falsche Bescheidenheit. Das ist keine weiche Erkenntnis – das ist Grundvoraussetzung für gute Dokumentation.</div>
-    </div>
-    <div class="case-row">
-      <div class="case-label">Übertragbare Lehre</div>
-      <div class="case-body">„Nicht neu im globalen Sinne" und „außergewöhnlich für das, was du gerade aufbaust" sind kein Widerspruch. Wer die eigene Arbeit richtig einordnen kann, kommuniziert sie auch ehrlicher.</div>
-    </div>
-  </section>
 
-  <div class="divider"><span>dateien & architektur</span></div>
-  <h2 id="files">Dateien, Zuständigkeiten, Aufbau der Seite</h2>
+      <div class="divider"><span>v1 vs v2 – zwei ansätze</span></div>
+      <h2>V1 und V2: nicht zwei Versionen derselben Sache</h2>
+      <p>
+        Schon früh war klar: V1 und V2 sind keine Iterationen desselben Konzepts.
+        Sie sind zwei grundlegend verschiedene technische Ansätze.
+        Das ist keine Kleinigkeit – das ist der eigentliche Architekturkern.
+      </p>
 
-  <div class="two-col">
-    <div class="info-card">
-      <h4>Dateistruktur (GitHub Pages)</h4>
-      <pre><code>promptrebel.github.io/
-```
+      <div class="two-col">
+        <div class="info-card">
+          <h4>V1 – Browser-TTS</h4>
+          <ul>
+            <li>Kleiner LLM im Browser generiert Text</li>
+            <li>Web Speech API liest vor (<code>speechSynthesis.speak()</code>)</li>
+            <li>Keine Audiodatei, nur Vorlesefunktion</li>
+            <li>Kein KI-Modell für Stimme nötig</li>
+            <li>Stimme = Betriebssystem-Stimme des Nutzers</li>
+            <li>Download: nicht zuverlässig möglich</li>
+          </ul>
+        </div>
 
+        <div class="info-card">
+          <h4>V2 – KI-TTS im Browser</h4>
+          <ul>
+            <li>Kleiner LLM im Browser generiert Text</li>
+            <li>Transformers.js lädt echtes TTS-Modell</li>
+            <li>Modell erzeugt rohe Audiodaten</li>
+            <li>WAV-Download aus Blob möglich</li>
+            <li>Stimme konsistenter, KI-generiert</li>
+            <li>Deutlich schwerer, RAM-intensiver</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout-pink">
+        <div class="callout-title">Der wichtige Unterschied bei Downloads</div>
+        V1 <em>spricht</em>. V2 <em>erzeugt Audiodaten</em>. Nur letzteres ist wirklich download-freundlich.
+        Die Web Speech API gibt dir Kontrolle über die Vorlesefunktion – aber keine fertige Audiodatei.
+        Wenn das TTS-Modell in V2 selbst die Audiodaten liefert, kann man daraus im Browser
+        einen Blob bauen und als WAV anbieten. Das ist kein Detail, das ist der Unterschied zwischen
+        „Vorlesen-Button“ und „Download-Button“.
+      </div>
+
+      <div class="divider"><span>build cases</span></div>
+      <h2 id="cases">Jeder relevante Widerstand als rekonstruierter Fall</h2>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 01</div>
+        <h3>GitHub Pages als Host: Grenze verstehen, bevor man dagegen baut</h3>
+
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">Die Idee war: Podcast-Agent auf der GitHub-Page. Die Frage dahinter: Kann GitHub Pages das überhaupt?</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom</div>
+          <div class="case-body">Keine Fehlermeldung – aber die Vorstellung war falsch. GitHub Pages kann kein Python, kein Ollama, kein XTTS. Es ist statisches Hosting. Wer das nicht weiß, baut gegen eine Wand.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">Das eigentliche Missverständnis war nicht die Technik, sondern die Annahme, GitHub Pages wäre ein Server. Es ist eine Dateiauslieferung. Die Schlussfolgerung: Alles, was nicht in einer statischen Datei oder im Browser passiert, geht nicht.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Kein Server. Kein Backend. Alles läuft im Browser des Nutzers – und das ist kein Kompromiss, sondern die PromptRebel-Idee in ihrer reinsten Form.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">Klare Architektur. GitHub Pages als Hülle. Browser als Recheneinheit. Kein Widerspruch mehr.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Grenzen verstehen ist keine Niederlage. Wer weiß, was eine Plattform nicht kann, trifft bessere Architekturentscheidungen als wer es einfach versucht.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 02</div>
+        <h3>Apple blockiert WebGPU – oder doch nicht?</h3>
+
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">Der WebGPU-Chatbot auf PromptRebel lief auf dem Surface und dem PC, aber nicht auf dem iPhone. Die Annahme: Apple blockt das grundsätzlich.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom</div>
+          <div class="case-body">Kein Laden des Chatbots im iPhone-Browser. Kein Fehler, einfach kein Start.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">Die Annahme „Apple blockiert WebGPU generell“ war bereits zu grob. Das eigentliche Problem lag wahrscheinlicher an iOS-/Safari-Version, Geräte-Limit oder Modell-Kompatibilität – nicht an einem pauschalen Apple-Block.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">iPhone-Kompatibilität als bekannte Einschränkung offen kommunizieren, nicht als Architekturproblem behandeln. Der Nutzer auf mobilen Geräten bekommt einen klaren Hinweis.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">Kein Rabbit Hole um Apple-Workarounds. Klare Nutzerkommunikation statt technischer Vernebelung.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">„Das Ding blockiert das“ ist selten die vollständige Wahrheit. Bevor man eine Architekturentscheidung auf einer Annahme aufbaut, lohnt sich ein kurzer Gegencheck.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 03</div>
+        <h3>V1 Download-Button: die Brücke, die es nicht gibt</h3>
+
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">V1 sollte vorlesen und einen Download-Button haben. Klingt einfach. War es nicht.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom</div>
+          <div class="case-body">Kein Crash, kein Fehler – nur die Erkenntnis, dass der geplante Download-Button technisch nicht sauber existiert. Die Web Speech API gibt dir keine fertige Audiodatei.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">
+            <code>speechSynthesis.speak()</code> steuert den Browser-Vorleseprozess. Aber zwischen dieser API und „hier ist dein WAV-Download“ gibt es keinen standardisierten, browserübergreifenden Pfad. MediaRecorder kann Audio-Streams aufnehmen – aber nicht direkt den <code>speechSynthesis</code>-Stream, zumindest nicht zuverlässig über alle Browser hinweg.
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">V1 ohne Download planen. Vorlesen-Button, Stop/Pause/Fortsetzen – das ist realistisch. Download-Button erst bei V2, wo das TTS-Modell selbst die Audiodaten liefert und man daraus einen Blob bauen kann.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">Sauberere V1-Architektur. Kein halbfertiger Download-Hack. V2 bekommt den Download, weil V2 ihn verdient – weil das Modell selbst die Daten liefert.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Nicht jede Funktion, die sich einfach anfühlt, ist einfach zu bauen. Eine Brücke zwischen zwei APIs zu wollen heißt nicht, dass diese Brücke existiert.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 04</div>
+        <h3>HuggingFace Xet Bridge – der Infrastruktur-Crash, der fast alles gestoppt hätte</h3>
+
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">V2 sollte ein echtes TTS-Modell im Browser laden. Stattdessen: Ladefehler, keine Audioerzeugung, keine klare Fehlermeldung. Das Modell schien nicht da zu sein, obwohl die URL stimmte.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom / Fehlermeldung</div>
+          <div class="case-body">
+            <div class="raw-error">
+Failed to load resource: HuggingFace Xet Bridge
+
+TypeError: Cannot read properties of undefined (reading 'audio')
+SpeakerEmbeddings: URL not found or format mismatch
+            </div>
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">
+            HuggingFace hatte seine interne Infrastruktur geändert – der sogenannte Xet Bridge, eine CDN-Zwischenschicht für Modelldateien. Modelle, die früher über direkte URLs erreichbar waren, lieferten plötzlich Fehler oder leere Responses. Dazu kamen veraltete Speaker-Embedding-URLs in der Pipeline-Konfiguration: <code>podcast-ai-tts.js</code> referenzierte eine alte Pfadstruktur für die Sprecherreferenz-Datei, die HuggingFace nach dem Infrastrukturwechsel nicht mehr auslieferte.
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Nur <code>podcast-ai-tts.js</code> ersetzen – nicht die ganze Seite umbauen. Neue Speaker-Embeddings-URL. Harte Neuladen im Browser. V2 Voice zuerst laden, dann Audio erzeugen.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">
+            <div class="result-good">
+=== V2 Audio Pipeline ===
+
+&gt; Speaker Embeddings: geladen ✓
+&gt; Modell: initialisiert ✓
+&gt; Text → TTS → Audio: verarbeitet ✓
+&gt; → audio.wav erzeugt
+&gt; → Download-Button aktiv
+&gt; Prozess beendet. Keine Fehler.
+            </div>
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Externe Infrastruktur ändert sich ohne Ankündigung. Wenn ein Modell plötzlich nicht mehr lädt, obwohl sich nichts am eigenen Code geändert hat, ist der erste Verdacht: URL, CDN oder Infrastrukturwechsel auf der anderen Seite. Nicht der eigene Code.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 05</div>
+        <h3>Sprache gemischt, Skript abgeschnitten – und trotzdem der Durchbruch</h3>
+
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">V2 erzeugte Audio. Aber: die Sprache klang englisch-deutsch gemischt, und das Skript wurde nicht vollständig gesprochen. Zwei klare Probleme, direkt nach dem ersten Erfolg.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom</div>
+          <div class="case-body">Hörbar englische Aussprache bei deutschem Text. Audio endet nach einem Teil des Skripts. Kein Crash – aber kein vollständiges Ergebnis.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">
+            Zwei getrennte Probleme mit zwei getrennten Ursachen:<br><br>
+            <strong>Sprachmix:</strong> Das verwendete Modell (<code>speecht5_tts</code>) ist kein deutsches Spezialmodell. Dass die Aussprache bei deutschem Input schief klingt, ist modellbedingt, nicht architekturbedingt.<br><br>
+            <strong>Abschneiden:</strong> TTS-Modelle kommen mit zu langem Input schlecht zurecht. Das ist kein Fehler, sondern ein Längen-/Stabilitätsproblem. Lösung: Chunking – Text in kleinere Segmente aufteilen, nacheinander vertonen, zusammenfügen.
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Zuerst Pipeline stabilisieren, nicht Perfektion jagen. Text künstlich kürzen (300–400 Zeichen), testen ob vollständig gesprochen wird. Erst wenn kurze Texte stabil laufen: Chunking einbauen für längere Inhalte.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">
+            Der eigentliche Satz danach: <strong>„Es wird eine Audio erzeugt 🥳 – die Sprache ist zwar englisch-deutsch gemischt und beinhaltet nicht das komplette Skript aber – es funktioniert technisch und architektonisch!!!!“</strong>
+            <br><br>
+            Kein vollständiger Podcast. Aber ein bewiesenes Konzept. Text läuft lokal im Browser. TTS läuft lokal im Browser. Audio-Player läuft. WAV-Download läuft. Die Gesamtpipeline funktioniert.
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">Stimme ist kein Architekturproblem. Länge ist kein Architekturproblem. Beides ist eine Qualitäts- und Konfigurationsfrage, die man angehen kann, sobald die Pipeline bewiesen ist. Erst beweisen, dann optimieren.</div>
+        </div>
+      </section>
+
+      <section class="build-case panel">
+        <div class="case-index">Build Case 06</div>
+        <h3>„Ist das was Besonderes?“ – Die ehrlichste Frage im ganzen Build</h3>
+
+        <div class="case-row">
+          <div class="case-label">Widerstand</div>
+          <div class="case-body">NotebookLM hatte das Projekt als „etwas Großes, eine Neuheit“ beschrieben. Die Gegenfrage war direkter: Ist es das wirklich? Oder redet man sich da etwas schön?</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Rohes Symptom</div>
+          <div class="case-body">Kein technischer Fehler. Eine ehrliche Unsicherheit darüber, was der eigentliche Wert des Projekts ist.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Debug-Autopsie</div>
+          <div class="case-body">
+            Die nüchterne Einordnung: Technisch gesehen ist ein kleiner LLM + TTS + WAV-Export im Browser bekannte Technik. Es gibt ähnliches in Varianten – Research, Demos, GitHub-Projekte.<br><br>
+            Aber: Der eigentliche Wert liegt woanders. Zero-Barrier-Zugang (keine Anmeldung, keine API, keine Installation). Alles lokal (kein Server, keine Datenabgabe, keine Kosten). Reproduzierbarkeit: copy – paste – läuft. Didaktischer Wert: zeigen wie es funktioniert, nicht nur dass es funktioniert.<br><br>
+            Und am wichtigsten: es wurde umgesetzt. Die meisten bleiben bei „interessant, aber zu kompliziert“.
+          </div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Entscheidung</div>
+          <div class="case-body">Keine Revolution behaupten. Aber auch keine unnötige Selbstverkleinerung. Das Projekt ist, was es ist: ein funktionierender Local-AI-Prototyp, ein Beweis dass sowas im Browser geht, ein Baustein auf dem man weiter aufbaut.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Ergebnis</div>
+          <div class="case-body">Klares Selbstbild ohne Hype und ohne falsche Bescheidenheit. Das ist keine weiche Erkenntnis – das ist Grundvoraussetzung für gute Dokumentation.</div>
+        </div>
+        <div class="case-row">
+          <div class="case-label">Übertragbare Lehre</div>
+          <div class="case-body">„Nicht neu im globalen Sinne“ und „außergewöhnlich für das, was du gerade aufbaust“ sind kein Widerspruch. Wer die eigene Arbeit richtig einordnen kann, kommuniziert sie auch ehrlicher.</div>
+        </div>
+      </section>
+
+      <div class="divider"><span>dateien & architektur</span></div>
+      <h2 id="files">Dateien, Zuständigkeiten, Aufbau der Seite</h2>
+
+      <div class="two-col">
+        <div class="info-card">
+          <h4>Dateistruktur (GitHub Pages)</h4>
+          <pre><code>promptrebel.github.io/
 │
-├─ index.html              # Hauptseite / Navigation
-├─ podcast/
-│  └─ index.html           # Podcast-Agent-Seite
-│     ├─ V1-Bereich
-│     └─ V2-Bereich
+├─ index.html
+├─ tools/
+│  └─ podcast.html
 │
-├─ podcast-ai-tts.js       # TTS-Logik V2 (Transformers.js)
-├─ podcast-page.js         # UI-Logik, Status, Player
-│
-└─ assets/
-└─ [CSS, Icons, …]</code></pre>
-</div>
-<div class="info-card">
-<h4>Welche Datei macht was?</h4>
-<ul>
-<li><strong>podcast/index.html</strong> zeigt die Oberfläche: Eingabefeld, Buttons, Player, Status, Hinweise.</li>
-<li><strong>podcast-ai-tts.js</strong> enthält die gesamte TTS-Pipeline für V2: Modell laden, Speaker Embeddings, Audio erzeugen, Blob bauen.</li>
-<li><strong>podcast-page.js</strong> orchestriert UI-Logik: Fortschritt, V1/V2-Zustand, Player-Steuerung, Download-Link.</li>
-</ul>
-</div>
-</div>
+├─ assets/
+│  └─ js/
+│     ├─ podcast-transformers.js
+│     ├─ podcast-tts.js
+│     ├─ podcast-ai-tts.js
+│     ├─ podcast-page.js
+│     └─ wav-export.js
+          </code></pre>
+        </div>
 
-```
-  <div class="divider"><span>workflow heute</span></div>
-  <h2>Was der fertige Workflow im Browser macht</h2>
+        <div class="info-card">
+          <h4>Welche Datei macht was?</h4>
+          <ul>
+            <li><strong>tools/podcast.html</strong> zeigt die Oberfläche: Eingabefeld, Buttons, Player, Status, Hinweise.</li>
+            <li><strong>podcast-transformers.js</strong> enthält die Textgenerierung im Browser.</li>
+            <li><strong>podcast-tts.js</strong> steuert V1 über die Browser-Stimme.</li>
+            <li><strong>podcast-ai-tts.js</strong> enthält die gesamte TTS-Pipeline für V2: Modell laden, Speaker Embeddings, Audio erzeugen.</li>
+            <li><strong>podcast-page.js</strong> orchestriert UI-Logik: Fortschritt, V1/V2-Zustand, Player-Steuerung, Download-Link.</li>
+            <li><strong>wav-export.js</strong> wandelt das Audio in eine herunterladbare WAV-Datei um.</li>
+          </ul>
+        </div>
+      </div>
 
-  <div class="two-col">
-    <div class="info-card">
-      <h4>V1 – Browser-TTS</h4>
-      <pre><code># 1. Nutzer gibt Thema ein
-```
+      <div class="divider"><span>workflow heute</span></div>
+      <h2>Was der fertige Workflow im Browser macht</h2>
 
-# 2. Kleiner LLM im Browser (WebLLM)
-
-# generiert Podcast-Text (~500 Zeichen)
-
+      <div class="two-col">
+        <div class="info-card">
+          <h4>V1 – Browser-TTS</h4>
+          <pre><code># 1. Nutzer gibt Thema ein
+# 2. Kleiner LLM im Browser generiert Podcast-Text
 # 3. Text wird angezeigt
-
 # 4. speechSynthesis.speak() liest vor
-
 # 5. Stop / Pause / Fortsetzen möglich
+# 6. Kein Download (bewusste Entscheidung)
+          </code></pre>
+        </div>
 
-# 6. Kein Download (bewusste Entscheidung)</code></pre>
-
-```
-    </div>
-    <div class="info-card">
-      <h4>V2 – KI-TTS im Browser</h4>
-      <pre><code># 1. Nutzer gibt Thema ein
-```
-
+        <div class="info-card">
+          <h4>V2 – KI-TTS im Browser</h4>
+          <pre><code># 1. Nutzer gibt Thema ein
 # 2. LLM generiert Podcast-Skript
-
 # 3. Transformers.js lädt TTS-Modell
-
-# (einmalig, dann gecacht)
-
 # 4. Speaker Embeddings werden geladen
-
 # 5. Text → Modell → Audiodaten
-
 # 6. Blob → WAV → Download-Link aktiv
-
-# 7. Audio-Player zeigt Ergebnis</code></pre>
-
-```
-    </div>
-  </div>
-
-  <div class="divider"><span>learnings</span></div>
-  <h2 id="learn">Was davon übertragbar ist</h2>
-
-  <div class="two-col">
-    <div class="info-card">
-      <h4>Was wirklich funktioniert hat</h4>
-      <ul>
-        <li>V1 und V2 als getrennte Ansätze begreifen, nicht als Iterationen</li>
-        <li>GitHub Pages-Limits früh klären statt dagegen bauen</li>
-        <li>Pipeline beweisen bevor man Qualität optimiert</li>
-        <li>Chunking als universelles Muster für TTS-Stabilität</li>
-        <li>HF-Infrastruktur-Änderungen als externe Variable einplanen</li>
-        <li>Ehrliche Einordnung ohne Hype und ohne falsche Bescheidenheit</li>
-      </ul>
-    </div>
-    <div class="info-card">
-      <h4>Was andere daraus mitnehmen können</h4>
-      <ul>
-        <li>Kein Server ist eine Architekturentscheidung, kein Kompromiss</li>
-        <li>Web Speech API und KI-TTS sind zwei verschiedene Dinge</li>
-        <li>Download-Button klingt einfach – ist bei V1 aber strukturell schwer</li>
-        <li>Wenn externe Modelle plötzlich nicht laden: URL und CDN zuerst prüfen</li>
-        <li>„Es erzeugt Audio" ist wichtiger als „die Stimme klingt gut"</li>
-      </ul>
-    </div>
-  </div>
-
-  <blockquote>
-    <p>
-      „Es wird eine Audio erzeugt 🥳 – die Sprache ist zwar englisch-deutsch gemischt und beinhaltet nicht
-      das komplette Skript – aber es funktioniert technisch und architektonisch!!!!"
-    </p>
-  </blockquote>
-
-  <p>
-    Genau das ist der Satz, der zählt. Nicht weil er perfekt klingt.
-    Sondern weil ab diesem Moment klar ist: die Frage ist nicht mehr
-    „geht das überhaupt?", sondern „welches Modell, welche Textlänge, wie gut kann die Stimme werden".
-    Das ist eine viel bessere Problemklasse.
-  </p>
-
-  <div class="divider"><span>nächste schritte</span></div>
-  <h2>Was als Nächstes kommen kann</h2>
-  <ul style="padding-left:18px; color:#d1d5db; margin-bottom:22px;">
-    <li>deutsches TTS-Modell testen statt englisch-dominiertem speecht5</li>
-    <li>Chunking einbauen für vollständige Skripte ohne Abschneiden</li>
-    <li>V2 stabilisieren: zuverlässig kurze Segmente, bevor man die Länge erhöht</li>
-    <li>klarer Hinweis auf der Seite: experimentell, limitiert, lokal</li>
-    <li>Build Log Guide mit kopierbaren Codeboxen – aber erst wenn V2 stabil läuft</li>
-    <li>Reproduzierbarkeit als eigentliches Ziel: andere sollen es nachbauen können</li>
-  </ul>
-
-  <div class="callout">
-    <div class="callout-title">Die richtige Reihenfolge</div>
-    Erst zum Laufen bringen, dann dokumentieren. Nicht umgekehrt.
-    Alles andere erzeugt nur Schein-Sauberkeit: hübsche Erklärung, schöne Build Logs,
-    aber intern noch halb instabil. Pipeline stabil → Qualität stabil → Build Log Guide.
-    In dieser Reihenfolge. Nicht früher.
-  </div>
-
-  <div class="panel end-panel">
-    <div class="end-title">Build Status</div>
-    <p style="margin-bottom:10px;">
-      Kein Server. Kein Python. Kein Tailscale. Nur ein Browser – und Audio, das daraus entsteht.
-      Das ist kein perfektes System. Das ist ein bewiesenes Konzept.
-      Und genau da beginnt der eigentliche nächste Bau.
-    </p>
-    <div class="end-links">
-      <a href="lokaler-podcast-agent.html" class="end-link">← Build Log #01</a>
-      <a href="#" class="end-link">Nächster Build Log →</a>
-      <a href="#overview" class="end-link">Zurück zum Anfang →</a>
-    </div>
-
-    <footer>
-      <div>© PromptRebel | CC BY-NC-SA 4.0</div>
-      <div class="center-links">
-        <a href="#">Imprint</a>
-        <span>·</span>
-        <a href="#">Privacy</a>
+# 7. Audio-Player zeigt Ergebnis
+          </code></pre>
+        </div>
       </div>
-      <div>build log: v1.0</div>
-    </footer>
-  </div>
-</section>
-```
 
+      <div class="divider"><span>learnings</span></div>
+      <h2 id="learn">Was davon übertragbar ist</h2>
+
+      <div class="two-col">
+        <div class="info-card">
+          <h4>Was wirklich funktioniert hat</h4>
+          <ul>
+            <li>V1 und V2 als getrennte Ansätze begreifen, nicht als Iterationen</li>
+            <li>GitHub Pages-Limits früh klären statt dagegen bauen</li>
+            <li>Pipeline beweisen bevor man Qualität optimiert</li>
+            <li>Chunking als universelles Muster für TTS-Stabilität</li>
+            <li>HF-Infrastruktur-Änderungen als externe Variable einplanen</li>
+            <li>Ehrliche Einordnung ohne Hype und ohne falsche Bescheidenheit</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <h4>Was andere daraus mitnehmen können</h4>
+          <ul>
+            <li>Kein Server ist eine Architekturentscheidung, kein Kompromiss</li>
+            <li>Web Speech API und KI-TTS sind zwei verschiedene Dinge</li>
+            <li>Download-Button klingt einfach – ist bei V1 aber strukturell schwer</li>
+            <li>Wenn externe Modelle plötzlich nicht laden: URL und CDN zuerst prüfen</li>
+            <li>„Es erzeugt Audio“ ist wichtiger als „die Stimme klingt gut“</li>
+          </ul>
+        </div>
+      </div>
+
+      <blockquote>
+        <p>
+          „Es wird eine Audio erzeugt 🥳 – die Sprache ist zwar englisch-deutsch gemischt und beinhaltet nicht
+          das komplette Skript – aber es funktioniert technisch und architektonisch!!!!“
+        </p>
+      </blockquote>
+
+      <p>
+        Genau das ist der Satz, der zählt. Nicht weil er perfekt klingt.
+        Sondern weil ab diesem Moment klar ist: die Frage ist nicht mehr
+        „geht das überhaupt?“, sondern „welches Modell, welche Textlänge, wie gut kann die Stimme werden“.
+        Das ist eine viel bessere Problemklasse.
+      </p>
+
+      <div class="divider"><span>nächste schritte</span></div>
+      <h2>Was als Nächstes kommen kann</h2>
+      <ul style="padding-left:18px; color:#d1d5db; margin-bottom:22px;">
+        <li>deutsches TTS-Modell testen statt englisch-dominiertem speecht5</li>
+        <li>Chunking einbauen für vollständige Skripte ohne Abschneiden</li>
+        <li>V2 stabilisieren: zuverlässig kurze Segmente, bevor man die Länge erhöht</li>
+        <li>klarer Hinweis auf der Seite: experimentell, limitiert, lokal</li>
+        <li>Build Log Guide mit kopierbaren Codeboxen – aber erst wenn V2 stabil läuft</li>
+        <li>Reproduzierbarkeit als eigentliches Ziel: andere sollen es nachbauen können</li>
+      </ul>
+
+      <div class="callout">
+        <div class="callout-title">Die richtige Reihenfolge</div>
+        Erst zum Laufen bringen, dann dokumentieren. Nicht umgekehrt.
+        Alles andere erzeugt nur Schein-Sauberkeit: hübsche Erklärung, schöne Build Logs,
+        aber intern noch halb instabil. Pipeline stabil → Qualität stabil → Build Log Guide.
+        In dieser Reihenfolge. Nicht früher.
+      </div>
+
+      <div class="panel end-panel">
+        <div class="end-title">Build Status</div>
+        <p style="margin-bottom:10px;">
+          Kein Server. Kein Python. Kein Tailscale. Nur ein Browser – und Audio, das daraus entsteht.
+          Das ist kein perfektes System. Das ist ein bewiesenes Konzept.
+          Und genau da beginnt der eigentliche nächste Bau.
+        </p>
+
+        <div class="end-links">
+          <a href="lokaler-podcast-agent.html" class="end-link">← Build Log #01</a>
+          <a href="#" class="end-link">Nächster Build Log →</a>
+          <a href="#overview" class="end-link">Zurück zum Anfang →</a>
+        </div>
+
+        <footer>
+          <div>© PromptRebel | CC BY-NC-SA 4.0</div>
+          <div class="center-links">
+            <a href="#">Imprint</a>
+            <span>·</span>
+            <a href="#">Privacy</a>
+          </div>
+          <div>build log: v1.0</div>
+        </footer>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -1188,6 +1204,5 @@ HuggingFace hatte seine interne Infrastruktur geändert – der sogenannte Xet B
       document.documentElement.style.setProperty("--scroll", ratio.toString());
     });
   </script>
-
 </body>
 </html>
