@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Open Source AI Tic-Tac-Toe</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #121212; color: white; }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; margin-top: 20px; }
+        .cell { width: 100px; height: 100px; background: #1e1e1e; display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; border-radius: 8px; }
+        .cell:hover { background: #333; }
+        select, button { margin: 10px; padding: 10px; border-radius: 5px; border: none; cursor: pointer; }
+        .status { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Tic-Tac-Toe AI</h1>
+    
+    <div>
+        <label>Schwierigkeit:</label>
+        <select id="difficulty">
+            <option value="easy">Einfach (Zufall)</option>
+            <option value="medium">Mittel (Logik)</option>
+            <option value="hard">Unbesiegbar (Minimax)</option>
+        </select>
+        <button onclick="resetGame()">Neu starten</button>
+    </div>
+
+    <div class="board" id="board"></div>
+    <div class="status" id="status">Du bist dran (X)</div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const statusElement = document.getElementById('status');
+        const diffSelect = document.getElementById('difficulty');
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let gameActive = true;
+        const huPlayer = "X";
+        const aiPlayer = "O";
+
+        // Spielfeld erzeugen
+        function createBoard() {
+            boardElement.innerHTML = "";
+            board.forEach((cell, i) => {
+                const div = document.createElement('div');
+                div.classList.add('cell');
+                div.innerText = cell;
+                div.addEventListener('click', () => handleMove(i));
+                boardElement.appendChild(div);
+            });
+        }
+
+        function handleMove(i) {
+            if (board[i] !== "" || !gameActive) return;
+            makeMove(i, huPlayer);
+            if (gameActive) setTimeout(aiMove, 300);
+        }
+
+        function makeMove(index, player) {
+            board[index] = player;
+            createBoard();
+            checkWinner();
+        }
+
+        function aiMove() {
+            const diff = diffSelect.value;
+            let move;
+
+            if (diff === "easy") {
+                move = getRandomMove();
+            } else if (diff === "medium") {
+                move = getMediumMove() || getRandomMove();
+            } else {
+                move = getBestMove(); // Minimax
+            }
+
+            if (move !== null) makeMove(move, aiPlayer);
+        }
+
+        // --- KI LOGIKEN ---
+
+        function getRandomMove() {
+            const available = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            return available.length > 0 ? available[Math.floor(Math.random() * available.length)] : null;
+        }
+
+        function getMediumMove() {
+            // Versuche zu gewinnen oder zu blocken
+            for (let p of [aiPlayer, huPlayer]) {
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === "") {
+                        board[i] = p;
+                        if (checkWin(board, p)) { board[i] = ""; return i; }
+                        board[i] = "";
+                    }
+                }
+            }
+            return null;
+        }
+
+        function getBestMove() {
+            return minimax(board, aiPlayer).index;
+        }
+
+        function minimax(newBoard, player) {
+            const availSpots = newBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+
+            if (checkWin(newBoard, huPlayer)) return {score: -10};
+            if (checkWin(newBoard, aiPlayer)) return {score: 10};
+            if (availSpots.length === 0) return {score: 0};
+
+            const moves = [];
+            for (let i = 0; i < availSpots.length; i++) {
+                let move = {};
+                move.index = availSpots[i];
+                newBoard[availSpots[i]] = player;
+
+                if (player === aiPlayer) {
+                    move.score = minimax(newBoard, huPlayer).score;
+                } else {
+                    move.score = minimax(newBoard, aiPlayer).score;
+                }
+
+                newBoard[availSpots[i]] = "";
+                moves.push(move);
+            }
+
+            let bestMove;
+            if (player === aiPlayer) {
+                let bestScore = -10000;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score > bestScore) { bestScore = moves[i].score; bestMove = i; }
+                }
+            } else {
+                let bestScore = 10000;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score < bestScore) { bestScore = moves[i].score; bestMove = i; }
+                }
+            }
+            return moves[bestMove];
+        }
+
+        // --- HILFSFUNKTIONEN ---
+
+        function checkWin(b, p) {
+            const winStates = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return winStates.some(s => s.every(i => b[i] === p));
+        }
+
+        function checkWinner() {
+            if (checkWin(board, huPlayer)) { statusElement.innerText = "Du gewinnst!"; gameActive = false; }
+            else if (checkWin(board, aiPlayer)) { statusElement.innerText = "KI gewinnt!"; gameActive = false; }
+            else if (!board.includes("")) { statusElement.innerText = "Unentschieden!"; gameActive = false; }
+        }
+
+        function resetGame() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            gameActive = true;
+            statusElement.innerText = "Du bist dran (X)";
+            createBoard();
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
