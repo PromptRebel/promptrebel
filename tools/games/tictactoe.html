@@ -1,881 +1,1215 @@
 <!DOCTYPE html>
-
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TicTacToe // Neural Training Ground v3</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptRebel // Neural TicTacToe</title>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
+      --bg: #05060b;
+      --panel: rgba(10, 12, 22, 0.9);
+      --panel-2: rgba(16, 18, 32, 0.96);
+      --line: #1d2235;
+      --text: #cfd6f6;
+      --dim: #7580a6;
       --magenta: #ff2d78;
-      --green:   #00ff88;
-      --orange:  #ff8c42;
-      --dark:    #0a0a0f;
-      --panel:   #0f0f1a;
-      --border:  #1a1a2e;
-      --dim:     #3a3a5c;
-      --text:    #c8c8e8;
-      --glow-m:  0 0 10px rgba(255,45,120,0.6), 0 0 30px rgba(255,45,120,0.2);
-      --glow-g:  0 0 10px rgba(0,255,136,0.6),  0 0 30px rgba(0,255,136,0.2);
-      --glow-o:  0 0 10px rgba(255,140,66,0.6), 0 0 30px rgba(255,140,66,0.2);
+      --green: #00ff88;
+      --orange: #ff944d;
+      --cyan: #57e7ff;
+      --shadow-m: 0 0 10px rgba(255,45,120,.5), 0 0 24px rgba(255,45,120,.2);
+      --shadow-g: 0 0 10px rgba(0,255,136,.45), 0 0 24px rgba(0,255,136,.15);
+      --shadow-o: 0 0 10px rgba(255,148,77,.4), 0 0 24px rgba(255,148,77,.14);
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
 
-```
-body {
-  background: var(--dark);
-  color: var(--text);
-  font-family: 'Share Tech Mono', monospace;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-body::before {
-  content:''; position:fixed; inset:0; pointer-events:none; z-index:1000;
-  background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px);
-}
-body::after {
-  content:''; position:fixed; inset:0; pointer-events:none;
-  background-image: linear-gradient(rgba(255,45,120,0.025) 1px,transparent 1px),
-                    linear-gradient(90deg,rgba(255,45,120,0.025) 1px,transparent 1px);
-  background-size:40px 40px;
-}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255,45,120,.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(0,255,136,.09), transparent 26%),
+        linear-gradient(180deg, #070810 0%, #05060b 100%);
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,.018) 2px,
+        rgba(255,255,255,.018) 4px
+      );
+      opacity: .45;
+      z-index: 100;
+    }
 
-/* ── BOOT ── */
-#boot {
-  position:fixed; inset:0; background:var(--dark); z-index:900;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:1.4rem; padding:2rem;
-}
-#boot.gone { display:none; }
-.boot-logo {
-  font-family:'Orbitron',sans-serif; font-weight:900;
-  font-size:clamp(1rem,3vw,1.5rem); letter-spacing:3px; text-align:center;
-  background:linear-gradient(135deg,var(--magenta),var(--orange),var(--green));
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-}
-.boot-phase { font-size:.65rem; color:var(--magenta); letter-spacing:3px; text-align:center; min-height:1rem; }
-.boot-track { width:min(380px,80vw); height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
-.boot-fill  { height:100%; width:0%; background:linear-gradient(90deg,var(--magenta),var(--green)); border-radius:3px; transition:width .12s linear; box-shadow:var(--glow-g); }
-.boot-sub   { font-size:.58rem; color:var(--dim); letter-spacing:2px; text-align:center; min-height:.9rem; }
-.boot-log   {
-  width:min(380px,80vw); height:76px; overflow-y:auto;
-  font-size:.58rem; color:var(--dim); line-height:1.7;
-  border:1px solid var(--border); padding:.5rem; border-radius:2px;
-}
-.boot-log .g { color:var(--green); }
-.boot-log .m { color:var(--magenta); }
-.boot-log .o { color:var(--orange); }
+    .grid-noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(87,231,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(87,231,255,.035) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: .45;
+      z-index: 0;
+    }
 
-/* ── HEADER ── */
-header { text-align:center; padding:2rem 1rem 1rem; }
-.tag    { font-size:.6rem; color:var(--magenta); letter-spacing:4px; margin-bottom:.5rem; }
-h1 {
-  font-family:'Orbitron',sans-serif; font-weight:900;
-  font-size:clamp(1.3rem,4vw,2rem); letter-spacing:2px;
-  background:linear-gradient(135deg,var(--magenta),var(--orange),var(--green));
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-}
-.sub { font-size:.65rem; color:var(--dim); margin-top:.4rem; letter-spacing:2px; }
+    #boot {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: grid;
+      place-items: center;
+      background: rgba(5, 6, 11, .98);
+      padding: 2rem;
+    }
+    #boot.hidden { display: none; }
+    .boot-card {
+      width: min(520px, 100%);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(15,17,30,.96), rgba(8,10,18,.96));
+      padding: 1.2rem;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.38);
+    }
+    .boot-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1rem, 3vw, 1.45rem);
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--magenta), var(--orange), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: .65rem;
+    }
+    .boot-phase, .boot-sub {
+      font-size: .67rem;
+      letter-spacing: 2px;
+      color: var(--dim);
+      min-height: 1rem;
+    }
+    .boot-phase { color: var(--magenta); margin-bottom: .55rem; }
+    .boot-track {
+      height: 8px;
+      background: #0b0e17;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: .7rem 0;
+    }
+    .boot-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--magenta), var(--green));
+      box-shadow: var(--shadow-g);
+      transition: width .15s linear;
+    }
+    .boot-log {
+      margin-top: .8rem;
+      max-height: 160px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      background: rgba(4,5,10,.55);
+      border-radius: 8px;
+      padding: .75rem;
+      font-size: .62rem;
+      line-height: 1.65;
+      color: var(--dim);
+    }
+    .boot-log .g { color: var(--green); }
+    .boot-log .m { color: var(--magenta); }
+    .boot-log .o { color: var(--orange); }
 
-/* ── LAYOUT ── */
-.wrap {
-  display:grid; grid-template-columns:1fr auto 1fr;
-  gap:1.4rem; max-width:1000px; margin:1.4rem auto; padding:0 1rem; align-items:start;
-}
-.panel { background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:1rem; position:relative; }
-.panel::before { content:''; position:absolute; top:-1px; left:20px; width:36px; height:2px; background:var(--magenta); }
-.plabel { font-size:.58rem; letter-spacing:3px; color:var(--magenta); text-transform:uppercase; margin-bottom:.9rem; }
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 2rem 1rem 2.5rem;
+    }
 
-.row { display:flex; justify-content:space-between; align-items:center; padding:.35rem 0; border-bottom:1px solid var(--border); font-size:.75rem; }
-.row:last-child { border-bottom:none; }
-.rl { color:var(--dim); }
-.rv { color:var(--green); font-weight:bold; }
-.rv.m { color:var(--magenta); }
-.rv.o { color:var(--orange); }
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .kicker {
+      color: var(--magenta);
+      letter-spacing: 4px;
+      font-size: .62rem;
+      margin-bottom: .55rem;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.5rem, 4.2vw, 2.5rem);
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--magenta), var(--orange), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: .45rem;
+    }
+    .subline {
+      color: var(--dim);
+      font-size: .7rem;
+      letter-spacing: 2px;
+    }
 
-.btrack { height:5px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:.3rem; }
-.bfill  { height:100%; border-radius:3px; transition:width .7s ease; }
-.bfill.ai  { background:linear-gradient(90deg,var(--magenta),var(--green)); box-shadow:var(--glow-g); }
-.bfill.eps { background:linear-gradient(90deg,var(--green),var(--orange)); }
-.blabel { font-size:.55rem; color:var(--dim); letter-spacing:2px; margin-top:.7rem; margin-bottom:.25rem; }
-.bsub   { display:flex; justify-content:space-between; font-size:.5rem; color:var(--dim); margin-top:.2rem; }
+    .layout {
+      display: grid;
+      grid-template-columns: 290px minmax(300px, 1fr) 290px;
+      gap: 1rem;
+      align-items: start;
+    }
 
-/* ── GAME CENTER ── */
-.game { display:flex; flex-direction:column; align-items:center; gap:.9rem; }
+    .panel {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(14,17,28,.9), rgba(8,10,18,.9));
+      border-radius: 14px;
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 18px;
+      width: 44px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--magenta), var(--green));
+    }
+    .panel-label {
+      color: var(--magenta);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-size: .58rem;
+      margin-bottom: .95rem;
+    }
 
-.status {
-  font-family:'Orbitron',sans-serif; font-size:.7rem; letter-spacing:2px;
-  text-align:center; padding:.55rem 1.4rem;
-  border:1px solid var(--dim); border-radius:2px; min-width:230px; transition:all .25s;
-}
-.status.you  { border-color:var(--green);  color:var(--green);   box-shadow:var(--glow-g); }
-.status.ai   { border-color:var(--magenta); color:var(--magenta); box-shadow:var(--glow-m); }
-.status.win  { border-color:var(--green);  color:var(--green);   box-shadow:var(--glow-g); animation:blink .45s ease 4; }
-.status.lose { border-color:var(--magenta); color:var(--magenta); box-shadow:var(--glow-m); }
-.status.draw { border-color:var(--orange);  color:var(--orange); }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      gap: .7rem;
+      font-size: .75rem;
+      padding: .38rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .stat-row:last-child { border-bottom: 0; }
+    .stat-row .l { color: var(--dim); }
+    .stat-row .v { color: var(--green); font-weight: 700; }
+    .stat-row .v.m { color: var(--magenta); }
+    .stat-row .v.o { color: var(--orange); }
 
-.board {
-  display:grid; grid-template-columns:repeat(3,1fr);
-  gap:4px; background:var(--magenta); padding:4px; border-radius:4px;
-  box-shadow:var(--glow-m);
-}
-.cell {
-  width:88px; height:88px; background:var(--panel);
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Orbitron',sans-serif; font-size:2rem; font-weight:900;
-  cursor:pointer; border-radius:2px; transition:all .13s; position:relative; overflow:hidden;
-}
-.cell::after { content:''; position:absolute; inset:0; background:var(--green); opacity:0; transition:opacity .13s; }
-.cell:hover:not(.taken)::after { opacity:.07; }
-.cell:hover:not(.taken) { transform:scale(.97); }
-.cell.taken { cursor:default; }
-.x { color:var(--green);   text-shadow:var(--glow-g); position:relative; z-index:1; }
-.o { color:var(--magenta); text-shadow:var(--glow-m); position:relative; z-index:1; }
-.cell.win-cell { background:rgba(0,255,136,.1); box-shadow:inset 0 0 12px rgba(0,255,136,.2); }
-.qval {
-  position:absolute; bottom:3px; right:4px;
-  font-size:.42rem; font-family:'Share Tech Mono',monospace;
-  pointer-events:none; z-index:2; transition:color .3s;
-}
+    .bar-label {
+      color: var(--dim);
+      font-size: .55rem;
+      letter-spacing: 2px;
+      margin-top: .9rem;
+      margin-bottom: .3rem;
+      text-transform: uppercase;
+    }
+    .bar {
+      height: 7px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #0a0c15;
+      border: 1px solid var(--line);
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      transition: width .4s ease;
+    }
+    .bar-fill.win {
+      background: linear-gradient(90deg, var(--magenta), var(--green));
+      box-shadow: var(--shadow-g);
+    }
+    .bar-fill.eps {
+      background: linear-gradient(90deg, var(--green), var(--orange));
+      box-shadow: var(--shadow-o);
+    }
+    .bar-scale {
+      display: flex;
+      justify-content: space-between;
+      color: var(--dim);
+      font-size: .52rem;
+      margin-top: .18rem;
+    }
 
-.eps-row { display:flex; align-items:center; gap:.5rem; font-size:.6rem; color:var(--dim); }
-.eps-dot { width:6px; height:6px; border-radius:50%; background:var(--magenta); box-shadow:var(--glow-m); animation:pulse 1.1s ease infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.15} }
+    .center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .9rem;
+    }
 
-/* ── BUTTONS ── */
-.btns { display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center; }
-.btn {
-  font-family:'Share Tech Mono',monospace; font-size:.65rem; letter-spacing:2px;
-  padding:.45rem .9rem; border:1px solid var(--dim); background:transparent;
-  color:var(--text); cursor:pointer; border-radius:2px; text-transform:uppercase; transition:all .18s;
-}
-.btn:hover  { border-color:var(--magenta); color:var(--magenta); box-shadow:var(--glow-m); }
-.btn.g      { border-color:var(--green);   color:var(--green); }
-.btn.g:hover{ background:rgba(0,255,136,.08); box-shadow:var(--glow-g); }
-.btn.o      { border-color:var(--orange);  color:var(--orange); }
-.btn.o:hover{ background:rgba(255,140,66,.08); box-shadow:var(--glow-o); }
-.btn.danger { border-color:#444; color:#666; font-size:.55rem; }
-.btn.danger:hover { border-color:var(--magenta); color:var(--magenta); }
+    .status {
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 2px;
+      font-size: .72rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: .8rem 1rem;
+      background: rgba(10, 12, 22, .7);
+      transition: .2s ease;
+    }
+    .status.you  { color: var(--green); border-color: rgba(0,255,136,.4); box-shadow: var(--shadow-g); }
+    .status.ai   { color: var(--magenta); border-color: rgba(255,45,120,.4); box-shadow: var(--shadow-m); }
+    .status.win  { color: var(--green); border-color: rgba(0,255,136,.4); box-shadow: var(--shadow-g); }
+    .status.lose { color: var(--magenta); border-color: rgba(255,45,120,.4); box-shadow: var(--shadow-m); }
+    .status.draw { color: var(--orange); border-color: rgba(255,148,77,.4); box-shadow: var(--shadow-o); }
 
-.persist-badge { font-size:.52rem; color:var(--dim); text-align:center; letter-spacing:1px; }
-.persist-badge b { color:var(--orange); }
+    .board-shell {
+      position: relative;
+      padding: .9rem;
+      border-radius: 18px;
+      border: 1px solid rgba(255,45,120,.22);
+      background: linear-gradient(180deg, rgba(17, 18, 30, .96), rgba(10, 11, 18, .96));
+      box-shadow: 0 0 0 1px rgba(255,255,255,.02) inset, 0 16px 36px rgba(0,0,0,.28);
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 6px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255,45,120,.75), rgba(87,231,255,.2), rgba(0,255,136,.75));
+      box-shadow: 0 0 26px rgba(255,45,120,.16);
+    }
+    .cell {
+      width: 108px;
+      height: 108px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(16,18,31,.98), rgba(9,10,17,.98));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+    }
+    .cell:hover:not(.taken) {
+      transform: translateY(-1px) scale(.985);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 0 18px rgba(0,255,136,.08);
+    }
+    .cell:hover:not(.taken)::after {
+      opacity: .09;
+    }
+    .cell::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(0,255,136,.28), transparent 68%);
+      opacity: 0;
+      transition: opacity .12s ease;
+      pointer-events: none;
+    }
+    .cell.taken { cursor: default; }
+    .cell.win-cell {
+      background: rgba(0,255,136,.09);
+      box-shadow: inset 0 0 0 1px rgba(0,255,136,.25), inset 0 0 24px rgba(0,255,136,.1);
+    }
+    .mark {
+      position: relative;
+      z-index: 2;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.15rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .mark.x { color: var(--green); text-shadow: var(--shadow-g); }
+    .mark.o { color: var(--magenta); text-shadow: var(--shadow-m); }
+    .qval {
+      position: absolute;
+      right: 6px;
+      bottom: 4px;
+      font-size: .45rem;
+      letter-spacing: .5px;
+      z-index: 2;
+      pointer-events: none;
+    }
 
-/* ── HISTORY DOTS ── */
-.dots { display:flex; gap:4px; flex-wrap:wrap; margin-top:.4rem; }
-.dot  { width:9px; height:9px; border-radius:50%; }
+    .micro {
+      font-size: .62rem;
+      color: var(--dim);
+      text-align: center;
+      line-height: 1.6;
+    }
 
-/* ── LOG ── */
-.logwrap { max-width:1000px; margin:0 auto 2rem; padding:0 1rem; }
-.logbox  {
-  background:var(--panel); border:1px solid var(--border); border-radius:4px;
-  padding:.9rem; font-size:.6rem; color:var(--dim); max-height:90px; overflow-y:auto; position:relative;
-}
-.logbox::before { content:''; position:absolute; top:-1px; left:20px; width:36px; height:2px; background:var(--green); }
-.le   { line-height:1.6; }
-.le.g { color:var(--green); }
-.le.m { color:var(--magenta); }
-.le.o { color:var(--orange); }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      justify-content: center;
+    }
+    .btn {
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+      padding: .62rem .95rem;
+      font-family: inherit;
+      font-size: .63rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    .btn:hover { border-color: var(--magenta); color: var(--magenta); box-shadow: var(--shadow-m); }
+    .btn.g { border-color: rgba(0,255,136,.35); color: var(--green); }
+    .btn.g:hover { box-shadow: var(--shadow-g); background: rgba(0,255,136,.06); }
+    .btn.o { border-color: rgba(255,148,77,.35); color: var(--orange); }
+    .btn.o:hover { box-shadow: var(--shadow-o); background: rgba(255,148,77,.06); }
+    .btn.danger { color: #9aa3c3; }
+    .btn.danger:hover { color: var(--magenta); }
 
-@media(max-width:680px) {
-  .wrap { grid-template-columns:1fr; }
-  .cell { width:78px; height:78px; font-size:1.7rem; }
-}
-```
+    .badge {
+      color: var(--dim);
+      font-size: .54rem;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .badge b { color: var(--orange); }
 
+    .legend,
+    .note {
+      color: var(--dim);
+      font-size: .58rem;
+      line-height: 1.75;
+    }
+
+    .dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: .5rem;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.04) inset;
+    }
+
+    .upload-wrap {
+      margin-top: .95rem;
+      padding-top: .95rem;
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+
+    .log-wrap {
+      margin-top: 1rem;
+    }
+    .logbox {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(12,14,24,.9), rgba(8,10,18,.92));
+      border-radius: 14px;
+      padding: .95rem;
+      max-height: 140px;
+      overflow: auto;
+      position: relative;
+      font-size: .62rem;
+      color: var(--dim);
+    }
+    .logbox::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 18px;
+      width: 46px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--green), var(--cyan));
+    }
+    .le { line-height: 1.65; }
+    .le.g { color: var(--green); }
+    .le.m { color: var(--magenta); }
+    .le.o { color: var(--orange); }
+
+    canvas#netCanvas {
+      width: 100%;
+      display: block;
+      opacity: .9;
+      border-radius: 8px;
+      background: rgba(5,6,10,.35);
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .center { order: -1; }
+      .cell { width: min(28vw, 104px); height: min(28vw, 104px); }
+    }
+
+    @media (max-width: 480px) {
+      .app { padding-left: .75rem; padding-right: .75rem; }
+      .cell { width: min(28vw, 90px); height: min(28vw, 90px); }
+      .mark { font-size: 1.85rem; }
+      .btn { width: 100%; }
+      .btn-row { width: 100%; }
+    }
   </style>
 </head>
 <body>
+  <div class="grid-noise"></div>
 
-<!-- ══ BOOT ══ -->
-
-<div id="boot">
-  <div class="boot-logo">NEURAL TIC-TAC-TOE<br>TRAINING GROUND v3</div>
-  <div class="boot-phase" id="bPhase">INITIALISIERE...</div>
-  <div class="boot-track"><div class="boot-fill" id="bBar"></div></div>
-  <div class="boot-sub"  id="bSub">Lade TensorFlow.js...</div>
-  <div class="boot-log"  id="bLog"></div>
-</div>
-
-<!-- ══ MAIN ══ -->
-
-<header>
-  <div class="tag">// PromptRebel KI-Labor //</div>
-  <h1>NEURAL TIC-TAC-TOE</h1>
-  <div class="sub">DQN // TENSORFLOW.JS // INDEXEDDB PERSISTENCE // LIVE TRAINING</div>
-</header>
-
-<div class="wrap">
-
-  <!-- LEFT: STATS -->
-
-  <div class="panel">
-    <div class="plabel">// KI Statistik</div>
-
-```
-<div class="row"><span class="rl">Spiele gesamt</span>    <span class="rv"  id="sTotal">0</span></div>
-<div class="row"><span class="rl">Vortraining</span>      <span class="rv o" id="sPre">0</span></div>
-<div class="row"><span class="rl">Echte Spiele</span>     <span class="rv"  id="sLive">0</span></div>
-<div class="row"><span class="rl">KI Siege</span>         <span class="rv m" id="sAI">0</span></div>
-<div class="row"><span class="rl">Menschl. Siege</span>   <span class="rv"  id="sHu">0</span></div>
-<div class="row"><span class="rl">Unentschieden</span>    <span class="rv o" id="sDr">0</span></div>
-
-<div class="blabel">// KI GEWINNRATE (live)</div>
-<div class="btrack"><div class="bfill ai" id="bWin" style="width:0%"></div></div>
-<div class="bsub"><span>0%</span><span id="bWinPct">0%</span><span>100%</span></div>
-
-<div class="blabel">// ERKUNDUNG ε</div>
-<div class="btrack"><div class="bfill eps" id="bEps" style="width:100%"></div></div>
-<div class="bsub"><span>Exploit</span><span id="bEpsPct">100%</span><span>Explore</span></div>
-
-<div class="blabel">// NETZWERK</div>
-<canvas id="netCanvas" width="220" height="78" style="width:100%;opacity:.85"></canvas>
-```
-
-  </div>
-
-  <!-- CENTER: GAME -->
-
-  <div class="game">
-    <div class="status you" id="status">LADE...</div>
-    <div class="board" id="board"></div>
-    <div class="eps-row">
-      <div class="eps-dot"></div>
-      <span id="epsText">...</span>
+  <div id="boot">
+    <div class="boot-card">
+      <div class="boot-title">NEURAL TIC-TAC-TOE // PROMPTREBEL LAB</div>
+      <div class="boot-phase" id="bootPhase">INITIALISIERE SYSTEM...</div>
+      <div class="boot-sub" id="bootSub">Lade TensorFlow.js</div>
+      <div class="boot-track"><div class="boot-fill" id="bootFill"></div></div>
+      <div class="boot-log" id="bootLog"></div>
     </div>
-    <div class="btns">
-      <button class="btn g" onclick="resetGame()">▶ NEU STARTEN</button>
-      <button class="btn o" onclick="exportModel()">💾 EXPORTIEREN</button>
-    </div>
-    <div class="persist-badge" id="badge">Lade Modell...</div>
   </div>
 
-  <!-- RIGHT: ANALYSIS -->
+  <main class="app">
+    <header>
+      <div class="kicker">// PromptRebel // Neural Sandbox //</div>
+      <h1>NEURAL TIC-TAC-TOE</h1>
+      <div class="subline">DQN // TensorFlow.js // IndexedDB Persistence // Live Training</div>
+    </header>
 
-  <div class="panel">
-    <div class="plabel">// Analyse</div>
-    <div style="font-size:.6rem;color:var(--dim);line-height:1.8;margin-bottom:.8rem">
-      Zahlen in Feldern = Q-Values der KI.<br>Höher = attraktiver für die KI.
-    </div>
+    <section class="layout">
+      <aside class="panel">
+        <div class="panel-label">// KI Statistik</div>
 
-```
-<div class="row"><span class="rl">Training Steps</span>  <span class="rv"  id="sSteps">0</span></div>
-<div class="row"><span class="rl">Memory Buffer</span>   <span class="rv o" id="sMem">0/5000</span></div>
-<div class="row"><span class="rl">Letzter Loss</span>    <span class="rv"  id="sLoss">—</span></div>
-<div class="row"><span class="rl">Modell Quelle</span>   <span class="rv"  id="sSource" style="font-size:.55rem">—</span></div>
-<div class="row"><span class="rl">Zuletzt gespeichert</span><span class="rv o" id="sSaved" style="font-size:.55rem">—</span></div>
+        <div class="stat-row"><span class="l">Spiele gesamt</span><span class="v" id="sTotal">0</span></div>
+        <div class="stat-row"><span class="l">Vortraining</span><span class="v o" id="sPretrain">0</span></div>
+        <div class="stat-row"><span class="l">Live-Spiele</span><span class="v" id="sLive">0</span></div>
+        <div class="stat-row"><span class="l">KI-Siege</span><span class="v m" id="sAIWins">0</span></div>
+        <div class="stat-row"><span class="l">Mensch-Siege</span><span class="v" id="sHumanWins">0</span></div>
+        <div class="stat-row"><span class="l">Unentschieden</span><span class="v o" id="sDraws">0</span></div>
 
-<div style="margin-top:.9rem;font-size:.58rem;color:var(--dim);line-height:1.7;border-top:1px solid var(--border);padding-top:.8rem">
-  <span style="color:var(--green)">X</span> = Du &nbsp;|&nbsp;
-  <span style="color:var(--magenta)">O</span> = KI<br>
-  Modell lebt in IndexedDB —<br>
-  überlebt jeden Reload.<br>
-  Wächst mit jedem Spiel. 🧠
-</div>
+        <div class="bar-label">// KI-Gewinnrate live</div>
+        <div class="bar"><div class="bar-fill win" id="winBar"></div></div>
+        <div class="bar-scale"><span>0%</span><span id="winBarText">0%</span><span>100%</span></div>
 
-<div class="blabel">// LETZTE 10 SPIELE</div>
-<div class="dots" id="dots"></div>
+        <div class="bar-label">// Erkundung ε</div>
+        <div class="bar"><div class="bar-fill eps" id="epsBar"></div></div>
+        <div class="bar-scale"><span>Exploit</span><span id="epsBarText">100%</span><span>Explore</span></div>
 
-<div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:.8rem">
-  <div class="blabel">// MODELL IMPORTIEREN</div>
-  <div style="font-size:.52rem;color:var(--dim);margin-bottom:.4rem">model.json + weights.bin wählen</div>
-  <input type="file" id="importInput" accept=".json,.bin" multiple style="display:none" onchange="importModel(event)">
-  <button class="btn" style="width:100%;font-size:.58rem" onclick="document.getElementById('importInput').click()">📂 Modell laden</button>
-</div>
+        <div class="bar-label">// Netzwerk</div>
+        <canvas id="netCanvas" width="240" height="88"></canvas>
+      </aside>
 
-<div style="margin-top:.6rem">
-  <button class="btn danger" style="width:100%" onclick="confirmReset()">⚠ Modell zurücksetzen</button>
-</div>
-```
+      <section class="center">
+        <div class="status you" id="status">LADE...</div>
 
-  </div>
+        <div class="board-shell">
+          <div class="board" id="board"></div>
+        </div>
 
-</div>
+        <div class="micro" id="epsText">...</div>
 
-<!-- LOG -->
+        <div class="btn-row">
+          <button class="btn g" id="newGameBtn">▶ Neu starten</button>
+          <button class="btn o" id="exportBtn">💾 Exportieren</button>
+        </div>
 
-<div class="logwrap">
-  <div class="logbox" id="logbox">
-    <div class="le g">// SYSTEM BOOT // Neural TicTacToe v3.0 // PromptRebel KI-Labor</div>
-  </div>
-</div>
+        <div class="badge" id="persistBadge">Lade Modell...</div>
+      </section>
 
-<script>
-'use strict';
-// ══════════════════════════════════════════════════════════════
-//  CONFIG
-// ══════════════════════════════════════════════════════════════
-const CFG = {
-  gamma:        0.95,
-  epsStart:     1.0,
-  epsMin:       0.05,
-  epsDecay:     0.97,   // per human game
-  batchSize:    32,
-  memorySize:   5000,
-  pretrainGames:500,
-  pretrainEps:  0.15,   // randomness in minimax during pretrain
-  trainEvery:   1,      // train after every game
-  autoSaveEvery:5,      // save to IndexedDB every N games
-  modelKey:     'indexeddb://ttt-dqn-v3',
-  stateKey:     'ttt-state-v3',
-};
+      <aside class="panel">
+        <div class="panel-label">// Analyse</div>
 
-const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        <div class="note" style="margin-bottom:.75rem;">
+          Zahlen in freien Feldern zeigen die aktuellen Q-Werte der KI. Höher bedeutet: attraktiverer Zug aus Sicht des Modells.
+        </div>
 
-// ══════════════════════════════════════════════════════════════
-//  RUNTIME STATE
-// ══════════════════════════════════════════════════════════════
-let model       = null;
-let epsilon     = CFG.epsStart;
-let memory      = [];          // experience replay buffer
-let trainSteps  = 0;
-let lastLoss    = null;
-let gameActive  = false;
-let board       = Array(9).fill(0);
-let gameHistory = [];          // 'H','A','D'
-let modelSource = '—';
+        <div class="stat-row"><span class="l">Training Steps</span><span class="v" id="sSteps">0</span></div>
+        <div class="stat-row"><span class="l">Replay Buffer</span><span class="v o" id="sMemory">0/5000</span></div>
+        <div class="stat-row"><span class="l">Letzter Loss</span><span class="v" id="sLoss">—</span></div>
+        <div class="stat-row"><span class="l">Modellquelle</span><span class="v" id="sSource" style="font-size:.58rem">—</span></div>
+        <div class="stat-row"><span class="l">Zuletzt gespeichert</span><span class="v o" id="sSaved" style="font-size:.58rem">—</span></div>
 
-let stats = { total:0, pretrain:0, live:0, aiWins:0, humanWins:0, draws:0 };
+        <div class="legend" style="margin-top:.85rem; padding-top:.85rem; border-top:1px solid rgba(255,255,255,.05);">
+          <span style="color:var(--green)">X</span> = Mensch<br>
+          <span style="color:var(--magenta)">O</span> = KI<br><br>
+          Modell wird in IndexedDB gespeichert und überlebt Reloads. Das Netz lernt mit jedem Spiel weiter.
+        </div>
 
-// ══════════════════════════════════════════════════════════════
-//  GAME HELPERS
-// ══════════════════════════════════════════════════════════════
-const empty  = b => b.reduce((a,v,i)=>{ if(v===0) a.push(i); return a; },[]);
-const won    = (b,p) => WIN_LINES.some(l => l.every(i => b[i]===p));
-const winLine= (b,p) => WIN_LINES.find(l => l.every(i => b[i]===p)) || null;
+        <div class="bar-label">// Letzte 10 Spiele</div>
+        <div class="dots" id="historyDots"></div>
 
-// Board from AI perspective: AI always sees itself as +1
-// When AI is O(-1): multiply by -1 so its pieces are +1, opponent -1
-function boardForAI(b) { return b.map(v => v === 0 ? 0 : v === -1 ? 1 : -1); }
+        <div class="upload-wrap">
+          <div class="bar-label">// Modell importieren</div>
+          <div class="note" style="margin-bottom:.45rem;">model.json und weights.bin gemeinsam auswählen</div>
+          <input id="importInput" type="file" accept=".json,.bin" multiple hidden>
+          <button class="btn" id="importBtn" style="width:100%;">📂 Modell laden</button>
+        </div>
 
-// ══════════════════════════════════════════════════════════════
-//  MINIMAX  (pretraining opponent, plays as human X=+1)
-// ══════════════════════════════════════════════════════════════
-function minimax(b, maximizing, depth=0) {
-  if (won(b, 1))  return { score: depth - 10 }; // human wins = bad for AI
-  if (won(b, -1)) return { score: 10 - depth }; // AI wins   = good for AI
-  const e = empty(b);
-  if (!e.length)  return { score: 0 };
-  let best = maximizing ? {score:-Infinity} : {score:Infinity};
-  for (const i of e) {
-    b[i] = maximizing ? 1 : -1;
-    const r = minimax(b, !maximizing, depth+1);
-    b[i] = 0; r.index = i;
-    if (maximizing ? r.score>best.score : r.score<best.score) best=r;
-  }
-  return best;
-}
-function minimaxMove(b) {
-  if (Math.random() < CFG.pretrainEps) { const e=empty(b); return e[Math.floor(Math.random()*e.length)]; }
-  return minimax([...b], true).index; // human maximizes
-}
+        <div class="upload-wrap" style="margin-top:.6rem;">
+          <button class="btn danger" id="resetModelBtn" style="width:100%;">⚠ Modell zurücksetzen</button>
+        </div>
+      </aside>
+    </section>
 
-// ══════════════════════════════════════════════════════════════
-//  MODEL
-// ══════════════════════════════════════════════════════════════
-async function buildModel() {
-  const m = tf.sequential();
-  m.add(tf.layers.dense({ units:256, inputShape:[9], activation:'relu',
-        kernelInitializer:'heNormal' }));
-  m.add(tf.layers.dense({ units:256, activation:'relu', kernelInitializer:'heNormal' }));
-  m.add(tf.layers.dense({ units:128, activation:'relu', kernelInitializer:'heNormal' }));
-  m.add(tf.layers.dense({ units:9,   activation:'linear' }));
-  m.compile({ optimizer: tf.train.adam(0.0005), loss:'meanSquaredError' });
-  return m;
-}
+    <section class="log-wrap">
+      <div class="logbox" id="logbox">
+        <div class="le g">// SYSTEM BOOT // PromptRebel Neural TicTacToe</div>
+      </div>
+    </section>
+  </main>
 
-function compileModel(m) {
-  m.compile({ optimizer: tf.train.adam(0.0005), loss:'meanSquaredError' });
-  return m;
-}
+  <script>
+    'use strict';
 
-// ══════════════════════════════════════════════════════════════
-//  PERSISTENCE  (IndexedDB via TF.js + localStorage for state)
-// ══════════════════════════════════════════════════════════════
-async function saveToIndexedDB() {
-  try {
-    await model.save(CFG.modelKey);
-    const state = { epsilon, trainSteps, lastLoss, stats, gameHistory: gameHistory.slice(-200), modelSource };
-    localStorage.setItem(CFG.stateKey, JSON.stringify(state));
-    const t = new Date().toLocaleTimeString('de-DE');
-    document.getElementById('sSaved').textContent = t;
-    document.getElementById('badge').innerHTML = `Auto-gespeichert: <b>${t}</b> // ${stats.total} Spiele`;
-  } catch(e) { log('// Auto-save Fehler: '+e.message,'m'); }
-}
+    const CFG = {
+      gamma: 0.95,
+      epsStart: 1.0,
+      epsMin: 0.05,
+      epsDecay: 0.97,
+      batchSize: 32,
+      memorySize: 5000,
+      pretrainGames: 500,
+      pretrainNoise: 0.15,
+      autoSaveEvery: 5,
+      modelKey: 'indexeddb://promptrebel-ttt-dqn-v1',
+      stateKey: 'promptrebel-ttt-state-v1'
+    };
 
-async function loadFromIndexedDB() {
-  try {
-    const m = await tf.loadLayersModel(CFG.modelKey);
-    model = compileModel(m);
-    const raw = localStorage.getItem(CFG.stateKey);
-    if (raw) {
-      const s = JSON.parse(raw);
-      epsilon     = s.epsilon     ?? CFG.epsMin;
-      trainSteps  = s.trainSteps  ?? 0;
-      lastLoss    = s.lastLoss    ?? null;
-      stats       = s.stats       ?? stats;
-      gameHistory = s.gameHistory ?? [];
-      modelSource = s.modelSource ?? 'IndexedDB';
+    const WIN_LINES = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    let model = null;
+    let epsilon = CFG.epsStart;
+    let memory = [];
+    let trainSteps = 0;
+    let lastLoss = null;
+    let board = Array(9).fill(0);
+    let gameActive = false;
+    let modelSource = '—';
+    let history = [];
+    let stats = {
+      total: 0,
+      pretrain: 0,
+      live: 0,
+      aiWins: 0,
+      humanWins: 0,
+      draws: 0
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    const emptyCells = (b) => b.reduce((acc, v, i) => {
+      if (v === 0) acc.push(i);
+      return acc;
+    }, []);
+
+    const hasWon = (b, p) => WIN_LINES.some(line => line.every(i => b[i] === p));
+    const getWinLine = (b, p) => WIN_LINES.find(line => line.every(i => b[i] === p)) || null;
+    const boardForAI = (b) => b.map(v => v === 0 ? 0 : v === -1 ? 1 : -1);
+
+    function log(msg, cls = '') {
+      const entry = document.createElement('div');
+      entry.className = `le ${cls}`.trim();
+      entry.textContent = `[${new Date().toLocaleTimeString('de-DE')}] ${msg}`;
+      $('logbox').appendChild(entry);
+      $('logbox').scrollTop = $('logbox').scrollHeight;
     }
-    return true;
-  } catch(_) { return false; }
-}
 
-// ══════════════════════════════════════════════════════════════
-//  DQN — GET MOVE
-// ══════════════════════════════════════════════════════════════
-async function aiMove(b, showHeat=false, forceGreedy=false) {
-  const e = empty(b);
-  if (!e.length) return null;
-
-  if (!forceGreedy && Math.random() < epsilon) {
-    return e[Math.floor(Math.random()*e.length)];
-  }
-
-  // AI sees board from its own perspective
-  const input = boardForAI(b);
-  const qt = tf.tidy(() => model.predict(tf.tensor2d([input],[1,9])));
-  const qa = await qt.data();
-  qt.dispose();
-
-  if (showHeat) updateHeat(b, qa);
-
-  let best=-1, bestQ=-Infinity;
-  for (const i of e) { if (qa[i]>bestQ) { bestQ=qa[i]; best=i; } }
-  return best;
-}
-
-// ══════════════════════════════════════════════════════════════
-//  EXPERIENCE REPLAY
-// ══════════════════════════════════════════════════════════════
-function remember(state, action, reward, nextState, done, nextValid) {
-  // Always store from AI perspective
-  memory.push({
-    s:  boardForAI(state),
-    a:  action,
-    r:  reward,
-    ns: boardForAI(nextState),
-    done,
-    nv: nextValid,
-  });
-  if (memory.length > CFG.memorySize) memory.shift();
-}
-
-async function learn() {
-  if (memory.length < CFG.batchSize) return;
-
-  const batch = Array.from({length:CFG.batchSize},
-    () => memory[Math.floor(Math.random()*memory.length)]);
-
-  const sT  = tf.tensor2d(batch.map(e=>e.s),  [CFG.batchSize,9]);
-  const nsT = tf.tensor2d(batch.map(e=>e.ns), [CFG.batchSize,9]);
-  const curQ = model.predict(sT);
-  const nxtQ = model.predict(nsT);
-  const curA = await curQ.array();
-  const nxtA = await nxtQ.array();
-
-  const targets = curA.map((qs,i) => {
-    const ex  = batch[i];
-    const upd = [...qs];
-    if (ex.done) {
-      upd[ex.a] = ex.r;
-    } else {
-      const maxNext = ex.nv.length
-        ? Math.max(...ex.nv.map(a => nxtA[i][a]))
-        : 0;
-      upd[ex.a] = ex.r + CFG.gamma * maxNext;
+    function bootLog(msg, cls = '') {
+      const entry = document.createElement('div');
+      entry.className = cls;
+      entry.textContent = msg;
+      $('bootLog').appendChild(entry);
+      $('bootLog').scrollTop = $('bootLog').scrollHeight;
     }
-    return upd;
-  });
 
-  const tT = tf.tensor2d(targets,[CFG.batchSize,9]);
-  const h  = await model.fit(sT, tT, {epochs:1, verbose:0});
-  lastLoss  = h.history.loss[0];
-  trainSteps++;
-  [sT,nsT,curQ,nxtQ,tT].forEach(t=>t.dispose());
-}
+    function setBootPhase(text) { $('bootPhase').textContent = text; }
+    function setBootSub(text) { $('bootSub').textContent = text; }
+    function setBootProgress(value) { $('bootFill').style.width = `${value}%`; }
 
-// ══════════════════════════════════════════════════════════════
-//  PRETRAINING
-// ══════════════════════════════════════════════════════════════
-async function pretrain() {
-  bPhase('PHASE 1 // VORTRAINING VS MINIMAX');
-  bLog(`Starte ${CFG.pretrainGames} Spiele gegen Minimax...`,'o');
+    function setStatus(text, type) {
+      const el = $('status');
+      el.textContent = text;
+      el.className = `status ${type}`;
+    }
 
-  for (let g=0; g<CFG.pretrainGames; g++) {
-    let b = Array(9).fill(0);
-    // Alternate starts so AI learns both positions
-    if (g%2!==0) { const m=minimaxMove(b); b[m]=1; }
+    function createModel() {
+      const m = tf.sequential();
+      m.add(tf.layers.dense({ units: 128, inputShape: [9], activation: 'relu', kernelInitializer: 'heNormal' }));
+      m.add(tf.layers.dense({ units: 128, activation: 'relu', kernelInitializer: 'heNormal' }));
+      m.add(tf.layers.dense({ units: 64, activation: 'relu', kernelInitializer: 'heNormal' }));
+      m.add(tf.layers.dense({ units: 9, activation: 'linear' }));
+      m.compile({ optimizer: tf.train.adam(0.0007), loss: 'meanSquaredError' });
+      return m;
+    }
 
-    let done=false;
-    while (!done) {
-      const sb = [...b];
-      const mv = await aiMove(b, false, false);
-      if (mv===null) break;
-      b[mv] = -1; // AI plays
+    function recompileModel(m) {
+      m.compile({ optimizer: tf.train.adam(0.0007), loss: 'meanSquaredError' });
+      return m;
+    }
 
-      if (won(b,-1)) {
-        remember(sb, mv, 1.0, [...b], true, []);
-        stats.aiWins++; done=true;
-      } else if (!empty(b).length) {
-        remember(sb, mv, 0.0, [...b], true, []);
-        stats.draws++; done=true;
-      } else {
-        // Minimax responds as human
-        const hm   = minimaxMove(b);
-        const bNext= [...b]; bNext[hm]=1;
+    async function saveState() {
+      try {
+        await model.save(CFG.modelKey);
+        localStorage.setItem(CFG.stateKey, JSON.stringify({
+          epsilon,
+          trainSteps,
+          lastLoss,
+          stats,
+          history: history.slice(-200),
+          modelSource
+        }));
+        const savedAt = new Date().toLocaleTimeString('de-DE');
+        $('sSaved').textContent = savedAt;
+        $('persistBadge').innerHTML = `Auto-Speicherung aktiv // zuletzt: <b>${savedAt}</b>`;
+      } catch (error) {
+        log(`// Autosave-Fehler: ${error.message}`, 'm');
+      }
+    }
 
-        if (won(bNext,1)) {
-          remember(sb, mv, -1.0, bNext, true, []);
-          stats.humanWins++; b=bNext; done=true;
-        } else if (!empty(bNext).length) {
-          remember(sb, mv, 0.0, bNext, true, []);
-          stats.draws++; b=bNext; done=true;
-        } else {
-          remember(sb, mv, 0.0, bNext, false, empty(bNext));
-          b=bNext;
+    async function loadState() {
+      try {
+        const loadedModel = await tf.loadLayersModel(CFG.modelKey);
+        model = recompileModel(loadedModel);
+        const raw = localStorage.getItem(CFG.stateKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          epsilon = parsed.epsilon ?? CFG.epsMin;
+          trainSteps = parsed.trainSteps ?? 0;
+          lastLoss = parsed.lastLoss ?? null;
+          stats = parsed.stats ?? stats;
+          history = parsed.history ?? [];
+          modelSource = parsed.modelSource ?? 'IndexedDB';
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function minimax(b, maximizing, depth = 0) {
+      if (hasWon(b, 1)) return { score: depth - 10 };
+      if (hasWon(b, -1)) return { score: 10 - depth };
+      const empties = emptyCells(b);
+      if (!empties.length) return { score: 0 };
+
+      let best = maximizing ? { score: -Infinity } : { score: Infinity };
+      for (const idx of empties) {
+        b[idx] = maximizing ? 1 : -1;
+        const result = minimax(b, !maximizing, depth + 1);
+        b[idx] = 0;
+        result.index = idx;
+        if (maximizing ? result.score > best.score : result.score < best.score) {
+          best = result;
         }
       }
-      if (memory.length >= CFG.batchSize) await learn();
+      return best;
     }
-    stats.total++; stats.pretrain++;
 
-    if (g%10===0) {
-      const pct = Math.round(g/CFG.pretrainGames*88)+2;
-      bBar(pct);
-      bSub(`Spiel ${g}/${CFG.pretrainGames} // Loss: ${lastLoss?lastLoss.toFixed(4):'—'} // Buf: ${memory.length}`);
-      if (g%100===0) bLog(`Spiel ${g}: Siege=${stats.aiWins} Niederl=${stats.humanWins} Steps=${trainSteps}`,'g');
-      await new Promise(r=>setTimeout(r,0));
+    function minimaxHumanMove(b) {
+      if (Math.random() < CFG.pretrainNoise) {
+        const empties = emptyCells(b);
+        return empties[Math.floor(Math.random() * empties.length)];
+      }
+      return minimax([...b], true).index;
     }
-  }
 
-  // After pretrain: low epsilon — AI uses what it learned
-  epsilon = 0.1;
-  bLog(`Vortraining fertig! Steps=${trainSteps} ε→${epsilon}`,'g');
-}
+    async function getAIMove(currentBoard, showHeat = false, forceGreedy = false) {
+      const empties = emptyCells(currentBoard);
+      if (!empties.length) return null;
 
-// ══════════════════════════════════════════════════════════════
-//  HUMAN GAME FLOW
-// ══════════════════════════════════════════════════════════════
-async function startGame() {
-  board = Array(9).fill(0);
-  gameActive = true;
-  renderBoard();
-  setStatus('Du bist dran (X)','you');
-}
+      if (!forceGreedy && Math.random() < epsilon) {
+        return empties[Math.floor(Math.random() * empties.length)];
+      }
 
-async function onCellClick(idx) {
-  if (!gameActive || board[idx]!==0) return;
-  const sb = [...board];
-  board[idx] = 1; // human = +1
-  renderBoard();
+      const input = boardForAI(currentBoard);
+      const prediction = tf.tidy(() => model.predict(tf.tensor2d([input], [1, 9])));
+      const qValues = await prediction.data();
+      prediction.dispose();
 
-  if (won(board,1)) {
-    remember(sb, idx, -1.0, [...board], true, []);
-    await endGame('human'); return;
-  }
-  if (!empty(board).length) { await endGame('draw'); return; }
+      if (showHeat) updateHeatOverlay(currentBoard, qValues);
 
-  setStatus('KI denkt...','ai');
-  await new Promise(r=>setTimeout(r,260));
+      let bestMove = empties[0];
+      let bestQ = -Infinity;
+      for (const idx of empties) {
+        if (qValues[idx] > bestQ) {
+          bestQ = qValues[idx];
+          bestMove = idx;
+        }
+      }
+      return bestMove;
+    }
 
-  const sb2 = [...board];
-  const mv  = await aiMove(board, true); // show heatmap
-  if (mv===null) { await endGame('draw'); return; }
-  board[mv] = -1;
-  renderBoard();
-  const ne = empty(board);
+    function remember(state, action, reward, nextState, done, nextValidMoves) {
+      memory.push({
+        s: boardForAI(state),
+        a: action,
+        r: reward,
+        ns: boardForAI(nextState),
+        done,
+        nv: nextValidMoves
+      });
+      if (memory.length > CFG.memorySize) memory.shift();
+    }
 
-  if (won(board,-1)) {
-    remember(sb2, mv, 1.0, [...board], true, []);
-    await endGame('ai'); return;
-  }
-  if (!ne.length) {
-    remember(sb2, mv, 0.0, [...board], true, []);
-    await endGame('draw'); return;
-  }
-  remember(sb2, mv, 0.0, [...board], false, ne);
-  setStatus('Du bist dran (X)','you');
-}
+    async function learnFromMemory() {
+      if (memory.length < CFG.batchSize) return;
 
-async function endGame(result) {
-  gameActive = false;
-  stats.total++;
-  stats.live++;
+      const batch = Array.from({ length: CFG.batchSize }, () => memory[Math.floor(Math.random() * memory.length)]);
+      const sTensor = tf.tensor2d(batch.map(x => x.s), [CFG.batchSize, 9]);
+      const nsTensor = tf.tensor2d(batch.map(x => x.ns), [CFG.batchSize, 9]);
 
-  if (result==='human') {
-    stats.humanWins++;
-    setStatus('DU GEWINNST! 🎉 KI lernt...','win');
-    const l=winLine(board,1); if(l) l.forEach(i=>document.querySelectorAll('.cell')[i].classList.add('win-cell'));
-    log(`// MENSCHLICHER SIEG // Spiel ${stats.total} // ε=${epsilon.toFixed(3)}`,'m');
-    gameHistory.push('H');
-  } else if (result==='ai') {
-    stats.aiWins++;
-    setStatus('KI GEWINNT!','lose');
-    const l=winLine(board,-1); if(l) l.forEach(i=>document.querySelectorAll('.cell')[i].classList.add('win-cell'));
-    log(`// KI SIEG // Spiel ${stats.total} // ε=${epsilon.toFixed(3)}`,'g');
-    gameHistory.push('A');
-  } else {
-    stats.draws++;
-    setStatus('UNENTSCHIEDEN','draw');
-    log(`// UNENTSCHIEDEN // Spiel ${stats.total}`,'o');
-    gameHistory.push('D');
-  }
+      const currentQ = model.predict(sTensor);
+      const nextQ = model.predict(nsTensor);
+      const currentArray = await currentQ.array();
+      const nextArray = await nextQ.array();
 
-  // Decay epsilon only for human games
-  epsilon = Math.max(epsilon * CFG.epsDecay, CFG.epsMin);
+      const targets = currentArray.map((row, i) => {
+        const exp = batch[i];
+        const updated = [...row];
+        if (exp.done) {
+          updated[exp.a] = exp.r;
+        } else {
+          const maxNext = exp.nv.length ? Math.max(...exp.nv.map(move => nextArray[i][move])) : 0;
+          updated[exp.a] = exp.r + CFG.gamma * maxNext;
+        }
+        return updated;
+      });
 
-  // Train
-  if (memory.length >= CFG.batchSize) await learn();
+      const targetTensor = tf.tensor2d(targets, [CFG.batchSize, 9]);
+      const fit = await model.fit(sTensor, targetTensor, { epochs: 1, verbose: 0 });
+      lastLoss = fit.history.loss[0];
+      trainSteps += 1;
 
-  // Auto-save to IndexedDB
-  if (stats.live % CFG.autoSaveEvery === 0) await saveToIndexedDB();
+      [sTensor, nsTensor, currentQ, nextQ, targetTensor].forEach(t => t.dispose());
+    }
 
-  updateUI();
-  drawNet();
-}
+    async function pretrain() {
+      setBootPhase('PHASE 1 // VORTRAINING VS MINIMAX');
+      bootLog(`Starte ${CFG.pretrainGames} Vortrainingsspiele...`, 'o');
 
-function resetGame() {
-  gameActive=false; board=Array(9).fill(0);
-  renderBoard(); setStatus('Du bist dran (X)','you');
-  setTimeout(startGame,80);
-}
+      for (let g = 0; g < CFG.pretrainGames; g++) {
+        let simBoard = Array(9).fill(0);
+        if (g % 2 === 1) {
+          const humanStart = minimaxHumanMove(simBoard);
+          simBoard[humanStart] = 1;
+        }
 
-// ══════════════════════════════════════════════════════════════
-//  EXPORT / IMPORT
-// ══════════════════════════════════════════════════════════════
-async function exportModel() {
-  try {
-    await model.save('downloads://ttt-model');
-    log(`// MODELL EXPORTIERT // ${stats.total} Spiele // ε=${epsilon.toFixed(3)}`,'g');
-    log('// → ttt-model.json + weights.bin // ins GitHub Repo pushen für Besucher!','o');
-  } catch(e) { log('// EXPORT FEHLER: '+e.message,'m'); }
-}
+        let finished = false;
+        while (!finished) {
+          const stateBefore = [...simBoard];
+          const aiMove = await getAIMove(simBoard, false, false);
+          if (aiMove === null) break;
+          simBoard[aiMove] = -1;
 
-async function importModel(evt) {
-  const files = Array.from(evt.target.files);
-  if (!files.length) return;
-  try {
-    log('// Importiere Modell...','o');
-    model.dispose();
-    model = compileModel(await tf.loadLayersModel(tf.io.browserFiles(files)));
-    epsilon = CFG.epsMin;
-    modelSource = '📂 '+files[0].name;
-    document.getElementById('sSource').textContent = modelSource;
-    log(`// IMPORT OK // ε→${epsilon} // KI startet als Veteran`,'g');
-    await saveToIndexedDB();
-    updateUI();
-  } catch(e) { log('// IMPORT FEHLER: '+e.message+' // .json UND .bin zusammen wählen!','m'); }
-}
+          if (hasWon(simBoard, -1)) {
+            remember(stateBefore, aiMove, 1, [...simBoard], true, []);
+            stats.aiWins += 1;
+            finished = true;
+          } else if (!emptyCells(simBoard).length) {
+            remember(stateBefore, aiMove, 0, [...simBoard], true, []);
+            stats.draws += 1;
+            finished = true;
+          } else {
+            const humanMove = minimaxHumanMove(simBoard);
+            const afterHuman = [...simBoard];
+            afterHuman[humanMove] = 1;
 
-async function confirmReset() {
-  if (!confirm('Modell wirklich zurücksetzen? Alle Lernerfahrungen gehen verloren!')) return;
-  try {
-    await tf.io.removeModel(CFG.modelKey);
-    localStorage.removeItem(CFG.stateKey);
-  } catch(_) {}
-  model.dispose();
-  model       = await buildModel();
-  epsilon     = CFG.epsStart;
-  memory      = [];
-  trainSteps  = 0;
-  lastLoss    = null;
-  stats       = {total:0,pretrain:0,live:0,aiWins:0,humanWins:0,draws:0};
-  gameHistory = [];
-  modelSource = 'Neu (nach Reset)';
-  log('// MODELL RESET // Vortraining läuft erneut...','m');
-  await pretrain();
-  await saveToIndexedDB();
-  updateUI();
-  resetGame();
-}
+            if (hasWon(afterHuman, 1)) {
+              remember(stateBefore, aiMove, -1, afterHuman, true, []);
+              stats.humanWins += 1;
+              simBoard = afterHuman;
+              finished = true;
+            } else if (!emptyCells(afterHuman).length) {
+              remember(stateBefore, aiMove, 0, afterHuman, true, []);
+              stats.draws += 1;
+              simBoard = afterHuman;
+              finished = true;
+            } else {
+              remember(stateBefore, aiMove, 0, afterHuman, false, emptyCells(afterHuman));
+              simBoard = afterHuman;
+            }
+          }
 
-// ══════════════════════════════════════════════════════════════
-//  RENDER
-// ══════════════════════════════════════════════════════════════
-function renderBoard() {
-  const el = document.getElementById('board');
-  el.innerHTML='';
-  board.forEach((v,i)=>{
-    const c=document.createElement('div');
-    c.className='cell'+(v!==0?' taken':'');
-    if(v===1)  c.innerHTML='<span class="x">X</span>';
-    if(v===-1) c.innerHTML='<span class="o">O</span>';
-    c.addEventListener('click',()=>onCellClick(i));
-    el.appendChild(c);
-  });
-}
+          if (memory.length >= CFG.batchSize) {
+            await learnFromMemory();
+          }
+        }
 
-function updateHeat(b, qa) {
-  const cells=[...document.querySelectorAll('.cell')];
-  const e=empty(b);
-  if(!e.length) return;
-  const mx=Math.max(...e.map(i=>qa[i]));
-  const mn=Math.min(...e.map(i=>qa[i]));
-  cells.forEach((c,i)=>{
-    let qv=c.querySelector('.qval');
-    if(!qv){qv=document.createElement('div');qv.className='qval';c.appendChild(qv);}
-    if(b[i]===0){
-      const norm=mx!==mn?(qa[i]-mn)/(mx-mn):0.5;
-      qv.textContent=qa[i].toFixed(2);
-      qv.style.color=`rgba(255,45,120,${0.28+norm*0.72})`;
-    } else { qv.textContent=''; }
-  });
-}
+        stats.total += 1;
+        stats.pretrain += 1;
 
-function setStatus(txt,cls) {
-  const el=document.getElementById('status');
-  el.textContent=txt; el.className='status '+cls;
-}
+        if (g % 10 === 0) {
+          const pct = Math.round((g / CFG.pretrainGames) * 88) + 5;
+          setBootProgress(pct);
+          setBootSub(`Spiel ${g}/${CFG.pretrainGames} // Loss: ${lastLoss ? lastLoss.toFixed(4) : '—'} // Buffer: ${memory.length}`);
+          if (g % 100 === 0) {
+            bootLog(`Spiel ${g}: KI=${stats.aiWins} / Mensch=${stats.humanWins} / Steps=${trainSteps}`, 'g');
+          }
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+      }
 
-function updateUI() {
-  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
-  set('sTotal', stats.total);
-  set('sPre',   stats.pretrain);
-  set('sLive',  stats.live);
-  set('sAI',    stats.aiWins);
-  set('sHu',    stats.humanWins);
-  set('sDr',    stats.draws);
-  set('sSteps', trainSteps);
-  set('sMem',   `${memory.length}/${CFG.memorySize}`);
-  set('sLoss',  lastLoss ? lastLoss.toFixed(5) : '—');
-  set('sSource',modelSource);
+      epsilon = 0.10;
+      bootLog(`Vortraining abgeschlossen // ε=${epsilon.toFixed(2)}`, 'g');
+    }
 
-  const livePct = stats.live>0 ? (stats.aiWins/stats.total*100).toFixed(0) : 0;
-  document.getElementById('bWin').style.width    = livePct+'%';
-  document.getElementById('bWinPct').textContent = livePct+'%';
+    function renderBoard() {
+      const boardEl = $('board');
+      boardEl.innerHTML = '';
+      board.forEach((value, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `cell${value !== 0 ? ' taken' : ''}`;
+        if (value === 1) button.innerHTML = '<span class="mark x">X</span>';
+        if (value === -1) button.innerHTML = '<span class="mark o">O</span>';
+        button.addEventListener('click', () => onHumanMove(index));
+        boardEl.appendChild(button);
+      });
+    }
 
-  const epsPct=((epsilon-CFG.epsMin)/(CFG.epsStart-CFG.epsMin)*100).toFixed(0);
-  document.getElementById('bEps').style.width    = epsPct+'%';
-  document.getElementById('bEpsPct').textContent = (epsilon*100).toFixed(0)+'%';
+    function updateHeatOverlay(currentBoard, qValues) {
+      const cells = [...document.querySelectorAll('.cell')];
+      const empties = emptyCells(currentBoard);
+      if (!empties.length) return;
 
-  let desc='// erkundet // viel Zufall';
-  if(epsilon<0.08)       desc='// Veteran // reines Wissen';
-  else if(epsilon<0.15)  desc='// Erfahren // nutzt Strategie';
-  else if(epsilon<0.35)  desc='// Entwickelt sich // gemischt';
-  document.getElementById('epsText').textContent=`ε=${epsilon.toFixed(3)} ${desc}`;
+      const maxQ = Math.max(...empties.map(i => qValues[i]));
+      const minQ = Math.min(...empties.map(i => qValues[i]));
 
-  const dotsEl=document.getElementById('dots');
-  dotsEl.innerHTML='';
-  gameHistory.slice(-10).forEach(r=>{
-    const d=document.createElement('div');
-    d.className='dot';
-    d.style.background=r==='A'?'var(--magenta)':r==='H'?'var(--green)':'var(--orange)';
-    d.title=r==='A'?'KI':r==='H'?'Mensch':'Draw';
-    dotsEl.appendChild(d);
-  });
-}
+      cells.forEach((cell, i) => {
+        let tag = cell.querySelector('.qval');
+        if (!tag) {
+          tag = document.createElement('div');
+          tag.className = 'qval';
+          cell.appendChild(tag);
+        }
 
-// ══════════════════════════════════════════════════════════════
-//  NETWORK VIZ
-// ══════════════════════════════════════════════════════════════
-function drawNet() {
-  const c=document.getElementById('netCanvas');
-  const ctx=c.getContext('2d');
-  ctx.clearRect(0,0,c.width,c.height);
-  const layers=[9,7,5,9], xs=[12,72,142,208], H=c.height;
-  const pos=layers.map((n,li)=>Array.from({length:n},(_,k)=>({x:xs[li],y:H/(n+1)*(k+1)})));
-  pos.forEach((l,li)=>{
-    if(li===pos.length-1) return;
-    l.forEach(f=>pos[li+1].forEach(t=>{
-      ctx.strokeStyle=`rgba(255,45,120,${.03+Math.random()*.1})`;
-      ctx.lineWidth=.5;
-      ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(t.x,t.y);ctx.stroke();
-    }));
-  });
-  pos.forEach((l,li)=>l.forEach(n=>{
-    const a=Math.random()>.42;
-    ctx.beginPath();ctx.arc(n.x,n.y,2.8,0,Math.PI*2);
-    ctx.fillStyle=li===0?(a?'rgba(0,255,136,.9)':'rgba(0,255,136,.15)')
-      :li===pos.length-1?(a?'rgba(255,45,120,.9)':'rgba(255,45,120,.15)')
-      :(a?'rgba(255,140,66,.8)':'rgba(255,140,66,.15)');
-    ctx.fill();
-  }));
-}
+        if (currentBoard[i] !== 0) {
+          tag.textContent = '';
+          return;
+        }
 
-// ══════════════════════════════════════════════════════════════
-//  LOG
-// ══════════════════════════════════════════════════════════════
-function log(msg,cls='') {
-  const box=document.getElementById('logbox');
-  const e=document.createElement('div');
-  e.className='le '+(cls||'');
-  e.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
-  box.appendChild(e); box.scrollTop=box.scrollHeight;
-}
+        const norm = maxQ !== minQ ? (qValues[i] - minQ) / (maxQ - minQ) : 0.5;
+        tag.textContent = qValues[i].toFixed(2);
+        tag.style.color = `rgba(255,45,120,${0.26 + norm * 0.74})`;
+      });
+    }
 
-// ══════════════════════════════════════════════════════════════
-//  BOOT HELPERS
-// ══════════════════════════════════════════════════════════════
-function bPhase(t){ document.getElementById('bPhase').textContent=t; }
-function bBar(p)  { document.getElementById('bBar').style.width=p+'%'; }
-function bSub(t)  { document.getElementById('bSub').textContent=t; }
-function bLog(msg,cls='') {
-  const box=document.getElementById('bLog');
-  const e=document.createElement('div');
-  e.className=cls; e.textContent=msg;
-  box.appendChild(e); box.scrollTop=box.scrollHeight;
-}
+    function clearWinHighlights() {
+      document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('win-cell'));
+    }
 
-// ══════════════════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════════════════
-async function init() {
-  bLog(`TensorFlow.js ${tf.version.tfjs} geladen`,'g');
-  bPhase('PHASE 0 // SPEICHER PRÜFEN');
-  bBar(3);
+    async function startGame() {
+      board = Array(9).fill(0);
+      gameActive = true;
+      renderBoard();
+      setStatus('DU BIST DRAN (X)', 'you');
+    }
 
-  // Try loading from IndexedDB first
-  bLog('Prüfe IndexedDB auf gespeichertes Modell...','');
-  const loaded = await loadFromIndexedDB();
+    async function onHumanMove(index) {
+      if (!gameActive || board[index] !== 0) return;
 
-  if (loaded) {
-    bLog('✓ Modell aus IndexedDB geladen!','g');
-    bLog(`  Spiele: ${stats.total} // Steps: ${trainSteps} // ε=${epsilon.toFixed(3)}`,'g');
-    modelSource = 'IndexedDB (persistent)';
-    bBar(95);
-    bPhase('MODELL GELADEN // BEREIT!');
-    bSub('Gespeichertes Modell wiederhergestellt.');
-  } else {
-    bLog('Kein gespeichertes Modell gefunden. Neues Modell + Vortraining...','o');
-    bPhase('PHASE 0 // MODELL AUFBAU');
-    bBar(5);
-    model = await buildModel();
-    bLog('Modell gebaut: 9→256→256→128→9 // Adam // MSE','g');
-    bBar(8);
+      clearWinHighlights();
+      const beforeHuman = [...board];
+      board[index] = 1;
+      renderBoard();
 
-    await pretrain();
+      if (hasWon(board, 1)) {
+        remember(beforeHuman, index, -1, [...board], true, []);
+        await finishGame('human');
+        return;
+      }
 
-    modelSource = `Vortraining ${CFG.pretrainGames}x Minimax`;
-    bBar(93);
-    bLog('Speichere in IndexedDB...','o');
-    await saveToIndexedDB();
-    bLog('✓ In IndexedDB gespeichert. Überlebt ab jetzt jeden Reload!','g');
-    bBar(98);
-    bPhase('BEREIT // VIEL SPASS!');
-  }
+      if (!emptyCells(board).length) {
+        await finishGame('draw');
+        return;
+      }
 
-  bBar(100);
-  await new Promise(r=>setTimeout(r,600));
-  document.getElementById('boot').classList.add('gone');
+      setStatus('KI ANALYSIERT...', 'ai');
+      await new Promise(resolve => setTimeout(resolve, 260));
 
-  updateUI();
-  drawNet();
-  setInterval(drawNet, 2200);
+      const beforeAI = [...board];
+      const move = await getAIMove(board, true, false);
+      if (move === null) {
+        await finishGame('draw');
+        return;
+      }
 
-  log(`// BEREIT // Quelle: ${modelSource} // Spiele: ${stats.total} // ε=${epsilon.toFixed(3)}`,'g');
-  log('// Modell lebt in IndexedDB — wächst mit jedem Spiel. Viel Spaß! 🧠','o');
+      board[move] = -1;
+      renderBoard();
+      updateHeatOverlay(board, Array(9).fill(0));
 
-  await startGame();
-}
+      const nextEmpties = emptyCells(board);
+      if (hasWon(board, -1)) {
+        remember(beforeAI, move, 1, [...board], true, []);
+        await finishGame('ai');
+        return;
+      }
 
-init().catch(e => {
-  bLog('KRITISCHER FEHLER: '+e.message,'m');
-  console.error(e);
-});
-</script>
+      if (!nextEmpties.length) {
+        remember(beforeAI, move, 0, [...board], true, []);
+        await finishGame('draw');
+        return;
+      }
 
+      remember(beforeAI, move, 0, [...board], false, nextEmpties);
+      setStatus('DU BIST DRAN (X)', 'you');
+      updateUI();
+    }
+
+    async function finishGame(result) {
+      gameActive = false;
+      stats.total += 1;
+      stats.live += 1;
+
+      if (result === 'human') {
+        stats.humanWins += 1;
+        setStatus('DU GEWINNST // KI LERNT', 'win');
+        const line = getWinLine(board, 1);
+        if (line) line.forEach(i => document.querySelectorAll('.cell')[i].classList.add('win-cell'));
+        history.push('H');
+        log(`// Menschlicher Sieg // Spiel ${stats.total} // ε=${epsilon.toFixed(3)}`, 'm');
+      } else if (result === 'ai') {
+        stats.aiWins += 1;
+        setStatus('KI GEWINNT', 'lose');
+        const line = getWinLine(board, -1);
+        if (line) line.forEach(i => document.querySelectorAll('.cell')[i].classList.add('win-cell'));
+        history.push('A');
+        log(`// KI-Sieg // Spiel ${stats.total} // ε=${epsilon.toFixed(3)}`, 'g');
+      } else {
+        stats.draws += 1;
+        setStatus('UNENTSCHIEDEN', 'draw');
+        history.push('D');
+        log(`// Unentschieden // Spiel ${stats.total}`, 'o');
+      }
+
+      epsilon = Math.max(epsilon * CFG.epsDecay, CFG.epsMin);
+
+      if (memory.length >= CFG.batchSize) {
+        await learnFromMemory();
+      }
+      if (stats.live % CFG.autoSaveEvery === 0) {
+        await saveState();
+      }
+
+      updateUI();
+      drawNetwork();
+    }
+
+    async function resetGame() {
+      gameActive = false;
+      board = Array(9).fill(0);
+      renderBoard();
+      setStatus('NEUES SPIEL...', 'you');
+      setTimeout(() => { startGame(); }, 80);
+    }
+
+    async function exportModel() {
+      try {
+        await model.save('downloads://promptrebel-ttt-model');
+        log(`// Modell exportiert // ${stats.total} Spiele`, 'g');
+      } catch (error) {
+        log(`// Export-Fehler: ${error.message}`, 'm');
+      }
+    }
+
+    async function importModel(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+      try {
+        log('// Modellimport gestartet...', 'o');
+        if (model) model.dispose();
+        model = recompileModel(await tf.loadLayersModel(tf.io.browserFiles(files)));
+        epsilon = CFG.epsMin;
+        modelSource = `Import: ${files[0].name}`;
+        await saveState();
+        updateUI();
+        log('// Import erfolgreich // KI startet mit Veteranenprofil', 'g');
+      } catch (error) {
+        log(`// Import-Fehler: ${error.message}`, 'm');
+      } finally {
+        event.target.value = '';
+      }
+    }
+
+    async function resetModel() {
+      const ok = confirm('Modell wirklich zurücksetzen? Alle bisherigen Lerndaten gehen verloren.');
+      if (!ok) return;
+
+      try {
+        await tf.io.removeModel(CFG.modelKey);
+      } catch {}
+      localStorage.removeItem(CFG.stateKey);
+
+      if (model) model.dispose();
+      model = createModel();
+      epsilon = CFG.epsStart;
+      memory = [];
+      trainSteps = 0;
+      lastLoss = null;
+      board = Array(9).fill(0);
+      history = [];
+      modelSource = 'Neu nach Reset';
+      stats = { total: 0, pretrain: 0, live: 0, aiWins: 0, humanWins: 0, draws: 0 };
+
+      log('// Modell zurückgesetzt // Vortraining startet neu', 'm');
+      await pretrain();
+      await saveState();
+      updateUI();
+      await startGame();
+    }
+
+    function updateUI() {
+      $('sTotal').textContent = stats.total;
+      $('sPretrain').textContent = stats.pretrain;
+      $('sLive').textContent = stats.live;
+      $('sAIWins').textContent = stats.aiWins;
+      $('sHumanWins').textContent = stats.humanWins;
+      $('sDraws').textContent = stats.draws;
+      $('sSteps').textContent = trainSteps;
+      $('sMemory').textContent = `${memory.length}/${CFG.memorySize}`;
+      $('sLoss').textContent = lastLoss ? Number(lastLoss).toFixed(5) : '—';
+      $('sSource').textContent = modelSource;
+
+      const aiLiveWinrate = stats.live > 0 ? Math.round((stats.aiWins / stats.live) * 100) : 0;
+      $('winBar').style.width = `${aiLiveWinrate}%`;
+      $('winBarText').textContent = `${aiLiveWinrate}%`;
+
+      const epsPct = ((epsilon - CFG.epsMin) / (CFG.epsStart - CFG.epsMin)) * 100;
+      $('epsBar').style.width = `${Math.max(0, Math.min(100, epsPct))}%`;
+      $('epsBarText').textContent = `${Math.round(epsilon * 100)}%`;
+
+      let profile = '// erkundet // hoher Zufall';
+      if (epsilon < 0.08) profile = '// Veteran // fast nur Exploit';
+      else if (epsilon < 0.15) profile = '// Erfahren // stabile Strategie';
+      else if (epsilon < 0.35) profile = '// Lernphase // gemischtes Verhalten';
+      $('epsText').textContent = `ε=${epsilon.toFixed(3)} ${profile}`;
+
+      const dots = $('historyDots');
+      dots.innerHTML = '';
+      history.slice(-10).forEach(item => {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.style.background = item === 'A'
+          ? 'var(--magenta)'
+          : item === 'H'
+            ? 'var(--green)'
+            : 'var(--orange)';
+        dots.appendChild(dot);
+      });
+    }
+
+    function drawNetwork() {
+      const canvas = $('netCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const layers = [9, 6, 4, 9];
+      const xPos = [16, 82, 152, 224];
+      const h = canvas.height;
+      const nodes = layers.map((count, layerIndex) =>
+        Array.from({ length: count }, (_, i) => ({
+          x: xPos[layerIndex],
+          y: h / (count + 1) * (i + 1)
+        }))
+      );
+
+      nodes.forEach((layer, li) => {
+        if (li === nodes.length - 1) return;
+        layer.forEach(from => {
+          nodes[li + 1].forEach(to => {
+            ctx.strokeStyle = `rgba(255,45,120,${0.03 + Math.random() * 0.1})`;
+            ctx.lineWidth = .6;
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.stroke();
+          });
+        });
+      });
+
+      nodes.forEach((layer, li) => {
+        layer.forEach(node => {
+          const active = Math.random() > .43;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, 3, 0, Math.PI * 2);
+          if (li === 0) {
+            ctx.fillStyle = active ? 'rgba(0,255,136,.9)' : 'rgba(0,255,136,.12)';
+          } else if (li === nodes.length - 1) {
+            ctx.fillStyle = active ? 'rgba(255,45,120,.92)' : 'rgba(255,45,120,.12)';
+          } else {
+            ctx.fillStyle = active ? 'rgba(255,148,77,.86)' : 'rgba(255,148,77,.12)';
+          }
+          ctx.fill();
+        });
+      });
+    }
+
+    async function init() {
+      bootLog(`TensorFlow.js ${tf.version.tfjs} geladen`, 'g');
+      setBootPhase('PHASE 0 // PERSISTENZ PRÜFEN');
+      setBootSub('Suche gespeichertes Modell in IndexedDB...');
+      setBootProgress(4);
+
+      const found = await loadState();
+
+      if (found) {
+        modelSource = 'IndexedDB persistent';
+        bootLog('Persistentes Modell gefunden und geladen.', 'g');
+        bootLog(`Spiele=${stats.total} // Steps=${trainSteps} // ε=${epsilon.toFixed(3)}`, 'g');
+        setBootProgress(94);
+        setBootPhase('MODELL WIEDERHERGESTELLT');
+        setBootSub('Bereit für das nächste Spiel.');
+      } else {
+        bootLog('Kein persistentes Modell gefunden. Erzeuge neues Netz...', 'o');
+        setBootPhase('PHASE 0 // MODELLAUFBAU');
+        setBootSub('Initialisiere DQN...');
+        setBootProgress(8);
+
+        model = createModel();
+        modelSource = `Vortraining ${CFG.pretrainGames}x Minimax`;
+        bootLog('Modell gebaut: 9 → 128 → 128 → 64 → 9', 'g');
+
+        await pretrain();
+
+        setBootProgress(95);
+        setBootPhase('PHASE 2 // PERSISTENZ');
+        setBootSub('Speichere Modell in IndexedDB...');
+        await saveState();
+        bootLog('Modell erfolgreich persistent gespeichert.', 'g');
+      }
+
+      setBootProgress(100);
+      updateUI();
+      drawNetwork();
+      setInterval(drawNetwork, 2200);
+
+      log(`// Bereit // Quelle: ${modelSource} // Spiele: ${stats.total} // ε=${epsilon.toFixed(3)}`, 'g');
+      log('// Modell lebt in IndexedDB und wächst mit jedem Spiel weiter.', 'o');
+
+      await new Promise(resolve => setTimeout(resolve, 520));
+      $('boot').classList.add('hidden');
+      await startGame();
+    }
+
+    $('newGameBtn').addEventListener('click', resetGame);
+    $('exportBtn').addEventListener('click', exportModel);
+    $('importBtn').addEventListener('click', () => $('importInput').click());
+    $('importInput').addEventListener('change', importModel);
+    $('resetModelBtn').addEventListener('click', resetModel);
+
+    init().catch(error => {
+      bootLog(`KRITISCHER FEHLER: ${error.message}`, 'm');
+      console.error(error);
+    });
+  </script>
 </body>
 </html>
