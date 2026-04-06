@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="de">
 <head>
   <meta charset="UTF-8">
@@ -18,9 +19,7 @@
       --glow-m: 0 0 10px rgba(255,45,120,0.6), 0 0 30px rgba(255,45,120,0.2);
       --glow-g: 0 0 10px rgba(0,255,136,0.6), 0 0 30px rgba(0,255,136,0.2);
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       background: var(--dark);
       color: var(--text);
@@ -29,408 +28,154 @@
       overflow-x: hidden;
       position: relative;
     }
-
-    /* Scanline overlay */
     body::before {
       content: '';
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,0,0,0.15) 2px,
-        rgba(0,0,0,0.15) 4px
-      );
-      pointer-events: none;
-      z-index: 1000;
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+      pointer-events: none; z-index: 1000;
     }
-
-    /* Grid background */
     body::after {
       content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255,45,120,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,45,120,0.03) 1px, transparent 1px);
+      position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(255,45,120,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,45,120,0.03) 1px, transparent 1px);
       background-size: 40px 40px;
       pointer-events: none;
     }
 
-    header {
-      text-align: center;
-      padding: 2rem 1rem 1rem;
-      position: relative;
-    }
+```
+/* BOOT */
+#bootScreen {
+  position: fixed; inset: 0;
+  background: var(--dark);
+  z-index: 900;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; padding: 2rem;
+}
+#bootScreen.hidden { display: none; }
+.boot-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1rem, 3vw, 1.6rem); font-weight: 900;
+  background: linear-gradient(135deg, var(--magenta), #ff8c42, var(--green));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: 3px; text-align: center;
+}
+.boot-phase { font-size: 0.7rem; color: var(--magenta); letter-spacing: 3px; text-align: center; min-height: 1.2rem; }
+.boot-bar-wrap { width: min(400px, 80vw); height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.boot-bar-inner { height: 100%; background: linear-gradient(90deg, var(--magenta), var(--green)); border-radius: 3px; width: 0%; transition: width 0.15s linear; box-shadow: var(--glow-g); }
+.boot-sub { font-size: 0.6rem; color: var(--dim); letter-spacing: 2px; text-align: center; }
+.boot-log { width: min(400px, 80vw); height: 80px; overflow-y: auto; font-size: 0.6rem; color: var(--dim); line-height: 1.7; border: 1px solid var(--border); padding: 0.5rem; border-radius: 2px; }
+.boot-log .hl { color: var(--green); }
+.boot-log .warn { color: var(--magenta); }
+.boot-log .inf { color: #ff8c42; }
 
-    .title-tag {
-      font-size: 0.65rem;
-      color: var(--magenta);
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      margin-bottom: 0.5rem;
-    }
+/* HEADER */
+header { text-align: center; padding: 2rem 1rem 1rem; }
+.title-tag { font-size: 0.65rem; color: var(--magenta); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 0.5rem; }
+h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.4rem, 4vw, 2.2rem); font-weight: 900;
+  background: linear-gradient(135deg, var(--magenta), #ff8c42, var(--green));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: 2px; line-height: 1.1;
+}
+.subtitle { font-size: 0.7rem; color: var(--dim); margin-top: 0.4rem; letter-spacing: 2px; }
 
-    h1 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: clamp(1.4rem, 4vw, 2.2rem);
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--magenta), #ff8c42, var(--green));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: 2px;
-      line-height: 1.1;
-    }
+/* LAYOUT */
+.main-layout {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  gap: 1.5rem; max-width: 1000px; margin: 1.5rem auto; padding: 0 1rem; align-items: start;
+}
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; position: relative; }
+.panel::before { content: ''; position: absolute; top: -1px; left: 20px; width: 40px; height: 2px; background: var(--magenta); }
+.panel-label { font-size: 0.6rem; letter-spacing: 3px; color: var(--magenta); text-transform: uppercase; margin-bottom: 1rem; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: var(--dim); }
+.stat-value { color: var(--green); font-weight: bold; }
+.stat-value.bad { color: var(--magenta); }
+.stat-value.neutral { color: #ff8c42; }
+.winrate-bar { margin-top: 1rem; }
+.winrate-label { font-size: 0.6rem; color: var(--dim); letter-spacing: 2px; margin-bottom: 0.4rem; }
+.bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, var(--magenta), var(--green)); border-radius: 3px; transition: width 0.8s ease; box-shadow: var(--glow-g); }
 
-    .subtitle {
-      font-size: 0.7rem;
-      color: var(--dim);
-      margin-top: 0.4rem;
-      letter-spacing: 2px;
-    }
+/* GAME */
+.game-area { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.status-display {
+  font-family: 'Orbitron', sans-serif; font-size: 0.75rem; letter-spacing: 2px;
+  text-align: center; padding: 0.6rem 1.5rem; border: 1px solid var(--dim);
+  border-radius: 2px; min-width: 240px; transition: all 0.3s;
+}
+.status-display.player-turn { border-color: var(--green); color: var(--green); box-shadow: var(--glow-g); }
+.status-display.ai-turn { border-color: var(--magenta); color: var(--magenta); box-shadow: var(--glow-m); }
+.status-display.win { border-color: var(--green); color: var(--green); box-shadow: var(--glow-g); animation: pulse 0.5s ease 3; }
+.status-display.lose { border-color: var(--magenta); color: var(--magenta); box-shadow: var(--glow-m); }
+.status-display.draw { border-color: #ff8c42; color: #ff8c42; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
 
-    .main-layout {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 1.5rem;
-      max-width: 1000px;
-      margin: 1.5rem auto;
-      padding: 0 1rem;
-      align-items: start;
-    }
+.board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--magenta); padding: 4px; border-radius: 4px; box-shadow: var(--glow-m); }
+.cell {
+  width: 90px; height: 90px; background: var(--panel);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 900;
+  cursor: pointer; border-radius: 2px; transition: all 0.15s; position: relative; overflow: hidden;
+}
+.cell::before { content: ''; position: absolute; inset: 0; background: var(--green); opacity: 0; transition: opacity 0.15s; }
+.cell:hover:not(.taken)::before { opacity: 0.08; }
+.cell:hover:not(.taken) { transform: scale(0.97); }
+.cell.taken { cursor: default; }
+.cell .mark-x { color: var(--green); text-shadow: var(--glow-g); }
+.cell .mark-o { color: var(--magenta); text-shadow: var(--glow-m); }
+.cell.winning { animation: winCell 0.4s ease forwards; }
+@keyframes winCell { 0%{background:var(--panel)}50%{background:rgba(0,255,136,0.2)}100%{background:rgba(0,255,136,0.1)} }
+.cell .heat { position: absolute; bottom: 3px; right: 4px; font-size: 0.45rem; font-family: 'Share Tech Mono', monospace; color: rgba(255,45,120,0.6); pointer-events: none; }
 
-    /* PANELS */
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 1rem;
-      position: relative;
-    }
+/* CONTROLS */
+.controls { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+.btn { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; letter-spacing: 2px; padding: 0.5rem 1rem; border: 1px solid var(--dim); background: transparent; color: var(--text); cursor: pointer; border-radius: 2px; text-transform: uppercase; transition: all 0.2s; }
+.btn:hover { border-color: var(--magenta); color: var(--magenta); box-shadow: var(--glow-m); }
+.btn.primary { border-color: var(--green); color: var(--green); }
+.btn.primary:hover { background: rgba(0,255,136,0.1); box-shadow: var(--glow-g); }
+.btn.save { border-color: #ff8c42; color: #ff8c42; }
+.btn.save:hover { background: rgba(255,140,66,0.1); }
 
-    .panel::before {
-      content: '';
-      position: absolute;
-      top: -1px; left: 20px;
-      width: 40px; height: 2px;
-      background: var(--magenta);
-    }
+.epsilon-track { display: flex; align-items: center; gap: 0.5rem; font-size: 0.65rem; color: var(--dim); }
+.epsilon-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--magenta); box-shadow: var(--glow-m); animation: blink 1s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.2} }
 
-    .panel-label {
-      font-size: 0.6rem;
-      letter-spacing: 3px;
-      color: var(--magenta);
-      text-transform: uppercase;
-      margin-bottom: 1rem;
-    }
+.save-badge { font-size: 0.55rem; letter-spacing: 2px; color: var(--dim); text-align: center; }
+.save-badge span { color: #ff8c42; }
 
-    /* STATS PANEL */
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.4rem 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.8rem;
-    }
-    .stat-row:last-child { border-bottom: none; }
-    .stat-label { color: var(--dim); }
-    .stat-value { color: var(--green); font-weight: bold; }
-    .stat-value.bad { color: var(--magenta); }
-    .stat-value.neutral { color: #ff8c42; }
+/* LOG */
+.log-panel { max-width: 1000px; margin: 0 auto 2rem; padding: 0 1rem; }
+.log-box { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; font-size: 0.65rem; color: var(--dim); max-height: 100px; overflow-y: auto; position: relative; }
+.log-box::before { content: ''; position: absolute; top: -1px; left: 20px; width: 40px; height: 2px; background: var(--green); }
+.log-entry { line-height: 1.6; }
+.log-entry.highlight { color: var(--green); }
+.log-entry.warn { color: var(--magenta); }
+.log-entry.info { color: #ff8c42; }
 
-    /* WIN RATE BAR */
-    .winrate-bar {
-      margin-top: 1rem;
-    }
-    .winrate-label {
-      font-size: 0.6rem;
-      color: var(--dim);
-      letter-spacing: 2px;
-      margin-bottom: 0.4rem;
-    }
-    .bar-track {
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--magenta), var(--green));
-      border-radius: 3px;
-      transition: width 0.8s ease;
-      box-shadow: var(--glow-g);
-    }
+@media (max-width: 700px) {
+  .main-layout { grid-template-columns: 1fr; }
+  .cell { width: 80px; height: 80px; font-size: 1.8rem; }
+}
+```
 
-    /* BRAIN VIZ */
-    .brain-viz {
-      margin-top: 1rem;
-    }
-    .brain-label {
-      font-size: 0.6rem;
-      color: var(--dim);
-      letter-spacing: 2px;
-      margin-bottom: 0.6rem;
-    }
-    .network-svg {
-      width: 100%;
-      height: 80px;
-    }
-
-    /* GAME AREA */
-    .game-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .status-display {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 0.75rem;
-      letter-spacing: 2px;
-      text-align: center;
-      padding: 0.6rem 1.5rem;
-      border: 1px solid var(--dim);
-      border-radius: 2px;
-      min-width: 240px;
-      transition: all 0.3s;
-    }
-    .status-display.player-turn { 
-      border-color: var(--green); 
-      color: var(--green);
-      box-shadow: var(--glow-g);
-    }
-    .status-display.ai-turn { 
-      border-color: var(--magenta); 
-      color: var(--magenta);
-      box-shadow: var(--glow-m);
-    }
-    .status-display.win { 
-      border-color: var(--green); 
-      color: var(--green);
-      box-shadow: var(--glow-g);
-      animation: pulse 0.5s ease 3;
-    }
-    .status-display.lose { 
-      border-color: var(--magenta); 
-      color: var(--magenta);
-      box-shadow: var(--glow-m);
-    }
-    .status-display.draw { 
-      border-color: #ff8c42; 
-      color: #ff8c42;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    /* BOARD */
-    .board {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      background: var(--magenta);
-      padding: 4px;
-      border-radius: 4px;
-      box-shadow: var(--glow-m);
-    }
-
-    .cell {
-      width: 90px;
-      height: 90px;
-      background: var(--panel);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Orbitron', sans-serif;
-      font-size: 2.2rem;
-      font-weight: 900;
-      cursor: pointer;
-      border-radius: 2px;
-      transition: all 0.15s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cell::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--green);
-      opacity: 0;
-      transition: opacity 0.15s;
-    }
-
-    .cell:hover:not(.taken)::before { opacity: 0.08; }
-    .cell:hover:not(.taken) { transform: scale(0.97); }
-
-    .cell.taken { cursor: default; }
-
-    .cell .mark-x { color: var(--green); text-shadow: var(--glow-g); }
-    .cell .mark-o { color: var(--magenta); text-shadow: var(--glow-m); }
-
-    .cell.winning { animation: winCell 0.4s ease forwards; }
-    @keyframes winCell {
-      0% { background: var(--panel); }
-      50% { background: rgba(0,255,136,0.2); }
-      100% { background: rgba(0,255,136,0.1); }
-    }
-
-    /* HEAT OVERLAY */
-    .cell .heat {
-      position: absolute;
-      bottom: 3px;
-      right: 4px;
-      font-size: 0.45rem;
-      font-family: 'Share Tech Mono', monospace;
-      color: rgba(255,45,120,0.6);
-      pointer-events: none;
-    }
-
-    /* CONTROLS */
-    .controls {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .btn {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 2px;
-      padding: 0.5rem 1rem;
-      border: 1px solid var(--dim);
-      background: transparent;
-      color: var(--text);
-      cursor: pointer;
-      border-radius: 2px;
-      text-transform: uppercase;
-      transition: all 0.2s;
-    }
-    .btn:hover {
-      border-color: var(--magenta);
-      color: var(--magenta);
-      box-shadow: var(--glow-m);
-    }
-    .btn.primary {
-      border-color: var(--green);
-      color: var(--green);
-    }
-    .btn.primary:hover {
-      background: rgba(0,255,136,0.1);
-      box-shadow: var(--glow-g);
-    }
-
-    /* EPSILON DISPLAY */
-    .epsilon-track {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.65rem;
-      color: var(--dim);
-    }
-    .epsilon-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--magenta);
-      box-shadow: var(--glow-m);
-      animation: blink 1s ease infinite;
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
-    }
-
-    /* LOG */
-    .log-panel {
-      max-width: 1000px;
-      margin: 0 auto 2rem;
-      padding: 0 1rem;
-    }
-
-    .log-box {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 1rem;
-      font-size: 0.65rem;
-      color: var(--dim);
-      max-height: 100px;
-      overflow-y: auto;
-      position: relative;
-    }
-    .log-box::before {
-      content: '';
-      position: absolute;
-      top: -1px; left: 20px;
-      width: 40px; height: 2px;
-      background: var(--green);
-    }
-
-    .log-entry { 
-      line-height: 1.6;
-      color: var(--dim);
-    }
-    .log-entry.highlight { color: var(--green); }
-    .log-entry.warn { color: var(--magenta); }
-    .log-entry.info { color: #ff8c42; }
-
-    /* TRAINING INDICATOR */
-    .training-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(10,10,15,0.85);
-      z-index: 500;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .training-overlay.active { display: flex; }
-    .training-text {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1rem;
-      color: var(--magenta);
-      letter-spacing: 4px;
-      animation: pulse 0.8s ease infinite;
-    }
-    .training-bar-wrap {
-      width: 200px;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .training-bar-inner {
-      height: 100%;
-      background: var(--magenta);
-      border-radius: 2px;
-      animation: trainAnim 1.5s ease infinite;
-    }
-    @keyframes trainAnim {
-      0% { width: 0%; margin-left: 0; }
-      50% { width: 100%; margin-left: 0; }
-      100% { width: 0%; margin-left: 100%; }
-    }
-
-    @media (max-width: 700px) {
-      .main-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-      }
-      .cell { width: 80px; height: 80px; font-size: 1.8rem; }
-    }
   </style>
 </head>
 <body>
+
+<!-- BOOT SCREEN -->
+
+<div id="bootScreen">
+  <div class="boot-title">NEURAL TIC-TAC-TOE<br>TRAINING GROUND</div>
+  <div class="boot-phase" id="bootPhase">INITIALISIERE...</div>
+  <div class="boot-bar-wrap"><div class="boot-bar-inner" id="bootBar"></div></div>
+  <div class="boot-sub" id="bootSub">Lade TensorFlow.js...</div>
+  <div class="boot-log" id="bootLog"></div>
+</div>
+
+<!-- MAIN UI -->
 
 <header>
   <div class="title-tag">// PromptRebel KI-Labor //</div>
@@ -440,361 +185,332 @@
 
 <div class="main-layout">
 
-  <!-- LEFT: STATS -->
-  <div class="panel" id="statsPanel">
+  <!-- LEFT -->
+
+  <div class="panel">
     <div class="panel-label">// KI Statistik</div>
-
-    <div class="stat-row">
-      <span class="stat-label">Spiele gesamt</span>
-      <span class="stat-value" id="statTotal">0</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">KI Siege</span>
-      <span class="stat-value bad" id="statAIWins">0</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">Menschliche Siege</span>
-      <span class="stat-value" id="statHumanWins">0</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">Unentschieden</span>
-      <span class="stat-value neutral" id="statDraws">0</span>
-    </div>
-
+    <div class="stat-row"><span class="stat-label">Spiele gesamt</span><span class="stat-value" id="statTotal">0</span></div>
+    <div class="stat-row"><span class="stat-label">Vortraining (Minimax)</span><span class="stat-value neutral" id="statPretrain">0</span></div>
+    <div class="stat-row"><span class="stat-label">KI Siege</span><span class="stat-value bad" id="statAIWins">0</span></div>
+    <div class="stat-row"><span class="stat-label">Menschliche Siege</span><span class="stat-value" id="statHumanWins">0</span></div>
+    <div class="stat-row"><span class="stat-label">Unentschieden</span><span class="stat-value neutral" id="statDraws">0</span></div>
     <div class="winrate-bar">
       <div class="winrate-label">// KI GEWINNRATE</div>
-      <div class="bar-track">
-        <div class="bar-fill" id="winRateBar" style="width:0%"></div>
-      </div>
+      <div class="bar-track"><div class="bar-fill" id="winRateBar" style="width:0%"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:0.55rem;color:var(--dim);margin-top:0.3rem">
-        <span>0%</span>
-        <span id="winRatePct">0%</span>
-        <span>100%</span>
+        <span>0%</span><span id="winRatePct">0%</span><span>100%</span>
       </div>
     </div>
-
     <div class="winrate-bar" style="margin-top:0.8rem">
       <div class="winrate-label">// ERKUNDUNG (ε)</div>
-      <div class="bar-track">
-        <div class="bar-fill" id="epsilonBar" style="width:100%;background:linear-gradient(90deg,var(--magenta),#ff8c42)"></div>
-      </div>
+      <div class="bar-track"><div class="bar-fill" id="epsilonBar" style="width:100%;background:linear-gradient(90deg,var(--magenta),#ff8c42)"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:0.55rem;color:var(--dim);margin-top:0.3rem">
-        <span>Exploit</span>
-        <span id="epsilonPct">100%</span>
-        <span>Explore</span>
+        <span>Exploit</span><span id="epsilonPct">100%</span><span>Explore</span>
       </div>
     </div>
-
-    <div class="brain-viz">
-      <div class="brain-label">// NETZWERK AKTIVITÄT</div>
+    <div style="margin-top:1rem">
+      <div class="winrate-label">// NETZWERK AKTIVITÄT</div>
       <canvas id="networkCanvas" width="220" height="80" style="width:100%;opacity:0.8"></canvas>
     </div>
   </div>
 
-  <!-- CENTER: GAME -->
+  <!-- CENTER -->
+
   <div class="game-area">
-    <div class="status-display player-turn" id="statusDisplay">DU BIST DRAN (X)</div>
+    <div class="status-display player-turn" id="statusDisplay">LADE...</div>
     <div class="board" id="board"></div>
     <div class="epsilon-track">
       <div class="epsilon-dot"></div>
-      <span id="epsilonText">KI lernt noch // hohe Zufälligkeit</span>
+      <span id="epsilonText">Lade...</span>
     </div>
     <div class="controls">
       <button class="btn primary" onclick="resetGame()">▶ NEU STARTEN</button>
-      <button class="btn" onclick="resetModel()">⚡ MODELL RESET</button>
+      <button class="btn save" onclick="saveModel()">💾 MODELL SPEICHERN</button>
     </div>
+    <div class="save-badge" id="saveBadge">Noch nicht gespeichert</div>
   </div>
 
-  <!-- RIGHT: HEAT MAP INFO -->
+  <!-- RIGHT -->
+
   <div class="panel">
     <div class="panel-label">// KI Zugsanalyse</div>
-
     <div style="font-size:0.65rem;color:var(--dim);line-height:1.8;margin-bottom:0.8rem">
-      Die Zahlen in den Feldern zeigen die Bewertung der KI für diesen Zug. Höher = attraktiver.
+      Zahlen in den Feldern = Q-Values. Höher = für die KI attraktiver.
     </div>
-
-    <div class="stat-row">
-      <span class="stat-label">Training Steps</span>
-      <span class="stat-value" id="statSteps">0</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">Memory Buffer</span>
-      <span class="stat-value neutral" id="statMemory">0 / 512</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">Letzter Loss</span>
-      <span class="stat-value" id="statLoss">—</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">Batch Size</span>
-      <span class="stat-value neutral">32</span>
-    </div>
-
+    <div class="stat-row"><span class="stat-label">Training Steps</span><span class="stat-value" id="statSteps">0</span></div>
+    <div class="stat-row"><span class="stat-label">Memory Buffer</span><span class="stat-value neutral" id="statMemory">0 / 5000</span></div>
+    <div class="stat-row"><span class="stat-label">Letzter Loss</span><span class="stat-value" id="statLoss">—</span></div>
+    <div class="stat-row"><span class="stat-label">Modell</span><span class="stat-value" id="statModelSource" style="font-size:0.6rem">—</span></div>
     <div style="margin-top:1rem;font-size:0.6rem;color:var(--dim);line-height:1.7;border-top:1px solid var(--border);padding-top:0.8rem">
-      <span style="color:var(--magenta)">X</span> = Du &nbsp;|&nbsp; 
-      <span style="color:var(--magenta)">O</span> = KI<br>
-      ε sinkt mit jedem Spiel.<br>
-      Bei ε=0 spielt die KI<br>
-      nur noch was sie gelernt hat.
+      <span style="color:var(--green)">X</span> = Du &nbsp;|&nbsp; <span style="color:var(--magenta)">O</span> = KI<br>
+      Vortraining: 500 Runden vs Minimax.<br>
+      Dann lernt die KI von echten Spielern.
     </div>
-
     <div style="margin-top:1rem">
       <div class="winrate-label">// LETZTE 10 SPIELE</div>
       <div id="historyDots" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:0.4rem"></div>
+    </div>
+    <div style="margin-top:1rem">
+      <div class="winrate-label">// VORTRAINIERTES MODELL LADEN</div>
+      <div style="font-size:0.55rem;color:var(--dim);margin-bottom:0.4rem;line-height:1.6">
+        model.json + weights.bin zusammen auswählen
+      </div>
+      <input type="file" id="modelFileInput" accept=".json,.bin" multiple style="display:none" onchange="loadModelFromFiles(event)">
+      <button class="btn" style="width:100%;font-size:0.6rem" onclick="document.getElementById('modelFileInput').click()">
+        📂 Modell laden
+      </button>
     </div>
   </div>
 
 </div>
 
 <!-- LOG -->
+
 <div class="log-panel">
   <div class="log-box" id="logBox">
-    <div class="log-entry highlight">// SYSTEM BOOT // Neural Tic-Tac-Toe Training Ground v1.0</div>
-    <div class="log-entry info">// Lade TensorFlow.js Modell...</div>
+    <div class="log-entry highlight">// SYSTEM BOOT // Neural Tic-Tac-Toe v2.0 // PromptRebel KI-Labor</div>
   </div>
 </div>
 
-<!-- TRAINING OVERLAY -->
-<div class="training-overlay" id="trainingOverlay">
-  <div class="training-text">TRAINIERE NETZWERK</div>
-  <div class="training-bar-wrap"><div class="training-bar-inner"></div></div>
-</div>
-
 <script>
-// ============================================================
-// REINFORCEMENT LEARNING TIC-TAC-TOE
-// Deep Q-Network (DQN) mit Experience Replay
-// ============================================================
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+const GAMMA          = 0.95;
+const EPSILON_START  = 1.0;
+const EPSILON_MIN    = 0.05;
+const EPSILON_DECAY  = 0.98;
+const BATCH_SIZE     = 32;
+const MEMORY_SIZE    = 5000;
+const PRETRAIN_GAMES = 500;
+const PRETRAIN_EPS   = 0.15; // Minimax randomness during pretraining
 
-const GAMMA = 0.9;         // Discount factor
-const EPSILON_START = 1.0; // Start: pure exploration
-const EPSILON_MIN = 0.05;  // End: mostly exploitation
-const EPSILON_DECAY = 0.97;// Decay per game
-const BATCH_SIZE = 32;
-const MEMORY_SIZE = 512;
-const TRAIN_EVERY = 1;     // Train after every game
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let model       = null;
+let epsilon     = EPSILON_START;
+let memory      = [];
+let trainSteps  = 0;
+let lastLoss    = null;
+let gameHistory = [];
+let stats       = { total:0, pretrain:0, aiWins:0, humanWins:0, draws:0 };
+let board       = Array(9).fill(0);
+let gameActive  = false;
+let modelSource = 'Neu';
 
-let epsilon = EPSILON_START;
-let memory = [];           // Experience replay buffer
-let trainSteps = 0;
-let lastLoss = null;
-let model = null;
-let gameHistory = [];      // W/L/D per game
+const WIN_COMBOS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
-// Stats
-let stats = { total: 0, aiWins: 0, humanWins: 0, draws: 0 };
-
-// Game state
-let board = Array(9).fill(0); // 1=human(X), -1=ai(O), 0=empty
-let gameActive = false;
-let currentEpisodeExperiences = [];
-
-// ============================================================
-// BUILD MODEL
-// ============================================================
+// ═══════════════════════════════════════
+// MODEL BUILD
+// ═══════════════════════════════════════
 async function buildModel() {
   const m = tf.sequential();
-  m.add(tf.layers.dense({ units: 64, inputShape: [9], activation: 'relu' }));
-  m.add(tf.layers.dense({ units: 64, activation: 'relu' }));
-  m.add(tf.layers.dense({ units: 32, activation: 'relu' }));
-  m.add(tf.layers.dense({ units: 9, activation: 'linear' }));
+  m.add(tf.layers.dense({ units: 128, inputShape: [9], activation: 'relu' }));
+  m.add(tf.layers.dense({ units: 128, activation: 'relu' }));
+  m.add(tf.layers.dense({ units: 64,  activation: 'relu' }));
+  m.add(tf.layers.dense({ units: 9,   activation: 'linear' }));
   m.compile({ optimizer: tf.train.adam(0.001), loss: 'meanSquaredError' });
   return m;
 }
 
-// ============================================================
+// ═══════════════════════════════════════
 // GAME LOGIC
-// ============================================================
-const WIN_COMBOS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+// ═══════════════════════════════════════
+function checkWin(b, p) { return WIN_COMBOS.some(c => c.every(i => b[i] === p)); }
+function getWinCombo(b, p) { return WIN_COMBOS.find(c => c.every(i => b[i] === p)) || null; }
+function getEmpty(b) { return b.map((v,i) => v===0?i:-1).filter(i=>i!==-1); }
 
-function checkWin(b, player) {
-  return WIN_COMBOS.some(combo => combo.every(i => b[i] === player));
-}
-
-function getWinCombo(b, player) {
-  return WIN_COMBOS.find(combo => combo.every(i => b[i] === player)) || null;
-}
-
-function getEmptyCells(b) {
-  return b.map((v,i) => v === 0 ? i : -1).filter(i => i !== -1);
-}
-
-function boardToTensor(b) {
-  return tf.tensor2d([b], [1, 9]);
-}
-
-// ============================================================
-// AI MOVE
-// ============================================================
-async function getAIMove(b) {
-  const empty = getEmptyCells(b);
-  if (empty.length === 0) return null;
-
-  if (Math.random() < epsilon) {
-    // Explore: random
-    return empty[Math.floor(Math.random() * empty.length)];
-  } else {
-    // Exploit: best Q-value
-    const qValues = await tf.tidy(() => {
-      const input = boardToTensor(b);
-      return model.predict(input);
-    });
-    const qArray = await qValues.data();
-    qValues.dispose();
-
-    // Mask invalid moves
-    let bestMove = -1;
-    let bestQ = -Infinity;
-    for (const i of empty) {
-      if (qArray[i] > bestQ) {
-        bestQ = qArray[i];
-        bestMove = i;
-      }
-    }
-    updateHeatmap(b, qArray);
-    return bestMove;
+// ═══════════════════════════════════════
+// MINIMAX (pretraining opponent)
+// ═══════════════════════════════════════
+function minimax(b, isMax, depth=0) {
+  if (checkWin(b,-1)) return { score: 10-depth };
+  if (checkWin(b, 1)) return { score: depth-10 };
+  const empty = getEmpty(b);
+  if (!empty.length) return { score: 0 };
+  let best = isMax ? {score:-Infinity} : {score:Infinity};
+  for (const i of empty) {
+    b[i] = isMax ? -1 : 1;
+    const r = minimax(b, !isMax, depth+1);
+    b[i] = 0;
+    r.index = i;
+    if (isMax ? r.score > best.score : r.score < best.score) best = r;
   }
+  return best;
 }
 
-// ============================================================
-// EXPERIENCE REPLAY TRAINING
-// ============================================================
+function getMinimaxMove(b) {
+  if (Math.random() < PRETRAIN_EPS) {
+    const e = getEmpty(b);
+    return e[Math.floor(Math.random()*e.length)];
+  }
+  return minimax([...b], true).index;
+}
+
+// ═══════════════════════════════════════
+// DQN MOVE
+// ═══════════════════════════════════════
+async function getAIMove(b, showHeat=false) {
+  const empty = getEmpty(b);
+  if (!empty.length) return null;
+  if (Math.random() < epsilon) return empty[Math.floor(Math.random()*empty.length)];
+  const qTensor = tf.tidy(() => model.predict(tf.tensor2d([b],[1,9])));
+  const qArr = await qTensor.data();
+  qTensor.dispose();
+  if (showHeat) updateHeatmap(b, qArr);
+  let best=-1, bestQ=-Infinity;
+  for (const i of empty) { if (qArr[i]>bestQ) { bestQ=qArr[i]; best=i; } }
+  return best;
+}
+
+// ═══════════════════════════════════════
+// EXPERIENCE & TRAINING
+// ═══════════════════════════════════════
+function storeExp(state, action, reward, nextState, done, validNext) {
+  memory.push({state, action, reward, nextState, done, validNext});
+  if (memory.length > MEMORY_SIZE) memory.shift();
+}
+
 async function trainStep() {
   if (memory.length < BATCH_SIZE) return;
+  const batch = Array.from({length:BATCH_SIZE}, () => memory[Math.floor(Math.random()*memory.length)]);
+  const sT  = tf.tensor2d(batch.map(e=>e.state),     [BATCH_SIZE,9]);
+  const nsT = tf.tensor2d(batch.map(e=>e.nextState),  [BATCH_SIZE,9]);
+  const cQ  = model.predict(sT);
+  const nQ  = model.predict(nsT);
+  const cQa = await cQ.array();
+  const nQa = await nQ.array();
 
-  const batch = [];
-  for (let i = 0; i < BATCH_SIZE; i++) {
-    const idx = Math.floor(Math.random() * memory.length);
-    batch.push(memory[idx]);
-  }
-
-  const states = batch.map(e => e.state);
-  const nextStates = batch.map(e => e.nextState);
-
-  const statesTensor = tf.tensor2d(states, [BATCH_SIZE, 9]);
-  const nextStatesTensor = tf.tensor2d(nextStates, [BATCH_SIZE, 9]);
-
-  const currentQs = model.predict(statesTensor);
-  const nextQs = model.predict(nextStatesTensor);
-
-  const currentQsArray = await currentQs.array();
-  const nextQsArray = await nextQs.array();
-
-  const targetQs = currentQsArray.map((qs, i) => {
-    const exp = batch[i];
-    const updated = [...qs];
-    if (exp.done) {
-      updated[exp.action] = exp.reward;
+  const targets = cQa.map((qs,i) => {
+    const e = batch[i];
+    const upd = [...qs];
+    if (e.done) {
+      upd[e.action] = e.reward;
     } else {
-      const validNextQs = exp.validNextActions.map(a => nextQsArray[i][a]);
-      const maxNextQ = validNextQs.length > 0 ? Math.max(...validNextQs) : 0;
-      updated[exp.action] = exp.reward + GAMMA * maxNextQ;
+      const vn = e.validNext.length > 0 ? Math.max(...e.validNext.map(a=>nQa[i][a])) : 0;
+      upd[e.action] = e.reward + GAMMA*vn;
     }
-    return updated;
+    return upd;
   });
 
-  const targetTensor = tf.tensor2d(targetQs, [BATCH_SIZE, 9]);
-
-  const h = await model.fit(statesTensor, targetTensor, {
-    epochs: 1,
-    verbose: 0
-  });
-
+  const tT = tf.tensor2d(targets, [BATCH_SIZE,9]);
+  const h  = await model.fit(sT, tT, {epochs:1, verbose:0});
   lastLoss = h.history.loss[0];
   trainSteps++;
-
-  statesTensor.dispose();
-  nextStatesTensor.dispose();
-  currentQs.dispose();
-  nextQs.dispose();
-  targetTensor.dispose();
+  [sT,nsT,cQ,nQ,tT].forEach(t=>t.dispose());
 }
 
-// ============================================================
-// GAME FLOW
-// ============================================================
+// ═══════════════════════════════════════
+// PRETRAINING
+// ═══════════════════════════════════════
+async function pretrain() {
+  setBootPhase('PHASE 1 // VORTRAINING VS MINIMAX');
+  bootLog(`Starte ${PRETRAIN_GAMES} Spiele vs Minimax...`, 'inf');
+
+  for (let g=0; g<PRETRAIN_GAMES; g++) {
+    let b = Array(9).fill(0);
+    // Alternate who starts
+    if (g%2!==0) { const m=getMinimaxMove(b); b[m]=1; }
+
+    let done = false;
+    while (!done) {
+      const sb = [...b];
+      const aiMove = await getAIMove(b);
+      if (aiMove===null) break;
+      b[aiMove] = -1;
+
+      if (checkWin(b,-1)) {
+        storeExp(sb, aiMove, 1, [...b], true, []);
+        stats.aiWins++; done=true;
+      } else if (!getEmpty(b).length) {
+        storeExp(sb, aiMove, 0.3, [...b], true, []);
+        stats.draws++; done=true;
+      } else {
+        const mmMove = getMinimaxMove(b);
+        const bAfter = [...b]; bAfter[mmMove]=1;
+        if (checkWin(bAfter,1)) {
+          storeExp(sb, aiMove, -1, bAfter, true, []);
+          stats.humanWins++; b=bAfter; done=true;
+        } else if (!getEmpty(bAfter).length) {
+          storeExp(sb, aiMove, 0.3, bAfter, true, []);
+          stats.draws++; b=bAfter; done=true;
+        } else {
+          storeExp(sb, aiMove, 0.01, bAfter, false, getEmpty(bAfter));
+          b = bAfter;
+        }
+      }
+      if (memory.length>=BATCH_SIZE) await trainStep();
+    }
+
+    stats.total++; stats.pretrain++;
+
+    if (g%10===0) {
+      const pct = Math.round(g/PRETRAIN_GAMES*90);
+      setBootBar(pct);
+      setBootSub(`Spiel ${g}/${PRETRAIN_GAMES} // Loss: ${lastLoss?lastLoss.toFixed(4):'—'} // Buffer: ${memory.length}`);
+      if (g%100===0) bootLog(`Spiel ${g}: Buffer=${memory.length} Loss=${lastLoss?lastLoss.toFixed(4):'—'}`, 'hl');
+      await new Promise(r=>setTimeout(r,0));
+    }
+  }
+
+  epsilon = 0.2;
+  bootLog(`Vortraining fertig! ε→${epsilon} // ${trainSteps} Trainingschritte`, 'hl');
+}
+
+// ═══════════════════════════════════════
+// HUMAN GAME
+// ═══════════════════════════════════════
 async function startGame() {
   board = Array(9).fill(0);
   gameActive = true;
-  currentEpisodeExperiences = [];
   renderBoard();
   updateStatus('Du bist dran (X)', 'player-turn');
-  log('// Neues Spiel gestartet', 'info');
 }
 
 async function handleHumanMove(idx) {
-  if (!gameActive || board[idx] !== 0) return;
-
-  const stateBefore = [...board];
-  board[idx] = 1; // Human = 1
+  if (!gameActive || board[idx]!==0) return;
+  const sb = [...board];
+  board[idx] = 1;
   renderBoard();
 
-  if (checkWin(board, 1)) {
-    endGame('human');
-    // Store negative experience for AI
-    storeExperience(stateBefore, idx, -1, [...board], true, []);
-    return;
-  }
-  if (getEmptyCells(board).length === 0) {
-    endGame('draw');
-    return;
-  }
+  if (checkWin(board,1)) { storeExp(sb,idx,-1,[...board],true,[]); endGame('human'); return; }
+  if (!getEmpty(board).length) { endGame('draw'); return; }
 
   updateStatus('KI denkt...', 'ai-turn');
-  await new Promise(r => setTimeout(r, 200));
+  await new Promise(r=>setTimeout(r,280));
   await doAIMove();
 }
 
 async function doAIMove() {
   if (!gameActive) return;
-  const stateBefore = [...board];
-  const empty = getEmptyCells(board);
-
-  const move = await getAIMove(board);
-  if (move === null) { endGame('draw'); return; }
-
-  board[move] = -1; // AI = -1
+  const sb = [...board];
+  const move = await getAIMove(board, true);
+  if (move===null) { endGame('draw'); return; }
+  board[move] = -1;
   renderBoard();
+  const nextEmpty = getEmpty(board);
 
-  const nextEmpty = getEmptyCells(board);
-
-  if (checkWin(board, -1)) {
-    storeExperience(stateBefore, move, 1, [...board], true, []);
-    endGame('ai');
-    return;
-  }
-  if (nextEmpty.length === 0) {
-    storeExperience(stateBefore, move, 0.1, [...board], true, []);
-    endGame('draw');
-    return;
-  }
-
-  // Intermediate: small reward for not losing
-  storeExperience(stateBefore, move, 0, [...board], false, nextEmpty);
+  if (checkWin(board,-1)) { storeExp(sb,move,1,[...board],true,[]); endGame('ai'); return; }
+  if (!nextEmpty.length)  { storeExp(sb,move,0.3,[...board],true,[]); endGame('draw'); return; }
+  storeExp(sb,move,0.01,[...board],false,nextEmpty);
   updateStatus('Du bist dran (X)', 'player-turn');
-}
-
-function storeExperience(state, action, reward, nextState, done, validNextActions) {
-  memory.push({ state, action, reward, nextState, done, validNextActions });
-  if (memory.length > MEMORY_SIZE) memory.shift();
 }
 
 async function endGame(result) {
   gameActive = false;
   stats.total++;
 
-  let winCombo = null;
-
-  if (result === 'human') {
+  if (result==='human') {
     stats.humanWins++;
     updateStatus('DU GEWINNST! KI lernt...', 'win');
-    winCombo = getWinCombo(board, 1);
-    log(`// MENSCHLICHER SIEG // Spiel ${stats.total} // KI verliert und lernt`, 'warn');
+    const c=getWinCombo(board,1); if(c) highlightWin(c);
+    log(`// MENSCHLICHER SIEG // Spiel ${stats.total} // ε=${epsilon.toFixed(3)}`, 'warn');
     gameHistory.push('H');
-  } else if (result === 'ai') {
+  } else if (result==='ai') {
     stats.aiWins++;
     updateStatus('KI GEWINNT!', 'lose');
-    winCombo = getWinCombo(board, -1);
+    const c=getWinCombo(board,-1); if(c) highlightWin(c);
     log(`// KI SIEG // Spiel ${stats.total} // ε=${epsilon.toFixed(3)}`, 'highlight');
     gameHistory.push('A');
   } else {
@@ -804,211 +520,206 @@ async function endGame(result) {
     gameHistory.push('D');
   }
 
-  if (winCombo) highlightWin(winCombo, result);
-
-  // Epsilon decay
-  if (epsilon > EPSILON_MIN) {
-    epsilon *= EPSILON_DECAY;
-    epsilon = Math.max(epsilon, EPSILON_MIN);
-  }
-
-  updateStats();
-
-  // Train
-  if (stats.total % TRAIN_EVERY === 0 && memory.length >= BATCH_SIZE) {
-    await trainStep();
-  }
-
+  epsilon = Math.max(epsilon*EPSILON_DECAY, EPSILON_MIN);
+  if (memory.length>=BATCH_SIZE) await trainStep();
   updateStats();
   drawNetwork();
 }
 
 function resetGame() {
-  board = Array(9).fill(0);
-  gameActive = false;
-  renderBoard();
-  updateStatus('Du bist dran (X)', 'player-turn');
+  gameActive=false; board=Array(9).fill(0);
+  renderBoard(); updateStatus('Du bist dran (X)','player-turn');
   setTimeout(startGame, 100);
 }
 
-async function resetModel() {
-  model.dispose();
-  model = await buildModel();
-  epsilon = EPSILON_START;
-  memory = [];
-  stats = { total: 0, aiWins: 0, humanWins: 0, draws: 0 };
-  gameHistory = [];
-  trainSteps = 0;
-  lastLoss = null;
-  updateStats();
-  log('// MODELL RESET // Alle Gewichte gelöscht // Neustart', 'warn');
-  resetGame();
+// ═══════════════════════════════════════
+// SAVE / LOAD
+// ═══════════════════════════════════════
+async function saveModel() {
+  try {
+    await model.save('downloads://tictactoe-model');
+    const now = new Date().toLocaleString('de-DE');
+    document.getElementById('saveBadge').innerHTML =
+      `Gespeichert: <span>${now} // ${stats.total} Spiele</span>`;
+    log(`// MODELL GESPEICHERT // ${stats.total} Spiele // ε=${epsilon.toFixed(3)}`, 'highlight');
+    log('// Tipp: model.json + weights.bin ins GitHub Repo pushen!', 'info');
+  } catch(e) { log('// SAVE FEHLER: '+e.message,'warn'); }
 }
 
-// ============================================================
+async function loadModelFromFiles(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  try {
+    log('// Lade Modell aus Dateien...','info');
+    model.dispose();
+    model = await tf.loadLayersModel(tf.io.browserFiles(files));
+    model.compile({ optimizer: tf.train.adam(0.001), loss: 'meanSquaredError' });
+    epsilon = EPSILON_MIN;
+    modelSource = files[0].name;
+    document.getElementById('statModelSource').textContent = '✓ ' + files[0].name;
+    log(`// MODELL GELADEN // ε→${epsilon} // Bereit für echte Spiele`, 'highlight');
+    updateStats();
+  } catch(e) {
+    log('// LOAD FEHLER: '+e.message+' // model.json UND weights.bin zusammen auswählen','warn');
+  }
+}
+
+// ═══════════════════════════════════════
 // RENDER
-// ============================================================
+// ═══════════════════════════════════════
 function renderBoard() {
-  const boardEl = document.getElementById('board');
-  boardEl.innerHTML = '';
-  board.forEach((val, i) => {
+  const el = document.getElementById('board');
+  el.innerHTML = '';
+  board.forEach((val,i) => {
     const cell = document.createElement('div');
-    cell.className = 'cell' + (val !== 0 ? ' taken' : '');
-    if (val === 1) cell.innerHTML = '<span class="mark-x">X</span>';
-    else if (val === -1) cell.innerHTML = '<span class="mark-o">O</span>';
-    cell.addEventListener('click', () => handleHumanMove(i));
-    boardEl.appendChild(cell);
+    cell.className = 'cell'+(val!==0?' taken':'');
+    if (val===1)  cell.innerHTML='<span class="mark-x">X</span>';
+    if (val===-1) cell.innerHTML='<span class="mark-o">O</span>';
+    cell.addEventListener('click', ()=>handleHumanMove(i));
+    el.appendChild(cell);
   });
 }
 
-function highlightWin(combo, result) {
-  const cells = document.querySelectorAll('.cell');
-  combo.forEach(i => cells[i].classList.add('winning'));
+function highlightWin(combo) {
+  document.querySelectorAll('.cell').forEach((c,i) => { if(combo.includes(i)) c.classList.add('winning'); });
 }
 
-async function updateHeatmap(b, qArray) {
+async function updateHeatmap(b, qArr) {
   const cells = document.querySelectorAll('.cell');
-  const empty = getEmptyCells(b);
-  const maxQ = Math.max(...empty.map(i => qArray[i]));
-  const minQ = Math.min(...empty.map(i => qArray[i]));
-
-  cells.forEach((cell, i) => {
+  const empty = getEmpty(b);
+  if (!empty.length) return;
+  const maxQ = Math.max(...empty.map(i=>qArr[i]));
+  const minQ = Math.min(...empty.map(i=>qArr[i]));
+  cells.forEach((cell,i) => {
     let heat = cell.querySelector('.heat');
-    if (!heat) { heat = document.createElement('div'); heat.className = 'heat'; cell.appendChild(heat); }
-    if (b[i] === 0) {
-      const norm = maxQ !== minQ ? ((qArray[i] - minQ) / (maxQ - minQ)) : 0.5;
-      heat.textContent = qArray[i].toFixed(2);
-      heat.style.color = `rgba(255,45,120,${0.3 + norm * 0.7})`;
-    } else {
-      heat.textContent = '';
-    }
+    if (!heat) { heat=document.createElement('div'); heat.className='heat'; cell.appendChild(heat); }
+    if (b[i]===0) {
+      const norm = maxQ!==minQ ? (qArr[i]-minQ)/(maxQ-minQ) : 0.5;
+      heat.textContent = qArr[i].toFixed(2);
+      heat.style.color = `rgba(255,45,120,${0.3+norm*0.7})`;
+    } else { heat.textContent=''; }
   });
 }
 
 function updateStatus(text, cls) {
   const el = document.getElementById('statusDisplay');
-  el.textContent = text;
-  el.className = 'status-display ' + cls;
+  el.textContent=text; el.className='status-display '+cls;
 }
 
 function updateStats() {
-  document.getElementById('statTotal').textContent = stats.total;
-  document.getElementById('statAIWins').textContent = stats.aiWins;
+  document.getElementById('statTotal').textContent     = stats.total;
+  document.getElementById('statPretrain').textContent  = stats.pretrain;
+  document.getElementById('statAIWins').textContent    = stats.aiWins;
   document.getElementById('statHumanWins').textContent = stats.humanWins;
-  document.getElementById('statDraws').textContent = stats.draws;
-  document.getElementById('statSteps').textContent = trainSteps;
-  document.getElementById('statMemory').textContent = `${memory.length} / ${MEMORY_SIZE}`;
-  document.getElementById('statLoss').textContent = lastLoss ? lastLoss.toFixed(4) : '—';
+  document.getElementById('statDraws').textContent     = stats.draws;
+  document.getElementById('statSteps').textContent     = trainSteps;
+  document.getElementById('statMemory').textContent    = `${memory.length} / ${MEMORY_SIZE}`;
+  document.getElementById('statLoss').textContent      = lastLoss ? lastLoss.toFixed(4) : '—';
+  document.getElementById('statModelSource').textContent = modelSource;
 
-  const pct = stats.total > 0 ? (stats.aiWins / stats.total * 100) : 0;
-  document.getElementById('winRateBar').style.width = pct + '%';
-  document.getElementById('winRatePct').textContent = pct.toFixed(0) + '%';
+  const pct = stats.total>0 ? (stats.aiWins/stats.total*100).toFixed(0) : 0;
+  document.getElementById('winRateBar').style.width = pct+'%';
+  document.getElementById('winRatePct').textContent = pct+'%';
 
-  const epsPct = ((epsilon - EPSILON_MIN) / (EPSILON_START - EPSILON_MIN) * 100);
-  document.getElementById('epsilonBar').style.width = epsPct + '%';
-  document.getElementById('epsilonPct').textContent = (epsilon * 100).toFixed(0) + '%';
+  const epsPct = ((epsilon-EPSILON_MIN)/(EPSILON_START-EPSILON_MIN)*100).toFixed(0);
+  document.getElementById('epsilonBar').style.width = epsPct+'%';
+  document.getElementById('epsilonPct').textContent = (epsilon*100).toFixed(0)+'%';
 
-  // Epsilon description
-  let desc = '// Lernt noch // hohe Zufälligkeit';
-  if (epsilon < 0.3) desc = '// Erfahren // nutzt Wissen';
-  else if (epsilon < 0.6) desc = '// Entwickelt sich // gemischte Strategie';
-  document.getElementById('epsilonText').textContent = 'ε=' + epsilon.toFixed(3) + ' ' + desc;
+  let desc = '// Erkundet // viel Zufall';
+  if (epsilon<0.1)       desc = '// Veteran // reines Wissen';
+  else if (epsilon<0.25) desc = '// Erfahren // nutzt Strategie';
+  else if (epsilon<0.5)  desc = '// Entwickelt sich // gemischt';
+  document.getElementById('epsilonText').textContent = `ε=${epsilon.toFixed(3)} ${desc}`;
 
-  // History dots
   const dotsEl = document.getElementById('historyDots');
-  dotsEl.innerHTML = '';
-  const recent = gameHistory.slice(-10);
-  recent.forEach(r => {
-    const dot = document.createElement('div');
-    dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${r==='A'?'var(--magenta)':r==='H'?'var(--green)':'#ff8c42'}`;
-    dot.title = r === 'A' ? 'KI Sieg' : r === 'H' ? 'Menschlicher Sieg' : 'Unentschieden';
-    dotsEl.appendChild(dot);
+  dotsEl.innerHTML='';
+  gameHistory.slice(-10).forEach(r => {
+    const d=document.createElement('div');
+    d.style.cssText=`width:10px;height:10px;border-radius:50%;background:${r==='A'?'var(--magenta)':r==='H'?'var(--green)':'#ff8c42'}`;
+    d.title=r==='A'?'KI Sieg':r==='H'?'Menschlicher Sieg':'Unentschieden';
+    dotsEl.appendChild(d);
   });
 }
 
-// ============================================================
-// NETWORK VISUALIZATION
-// ============================================================
+// ═══════════════════════════════════════
+// NETWORK VIZ
+// ═══════════════════════════════════════
 function drawNetwork() {
-  const canvas = document.getElementById('networkCanvas');
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-
-  const layers = [9, 6, 4, 9];
-  const layerX = [15, 75, 145, 205];
-  const nodePositions = [];
-
-  layers.forEach((count, li) => {
-    const positions = [];
-    const startY = (H - (count - 1) * (H / (count + 1))) / 2;
-    for (let n = 0; n < count; n++) {
-      positions.push({ x: layerX[li], y: H / (count + 1) * (n + 1) });
-    }
-    nodePositions.push(positions);
+  const canvas=document.getElementById('networkCanvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const layers=[9,6,5,9], xs=[15,75,145,205], H=canvas.height;
+  const pos=layers.map((count,li)=>Array.from({length:count},(_,n)=>({x:xs[li],y:H/(count+1)*(n+1)})));
+  pos.forEach((layer,li)=>{
+    if(li===pos.length-1) return;
+    layer.forEach(from=>pos[li+1].forEach(to=>{
+      ctx.strokeStyle=`rgba(255,45,120,${0.04+Math.random()*0.12})`;
+      ctx.lineWidth=0.5;
+      ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke();
+    }));
   });
-
-  // Draw connections
-  nodePositions.forEach((layer, li) => {
-    if (li === nodePositions.length - 1) return;
-    layer.forEach(from => {
-      nodePositions[li + 1].forEach(to => {
-        const alpha = 0.05 + Math.random() * 0.15;
-        ctx.strokeStyle = `rgba(255,45,120,${alpha})`;
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(from.x, from.y);
-        ctx.lineTo(to.x, to.y);
-        ctx.stroke();
-      });
-    });
-  });
-
-  // Draw nodes
-  nodePositions.forEach((layer, li) => {
-    layer.forEach((node, ni) => {
-      const isActive = Math.random() > 0.4;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, 3, 0, Math.PI * 2);
-      if (li === 0) ctx.fillStyle = isActive ? 'rgba(0,255,136,0.9)' : 'rgba(0,255,136,0.2)';
-      else if (li === nodePositions.length - 1) ctx.fillStyle = isActive ? 'rgba(255,45,120,0.9)' : 'rgba(255,45,120,0.2)';
-      else ctx.fillStyle = isActive ? 'rgba(255,140,66,0.8)' : 'rgba(255,140,66,0.2)';
-      ctx.fill();
-    });
-  });
+  pos.forEach((layer,li)=>layer.forEach(node=>{
+    const a=Math.random()>0.4;
+    ctx.beginPath(); ctx.arc(node.x,node.y,3,0,Math.PI*2);
+    ctx.fillStyle=li===0?(a?'rgba(0,255,136,0.9)':'rgba(0,255,136,0.2)'):li===pos.length-1?(a?'rgba(255,45,120,0.9)':'rgba(255,45,120,0.2)'):(a?'rgba(255,140,66,0.8)':'rgba(255,140,66,0.2)');
+    ctx.fill();
+  }));
 }
 
-// ============================================================
-// LOG
-// ============================================================
-function log(msg, type = '') {
-  const box = document.getElementById('logBox');
-  const entry = document.createElement('div');
-  entry.className = 'log-entry ' + type;
-  entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  box.appendChild(entry);
-  box.scrollTop = box.scrollHeight;
+// ═══════════════════════════════════════
+// LOG & BOOT HELPERS
+// ═══════════════════════════════════════
+function log(msg, type='') {
+  const box=document.getElementById('logBox');
+  const e=document.createElement('div');
+  e.className='log-entry '+type;
+  e.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
+  box.appendChild(e); box.scrollTop=box.scrollHeight;
 }
 
-// ============================================================
+function setBootPhase(t) { document.getElementById('bootPhase').textContent=t; }
+function setBootBar(p)   { document.getElementById('bootBar').style.width=p+'%'; }
+function setBootSub(t)   { document.getElementById('bootSub').textContent=t; }
+function bootLog(msg,cls='') {
+  const box=document.getElementById('bootLog');
+  const e=document.createElement('div');
+  e.className=cls; e.textContent=msg;
+  box.appendChild(e); box.scrollTop=box.scrollHeight;
+}
+
+// ═══════════════════════════════════════
 // INIT
-// ============================================================
+// ═══════════════════════════════════════
 async function init() {
-  log('// TensorFlow.js ' + tf.version.tfjs + ' geladen', 'highlight');
-  log('// Baue DQN Modell: 9→64→64→32→9 Neuronen', 'info');
+  bootLog(`TensorFlow.js ${tf.version.tfjs} geladen`,'hl');
+  setBootPhase('PHASE 0 // MODELL AUFBAU');
+  setBootBar(3);
+
+  bootLog('Baue DQN: 9→128→128→64→9 Neuronen','');
   model = await buildModel();
-  log('// Modell kompiliert // Adam Optimizer // MSE Loss', 'highlight');
-  log('// Bereit // Starte erstes Spiel', 'info');
+  bootLog('Modell kompiliert // Adam // MSE Loss','hl');
+  setBootBar(8);
+  await new Promise(r=>setTimeout(r,200));
+
+  await pretrain();
+
+  modelSource = `Vortraining ${PRETRAIN_GAMES}x Minimax`;
+  setBootPhase('BEREIT // VIEL SPASS!');
+  setBootBar(100);
+  bootLog('System bereit. Du bist dran!','hl');
+  await new Promise(r=>setTimeout(r,700));
+
+  document.getElementById('bootScreen').classList.add('hidden');
   updateStats();
   drawNetwork();
   setInterval(drawNetwork, 2000);
+  log(`// System bereit // ${PRETRAIN_GAMES} Vortraining-Spiele // ε=${epsilon.toFixed(3)}`,'highlight');
+  log('// KI hat Grundwissen aus Minimax-Training // Jetzt verfeinern echte Spieler sie','info');
   await startGame();
 }
 
-init().catch(e => {
-  log('// FEHLER: ' + e.message, 'warn');
-  console.error(e);
-});
+init().catch(e=>{ bootLog('FEHLER: '+e.message,'warn'); console.error(e); });
 </script>
+
 </body>
 </html>
