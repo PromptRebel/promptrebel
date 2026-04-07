@@ -97,9 +97,7 @@ export class ImageGenerator {
     this.setProgress(0);
 
     try {
-      const adapter = await navigator.gpu.requestAdapter();
-      const hasShaderF16 = adapter?.features?.has?.("shader-f16") ?? false;
-      const dtype = hasShaderF16 ? "fp16" : "q4";
+      const dtype = "q4";
 
       const progress_callback = (data) => {
         if (!data) return;
