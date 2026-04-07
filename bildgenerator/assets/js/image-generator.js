@@ -85,11 +85,6 @@ export class ImageGenerator {
     if (this.loading) return;
     if (this.ready && this.model && this.processor) return;
 
-    const hasWebGPU = await this.checkWebGPU();
-    if (!hasWebGPU) {
-      throw new Error("WebGPU nicht verfügbar. Bitte Chrome oder Edge testen.");
-    }
-
     this.loading = true;
     this.ready = false;
     this.setStatus("Initialisiere Modell-Download ...");
@@ -97,7 +92,8 @@ export class ImageGenerator {
     this.setProgress(0);
 
     try {
-      const dtype = "q4";
+      // WebGPU nur noch informativ prüfen, aber nicht mehr für die Inferenz verwenden
+      await this.checkWebGPU();
 
       const progress_callback = (data) => {
         if (!data) return;
@@ -118,7 +114,7 @@ export class ImageGenerator {
           this.setProgress(100);
           this.setStatus(`Datei fertig: ${data.file || "unbekannt"}`);
         } else if (data.status === "ready") {
-          this.setStatus("Modell geladen. Initialisiere WebGPU ...");
+          this.setStatus("Modell geladen. Initialisiere WASM ...");
           this.setProgress(100);
         }
       };
@@ -127,19 +123,15 @@ export class ImageGenerator {
         progress_callback,
       });
 
-      this.processor = await this.processor;
-
       this.model = await MultiModalityCausalLM.from_pretrained(MODEL_ID, {
-        device: "webgpu",
-        dtype,
+        device: "wasm",
+        dtype: "q8",
         progress_callback,
       });
 
-      this.model = await this.model;
-
       this.ready = true;
       this.setStatus("Modell bereit.");
-      this.setInfo(`${MODEL_ID} (${dtype}, WebGPU)`);
+      this.setInfo(`${MODEL_ID} (q8, WASM)`);
       this.setProgress(100);
 
       setTimeout(() => {
@@ -227,20 +219,17 @@ export class ImageGenerator {
   async renderImageToCanvas(imageOutput) {
     if (!this.canvas) return;
 
-    // Fall 1: Transformers.js-Image mit toCanvas()
     if (typeof imageOutput.toCanvas === "function") {
       await imageOutput.toCanvas(this.canvas);
       return;
     }
 
-    // Fall 2: Transformers.js-Image mit toDataURL()
     if (typeof imageOutput.toDataURL === "function") {
       const dataUrl = imageOutput.toDataURL();
       await this.drawDataUrlToCanvas(dataUrl);
       return;
     }
 
-    // Fall 3: save() existiert, aber kein Canvas-Helper → Versuch über Blob/DataURL nicht dokumentiert
     throw new Error("Bildausgabe konnte nicht auf Canvas gerendert werden.");
   }
 
@@ -260,4 +249,3 @@ export class ImageGenerator {
     });
   }
 }
-
