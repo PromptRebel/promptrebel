@@ -247,25 +247,46 @@ export class ImageGenerator {
       return;
     }
 
-    // Fall 4: Rohobjekt { data, width, height }
     if (
-      imageOutput &&
-      imageOutput.data &&
-      imageOutput.width &&
-      imageOutput.height
-    ) {
-      this.canvas.width = imageOutput.width;
-      this.canvas.height = imageOutput.height;
+  imageOutput &&
+  imageOutput.data &&
+  imageOutput.width &&
+  imageOutput.height
+) {
+  const { data, width, height, channels } = imageOutput;
 
-      const ctx = this.canvas.getContext("2d");
-      const imgData = new ImageData(
-        new Uint8ClampedArray(imageOutput.data),
-        imageOutput.width,
-        imageOutput.height
-      );
-      ctx.putImageData(imgData, 0, 0);
-      return;
+  this.canvas.width = width;
+  this.canvas.height = height;
+
+  const ctx = this.canvas.getContext("2d");
+
+  // 🔥 FALL: 3 CHANNELS (RGB) → RGBA KONVERTIEREN
+  if (channels === 3) {
+    const rgba = new Uint8ClampedArray(width * height * 4);
+
+    for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
+      rgba[j] = data[i];       // R
+      rgba[j + 1] = data[i+1]; // G
+      rgba[j + 2] = data[i+2]; // B
+      rgba[j + 3] = 255;       // A (voll sichtbar)
     }
+
+    const imgData = new ImageData(rgba, width, height);
+    ctx.putImageData(imgData, 0, 0);
+    return;
+  }
+
+  // FALL: bereits RGBA
+  if (channels === 4) {
+    const imgData = new ImageData(
+      new Uint8ClampedArray(data),
+      width,
+      height
+    );
+    ctx.putImageData(imgData, 0, 0);
+    return;
+  }
+}
 
     // Fall 5: Tensor-artige Struktur mit dims + data
     if (
