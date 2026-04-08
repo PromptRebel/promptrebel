@@ -222,22 +222,24 @@ export class ImageGenerator {
   }
 
   async renderImageToCanvas(imageOutput) {
-    if (!this.canvas) {
-      throw new Error("Canvas nicht gefunden.");
-    }
+  if (!this.canvas) {
+    throw new Error("Canvas nicht gefunden.");
+  }
 
-    console.log("Render Output:", imageOutput);
-    console.log("firstImage keys:", Object.keys(imageOutput ?? {}));
-    console.log("firstImage type:", typeof imageOutput);
-    console.log("has data:", !!imageOutput?.data);
-    console.log("has width:", !!imageOutput?.width);
-    console.log("has height:", !!imageOutput?.height);
-    console.log("has channels:", !!imageOutput?.channels);
-    console.log("NEUER RENDERPFAD AKTIV");
+  console.log("Render Output:", imageOutput);
+  console.log("firstImage keys:", Object.keys(imageOutput ?? {}));
+  console.log("firstImage type:", typeof imageOutput);
+  console.log("has data:", !!imageOutput?.data);
+  console.log("has width:", !!imageOutput?.width);
+  console.log("has height:", !!imageOutput?.height);
+  console.log("has channels:", !!imageOutput?.channels);
+  console.log("NEUER RENDERPFAD AKTIV");
 
+  try {
     if (typeof imageOutput?.toCanvas === "function") {
       await imageOutput.toCanvas(this.canvas);
       this.forceShowCanvas();
+      console.log("toCanvas erfolgreich");
       return;
     }
 
@@ -245,6 +247,7 @@ export class ImageGenerator {
       const dataUrl = imageOutput.toDataURL();
       await this.drawDataUrlToCanvas(dataUrl);
       this.forceShowCanvas();
+      console.log("toDataURL erfolgreich");
       return;
     }
 
@@ -252,8 +255,12 @@ export class ImageGenerator {
     const width = imageOutput?.width;
     const height = imageOutput?.height;
 
+    console.log("data length:", data?.length, "width:", width, "height:", height);
+
     if (data && width && height) {
+      console.log("Erzeuge RGBA-Array ...");
       const rgba = new Uint8ClampedArray(width * height * 4);
+      console.log("RGBA-Array erstellt:", rgba.length);
 
       for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
         rgba[j] = data[i];
@@ -262,30 +269,45 @@ export class ImageGenerator {
         rgba[j + 3] = 255;
       }
 
+      console.log("RGB -> RGBA Konvertierung fertig");
+
       const ctx = this.canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("2D-Kontext konnte nicht erstellt werden.");
+      }
+
+      console.log("Canvas-Kontext OK");
 
       this.canvas.width = width;
       this.canvas.height = height;
+      console.log("Canvas-Größe gesetzt");
 
-      ctx.putImageData(new ImageData(rgba, width, height), 0, 0);
-console.log("putImageData fertig");
+      const imageData = new ImageData(rgba, width, height);
+      console.log("ImageData erstellt");
 
-this.forceShowCanvas();
-console.log("forceShowCanvas fertig");
+      ctx.putImageData(imageData, 0, 0);
+      console.log("putImageData fertig");
 
-const probe = ctx.getImageData(0, 0, 1, 1).data;
-console.log("Canvas first pixel:", Array.from(probe));
-console.log("Canvas classes after render:", this.canvas.className);
-console.log("Canvas display:", getComputedStyle(this.canvas).display);
-console.log("Canvas visibility:", getComputedStyle(this.canvas).visibility);
-console.log("Canvas opacity:", getComputedStyle(this.canvas).opacity);
-console.log("Canvas size:", this.canvas.width, this.canvas.height);
+      this.forceShowCanvas();
+      console.log("forceShowCanvas fertig");
 
-return;
+      const probe = ctx.getImageData(0, 0, 1, 1).data;
+      console.log("Canvas first pixel:", Array.from(probe));
+      console.log("Canvas classes after render:", this.canvas.className);
+      console.log("Canvas display:", getComputedStyle(this.canvas).display);
+      console.log("Canvas visibility:", getComputedStyle(this.canvas).visibility);
+      console.log("Canvas opacity:", getComputedStyle(this.canvas).opacity);
+      console.log("Canvas size:", this.canvas.width, this.canvas.height);
+
+      return;
     }
 
     throw new Error("Unbekanntes Bildformat – kann nicht gerendert werden.");
+  } catch (renderErr) {
+    console.error("RENDER CRASH:", renderErr);
+    throw renderErr;
   }
+}
 
   forceShowCanvas() {
     const placeholder = document.getElementById("imagePlaceholder");
