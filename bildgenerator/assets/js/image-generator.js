@@ -227,30 +227,32 @@ export class ImageGenerator {
     }
 
     console.log("Render Output:", imageOutput);
+    console.log("firstImage keys:", Object.keys(imageOutput ?? {}));
+    console.log("firstImage type:", typeof imageOutput);
+    console.log("has data:", !!imageOutput?.data);
+    console.log("has width:", !!imageOutput?.width);
+    console.log("has height:", !!imageOutput?.height);
+    console.log("has channels:", !!imageOutput?.channels);
+    console.log("NEUER RENDERPFAD AKTIV");
 
-    // 1) Falls das Modell direkt Canvas/DataURL kann
     if (typeof imageOutput?.toCanvas === "function") {
       await imageOutput.toCanvas(this.canvas);
-      this.showCanvas();
+      this.forceShowCanvas();
       return;
     }
 
     if (typeof imageOutput?.toDataURL === "function") {
       const dataUrl = imageOutput.toDataURL();
       await this.drawDataUrlToCanvas(dataUrl);
-      this.showCanvas();
+      this.forceShowCanvas();
       return;
     }
 
-    // 2) Exakt derselbe Weg wie dein funktionierender Konsolen-Hack
-    if (
-      imageOutput &&
-      imageOutput.data &&
-      imageOutput.width &&
-      imageOutput.height
-    ) {
-      const { data, width, height } = imageOutput;
+    const data = imageOutput?.data ?? imageOutput?.rgb;
+    const width = imageOutput?.width;
+    const height = imageOutput?.height;
 
+    if (data && width && height) {
       const rgba = new Uint8ClampedArray(width * height * 4);
 
       for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
@@ -261,27 +263,37 @@ export class ImageGenerator {
       }
 
       const ctx = this.canvas.getContext("2d");
+
       this.canvas.width = width;
       this.canvas.height = height;
-      ctx.clearRect(0, 0, width, height);
+
       ctx.putImageData(new ImageData(rgba, width, height), 0, 0);
 
-      this.showCanvas();
+      this.forceShowCanvas();
+
+      const probe = ctx.getImageData(0, 0, 1, 1).data;
+      console.log("Canvas first pixel:", Array.from(probe));
+      console.log("Canvas classes after render:", this.canvas.className);
+
       return;
     }
 
     throw new Error("Unbekanntes Bildformat – kann nicht gerendert werden.");
   }
 
-  showCanvas() {
+  forceShowCanvas() {
     const placeholder = document.getElementById("imagePlaceholder");
+
     if (placeholder) {
       placeholder.classList.add("hidden");
+      placeholder.style.display = "none";
     }
 
     if (this.canvas) {
       this.canvas.classList.remove("hidden");
       this.canvas.style.display = "block";
+      this.canvas.style.visibility = "visible";
+      this.canvas.style.opacity = "1";
     }
   }
 
