@@ -268,14 +268,20 @@ export class ImageGenerator {
       this.canvas.height = height;
 
       ctx.putImageData(new ImageData(rgba, width, height), 0, 0);
+console.log("putImageData fertig");
 
-      this.forceShowCanvas();
+this.forceShowCanvas();
+console.log("forceShowCanvas fertig");
 
-      const probe = ctx.getImageData(0, 0, 1, 1).data;
-      console.log("Canvas first pixel:", Array.from(probe));
-      console.log("Canvas classes after render:", this.canvas.className);
+const probe = ctx.getImageData(0, 0, 1, 1).data;
+console.log("Canvas first pixel:", Array.from(probe));
+console.log("Canvas classes after render:", this.canvas.className);
+console.log("Canvas display:", getComputedStyle(this.canvas).display);
+console.log("Canvas visibility:", getComputedStyle(this.canvas).visibility);
+console.log("Canvas opacity:", getComputedStyle(this.canvas).opacity);
+console.log("Canvas size:", this.canvas.width, this.canvas.height);
 
-      return;
+return;
     }
 
     throw new Error("Unbekanntes Bildformat – kann nicht gerendert werden.");
