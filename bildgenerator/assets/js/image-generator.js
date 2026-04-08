@@ -233,76 +233,50 @@ export class ImageGenerator {
   console.log("has width:", !!imageOutput?.width);
   console.log("has height:", !!imageOutput?.height);
   console.log("has channels:", !!imageOutput?.channels);
-  console.log("NEUER RENDERPFAD AKTIV");
+  console.log("RAW RENDERPFAD ERZWUNGEN");
 
   try {
-    if (typeof imageOutput?.toCanvas === "function") {
-      await imageOutput.toCanvas(this.canvas);
-      this.forceShowCanvas();
-      console.log("toCanvas erfolgreich");
-      return;
-    }
-
-    if (typeof imageOutput?.toDataURL === "function") {
-      const dataUrl = imageOutput.toDataURL();
-      await this.drawDataUrlToCanvas(dataUrl);
-      this.forceShowCanvas();
-      console.log("toDataURL erfolgreich");
-      return;
-    }
-
     const data = imageOutput?.data ?? imageOutput?.rgb;
     const width = imageOutput?.width;
     const height = imageOutput?.height;
 
     console.log("data length:", data?.length, "width:", width, "height:", height);
 
-    if (data && width && height) {
-      console.log("Erzeuge RGBA-Array ...");
-      const rgba = new Uint8ClampedArray(width * height * 4);
-      console.log("RGBA-Array erstellt:", rgba.length);
-
-      for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
-        rgba[j] = data[i];
-        rgba[j + 1] = data[i + 1];
-        rgba[j + 2] = data[i + 2];
-        rgba[j + 3] = 255;
-      }
-
-      console.log("RGB -> RGBA Konvertierung fertig");
-
-      const ctx = this.canvas.getContext("2d");
-      if (!ctx) {
-        throw new Error("2D-Kontext konnte nicht erstellt werden.");
-      }
-
-      console.log("Canvas-Kontext OK");
-
-      this.canvas.width = width;
-      this.canvas.height = height;
-      console.log("Canvas-Größe gesetzt");
-
-      const imageData = new ImageData(rgba, width, height);
-      console.log("ImageData erstellt");
-
-      ctx.putImageData(imageData, 0, 0);
-      console.log("putImageData fertig");
-
-      this.forceShowCanvas();
-      console.log("forceShowCanvas fertig");
-
-      const probe = ctx.getImageData(0, 0, 1, 1).data;
-      console.log("Canvas first pixel:", Array.from(probe));
-      console.log("Canvas classes after render:", this.canvas.className);
-      console.log("Canvas display:", getComputedStyle(this.canvas).display);
-      console.log("Canvas visibility:", getComputedStyle(this.canvas).visibility);
-      console.log("Canvas opacity:", getComputedStyle(this.canvas).opacity);
-      console.log("Canvas size:", this.canvas.width, this.canvas.height);
-
-      return;
+    if (!data || !width || !height) {
+      throw new Error("Rohdaten fehlen für direkten Canvas-Render.");
     }
 
-    throw new Error("Unbekanntes Bildformat – kann nicht gerendert werden.");
+    const rgba = new Uint8ClampedArray(width * height * 4);
+
+    for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
+      rgba[j] = data[i];
+      rgba[j + 1] = data[i + 1];
+      rgba[j + 2] = data[i + 2];
+      rgba[j + 3] = 255;
+    }
+
+    const ctx = this.canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("2D-Kontext konnte nicht erstellt werden.");
+    }
+
+    this.canvas.width = width;
+    this.canvas.height = height;
+
+    const imageData = new ImageData(rgba, width, height);
+    ctx.putImageData(imageData, 0, 0);
+
+    this.forceShowCanvas();
+
+    const probe = ctx.getImageData(0, 0, 1, 1).data;
+    console.log("Canvas first pixel:", Array.from(probe));
+    console.log("Canvas classes after render:", this.canvas.className);
+    console.log("Canvas display:", getComputedStyle(this.canvas).display);
+    console.log("Canvas visibility:", getComputedStyle(this.canvas).visibility);
+    console.log("Canvas opacity:", getComputedStyle(this.canvas).opacity);
+    console.log("Canvas size:", this.canvas.width, this.canvas.height);
+
+    return;
   } catch (renderErr) {
     console.error("RENDER CRASH:", renderErr);
     throw renderErr;
