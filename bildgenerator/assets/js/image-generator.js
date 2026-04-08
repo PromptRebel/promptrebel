@@ -92,7 +92,7 @@ export class ImageGenerator {
     this.setProgress(0);
 
     try {
-      // WebGPU nur noch informativ prüfen, aber nicht mehr für die Inferenz verwenden
+      // WebGPU nur informativ prüfen
       await this.checkWebGPU();
 
       const progress_callback = (data) => {
@@ -190,11 +190,15 @@ export class ImageGenerator {
       });
 
       const firstImage = outputs?.[0];
+      console.log("Image Output:", firstImage);
+      console.log("All Outputs:", outputs);
+
       if (!firstImage) {
         throw new Error("Kein Bild im Modell-Output gefunden.");
       }
 
       await this.renderImageToCanvas(firstImage);
+
       this.setStatus("Bild fertig.");
       this.stopProgress();
 
@@ -219,18 +223,79 @@ export class ImageGenerator {
   async renderImageToCanvas(imageOutput) {
     if (!this.canvas) return;
 
-    if (typeof imageOutput.toCanvas === "function") {
+    console.log("Render Output:", imageOutput);
+
+    // Fall 1: Objekt mit toCanvas()
+    if (typeof imageOutput?.toCanvas === "function") {
       await imageOutput.toCanvas(this.canvas);
       return;
     }
 
-    if (typeof imageOutput.toDataURL === "function") {
+    // Fall 2: Objekt mit toDataURL()
+    if (typeof imageOutput?.toDataURL === "function") {
       const dataUrl = imageOutput.toDataURL();
       await this.drawDataUrlToCanvas(dataUrl);
       return;
     }
 
-    throw new Error("Bildausgabe konnte nicht auf Canvas gerendert werden.");
+    // Fall 3: ImageData direkt
+    if (imageOutput instanceof ImageData) {
+      this.canvas.width = imageOutput.width;
+      this.canvas.height = imageOutput.height;
+      const ctx = this.canvas.getContext("2d");
+      ctx.putImageData(imageOutput, 0, 0);
+      return;
+    }
+
+    // Fall 4: Rohobjekt { data, width, height }
+    if (
+      imageOutput &&
+      imageOutput.data &&
+      imageOutput.width &&
+      imageOutput.height
+    ) {
+      this.canvas.width = imageOutput.width;
+      this.canvas.height = imageOutput.height;
+
+      const ctx = this.canvas.getContext("2d");
+      const imgData = new ImageData(
+        new Uint8ClampedArray(imageOutput.data),
+        imageOutput.width,
+        imageOutput.height
+      );
+      ctx.putImageData(imgData, 0, 0);
+      return;
+    }
+
+    // Fall 5: Tensor-artige Struktur mit dims + data
+    if (
+      imageOutput &&
+      imageOutput.data &&
+      Array.isArray(imageOutput.dims) &&
+      imageOutput.dims.length >= 2
+    ) {
+      const dims = imageOutput.dims;
+      const height = dims[dims.length - 2];
+      const width = dims[dims.length - 1];
+
+      if (width && height) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+
+        const ctx = this.canvas.getContext("2d");
+        const raw = new Uint8ClampedArray(imageOutput.data);
+
+        // Falls nur Graustufen oder unerwartetes Format kommt,
+        // versuchen wir es direkt als RGBA nur wenn Länge passt.
+        if (raw.length === width * height * 4) {
+          const imgData = new ImageData(raw, width, height);
+          ctx.putImageData(imgData, 0, 0);
+          return;
+        }
+      }
+    }
+
+    throw new Error("Unbekanntes Bildformat – kann nicht gerendert werden.");
   }
 
   async drawDataUrlToCanvas(dataUrl) {
