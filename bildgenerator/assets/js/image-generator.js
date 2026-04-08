@@ -38,8 +38,10 @@ export class ImageGenerator {
 
   setGPUStatus(message, ok = null) {
     if (!this.gpuStatusEl) return;
+
     this.gpuStatusEl.textContent = message;
     this.gpuStatusEl.classList.remove("status-ok", "status-bad");
+
     if (ok === true) this.gpuStatusEl.classList.add("status-ok");
     if (ok === false) this.gpuStatusEl.classList.add("status-bad");
   }
@@ -92,7 +94,7 @@ export class ImageGenerator {
     this.setProgress(0);
 
     try {
-      // WebGPU nur informativ prüfen
+      // Nur informativ
       await this.checkWebGPU();
 
       const progress_callback = (data) => {
@@ -215,13 +217,15 @@ export class ImageGenerator {
 
   stop() {
     this.stopping.interrupt();
-    this.setStatus("Generierung gestoppt.");
     this.generating = false;
     this.stopProgress();
+    this.setStatus("Generierung gestoppt.");
   }
 
   async renderImageToCanvas(imageOutput) {
-    if (!this.canvas) return;
+    if (!this.canvas) {
+      throw new Error("Canvas nicht gefunden.");
+    }
 
     console.log("Render Output:", imageOutput);
 
@@ -247,46 +251,36 @@ export class ImageGenerator {
       return;
     }
 
+    // Fall 4: Rohobjekt mit data/width/height/channels
     if (
-  imageOutput &&
-  imageOutput.data &&
-  imageOutput.width &&
-  imageOutput.height
-) {
-  const { data, width, height, channels } = imageOutput;
+      imageOutput &&
+      imageOutput.data &&
+      imageOutput.width &&
+      imageOutput.height
+    ) {
+      const { data, width, height, channels } = imageOutput;
 
-  this.canvas.width = width;
-  this.canvas.height = height;
+      const ctx = this.canvas.getContext("2d");
+      this.canvas.width = width;
+      this.canvas.height = height;
+      ctx.clearRect(0, 0, width, height);
 
-  const ctx = this.canvas.getContext("2d");
+      if (channels === 3) {
+        const rgba = this.rgbToRgba(data, width, height);
+        const imgData = new ImageData(rgba, width, height);
+        ctx.putImageData(imgData, 0, 0);
+        return;
+      }
 
-  // 🔥 FALL: 3 CHANNELS (RGB) → RGBA KONVERTIEREN
-  if (channels === 3) {
-    const rgba = new Uint8ClampedArray(width * height * 4);
+      if (channels === 4) {
+        const rgba = new Uint8ClampedArray(data);
+        const imgData = new ImageData(rgba, width, height);
+        ctx.putImageData(imgData, 0, 0);
+        return;
+      }
 
-    for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
-      rgba[j] = data[i];       // R
-      rgba[j + 1] = data[i+1]; // G
-      rgba[j + 2] = data[i+2]; // B
-      rgba[j + 3] = 255;       // A (voll sichtbar)
+      throw new Error(`Nicht unterstützte Kanalanzahl: ${channels}`);
     }
-
-    const imgData = new ImageData(rgba, width, height);
-    ctx.putImageData(imgData, 0, 0);
-    return;
-  }
-
-  // FALL: bereits RGBA
-  if (channels === 4) {
-    const imgData = new ImageData(
-      new Uint8ClampedArray(data),
-      width,
-      height
-    );
-    ctx.putImageData(imgData, 0, 0);
-    return;
-  }
-}
 
     // Fall 5: Tensor-artige Struktur mit dims + data
     if (
@@ -300,16 +294,24 @@ export class ImageGenerator {
       const width = dims[dims.length - 1];
 
       if (width && height) {
+        const ctx = this.canvas.getContext("2d");
         this.canvas.width = width;
         this.canvas.height = height;
+        ctx.clearRect(0, 0, width, height);
 
-        const ctx = this.canvas.getContext("2d");
         const raw = new Uint8ClampedArray(imageOutput.data);
 
-        // Falls nur Graustufen oder unerwartetes Format kommt,
-        // versuchen wir es direkt als RGBA nur wenn Länge passt.
+        // RGBA direkt
         if (raw.length === width * height * 4) {
           const imgData = new ImageData(raw, width, height);
+          ctx.putImageData(imgData, 0, 0);
+          return;
+        }
+
+        // RGB direkt
+        if (raw.length === width * height * 3) {
+          const rgba = this.rgbToRgba(raw, width, height);
+          const imgData = new ImageData(rgba, width, height);
           ctx.putImageData(imgData, 0, 0);
           return;
         }
@@ -319,17 +321,40 @@ export class ImageGenerator {
     throw new Error("Unbekanntes Bildformat – kann nicht gerendert werden.");
   }
 
+  rgbToRgba(data, width, height) {
+    const expectedRgbLength = width * height * 3;
+    if (data.length !== expectedRgbLength) {
+      throw new Error(
+        `RGB-Datenlänge passt nicht. Erwartet ${expectedRgbLength}, erhalten ${data.length}`
+      );
+    }
+
+    const rgba = new Uint8ClampedArray(width * height * 4);
+
+    for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
+      rgba[j] = data[i];         // R
+      rgba[j + 1] = data[i + 1]; // G
+      rgba[j + 2] = data[i + 2]; // B
+      rgba[j + 3] = 255;         // A
+    }
+
+    return rgba;
+  }
+
   async drawDataUrlToCanvas(dataUrl) {
     return new Promise((resolve, reject) => {
       const img = new Image();
+
       img.onload = () => {
         this.canvas.width = img.width;
         this.canvas.height = img.height;
+
         const ctx = this.canvas.getContext("2d");
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         ctx.drawImage(img, 0, 0);
         resolve();
       };
+
       img.onerror = reject;
       img.src = dataUrl;
     });
