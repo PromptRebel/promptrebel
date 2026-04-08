@@ -94,7 +94,6 @@ export class ImageGenerator {
     this.setProgress(0);
 
     try {
-      // Nur informativ
       await this.checkWebGPU();
 
       const progress_callback = (data) => {
@@ -229,116 +228,61 @@ export class ImageGenerator {
 
     console.log("Render Output:", imageOutput);
 
-    // Fall 1: Objekt mit toCanvas()
+    // 1) Falls das Modell direkt Canvas/DataURL kann
     if (typeof imageOutput?.toCanvas === "function") {
       await imageOutput.toCanvas(this.canvas);
+      this.showCanvas();
       return;
     }
 
-    // Fall 2: Objekt mit toDataURL()
     if (typeof imageOutput?.toDataURL === "function") {
       const dataUrl = imageOutput.toDataURL();
       await this.drawDataUrlToCanvas(dataUrl);
+      this.showCanvas();
       return;
     }
 
-    // Fall 3: ImageData direkt
-    if (imageOutput instanceof ImageData) {
-      this.canvas.width = imageOutput.width;
-      this.canvas.height = imageOutput.height;
-      const ctx = this.canvas.getContext("2d");
-      ctx.putImageData(imageOutput, 0, 0);
-      return;
-    }
-
-    // Fall 4: Rohobjekt mit data/width/height/channels
+    // 2) Exakt derselbe Weg wie dein funktionierender Konsolen-Hack
     if (
       imageOutput &&
       imageOutput.data &&
       imageOutput.width &&
       imageOutput.height
     ) {
-      const { data, width, height, channels } = imageOutput;
+      const { data, width, height } = imageOutput;
+
+      const rgba = new Uint8ClampedArray(width * height * 4);
+
+      for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
+        rgba[j] = data[i];
+        rgba[j + 1] = data[i + 1];
+        rgba[j + 2] = data[i + 2];
+        rgba[j + 3] = 255;
+      }
 
       const ctx = this.canvas.getContext("2d");
       this.canvas.width = width;
       this.canvas.height = height;
       ctx.clearRect(0, 0, width, height);
+      ctx.putImageData(new ImageData(rgba, width, height), 0, 0);
 
-      if (channels === 3) {
-        const rgba = this.rgbToRgba(data, width, height);
-        const imgData = new ImageData(rgba, width, height);
-        ctx.putImageData(imgData, 0, 0);
-        return;
-      }
-
-      if (channels === 4) {
-        const rgba = new Uint8ClampedArray(data);
-        const imgData = new ImageData(rgba, width, height);
-        ctx.putImageData(imgData, 0, 0);
-        return;
-      }
-
-      throw new Error(`Nicht unterstützte Kanalanzahl: ${channels}`);
-    }
-
-    // Fall 5: Tensor-artige Struktur mit dims + data
-    if (
-      imageOutput &&
-      imageOutput.data &&
-      Array.isArray(imageOutput.dims) &&
-      imageOutput.dims.length >= 2
-    ) {
-      const dims = imageOutput.dims;
-      const height = dims[dims.length - 2];
-      const width = dims[dims.length - 1];
-
-      if (width && height) {
-        const ctx = this.canvas.getContext("2d");
-        this.canvas.width = width;
-        this.canvas.height = height;
-        ctx.clearRect(0, 0, width, height);
-
-        const raw = new Uint8ClampedArray(imageOutput.data);
-
-        // RGBA direkt
-        if (raw.length === width * height * 4) {
-          const imgData = new ImageData(raw, width, height);
-          ctx.putImageData(imgData, 0, 0);
-          return;
-        }
-
-        // RGB direkt
-        if (raw.length === width * height * 3) {
-          const rgba = this.rgbToRgba(raw, width, height);
-          const imgData = new ImageData(rgba, width, height);
-          ctx.putImageData(imgData, 0, 0);
-          return;
-        }
-      }
+      this.showCanvas();
+      return;
     }
 
     throw new Error("Unbekanntes Bildformat – kann nicht gerendert werden.");
   }
 
-  rgbToRgba(data, width, height) {
-    const expectedRgbLength = width * height * 3;
-    if (data.length !== expectedRgbLength) {
-      throw new Error(
-        `RGB-Datenlänge passt nicht. Erwartet ${expectedRgbLength}, erhalten ${data.length}`
-      );
+  showCanvas() {
+    const placeholder = document.getElementById("imagePlaceholder");
+    if (placeholder) {
+      placeholder.classList.add("hidden");
     }
 
-    const rgba = new Uint8ClampedArray(width * height * 4);
-
-    for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
-      rgba[j] = data[i];         // R
-      rgba[j + 1] = data[i + 1]; // G
-      rgba[j + 2] = data[i + 2]; // B
-      rgba[j + 3] = 255;         // A
+    if (this.canvas) {
+      this.canvas.classList.remove("hidden");
+      this.canvas.style.display = "block";
     }
-
-    return rgba;
   }
 
   async drawDataUrlToCanvas(dataUrl) {
