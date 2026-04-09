@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Neural Pong  // PromptRebel</title>
+  <title>Neural Pong v3 // PromptRebel</title>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 
   <style>
@@ -58,10 +58,8 @@
       mask-image:linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.35));
     }
 
-    a{color:inherit;text-decoration:none}
-
     header{
-      max-width:1120px;
+      max-width:1180px;
       margin:0 auto;
       padding:28px 16px 16px;
       text-align:center;
@@ -99,9 +97,9 @@
 
     .outer{
       display:grid;
-      grid-template-columns:240px 1fr 240px;
+      grid-template-columns:260px 1fr 260px;
       gap:16px;
-      max-width:1120px;
+      max-width:1180px;
       margin:0 auto;
       padding:8px 16px 20px;
       align-items:start;
@@ -156,6 +154,7 @@
     .rv.green{color:var(--green)}
     .rv.red{color:var(--red)}
     .rv.amber{color:var(--amber)}
+    .rv.violet{color:var(--violet)}
 
     .barlabel{
       font-size:.72rem;
@@ -185,6 +184,9 @@
     }
     .fill.eps{
       background:linear-gradient(90deg,var(--green),var(--amber));
+    }
+    .fill.prio{
+      background:linear-gradient(90deg,var(--amber),var(--red));
     }
 
     .bar-meta{
@@ -256,6 +258,7 @@
       font-size:.8rem;
       color:var(--muted);
       text-align:center;
+      max-width:720px;
     }
 
     .controls-row{
@@ -310,6 +313,11 @@
       box-shadow:var(--glow-red);
     }
 
+    .btn.mode{
+      border-color:rgba(167,139,250,.28);
+      color:var(--violet);
+    }
+
     #persistBadge{
       font-size:.76rem;
       color:var(--soft);
@@ -347,9 +355,11 @@
     .learn-box .k{color:var(--green);font-weight:700}
     .learn-box .o{color:var(--amber);font-weight:700}
     .learn-box .r{color:var(--red);font-weight:700}
+    .learn-box .v{color:var(--violet);font-weight:700}
+    .learn-box .c{color:var(--cyan);font-weight:700}
 
     .logwrap{
-      max-width:1120px;
+      max-width:1180px;
       margin:0 auto 18px;
       padding:0 16px;
     }
@@ -360,7 +370,7 @@
       border-radius:var(--radius);
       padding:14px 16px;
       min-height:110px;
-      max-height:140px;
+      max-height:160px;
       overflow:auto;
       box-shadow:var(--shadow);
       position:relative;
@@ -382,8 +392,9 @@
     .le.g{color:var(--green)}
     .le.m{color:var(--red)}
     .le.o{color:var(--amber)}
+    .le.v{color:var(--violet)}
 
-    @media (max-width: 900px){
+    @media (max-width: 980px){
       .outer{
         grid-template-columns:1fr;
       }
@@ -394,8 +405,8 @@
 
 <header>
   <div class="tag">PromptRebel · KI-Labor</div>
-  <h1>Neural Pong v2</h1>
-  <div class="sub">Target Network · Replay Buffer · IndexedDB Persistenz</div>
+  <h1>Neural Pong v3</h1>
+  <div class="sub">DDQN · Prioritized Replay · Eval Mode · Curriculum Opponent · Fast Training</div>
 </header>
 
 <div class="outer">
@@ -405,9 +416,12 @@
 
     <div class="row"><span class="rl">Punkte gespielt</span><span class="rv cyan" id="sRallies">0</span></div>
     <div class="row"><span class="rl">KI Punkte</span><span class="rv red" id="sAIpts">0</span></div>
-    <div class="row"><span class="rl">Mensch Punkte</span><span class="rv green" id="sHUpts">0</span></div>
+    <div class="row"><span class="rl">Bot/Mensch Punkte</span><span class="rv green" id="sHUpts">0</span></div>
     <div class="row"><span class="rl">Train Steps</span><span class="rv" id="sSteps">0</span></div>
     <div class="row"><span class="rl">Target Syncs</span><span class="rv amber" id="sSyncs">0</span></div>
+    <div class="row"><span class="rl">Eval Winrate</span><span class="rv violet" id="sEval">—</span></div>
+    <div class="row"><span class="rl">Curriculum</span><span class="rv amber" id="sCurriculum">Stufe 1</span></div>
+    <div class="row"><span class="rl">Fast-Mode</span><span class="rv" id="sFast">1x</span></div>
     <div class="row"><span class="rl">Mem Buffer</span><span class="rv amber" id="sMem">0</span></div>
     <div class="row"><span class="rl">Loss</span><span class="rv" id="sLoss">—</span></div>
 
@@ -419,18 +433,22 @@
     <div class="track"><div class="fill eps" id="bEps" style="width:100%"></div></div>
     <div class="bar-meta"><span>Exploit</span><span id="bEpsPct">100%</span><span>Explore</span></div>
 
+    <div class="barlabel">Priorität Replay</div>
+    <div class="track"><div class="fill prio" id="bPrio" style="width:0%"></div></div>
+    <div class="bar-meta"><span>Niedrig</span><span id="bPrioPct">0%</span><span>Hoch</span></div>
+
     <div class="barlabel">Letzte 10</div>
     <div class="dots" id="dots"></div>
 
     <div class="barlabel">Netzwerk</div>
-    <canvas id="netCanvas" class="net-canvas" width="180" height="70"></canvas>
+    <canvas id="netCanvas" class="net-canvas" width="220" height="80"></canvas>
   </aside>
 
   <main class="arena">
     <div class="score-bar">
       <div class="score-block">
         <div class="score-human" id="scoreHuman">00</div>
-        <small>Mensch</small>
+        <small id="leftLabel">Gegner</small>
       </div>
 
       <div class="score-vs">VS</div>
@@ -443,10 +461,17 @@
 
     <canvas id="pongCanvas" width="560" height="380"></canvas>
 
-    <div class="hint">Maus, Touch oder W/S bzw. Pfeiltasten steuern dein Paddle links</div>
+    <div class="hint">
+      Play-Mode: Maus, Touch oder W/S bzw. Pfeiltasten steuern links.  
+      Train-Mode: automatischer Gegner nach Curriculum.  
+      Eval-Mode: KI wird ohne Exploration gemessen.
+    </div>
 
     <div class="controls-row">
       <button class="btn primary" id="pauseBtn" onclick="togglePause()">Pause</button>
+      <button class="btn mode" id="modeBtn" onclick="cycleMode()">Mode: Play</button>
+      <button class="btn mode" id="speedBtn" onclick="cycleFastMode()">Fast: 1x</button>
+      <button class="btn mode" id="curriculumBtn" onclick="cycleCurriculumManual()">Curriculum: Auto</button>
       <button class="btn warn" onclick="exportModel()">Export</button>
       <input type="file" id="importInput" accept=".json,.bin" multiple style="display:none" onchange="importModel(event)">
       <button class="btn" onclick="document.getElementById('importInput').click()">Laden</button>
@@ -459,25 +484,33 @@
   <aside class="panel">
     <div class="plabel">Wie es lernt</div>
     <div class="learn-box">
-      <span class="k">Input (6):</span><br>
-      Ball X, Ball Y<br>
-      Ball vX, Ball vY<br>
-      KI Paddle Y<br>
-      Mensch Paddle Y<br><br>
+      <span class="c">State v3:</span><br>
+      Positionen, Geschwindigkeiten,<br>
+      relative Abstände, Vorhersagepunkt,<br>
+      Anflugrichtung, Normabstände<br><br>
 
-      <span class="r">Output (3):</span><br>
-      Hoch / Nichts / Runter<br><br>
-
-      <span class="o">Reward:</span><br>
+      <span class="r">Rewards:</span><br>
       +1 Treffer<br>
-      +1 KI punktet<br>
-      -1 KI verliert Punkt<br>
-      +0.01 Nähe zum Ball<br><br>
+      +4 KI punktet<br>
+      -4 KI verliert Punkt<br>
+      +0.02 Tracking wenn Ball anfliegt<br>
+      leichte Strafe für harte Fehlposition<br><br>
 
-      <span class="k">Persistenz:</span><br>
-      Modell in IndexedDB<br>
-      Zustand in localStorage<br>
-      Reload-fest pro Browser/Origin
+      <span class="v">DDQN:</span><br>
+      Online-Netz wählt Aktion,<br>
+      Target-Netz bewertet Aktion<br><br>
+
+      <span class="o">Replay:</span><br>
+      Prioritized Sampling nach TD-Fehler<br><br>
+
+      <span class="k">Modi:</span><br>
+      Play / Train / Eval<br>
+      Fast-Training bis 32x<br><br>
+
+      <span class="c">Curriculum:</span><br>
+      Stufe 1 Zufall<br>
+      Stufe 2 Ball folgen<br>
+      Stufe 3 Vorhaltewinkel
     </div>
 
     <div class="barlabel" style="margin-top:14px">Modell Info</div>
@@ -489,13 +522,16 @@
 
 <div class="logwrap">
   <div class="logbox" id="logbox">
-    <div class="le g">[BOOT] Neural Pong v2 // PromptRebel</div>
+    <div class="le g">[BOOT] Neural Pong v3 // PromptRebel</div>
   </div>
 </div>
 
 <script>
 'use strict';
 
+/* ═════════════════════════════════════════════════════════════
+   CONFIG
+═════════════════════════════════════════════════════════════ */
 const CFG = {
   W: 560,
   H: 380,
@@ -507,22 +543,44 @@ const CFG = {
   ballSpeedMax: 9,
   ballAccel: 0.08,
 
-  gamma: 0.97,
+  stateSize: 12,
+  actionSize: 3,
+
+  gamma: 0.985,
   epsStart: 1.0,
-  epsMin: 0.05,
-  epsDecayPerRally: 0.995,
+  epsMin: 0.03,
+  epsDecayEasy: 0.996,
+  epsDecayMedium: 0.998,
+  epsDecayHard: 0.999,
   batchSize: 64,
-  memorySize: 20000,
+  memorySize: 24000,
   trainEvery: 4,
   targetUpdateEvery: 200,
-  lr: 0.0003,
+  lr: 0.00025,
 
-  modelKey: 'indexeddb://neural-pong-v2-online',
-  targetModelKey: 'indexeddb://neural-pong-v2-target',
-  stateKey: 'neural-pong-state-v2',
-  saveEvery: 10
+  perAlpha: 0.6,
+  perBetaStart: 0.4,
+  perBetaIncrement: 0.00002,
+  perEps: 0.0001,
+
+  rewardHit: 1.0,
+  rewardScore: 4.0,
+  rewardLose: -4.0,
+  rewardTrack: 0.02,
+  rewardBadAlign: -0.01,
+
+  modelKey: 'indexeddb://neural-pong-v3-online',
+  targetModelKey: 'indexeddb://neural-pong-v3-target',
+  stateKey: 'neural-pong-state-v3',
+  saveEvery: 10,
+
+  fastModes: [1, 2, 4, 8, 16, 32],
+  evalRallies: 40
 };
 
+/* ═════════════════════════════════════════════════════════════
+   DOM + STATE
+═════════════════════════════════════════════════════════════ */
 const canvas = document.getElementById('pongCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -530,6 +588,7 @@ let model = null;
 let targetModel = null;
 
 let epsilon = CFG.epsStart;
+let perBeta = CFG.perBetaStart;
 let memory = [];
 let trainSteps = 0;
 let targetSyncs = 0;
@@ -541,28 +600,60 @@ let pointHistory = [];
 let isTraining = false;
 
 let stats = { rallies:0, aiPts:0, huPts:0 };
-let ball, aiPaddle, huPaddle;
+let evalStats = { wins:0, losses:0, rallies:0, lastWinRate:null };
+
+let ball, aiPaddle, leftPaddle;
 let mouseY = CFG.H / 2;
 
+let mode = 'play'; // play | train | eval
+let fastMode = 1;
+let curriculumStage = 1;
+let curriculumManual = false;
+
+/* ═════════════════════════════════════════════════════════════
+   MODELS
+═════════════════════════════════════════════════════════════ */
 function createModel() {
   const m = tf.sequential();
-  m.add(tf.layers.dense({ units:128, inputShape:[6], activation:'relu', kernelInitializer:'heNormal' }));
-  m.add(tf.layers.dense({ units:128, activation:'relu', kernelInitializer:'heNormal' }));
-  m.add(tf.layers.dense({ units:64, activation:'relu', kernelInitializer:'heNormal' }));
-  m.add(tf.layers.dense({ units:3, activation:'linear' }));
-  m.compile({ optimizer: tf.train.adam(CFG.lr), loss:'meanSquaredError' });
+  m.add(tf.layers.dense({
+    units: 160,
+    inputShape: [CFG.stateSize],
+    activation: 'relu',
+    kernelInitializer: 'heNormal'
+  }));
+  m.add(tf.layers.dense({
+    units: 160,
+    activation: 'relu',
+    kernelInitializer: 'heNormal'
+  }));
+  m.add(tf.layers.dense({
+    units: 96,
+    activation: 'relu',
+    kernelInitializer: 'heNormal'
+  }));
+  m.add(tf.layers.dense({
+    units: CFG.actionSize,
+    activation: 'linear'
+  }));
+  m.compile({
+    optimizer: tf.train.adam(CFG.lr),
+    loss: 'meanSquaredError'
+  });
   return m;
 }
 
 function compileModel(m) {
-  m.compile({ optimizer: tf.train.adam(CFG.lr), loss:'meanSquaredError' });
+  m.compile({
+    optimizer: tf.train.adam(CFG.lr),
+    loss: 'meanSquaredError'
+  });
   return m;
 }
 
 function cloneWeights(fromModel, toModel) {
-  const ws = fromModel.getWeights().map(w => w.clone());
-  toModel.setWeights(ws);
-  ws.forEach(w => w.dispose());
+  const weights = fromModel.getWeights().map(w => w.clone());
+  toModel.setWeights(weights);
+  weights.forEach(w => w.dispose());
 }
 
 function syncTargetNetwork() {
@@ -570,6 +661,9 @@ function syncTargetNetwork() {
   targetSyncs++;
 }
 
+/* ═════════════════════════════════════════════════════════════
+   PERSISTENCE
+═════════════════════════════════════════════════════════════ */
 async function saveDB() {
   try {
     await model.save(CFG.modelKey);
@@ -577,12 +671,18 @@ async function saveDB() {
 
     const s = {
       epsilon,
+      perBeta,
       trainSteps,
       targetSyncs,
       lastLoss,
       stats,
+      evalStats,
       pointHistory: pointHistory.slice(-100),
-      modelSource
+      modelSource,
+      mode,
+      fastMode,
+      curriculumStage,
+      curriculumManual
     };
 
     localStorage.setItem(CFG.stateKey, JSON.stringify(s));
@@ -613,12 +713,18 @@ async function loadDB() {
     if (raw) {
       const s = JSON.parse(raw);
       epsilon = s.epsilon ?? CFG.epsMin;
+      perBeta = s.perBeta ?? CFG.perBetaStart;
       trainSteps = s.trainSteps ?? 0;
       targetSyncs = s.targetSyncs ?? 0;
       lastLoss = s.lastLoss ?? null;
       stats = s.stats ?? stats;
+      evalStats = s.evalStats ?? evalStats;
       pointHistory = s.pointHistory ?? [];
       modelSource = s.modelSource ?? 'IndexedDB';
+      mode = s.mode ?? 'play';
+      fastMode = s.fastMode ?? 1;
+      curriculumStage = s.curriculumStage ?? 1;
+      curriculumManual = s.curriculumManual ?? false;
     }
     return true;
   } catch (_) {
@@ -626,6 +732,9 @@ async function loadDB() {
   }
 }
 
+/* ═════════════════════════════════════════════════════════════
+   GAME INIT
+═════════════════════════════════════════════════════════════ */
 function initBall(direction = null) {
   const angle = (Math.random() * 60 - 30) * Math.PI / 180;
   const dir = direction ?? (Math.random() > 0.5 ? 1 : -1);
@@ -640,33 +749,97 @@ function initBall(direction = null) {
 }
 
 function initGame() {
-  aiPaddle = { x: CFG.W - CFG.paddleW - 8, y: CFG.H / 2 - CFG.paddleH / 2 };
-  huPaddle = { x: 8, y: CFG.H / 2 - CFG.paddleH / 2 };
+  aiPaddle = {
+    x: CFG.W - CFG.paddleW - 8,
+    y: CFG.H / 2 - CFG.paddleH / 2
+  };
+
+  leftPaddle = {
+    x: 8,
+    y: CFG.H / 2 - CFG.paddleH / 2
+  };
+
   initBall();
 }
 
+function resetEpisode(direction = null) {
+  leftPaddle.y = CFG.H / 2 - CFG.paddleH / 2;
+  aiPaddle.y = CFG.H / 2 - CFG.paddleH / 2;
+  initBall(direction);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   STATE ENGINEERING
+═════════════════════════════════════════════════════════════ */
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function reflectY(y) {
+  while (y < 0 || y > CFG.H) {
+    if (y < 0) y = -y;
+    if (y > CFG.H) y = 2 * CFG.H - y;
+  }
+  return y;
+}
+
+function predictImpactY() {
+  if (ball.vx <= 0) return ball.y;
+  const dx = aiPaddle.x - ball.x;
+  if (dx <= 0 || Math.abs(ball.vx) < 1e-6) return ball.y;
+  const t = dx / ball.vx;
+  return reflectY(ball.y + ball.vy * t);
+}
+
 function getState() {
+  const aiCenter = aiPaddle.y + CFG.paddleH / 2;
+  const leftCenter = leftPaddle.y + CFG.paddleH / 2;
+  const predictedY = predictImpactY();
+
+  const dxToAI = (aiPaddle.x - ball.x) / CFG.W;
+  const dyToAI = (ball.y - aiCenter) / CFG.H;
+  const dyPred = (predictedY - aiCenter) / CFG.H;
+  const dyLeft = (ball.y - leftCenter) / CFG.H;
+  const approachingAI = ball.vx > 0 ? 1 : 0;
+
   return [
+    // base state
     ball.x / CFG.W,
     ball.y / CFG.H,
-    (ball.vx + CFG.ballSpeedMax) / (2 * CFG.ballSpeedMax),
-    (ball.vy + CFG.ballSpeedMax) / (2 * CFG.ballSpeedMax),
-    (aiPaddle.y + CFG.paddleH / 2) / CFG.H,
-    (huPaddle.y + CFG.paddleH / 2) / CFG.H
+    ball.vx / CFG.ballSpeedMax,
+    ball.vy / CFG.ballSpeedMax,
+    aiCenter / CFG.H,
+    leftCenter / CFG.H,
+
+    // engineered features
+    dxToAI,
+    dyToAI,
+    dyPred,
+    dyLeft,
+    approachingAI,
+    clamp((ball.speed - CFG.ballSpeedInit) / (CFG.ballSpeedMax - CFG.ballSpeedInit + 1e-6), 0, 1)
   ];
 }
 
-async function getAction(state) {
-  if (Math.random() < epsilon) {
-    return Math.floor(Math.random() * 3);
+/* ═════════════════════════════════════════════════════════════
+   ACTIONS
+═════════════════════════════════════════════════════════════ */
+async function getQValues(state) {
+  return tf.tidy(() => {
+    const stateTensor = tf.tensor2d([state], [1, CFG.stateSize]);
+    const pred = model.predict(stateTensor);
+    return Array.from(pred.dataSync());
+  });
+}
+
+async function getAction(state, forceGreedy = false) {
+  const greedy = forceGreedy || mode === 'eval';
+
+  if (!greedy && Math.random() < epsilon) {
+    return Math.floor(Math.random() * CFG.actionSize);
   }
 
-  const qValues = tf.tidy(() => {
-    const stateTensor = tf.tensor2d([state], [1,6]);
-    const pred = model.predict(stateTensor);
-    return pred.dataSync();
-  });
-
+  const qValues = await getQValues(state);
   let best = 0;
   for (let i = 1; i < qValues.length; i++) {
     if (qValues[i] > qValues[best]) best = i;
@@ -674,17 +847,80 @@ async function getAction(state) {
   return best;
 }
 
-function remember(state, action, reward, nextState, done) {
-  memory.push({ state, action, reward, nextState, done });
+/* ═════════════════════════════════════════════════════════════
+   PRIORITIZED REPLAY
+═════════════════════════════════════════════════════════════ */
+function remember(state, action, reward, nextState, done, tdError = 1.0) {
+  const priority = Math.pow(Math.abs(tdError) + CFG.perEps, CFG.perAlpha);
+  memory.push({
+    state,
+    action,
+    reward,
+    nextState,
+    done,
+    priority
+  });
   if (memory.length > CFG.memorySize) memory.shift();
 }
 
-function sampleBatch() {
+function getTotalPriority() {
+  let total = 0;
+  for (const exp of memory) total += exp.priority;
+  return total;
+}
+
+function sampleBatchPER() {
   const batch = [];
+  const indices = [];
+  const weights = [];
+  const totalPriority = getTotalPriority() || 1;
+  const N = memory.length;
+
   for (let i = 0; i < CFG.batchSize; i++) {
-    batch.push(memory[Math.floor(Math.random() * memory.length)]);
+    const r = Math.random() * totalPriority;
+    let acc = 0;
+    let chosen = memory.length - 1;
+    for (let j = 0; j < memory.length; j++) {
+      acc += memory[j].priority;
+      if (acc >= r) {
+        chosen = j;
+        break;
+      }
+    }
+    indices.push(chosen);
+    batch.push(memory[chosen]);
+
+    const p = memory[chosen].priority / totalPriority;
+    const w = Math.pow(N * p, -perBeta);
+    weights.push(w);
   }
-  return batch;
+
+  const maxW = Math.max(...weights, 1e-6);
+  const normWeights = weights.map(w => w / maxW);
+
+  return { batch, indices, normWeights, totalPriority };
+}
+
+async function computeTDError(exp) {
+  return tf.tidy(() => {
+    const s = tf.tensor2d([exp.state], [1, CFG.stateSize]);
+    const ns = tf.tensor2d([exp.nextState], [1, CFG.stateSize]);
+
+    const qCurrent = model.predict(s).dataSync();
+    const qNextOnline = model.predict(ns).dataSync();
+    const qNextTarget = targetModel.predict(ns).dataSync();
+
+    let bestNextAction = 0;
+    for (let a = 1; a < CFG.actionSize; a++) {
+      if (qNextOnline[a] > qNextOnline[bestNextAction]) bestNextAction = a;
+    }
+
+    const target = exp.done
+      ? exp.reward
+      : exp.reward + CFG.gamma * qNextTarget[bestNextAction];
+
+    return Math.abs(target - qCurrent[exp.action]);
+  });
 }
 
 async function learn() {
@@ -692,13 +928,13 @@ async function learn() {
   isTraining = true;
 
   try {
-    const batch = sampleBatch();
+    const { batch, indices, normWeights, totalPriority } = sampleBatchPER();
 
     const states = batch.map(e => e.state);
     const nextStates = batch.map(e => e.nextState);
 
-    const statesT = tf.tensor2d(states, [CFG.batchSize, 6]);
-    const nextStatesT = tf.tensor2d(nextStates, [CFG.batchSize, 6]);
+    const statesT = tf.tensor2d(states, [CFG.batchSize, CFG.stateSize]);
+    const nextStatesT = tf.tensor2d(nextStates, [CFG.batchSize, CFG.stateSize]);
 
     const currentQTensor = model.predict(statesT);
     const nextQOnlineTensor = model.predict(nextStatesT);
@@ -708,27 +944,47 @@ async function learn() {
     const nextQOnline = await nextQOnlineTensor.array();
     const nextQTarget = await nextQTargetTensor.array();
 
-    const targets = currentQ.map((row, i) => {
+    const targets = [];
+    const tdErrors = [];
+
+    for (let i = 0; i < batch.length; i++) {
       const e = batch[i];
-      const out = [...row];
+      const out = [...currentQ[i]];
+      let tdTarget;
 
       if (e.done) {
-        out[e.action] = e.reward;
+        tdTarget = e.reward;
       } else {
         let bestNextAction = 0;
-        for (let a = 1; a < 3; a++) {
+        for (let a = 1; a < CFG.actionSize; a++) {
           if (nextQOnline[i][a] > nextQOnline[i][bestNextAction]) bestNextAction = a;
         }
-        out[e.action] = e.reward + CFG.gamma * nextQTarget[i][bestNextAction];
+        tdTarget = e.reward + CFG.gamma * nextQTarget[i][bestNextAction];
       }
-      return out;
-    });
 
-    const targetsT = tf.tensor2d(targets, [CFG.batchSize, 3]);
-    const history = await model.fit(statesT, targetsT, { epochs:1, verbose:0 });
+      tdErrors.push(Math.abs(tdTarget - currentQ[i][e.action]));
+      out[e.action] = tdTarget;
+      targets.push(out);
+    }
+
+    const targetsT = tf.tensor2d(targets, [CFG.batchSize, CFG.actionSize]);
+    const weightsT = tf.tensor1d(normWeights);
+
+    const history = await model.fit(statesT, targetsT, {
+      epochs: 1,
+      verbose: 0,
+      sampleWeight: weightsT
+    });
 
     lastLoss = history.history.loss[0];
     trainSteps++;
+
+    for (let i = 0; i < indices.length; i++) {
+      const idx = indices[i];
+      memory[idx].priority = Math.pow(tdErrors[i] + CFG.perEps, CFG.perAlpha);
+    }
+
+    perBeta = Math.min(1.0, perBeta + CFG.perBetaIncrement);
 
     if (trainSteps % CFG.targetUpdateEvery === 0) {
       syncTargetNetwork();
@@ -741,6 +997,8 @@ async function learn() {
     nextQOnlineTensor.dispose();
     nextQTargetTensor.dispose();
     targetsT.dispose();
+    weightsT.dispose();
+
   } catch (e) {
     log('Train-Fehler: ' + e.message, 'm');
   } finally {
@@ -748,23 +1006,110 @@ async function learn() {
   }
 }
 
-async function update() {
-  if (paused) return;
+/* ═════════════════════════════════════════════════════════════
+   OPPONENT / CURRICULUM
+═════════════════════════════════════════════════════════════ */
+function updateCurriculumAuto() {
+  if (curriculumManual) return;
+
+  const winRate = stats.rallies > 0 ? stats.aiPts / stats.rallies : 0;
+
+  if (stats.rallies < 40) {
+    curriculumStage = 1;
+  } else if (winRate > 0.62 && stats.rallies >= 40) {
+    curriculumStage = 2;
+  }
+  if (winRate > 0.74 && stats.rallies >= 80) {
+    curriculumStage = 3;
+  }
+}
+
+function movePaddleTowards(paddle, targetY, factor = 1) {
+  const center = paddle.y + CFG.paddleH / 2;
+  const diff = targetY - center;
+  const step = CFG.paddleSpeed * factor;
+  if (Math.abs(diff) > 1) {
+    paddle.y += Math.sign(diff) * Math.min(Math.abs(diff), step);
+  }
+  paddle.y = clamp(paddle.y, 0, CFG.H - CFG.paddleH);
+}
+
+function getPredictedLeftImpactY() {
+  if (ball.vx >= 0) return ball.y;
+  const dx = ball.x - (leftPaddle.x + CFG.paddleW);
+  if (dx <= 0 || Math.abs(ball.vx) < 1e-6) return ball.y;
+  const t = dx / Math.abs(ball.vx);
+  return reflectY(ball.y + ball.vy * t);
+}
+
+function updateOpponent() {
+  if (mode === 'play') {
+    const center = leftPaddle.y + CFG.paddleH / 2;
+    const diff = mouseY - center;
+    if (Math.abs(diff) > 2) {
+      leftPaddle.y += Math.sign(diff) * Math.min(Math.abs(diff), CFG.paddleSpeed);
+    }
+    leftPaddle.y = clamp(leftPaddle.y, 0, CFG.H - CFG.paddleH);
+    return;
+  }
+
+  if (curriculumStage === 1) {
+    if (Math.random() < 0.08) {
+      const drift = (Math.random() - 0.5) * CFG.paddleSpeed * 6;
+      leftPaddle.y += drift;
+    }
+    leftPaddle.y = clamp(leftPaddle.y, 0, CFG.H - CFG.paddleH);
+    return;
+  }
+
+  if (curriculumStage === 2) {
+    movePaddleTowards(leftPaddle, ball.y, 1.0);
+    return;
+  }
+
+  if (curriculumStage === 3) {
+    const target = getPredictedLeftImpactY();
+    movePaddleTowards(leftPaddle, target, 1.15);
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════
+   EPSILON SCHEDULE
+═════════════════════════════════════════════════════════════ */
+function updateDynamicEpsilon(aiScored, lostPoint) {
+  if (mode === 'eval') return;
+
+  let decay = CFG.epsDecayMedium;
+
+  if (curriculumStage === 1) decay = CFG.epsDecayEasy;
+  if (curriculumStage === 2) decay = CFG.epsDecayMedium;
+  if (curriculumStage === 3) decay = CFG.epsDecayHard;
+
+  if (aiScored) {
+    decay *= 0.999;
+  }
+  if (lostPoint) {
+    decay *= 1.0015;
+  }
+
+  epsilon = Math.max(CFG.epsMin, epsilon * decay);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   ENV STEP
+═════════════════════════════════════════════════════════════ */
+async function stepEnvironment() {
   frameCount++;
 
-  const huCenter = huPaddle.y + CFG.paddleH / 2;
-  const huDiff = mouseY - huCenter;
-  if (Math.abs(huDiff) > 2) {
-    huPaddle.y += Math.sign(huDiff) * Math.min(Math.abs(huDiff), CFG.paddleSpeed);
-  }
-  huPaddle.y = Math.max(0, Math.min(CFG.H - CFG.paddleH, huPaddle.y));
+  updateCurriculumAuto();
+  updateOpponent();
 
   const state = getState();
-  const action = await getAction(state);
+  const action = await getAction(state, mode === 'eval');
 
   if (action === 0) aiPaddle.y -= CFG.paddleSpeed;
   if (action === 2) aiPaddle.y += CFG.paddleSpeed;
-  aiPaddle.y = Math.max(0, Math.min(CFG.H - CFG.paddleH, aiPaddle.y));
+  aiPaddle.y = clamp(aiPaddle.y, 0, CFG.H - CFG.paddleH);
 
   ball.x += ball.vx;
   ball.y += ball.vy;
@@ -780,13 +1125,19 @@ async function update() {
 
   let reward = 0;
   let done = false;
+  let aiScored = false;
+  let lostPoint = false;
+
+  const aiCenter = aiPaddle.y + CFG.paddleH / 2;
+  const predictedY = predictImpactY();
+  const predDist = Math.abs(predictedY - aiCenter) / CFG.H;
 
   if (ball.vx > 0) {
-    const aiCenter = aiPaddle.y + CFG.paddleH / 2;
-    const dist = Math.abs(ball.y - aiCenter) / CFG.H;
-    reward += 0.01 * (1 - dist);
+    reward += CFG.rewardTrack * (1 - predDist);
+    if (predDist > 0.18) reward += CFG.rewardBadAlign;
   }
 
+  // AI collision
   if (
     ball.vx > 0 &&
     ball.x + CFG.ballSize / 2 >= aiPaddle.x &&
@@ -802,61 +1153,94 @@ async function update() {
 
     ball.vx = -ball.speed * Math.cos(bounceAngle);
     ball.vy =  ball.speed * Math.sin(bounceAngle);
-    reward += 1.0;
+
+    reward += CFG.rewardHit;
   }
 
+  // Left collision
   if (
     ball.vx < 0 &&
-    ball.x - CFG.ballSize / 2 <= huPaddle.x + CFG.paddleW &&
-    ball.x + CFG.ballSize / 2 >= huPaddle.x &&
-    ball.y >= huPaddle.y &&
-    ball.y <= huPaddle.y + CFG.paddleH
+    ball.x - CFG.ballSize / 2 <= leftPaddle.x + CFG.paddleW &&
+    ball.x + CFG.ballSize / 2 >= leftPaddle.x &&
+    ball.y >= leftPaddle.y &&
+    ball.y <= leftPaddle.y + CFG.paddleH
   ) {
-    ball.x = huPaddle.x + CFG.paddleW + CFG.ballSize / 2;
+    ball.x = leftPaddle.x + CFG.paddleW + CFG.ballSize / 2;
     ball.speed = Math.min(ball.speed + CFG.ballAccel, CFG.ballSpeedMax);
 
-    const relY = (ball.y - (huPaddle.y + CFG.paddleH / 2)) / (CFG.paddleH / 2);
+    const relY = (ball.y - (leftPaddle.y + CFG.paddleH / 2)) / (CFG.paddleH / 2);
     const bounceAngle = relY * 60 * Math.PI / 180;
 
-    ball.vx =  ball.speed * Math.cos(bounceAngle);
-    ball.vy =  ball.speed * Math.sin(bounceAngle);
+    ball.vx = ball.speed * Math.cos(bounceAngle);
+    ball.vy = ball.speed * Math.sin(bounceAngle);
   }
 
   if (ball.x > CFG.W) {
     stats.huPts++;
     stats.rallies++;
-    reward = -1.0;
+    reward = CFG.rewardLose;
     done = true;
+    lostPoint = true;
     pointHistory.push('H');
     updateScoreDisplay();
 
-    epsilon = Math.max(epsilon * CFG.epsDecayPerRally, CFG.epsMin);
-    if (stats.rallies % CFG.saveEvery === 0) saveDB();
-    initBall(-1);
+    if (mode === 'eval') {
+      evalStats.losses++;
+      evalStats.rallies++;
+    }
+
+    updateDynamicEpsilon(false, true);
+
+    if (stats.rallies % CFG.saveEvery === 0 && mode !== 'eval') saveDB();
+    resetEpisode(-1);
 
   } else if (ball.x < 0) {
     stats.aiPts++;
     stats.rallies++;
-    reward = 1.0;
+    reward = CFG.rewardScore;
     done = true;
+    aiScored = true;
     pointHistory.push('A');
     updateScoreDisplay();
 
-    epsilon = Math.max(epsilon * CFG.epsDecayPerRally, CFG.epsMin);
-    if (stats.rallies % CFG.saveEvery === 0) saveDB();
-    initBall(1);
+    if (mode === 'eval') {
+      evalStats.wins++;
+      evalStats.rallies++;
+    }
+
+    updateDynamicEpsilon(true, false);
+
+    if (stats.rallies % CFG.saveEvery === 0 && mode !== 'eval') saveDB();
+    resetEpisode(1);
   }
 
   const nextState = getState();
-  remember(state, action, reward, nextState, done);
 
-  if (frameCount % CFG.trainEvery === 0 && memory.length >= CFG.batchSize) {
+  if (mode !== 'eval') {
+    remember(state, action, reward, nextState, done, Math.abs(reward));
+  }
+
+  if (frameCount % CFG.trainEvery === 0 && memory.length >= CFG.batchSize && mode !== 'eval') {
     await learn();
+  }
+
+  if (mode === 'eval' && evalStats.rallies >= CFG.evalRallies) {
+    const wr = evalStats.rallies > 0 ? (evalStats.wins / evalStats.rallies) * 100 : 0;
+    evalStats.lastWinRate = wr;
+    log(`Eval beendet · Winrate ${wr.toFixed(1)}%`, 'v');
+    mode = 'play';
+    evalStats.wins = 0;
+    evalStats.losses = 0;
+    evalStats.rallies = 0;
+    updateLabels();
   }
 
   if (frameCount % 20 === 0) updateUI();
 }
 
+/* ═════════════════════════════════════════════════════════════
+   RENDER
+═════════════════════════════════════════════════════════════ */
 function render() {
   ctx.fillStyle = '#020617';
   ctx.fillRect(0, 0, CFG.W, CFG.H);
@@ -870,15 +1254,19 @@ function render() {
   ctx.stroke();
   ctx.setLineDash([]);
 
+  // Left paddle
+  const leftColor = mode === 'play' ? '#34d399' : '#60a5fa';
   ctx.shadowBlur = 16;
-  ctx.shadowColor = '#34d399';
-  ctx.fillStyle = '#34d399';
-  ctx.fillRect(huPaddle.x, huPaddle.y, CFG.paddleW, CFG.paddleH);
+  ctx.shadowColor = leftColor;
+  ctx.fillStyle = leftColor;
+  ctx.fillRect(leftPaddle.x, leftPaddle.y, CFG.paddleW, CFG.paddleH);
 
+  // AI paddle
   ctx.shadowColor = '#fb7185';
   ctx.fillStyle = '#fb7185';
   ctx.fillRect(aiPaddle.x, aiPaddle.y, CFG.paddleW, CFG.paddleH);
 
+  // Ball
   const ballColor = ball.vx > 0 ? '#fb7185' : '#22d3ee';
   ctx.shadowColor = ballColor;
   ctx.shadowBlur = 18;
@@ -889,8 +1277,9 @@ function render() {
 
   ctx.shadowBlur = 0;
 
+  // Bottom bar
   const epsNorm = (epsilon - CFG.epsMin) / (CFG.epsStart - CFG.epsMin);
-  const exploreWidth = CFG.W * epsNorm;
+  const exploreWidth = CFG.W * clamp(epsNorm, 0, 1);
   const exploitWidth = CFG.W - exploreWidth;
 
   ctx.fillStyle = 'rgba(52,211,153,0.10)';
@@ -900,26 +1289,43 @@ function render() {
   ctx.fillRect(exploitWidth, CFG.H - 4, exploreWidth, 4);
 
   ctx.font = '10px system-ui, sans-serif';
-  ctx.fillStyle = 'rgba(52,211,153,0.42)';
-  ctx.fillText('MENSCH', 18, 18);
+  ctx.fillStyle = 'rgba(96,165,250,0.42)';
+  ctx.fillText(mode === 'play' ? 'MENSCH' : `BOT ${curriculumStage}`, 18, 18);
 
   ctx.fillStyle = 'rgba(251,113,133,0.42)';
   ctx.fillText('KI', CFG.W - 20, 18);
+
+  if (mode === 'eval') {
+    ctx.fillStyle = 'rgba(167,139,250,0.72)';
+    ctx.fillText('EVAL', CFG.W/2 - 14, 18);
+  }
 }
 
+/* ═════════════════════════════════════════════════════════════
+   LOOP
+═════════════════════════════════════════════════════════════ */
 let lastTime = 0;
 const TARGET_FPS = 60;
 const FRAME_MS = 1000 / TARGET_FPS;
 
 async function gameLoop(timestamp) {
-  if (timestamp - lastTime >= FRAME_MS) {
+  if (!paused && timestamp - lastTime >= FRAME_MS) {
     lastTime = timestamp;
-    await update();
+
+    for (let i = 0; i < fastMode; i++) {
+      await stepEnvironment();
+      if (paused) break;
+    }
+
     render();
   }
+
   requestAnimationFrame(gameLoop);
 }
 
+/* ═════════════════════════════════════════════════════════════
+   INPUT
+═════════════════════════════════════════════════════════════ */
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
   mouseY = (e.clientY - rect.top) * (CFG.H / rect.height);
@@ -936,10 +1342,28 @@ document.addEventListener('keydown', e => { keys[e.key] = true; });
 document.addEventListener('keyup', e => { keys[e.key] = false; });
 
 setInterval(() => {
+  if (mode !== 'play') return;
   if (keys['ArrowUp'] || keys['w'] || keys['W']) mouseY -= CFG.paddleSpeed * 1.5;
   if (keys['ArrowDown'] || keys['s'] || keys['S']) mouseY += CFG.paddleSpeed * 1.5;
-  mouseY = Math.max(0, Math.min(CFG.H, mouseY));
+  mouseY = clamp(mouseY, 0, CFG.H);
 }, 16);
+
+/* ═════════════════════════════════════════════════════════════
+   CONTROLS
+═════════════════════════════════════════════════════════════ */
+function updateLabels() {
+  document.getElementById('leftLabel').textContent =
+    mode === 'play' ? 'Mensch' :
+    mode === 'train' ? `Bot Stufe ${curriculumStage}` :
+    `Eval Bot ${curriculumStage}`;
+
+  document.getElementById('modeBtn').textContent =
+    `Mode: ${mode === 'play' ? 'Play' : mode === 'train' ? 'Train' : 'Eval'}`;
+
+  document.getElementById('speedBtn').textContent = `Fast: ${fastMode}x`;
+  document.getElementById('curriculumBtn').textContent =
+    curriculumManual ? `Curriculum: ${curriculumStage}` : 'Curriculum: Auto';
+}
 
 function togglePause() {
   paused = !paused;
@@ -947,9 +1371,47 @@ function togglePause() {
   log(paused ? 'Pause' : 'Weiter', 'o');
 }
 
+function cycleMode() {
+  if (mode === 'play') mode = 'train';
+  else if (mode === 'train') {
+    mode = 'eval';
+    evalStats.wins = 0;
+    evalStats.losses = 0;
+    evalStats.rallies = 0;
+    log('Eval gestartet · Exploration aus', 'v');
+  } else mode = 'play';
+
+  updateLabels();
+  updateUI();
+}
+
+function cycleFastMode() {
+  const idx = CFG.fastModes.indexOf(fastMode);
+  fastMode = CFG.fastModes[(idx + 1) % CFG.fastModes.length];
+  updateLabels();
+  updateUI();
+  log(`Fast-Mode ${fastMode}x`, 'o');
+}
+
+function cycleCurriculumManual() {
+  if (!curriculumManual) {
+    curriculumManual = true;
+    curriculumStage = 1;
+  } else if (curriculumStage < 3) {
+    curriculumStage++;
+  } else {
+    curriculumManual = false;
+    updateCurriculumAuto();
+  }
+
+  updateLabels();
+  updateUI();
+  log(curriculumManual ? `Curriculum manuell Stufe ${curriculumStage}` : 'Curriculum auto', 'o');
+}
+
 async function exportModel() {
   try {
-    await model.save('downloads://neural-pong-v2-model');
+    await model.save('downloads://neural-pong-v3-model');
     log(`Export ok · ${stats.rallies} Punkte · ε=${epsilon.toFixed(4)} · Steps=${trainSteps}`, 'g');
   } catch (e) {
     log('Export-Fehler: ' + e.message, 'm');
@@ -968,7 +1430,7 @@ async function importModel(evt) {
     targetModel = createModel();
     syncTargetNetwork();
 
-    epsilon = CFG.epsMin;
+    epsilon = Math.max(CFG.epsMin, 0.08);
     modelSource = 'Import: ' + files[0].name;
 
     log(`Import ok · ε→${epsilon}`, 'g');
@@ -998,16 +1460,23 @@ async function confirmReset() {
     syncTargetNetwork();
 
     epsilon = CFG.epsStart;
+    perBeta = CFG.perBetaStart;
     memory = [];
     trainSteps = 0;
     targetSyncs = 0;
     lastLoss = null;
     stats = { rallies:0, aiPts:0, huPts:0 };
+    evalStats = { wins:0, losses:0, rallies:0, lastWinRate:null };
     pointHistory = [];
     frameCount = 0;
     modelSource = 'Neu (Reset)';
+    mode = 'play';
+    fastMode = 1;
+    curriculumStage = 1;
+    curriculumManual = false;
 
     initGame();
+    updateLabels();
     updateScoreDisplay();
     updateUI();
     log('Reset ausgeführt · Modell lernt wieder von vorn', 'm');
@@ -1018,6 +1487,9 @@ async function confirmReset() {
   }
 }
 
+/* ═════════════════════════════════════════════════════════════
+   UI
+═════════════════════════════════════════════════════════════ */
 function updateScoreDisplay() {
   document.getElementById('scoreHuman').textContent = String(stats.huPts).padStart(2, '0');
   document.getElementById('scoreAI').textContent = String(stats.aiPts).padStart(2, '0');
@@ -1034,17 +1506,27 @@ function updateUI() {
   set('sHUpts', stats.huPts);
   set('sSteps', trainSteps);
   set('sSyncs', targetSyncs);
+  set('sFast', `${fastMode}x`);
+  set('sCurriculum', `Stufe ${curriculumStage}`);
   set('sMem', `${memory.length}/${CFG.memorySize}`);
   set('sLoss', lastLoss !== null ? Number(lastLoss).toFixed(5) : '—');
   set('sSource', modelSource);
+  set('sEval', evalStats.lastWinRate !== null ? `${evalStats.lastWinRate.toFixed(1)}%` : '—');
 
-  const winPct = stats.rallies > 0 ? (stats.aiPts / stats.rallies * 100).toFixed(0) : 0;
-  document.getElementById('bWin').style.width = winPct + '%';
-  document.getElementById('bWinPct').textContent = winPct + '%';
+  const winPct = stats.rallies > 0 ? (stats.aiPts / stats.rallies * 100) : 0;
+  document.getElementById('bWin').style.width = `${winPct.toFixed(1)}%`;
+  document.getElementById('bWinPct').textContent = `${winPct.toFixed(1)}%`;
 
   const epsPct = ((epsilon - CFG.epsMin) / (CFG.epsStart - CFG.epsMin) * 100);
-  document.getElementById('bEps').style.width = epsPct.toFixed(1) + '%';
-  document.getElementById('bEpsPct').textContent = epsPct.toFixed(1) + '%';
+  document.getElementById('bEps').style.width = `${clamp(epsPct, 0, 100).toFixed(1)}%`;
+  document.getElementById('bEpsPct').textContent = `${clamp(epsPct, 0, 100).toFixed(1)}%`;
+
+  const prioAvg = memory.length
+    ? memory.reduce((sum, e) => sum + e.priority, 0) / memory.length
+    : 0;
+  const prioNorm = clamp(prioAvg * 25, 0, 100);
+  document.getElementById('bPrio').style.width = `${prioNorm.toFixed(1)}%`;
+  document.getElementById('bPrioPct').textContent = `${prioNorm.toFixed(1)}%`;
 
   const dotsEl = document.getElementById('dots');
   dotsEl.innerHTML = '';
@@ -1052,20 +1534,24 @@ function updateUI() {
     const d = document.createElement('div');
     d.className = 'dot';
     d.style.background = r === 'A' ? 'var(--red)' : 'var(--green)';
-    d.title = r === 'A' ? 'KI Punkt' : 'Mensch Punkt';
+    d.title = r === 'A' ? 'KI Punkt' : 'Gegner Punkt';
     dotsEl.appendChild(d);
   });
 
   drawNet();
+  updateLabels();
 }
 
+/* ═════════════════════════════════════════════════════════════
+   NET VIZ
+═════════════════════════════════════════════════════════════ */
 function drawNet() {
   const c = document.getElementById('netCanvas');
   const ctx2 = c.getContext('2d');
   ctx2.clearRect(0, 0, c.width, c.height);
 
-  const layers = [6, 5, 4, 3];
-  const xs = [10, 55, 115, 165];
+  const layers = [CFG.stateSize, 6, 5, CFG.actionSize];
+  const xs = [10, 70, 145, 210];
   const H = c.height;
 
   const pos = layers.map((n, li) =>
@@ -1093,7 +1579,7 @@ function drawNet() {
     layer.forEach(node => {
       const active = Math.random() > 0.4;
       ctx2.beginPath();
-      ctx2.arc(node.x, node.y, 2.5, 0, Math.PI * 2);
+      ctx2.arc(node.x, node.y, 2.4, 0, Math.PI * 2);
 
       ctx2.fillStyle =
         li === 0
@@ -1107,6 +1593,9 @@ function drawNet() {
   });
 }
 
+/* ═════════════════════════════════════════════════════════════
+   LOG
+═════════════════════════════════════════════════════════════ */
 function log(msg, cls = '') {
   const box = document.getElementById('logbox');
   const e = document.createElement('div');
@@ -1116,6 +1605,9 @@ function log(msg, cls = '') {
   box.scrollTop = box.scrollHeight;
 }
 
+/* ═════════════════════════════════════════════════════════════
+   INIT
+═════════════════════════════════════════════════════════════ */
 async function init() {
   log('TensorFlow.js ' + tf.version.tfjs + ' geladen', 'g');
   log('Prüfe Persistenzspeicher …', 'o');
@@ -1133,12 +1625,13 @@ async function init() {
     syncTargetNetwork();
     modelSource = 'Neu';
     log('Kein Modell gefunden · neues Modell erstellt', 'o');
-    log('Target-Netz aktiv · stabileres Lernen', 'g');
+    log('DDQN + Prioritized Replay aktiv', 'g');
     document.getElementById('persistBadge').textContent =
       'Neues Modell · Lernstand wird lokal gespeichert';
   }
 
   initGame();
+  updateLabels();
   updateUI();
   updateScoreDisplay();
 
