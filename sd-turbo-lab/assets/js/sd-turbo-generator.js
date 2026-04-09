@@ -41,7 +41,6 @@ export class SDTurboGenerator {
   setProgress(percent) {
     if (!this.progressBar) return;
     this.progressBar.classList.remove("indeterminate");
-
     if (typeof percent === "number" && Number.isFinite(percent)) {
       this.progressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
     } else {
@@ -72,10 +71,8 @@ export class SDTurboGenerator {
     try {
       const client = await this.ensureClient();
       const caps = await client.detect();
-
       const ok = !!caps?.webgpu;
       this.setGPUStatus(ok ? "Verfügbar" : "Nicht verfügbar", ok);
-
       return ok;
     } catch (error) {
       console.error("SD Turbo capability check failed:", error);
@@ -85,156 +82,123 @@ export class SDTurboGenerator {
   }
 
   async loadModel() {
-  if (this.loading) return;
-  if (this.ready && this.loadedModelId === "sd-turbo") return;
+    if (this.loading) return;
+    if (this.ready && this.loadedModelId === "sd-turbo") return;
 
-  this.loading = true;
-  this.ready = false;
-  this.setStatus("Initialisiere SD Turbo ...");
-  this.setInfo("sd-turbo");
-  this.setProgress(0);
-
-  try {
-    const client = await this.ensureClient();
-    const caps = await client.detect();
-
-    if (!caps?.webgpu) {
-      throw new Error("WebGPU ist für SD Turbo in diesem Setup erforderlich.");
-    }
-
-    this.setGPUStatus("Verfügbar", true);
-
-    const loadRes = await client.load(
-      "sd-turbo",
-      {
-        backendPreference: ["webgpu"],
-
-        // CLIP-Tokenizer explizit injizieren
-        tokenizerProvider: async () => {
-          const g = globalThis.transformers;
-          if (!g?.AutoTokenizer) {
-            throw new Error("Transformers.js wurde nicht gefunden.");
-          }
-
-          const tok = await g.AutoTokenizer.from_pretrained(
-            "Xenova/clip-vit-base-patch16"
-          );
-
-          tok.pad_token_id = 0;
-
-          return (text, opts) => tok(text, opts);
-        },
-      },
-      (p) => {
-        const pct =
-          typeof p?.pct === "number"
-            ? p.pct
-            : (typeof p?.bytesDownloaded === "number" &&
-               typeof p?.totalBytesExpected === "number" &&
-               p.totalBytesExpected > 0)
-            ? Math.round((p.bytesDownloaded / p.totalBytesExpected) * 100)
-            : null;
-
-        if (pct != null) {
-          this.setProgress(pct);
-        }
-
-        const sizeText =
-          typeof p?.bytesDownloaded === "number" &&
-          typeof p?.totalBytesExpected === "number"
-            ? ` ${(p.bytesDownloaded / 1024 / 1024).toFixed(1)}/${(p.totalBytesExpected / 1024 / 1024).toFixed(1)} MB`
-            : "";
-
-        this.setStatus(
-          `${p?.message ?? "Lade SD Turbo ..."}${pct != null ? ` ${pct}%` : ""}${sizeText}`
-        );
-      }
-    );
-
-    if (!loadRes?.ok) {
-      throw new Error(loadRes?.message ?? "SD Turbo konnte nicht geladen werden.");
-    }
-
-    this.loadedModelId = "sd-turbo";
-    this.ready = true;
-    this.setProgress(100);
-    this.setInfo(`sd-turbo (${loadRes.backendUsed ?? "webgpu"})`);
-    this.setStatus("SD Turbo bereit.");
-
-    setTimeout(() => {
-      if (!this.generating) this.stopProgress();
-    }, 600);
-  } catch (error) {
-    console.error("SD Turbo load failed:", error);
+    this.loading = true;
     this.ready = false;
-    this.loadedModelId = null;
-    this.stopProgress();
-    this.setStatus(`Fehler: ${error?.message || error}`);
-    this.setInfo("SD Turbo konnte nicht geladen werden");
-    throw error;
-  } finally {
-    this.loading = false;
-  }
-}
-
-  async generate(prompt, options = {}) {
-    if (!this.ready || this.loadedModelId !== "sd-turbo") {
-      throw new Error("SD Turbo ist nicht bereit.");
-    }
-
-    const text = (prompt || "").trim();
-    if (!text) {
-      throw new Error("Kein Prompt eingegeben.");
-    }
-
-    this.generating = true;
-    this.startIndeterminate();
-    this.setStatus("Generiere Bild mit SD Turbo ...");
+    this.setStatus("Initialisiere SD Turbo (iPhone-Safe Modus)...");
+    this.setInfo("sd-turbo (q4)");
+    this.setProgress(0);
 
     try {
       const client = await this.ensureClient();
+      const caps = await client.detect();
 
-      const seed =
-        Number.isInteger(options.seed) ? options.seed : 42;
+      if (!caps?.webgpu) {
+        throw new Error("WebGPU ist erforderlich.");
+      }
+
+      this.setGPUStatus("Verfügbar", true);
+
+      const loadRes = await client.load(
+        "sd-turbo",
+        {
+          backendPreference: ["webgpu"],
+          // 🔥 WICHTIG: Erzwinge 4-Bit Quantisierung für Mobile-RAM-Limits
+          modelParameters: {
+            dtype: "q4", 
+          },
+
+          // 🔥 Tokenizer-Fix: Robuste Prüfung und korrektes Format
+          tokenizerProvider: async () => {
+            const transformersObj = globalThis.transformers || window.transformers;
+            if (!transformersObj?.AutoTokenizer) {
+              throw new Error("Transformers.js (AutoTokenizer) nicht gefunden.");
+            }
+
+            this.setStatus("Lade CLIP Tokenizer...");
+            const tok = await transformersObj.AutoTokenizer.from_pretrained(
+              "Xenova/clip-vit-base-patch16"
+            );
+            tok.pad_token_id = 0;
+
+            // SD-Turbo benötigt input_ids und attention_mask als Arrays
+            return async (text) => {
+              const result = await tok(text);
+              return {
+                input_ids: Array.from(result.input_ids.data),
+                attention_mask: Array.from(result.attention_mask.data),
+              };
+            };
+          },
+        },
+        (p) => {
+          const pct = typeof p?.pct === "number" ? p.pct : 
+                     (p?.totalBytesExpected > 0 ? Math.round((p.bytesDownloaded / p.totalBytesExpected) * 100) : null);
+
+          if (pct != null) this.setProgress(pct);
+          
+          const sizeText = p?.totalBytesExpected > 0 
+            ? ` ${(p.bytesDownloaded / 1024 / 1024).toFixed(1)}/${(p.totalBytesExpected / 1024 / 1024).toFixed(1)} MB`
+            : "";
+
+          this.setStatus(`${p?.message ?? "Lade SD Turbo..."}${pct != null ? ` ${pct}%` : ""}${sizeText}`);
+        }
+      );
+
+      if (!loadRes?.ok) {
+        throw new Error(loadRes?.message ?? "Ladefehler.");
+      }
+
+      this.loadedModelId = "sd-turbo";
+      this.ready = true;
+      this.setProgress(100);
+      this.setStatus("SD Turbo bereit.");
+
+      setTimeout(() => { if (!this.generating) this.stopProgress(); }, 600);
+    } catch (error) {
+      console.error("SD Turbo load failed:", error);
+      this.ready = false;
+      this.stopProgress();
+      this.setStatus(`Fehler: ${error?.message || error}`);
+      throw error;
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  async generate(prompt, options = {}) {
+    if (!this.ready) throw new Error("Nicht bereit.");
+
+    this.generating = true;
+    this.startIndeterminate();
+    this.setStatus("Generiere Bild...");
+
+    try {
+      const client = await this.ensureClient();
+      const seed = Number.isInteger(options.seed) ? options.seed : Math.floor(Math.random() * 1000000);
 
       const { promise, abort } = client.generate(
-        {
-          prompt: text,
-          seed,
-          model: "sd-turbo",
-        },
+        { prompt, seed, model: "sd-turbo" },
         (e) => {
           const phase = e?.phase ? ` (${e.phase})` : "";
-          this.setStatus(`Generiere Bild mit SD Turbo${phase} ...`);
-        },
-        {
-          busyPolicy: "queue",
-          debounceMs: 100,
+          this.setStatus(`Berechne Bild${phase}...`);
         }
       );
 
       this.abortCurrent = abort;
-
       const gen = await promise;
 
-      if (!gen?.ok) {
-        throw new Error(gen?.message ?? gen?.reason ?? "SD Turbo Generierung fehlgeschlagen.");
-      }
-
-      if (!gen?.blob) {
-        throw new Error("Kein Bild-Blob im Ergebnis gefunden.");
-      }
+      if (!gen?.ok || !gen?.blob) throw new Error(gen?.message || "Fehler.");
 
       await this.drawBlobToCanvas(gen.blob);
-
-      this.setStatus(`Bild fertig${typeof gen.timeMs === "number" ? ` (${Math.round(gen.timeMs)} ms)` : ""}.`);
+      this.setStatus(`Bild fertig (${Math.round(gen.timeMs)} ms).`);
       this.stopProgress();
-
       return gen;
     } catch (error) {
-      console.error("SD Turbo generation failed:", error);
+      this.setStatus(`Fehler: ${error.message}`);
       this.stopProgress();
-      this.setStatus(`Fehler: ${error?.message || error}`);
       throw error;
     } finally {
       this.generating = false;
@@ -243,71 +207,25 @@ export class SDTurboGenerator {
   }
 
   async stop() {
-    try {
-      if (this.abortCurrent) {
-        await this.abortCurrent();
-      }
-    } catch (error) {
-      console.warn("Abort warning:", error);
-    } finally {
-      this.generating = false;
-      this.stopProgress();
-      this.setStatus("Generierung gestoppt.");
-    }
-  }
-
-  async unload() {
-    if (!this.client || !this.loadedModelId) return;
-
-    try {
-      await this.client.unload(this.loadedModelId);
-    } catch (error) {
-      console.warn("Unload warning:", error);
-    } finally {
-      this.ready = false;
-      this.loadedModelId = null;
-      this.setInfo("Noch nicht geladen");
-    }
-  }
-
-  async purgeCache() {
-    if (!this.client) return;
-
-    try {
-      await this.client.purge("sd-turbo");
-      this.setStatus("SD-Turbo-Cache gelöscht.");
-    } catch (error) {
-      console.warn("Purge warning:", error);
-      this.setStatus("Cache konnte nicht gelöscht werden.");
-    }
+    if (this.abortCurrent) await this.abortCurrent();
+    this.generating = false;
+    this.stopProgress();
+    this.setStatus("Gestoppt.");
   }
 
   async drawBlobToCanvas(blob) {
-    if (!this.canvas) {
-      throw new Error("Canvas nicht gefunden.");
-    }
-
     const bitmap = await createImageBitmap(blob);
     const ctx = this.canvas.getContext("2d");
-
-    if (!ctx) {
-      throw new Error("2D-Kontext konnte nicht erstellt werden.");
-    }
-
     this.canvas.width = bitmap.width;
     this.canvas.height = bitmap.height;
-    ctx.clearRect(0, 0, bitmap.width, bitmap.height);
     ctx.drawImage(bitmap, 0, 0);
 
     const placeholder = document.getElementById("imagePlaceholder");
     if (placeholder) {
-      placeholder.classList.add("hidden");
       placeholder.style.display = "none";
+      placeholder.classList.add("hidden");
     }
-
     this.canvas.classList.remove("hidden");
     this.canvas.style.display = "block";
-    this.canvas.style.visibility = "visible";
-    this.canvas.style.opacity = "1";
   }
 }
