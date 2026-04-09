@@ -928,7 +928,7 @@ async function learn() {
   isTraining = true;
 
   try {
-    const { batch, indices, normWeights, totalPriority } = sampleBatchPER();
+    const { batch, indices } = sampleBatchPER();
 
     const states = batch.map(e => e.state);
     const nextStates = batch.map(e => e.nextState);
@@ -968,13 +968,10 @@ async function learn() {
     }
 
     const targetsT = tf.tensor2d(targets, [CFG.batchSize, CFG.actionSize]);
-    const weightsT = tf.tensor1d(normWeights);
-
     const history = await model.fit(statesT, targetsT, {
-      epochs: 1,
-      verbose: 0,
-      sampleWeight: weightsT
-    });
+  epochs: 1,
+  verbose: 0
+});
 
     lastLoss = history.history.loss[0];
     trainSteps++;
@@ -997,7 +994,7 @@ async function learn() {
     nextQOnlineTensor.dispose();
     nextQTargetTensor.dispose();
     targetsT.dispose();
-    weightsT.dispose();
+    
 
   } catch (e) {
     log('Train-Fehler: ' + e.message, 'm');
