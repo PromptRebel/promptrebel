@@ -85,7 +85,9 @@ btnGenerate.addEventListener("click", async () => {
     showPlaceholder("Generiere Bild ...");
     updateButtons();
 
-    await gen.generate(prompt);
+    // Fester Seed für reproduzierbare Tests
+    await gen.generate(prompt, { seed: 42 });
+
     showCanvas();
   } catch (error) {
     console.error(error);
@@ -96,10 +98,15 @@ btnGenerate.addEventListener("click", async () => {
   }
 });
 
-btnStop.addEventListener("click", () => {
-  gen.stop();
-  busy = false;
-  updateButtons();
+btnStop.addEventListener("click", async () => {
+  try {
+    await gen.stop();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    busy = false;
+    updateButtons();
+  }
 });
 
 btnDownload.addEventListener("click", () => {
