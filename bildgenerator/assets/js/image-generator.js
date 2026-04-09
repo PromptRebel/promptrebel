@@ -6,6 +6,18 @@ import {
 
 const MODEL_ID = "onnx-community/Janus-Pro-1B-ONNX";
 
+const JANUS_PRESETS = {
+  cartoon:
+    "simple cartoon illustration, clean black outline, flat colors, minimal shading, centered composition, simple shapes, high contrast",
+  icon:
+    "minimal icon style, bold outline, flat colors, centered composition, simple geometric shapes, high contrast",
+  ui:
+    "clean ui illustration, flat design, minimal details, soft but clear colors, centered composition, simple shapes",
+};
+
+const JANUS_NEGATIVE =
+  "blurry, realistic, photo, photographic, noise, artifacts, distorted, messy, extra limbs, extra eyes, extra ears, deformed, low contrast, complex background";
+
 export class ImageGenerator {
   constructor({
     statusId,
@@ -26,6 +38,9 @@ export class ImageGenerator {
     this.loading = false;
     this.generating = false;
     this.stopping = new InterruptableStoppingCriteria();
+
+    // Standard-Preset
+    this.currentPreset = "cartoon";
   }
 
   setStatus(message) {
@@ -62,6 +77,12 @@ export class ImageGenerator {
     if (!this.progressBar) return;
     this.progressBar.classList.remove("indeterminate");
     this.progressBar.style.width = "0%";
+  }
+
+  setPreset(presetName = "cartoon") {
+    if (JANUS_PRESETS[presetName]) {
+      this.currentPreset = presetName;
+    }
   }
 
   async checkWebGPU() {
@@ -152,15 +173,50 @@ export class ImageGenerator {
     }
   }
 
+  buildSmartPrompt(userPrompt) {
+    const preset = JANUS_PRESETS[this.currentPreset] || JANUS_PRESETS.cartoon;
+    const cleaned = this.cleanPrompt(userPrompt);
+    const simplified = this.limitPromptComplexity(cleaned);
+
+    const finalPrompt =
+      `${preset}, ${simplified}, white background. Avoid: ${JANUS_NEGATIVE}`;
+
+    console.log("Original prompt:", userPrompt);
+    console.log("Smart prompt:", finalPrompt);
+
+    return finalPrompt;
+  }
+
+  cleanPrompt(prompt) {
+    return String(prompt || "")
+      .replace(/\s+/g, " ")
+      .replace(/[.;]+/g, ",")
+      .replace(/\s*,\s*/g, ", ")
+      .trim();
+  }
+
+  limitPromptComplexity(prompt) {
+    // Kleine Modelle profitieren von weniger Segmenten
+    const parts = prompt
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    // Maximal 8 Fragmente, damit Janus nicht überladen wird
+    return parts.slice(0, 8).join(", ");
+  }
+
   async generate(prompt) {
     if (!this.ready || !this.model || !this.processor) {
       throw new Error("Modell nicht bereit.");
     }
 
-    const text = (prompt || "").trim();
-    if (!text) {
+    const rawText = (prompt || "").trim();
+    if (!rawText) {
       throw new Error("Kein Prompt eingegeben.");
     }
+
+    const text = this.buildSmartPrompt(rawText);
 
     this.generating = true;
     this.stopping.reset();
@@ -222,66 +278,52 @@ export class ImageGenerator {
   }
 
   async renderImageToCanvas(imageOutput) {
-  if (!this.canvas) {
-    throw new Error("Canvas nicht gefunden.");
+    if (!this.canvas) {
+      throw new Error("Canvas nicht gefunden.");
+    }
+
+    console.log("Render Output:", imageOutput);
+    console.log("RAW RENDERPFAD ERZWUNGEN");
+
+    try {
+      const data = imageOutput?.data ?? imageOutput?.rgb;
+      const width = imageOutput?.width;
+      const height = imageOutput?.height;
+
+      console.log("data length:", data?.length, "width:", width, "height:", height);
+
+      if (!data || !width || !height) {
+        throw new Error("Rohdaten fehlen für direkten Canvas-Render.");
+      }
+
+      const rgba = new Uint8ClampedArray(width * height * 4);
+
+      for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
+        rgba[j] = data[i];
+        rgba[j + 1] = data[i + 1];
+        rgba[j + 2] = data[i + 2];
+        rgba[j + 3] = 255;
+      }
+
+      const ctx = this.canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("2D-Kontext konnte nicht erstellt werden.");
+      }
+
+      this.canvas.width = width;
+      this.canvas.height = height;
+
+      const imageData = new ImageData(rgba, width, height);
+      ctx.putImageData(imageData, 0, 0);
+
+      this.forceShowCanvas();
+
+      return;
+    } catch (renderErr) {
+      console.error("RENDER CRASH:", renderErr);
+      throw renderErr;
+    }
   }
-
-  console.log("Render Output:", imageOutput);
-  console.log("firstImage keys:", Object.keys(imageOutput ?? {}));
-  console.log("firstImage type:", typeof imageOutput);
-  console.log("has data:", !!imageOutput?.data);
-  console.log("has width:", !!imageOutput?.width);
-  console.log("has height:", !!imageOutput?.height);
-  console.log("has channels:", !!imageOutput?.channels);
-  console.log("RAW RENDERPFAD ERZWUNGEN");
-
-  try {
-    const data = imageOutput?.data ?? imageOutput?.rgb;
-    const width = imageOutput?.width;
-    const height = imageOutput?.height;
-
-    console.log("data length:", data?.length, "width:", width, "height:", height);
-
-    if (!data || !width || !height) {
-      throw new Error("Rohdaten fehlen für direkten Canvas-Render.");
-    }
-
-    const rgba = new Uint8ClampedArray(width * height * 4);
-
-    for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
-      rgba[j] = data[i];
-      rgba[j + 1] = data[i + 1];
-      rgba[j + 2] = data[i + 2];
-      rgba[j + 3] = 255;
-    }
-
-    const ctx = this.canvas.getContext("2d");
-    if (!ctx) {
-      throw new Error("2D-Kontext konnte nicht erstellt werden.");
-    }
-
-    this.canvas.width = width;
-    this.canvas.height = height;
-
-    const imageData = new ImageData(rgba, width, height);
-    ctx.putImageData(imageData, 0, 0);
-
-    this.forceShowCanvas();
-
-    const probe = ctx.getImageData(0, 0, 1, 1).data;
-    console.log("Canvas first pixel:", Array.from(probe));
-    console.log("Canvas classes after render:", this.canvas.className);
-    console.log("Canvas display:", getComputedStyle(this.canvas).display);
-    console.log("Canvas visibility:", getComputedStyle(this.canvas).visibility);
-    console.log("Canvas opacity:", getComputedStyle(this.canvas).opacity);
-    console.log("Canvas size:", this.canvas.width, this.canvas.height);
-
-    return;
-  } catch (renderErr) {
-    console.error("RENDER CRASH:", renderErr);
-    throw renderErr;
-  }
-}
 
   forceShowCanvas() {
     const placeholder = document.getElementById("imagePlaceholder");
