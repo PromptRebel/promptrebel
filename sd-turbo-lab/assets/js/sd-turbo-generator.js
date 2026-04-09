@@ -1,5 +1,12 @@
 import { Txt2ImgClient } from "https://cdn.jsdelivr.net/npm/web-txt2img@0.3.1/dist/runtime/inline_client.js";
-import { AutoTokenizer } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2";
+import {
+  AutoTokenizer,
+  env,
+} from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2";
+
+// Verhindert, dass Transformers.js unter deiner GitHub-Page nach /models/... sucht
+env.allowLocalModels = false;
+env.allowRemoteModels = true;
 
 export class SDTurboGenerator {
   constructor({
@@ -199,7 +206,6 @@ export class SDTurboGenerator {
 
     try {
       const client = await this.ensureClient();
-
       const seed = Number.isInteger(options.seed) ? options.seed : 42;
 
       const { promise, abort } = client.generate(
@@ -223,7 +229,9 @@ export class SDTurboGenerator {
       const gen = await promise;
 
       if (!gen?.ok) {
-        throw new Error(gen?.message ?? gen?.reason ?? "SD Turbo Generierung fehlgeschlagen.");
+        throw new Error(
+          gen?.message ?? gen?.reason ?? "SD Turbo Generierung fehlgeschlagen."
+        );
       }
 
       if (!gen?.blob) {
