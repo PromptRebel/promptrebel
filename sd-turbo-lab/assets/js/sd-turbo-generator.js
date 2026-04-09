@@ -1,84 +1,313 @@
-import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0";
+import { Txt2ImgClient } from "https://cdn.jsdelivr.net/npm/web-txt2img@0.3.1/dist/runtime/inline_client.js";
 
 export class SDTurboGenerator {
-  constructor({ statusId, modelInfoId, canvasId, progressBarId, gpuStatusId }) {
+  constructor({
+    statusId,
+    modelInfoId,
+    canvasId,
+    progressBarId,
+    gpuStatusId,
+  }) {
     this.statusEl = document.getElementById(statusId);
     this.infoEl = document.getElementById(modelInfoId);
     this.canvas = document.getElementById(canvasId);
     this.progressBar = document.getElementById(progressBarId);
     this.gpuStatusEl = document.getElementById(gpuStatusId);
 
-    this.pipe = null;
+    this.client = null;
     this.ready = false;
     this.loading = false;
+    this.generating = false;
+    this.abortCurrent = null;
+    this.loadedModelId = null;
   }
 
-  // --- UI HELPER ---
-  setStatus(msg) { if (this.statusEl) this.statusEl.textContent = msg; }
-  setInfo(msg) { if (this.infoEl) this.infoEl.textContent = msg; }
-  setProgress(pct) {
-    if (this.progressBar) this.progressBar.style.width = `${pct}%`;
+  setStatus(message) {
+    if (this.statusEl) this.statusEl.textContent = message;
+  }
+
+  setInfo(message) {
+    if (this.infoEl) this.infoEl.textContent = message;
+  }
+
+  setGPUStatus(message, ok = null) {
+    if (!this.gpuStatusEl) return;
+    this.gpuStatusEl.textContent = message;
+    this.gpuStatusEl.classList.remove("status-ok", "status-bad");
+    if (ok === true) this.gpuStatusEl.classList.add("status-ok");
+    if (ok === false) this.gpuStatusEl.classList.add("status-bad");
+  }
+
+  setProgress(percent) {
+    if (!this.progressBar) return;
+    this.progressBar.classList.remove("indeterminate");
+
+    if (typeof percent === "number" && Number.isFinite(percent)) {
+      this.progressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+    } else {
+      this.progressBar.style.width = "0%";
+    }
+  }
+
+  startIndeterminate() {
+    if (!this.progressBar) return;
+    this.progressBar.style.width = "30%";
+    this.progressBar.classList.add("indeterminate");
+  }
+
+  stopProgress() {
+    if (!this.progressBar) return;
+    this.progressBar.classList.remove("indeterminate");
+    this.progressBar.style.width = "0%";
+  }
+
+  async ensureClient() {
+    if (!this.client) {
+      this.client = new Txt2ImgClient();
+    }
+    return this.client;
+  }
+
+  async checkWebGPU() {
+    try {
+      const client = await this.ensureClient();
+      const caps = await client.detect();
+
+      const ok = !!caps?.webgpu;
+      this.setGPUStatus(ok ? "Verfügbar" : "Nicht verfügbar", ok);
+
+      return ok;
+    } catch (error) {
+      console.error("SD Turbo capability check failed:", error);
+      this.setGPUStatus("Fehler bei Prüfung", false);
+      return false;
+    }
   }
 
   async loadModel() {
-    if (this.loading || this.ready) return;
-    this.loading = true;
-    this.setStatus("Lade iPhone-optimiertes SD-Turbo (q4)...");
+  if (this.loading) return;
+  if (this.ready && this.loadedModelId === "sd-turbo") return;
+
+  this.loading = true;
+  this.ready = false;
+  this.setStatus("Initialisiere SD Turbo ...");
+  this.setInfo("sd-turbo");
+  this.setProgress(0);
+
+  try {
+    const client = await this.ensureClient();
+    const caps = await client.detect();
+
+    if (!caps?.webgpu) {
+      throw new Error("WebGPU ist für SD Turbo in diesem Setup erforderlich.");
+    }
+
+    this.setGPUStatus("Verfügbar", true);
+
+    const loadRes = await client.load(
+      "sd-turbo",
+      {
+        backendPreference: ["webgpu"],
+
+        // CLIP-Tokenizer explizit injizieren
+        tokenizerProvider: async () => {
+          const g = globalThis.transformers;
+          if (!g?.AutoTokenizer) {
+            throw new Error("Transformers.js wurde nicht gefunden.");
+          }
+
+          const tok = await g.AutoTokenizer.from_pretrained(
+            "Xenova/clip-vit-base-patch16"
+          );
+
+          tok.pad_token_id = 0;
+
+          return (text, opts) => tok(text, opts);
+        },
+      },
+      (p) => {
+        const pct =
+          typeof p?.pct === "number"
+            ? p.pct
+            : (typeof p?.bytesDownloaded === "number" &&
+               typeof p?.totalBytesExpected === "number" &&
+               p.totalBytesExpected > 0)
+            ? Math.round((p.bytesDownloaded / p.totalBytesExpected) * 100)
+            : null;
+
+        if (pct != null) {
+          this.setProgress(pct);
+        }
+
+        const sizeText =
+          typeof p?.bytesDownloaded === "number" &&
+          typeof p?.totalBytesExpected === "number"
+            ? ` ${(p.bytesDownloaded / 1024 / 1024).toFixed(1)}/${(p.totalBytesExpected / 1024 / 1024).toFixed(1)} MB`
+            : "";
+
+        this.setStatus(
+          `${p?.message ?? "Lade SD Turbo ..."}${pct != null ? ` ${pct}%` : ""}${sizeText}`
+        );
+      }
+    );
+
+    if (!loadRes?.ok) {
+      throw new Error(loadRes?.message ?? "SD Turbo konnte nicht geladen werden.");
+    }
+
+    this.loadedModelId = "sd-turbo";
+    this.ready = true;
+    this.setProgress(100);
+    this.setInfo(`sd-turbo (${loadRes.backendUsed ?? "webgpu"})`);
+    this.setStatus("SD Turbo bereit.");
+
+    setTimeout(() => {
+      if (!this.generating) this.stopProgress();
+    }, 600);
+  } catch (error) {
+    console.error("SD Turbo load failed:", error);
+    this.ready = false;
+    this.loadedModelId = null;
+    this.stopProgress();
+    this.setStatus(`Fehler: ${error?.message || error}`);
+    this.setInfo("SD Turbo konnte nicht geladen werden");
+    throw error;
+  } finally {
+    this.loading = false;
+  }
+}
+
+  async generate(prompt, options = {}) {
+    if (!this.ready || this.loadedModelId !== "sd-turbo") {
+      throw new Error("SD Turbo ist nicht bereit.");
+    }
+
+    const text = (prompt || "").trim();
+    if (!text) {
+      throw new Error("Kein Prompt eingegeben.");
+    }
+
+    this.generating = true;
+    this.startIndeterminate();
+    this.setStatus("Generiere Bild mit SD Turbo ...");
 
     try {
-      // Wir nutzen direkt die Pipeline-API von Transformers.js v3
-      // Das Modell wird hier explizit als quantisierte Version angefordert
-      this.pipe = await pipeline("text-to-image", "onnx-community/sd-turbo-ONNX", {
-        device: "webgpu",
-        dtype: "q4", // ⚡ DAS IST DER KEY: Lädt nur ca. 700-800 MB!
-        progress_callback: (p) => {
-          if (p.status === "progress") {
-            const pct = Math.round(p.loaded / p.total * 100);
-            this.setProgress(pct);
-            this.setStatus(`Lade ${p.file}: ${pct}%`);
-          }
-        }
-      });
+      const client = await this.ensureClient();
 
-      this.ready = true;
-      this.setStatus("SD-Turbo (Mobile-Safe) bereit!");
-      this.setInfo("sd-turbo (q4, WebGPU)");
-    } catch (e) {
-      this.setStatus("Fehler: " + e.message);
-      console.error(e);
+      const seed =
+        Number.isInteger(options.seed) ? options.seed : 42;
+
+      const { promise, abort } = client.generate(
+        {
+          prompt: text,
+          seed,
+          model: "sd-turbo",
+        },
+        (e) => {
+          const phase = e?.phase ? ` (${e.phase})` : "";
+          this.setStatus(`Generiere Bild mit SD Turbo${phase} ...`);
+        },
+        {
+          busyPolicy: "queue",
+          debounceMs: 100,
+        }
+      );
+
+      this.abortCurrent = abort;
+
+      const gen = await promise;
+
+      if (!gen?.ok) {
+        throw new Error(gen?.message ?? gen?.reason ?? "SD Turbo Generierung fehlgeschlagen.");
+      }
+
+      if (!gen?.blob) {
+        throw new Error("Kein Bild-Blob im Ergebnis gefunden.");
+      }
+
+      await this.drawBlobToCanvas(gen.blob);
+
+      this.setStatus(`Bild fertig${typeof gen.timeMs === "number" ? ` (${Math.round(gen.timeMs)} ms)` : ""}.`);
+      this.stopProgress();
+
+      return gen;
+    } catch (error) {
+      console.error("SD Turbo generation failed:", error);
+      this.stopProgress();
+      this.setStatus(`Fehler: ${error?.message || error}`);
+      throw error;
     } finally {
-      this.loading = false;
+      this.generating = false;
+      this.abortCurrent = null;
     }
   }
 
-  async generate(prompt) {
-    if (!this.ready) return;
-    this.setStatus("Generiere Bild...");
-    
+  async stop() {
     try {
-      // SD-Turbo braucht nur 1 Step!
-      const output = await this.pipe(prompt, {
-        num_inference_steps: 1,
-        guidance_scale: 0.0, 
-      });
-
-      const canvas = this.canvas;
-      const ctx = canvas.getContext("2d");
-      
-      // Das Output-Bild von Transformers.js v3 ist meist ein RawImage-Objekt
-      const image = output[0]; 
-      canvas.width = image.width;
-      canvas.height = image.height;
-      
-      // Zeichnen auf den Canvas
-      const bitmap = await createImageBitmap(image.toBlob());
-      ctx.drawImage(bitmap, 0, 0);
-
-      canvas.classList.remove("hidden");
-      document.getElementById("imagePlaceholder").style.display = "none";
-      this.setStatus("Fertig!");
-    } catch (e) {
-      this.setStatus("Generierungsfehler: " + e.message);
+      if (this.abortCurrent) {
+        await this.abortCurrent();
+      }
+    } catch (error) {
+      console.warn("Abort warning:", error);
+    } finally {
+      this.generating = false;
+      this.stopProgress();
+      this.setStatus("Generierung gestoppt.");
     }
+  }
+
+  async unload() {
+    if (!this.client || !this.loadedModelId) return;
+
+    try {
+      await this.client.unload(this.loadedModelId);
+    } catch (error) {
+      console.warn("Unload warning:", error);
+    } finally {
+      this.ready = false;
+      this.loadedModelId = null;
+      this.setInfo("Noch nicht geladen");
+    }
+  }
+
+  async purgeCache() {
+    if (!this.client) return;
+
+    try {
+      await this.client.purge("sd-turbo");
+      this.setStatus("SD-Turbo-Cache gelöscht.");
+    } catch (error) {
+      console.warn("Purge warning:", error);
+      this.setStatus("Cache konnte nicht gelöscht werden.");
+    }
+  }
+
+  async drawBlobToCanvas(blob) {
+    if (!this.canvas) {
+      throw new Error("Canvas nicht gefunden.");
+    }
+
+    const bitmap = await createImageBitmap(blob);
+    const ctx = this.canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("2D-Kontext konnte nicht erstellt werden.");
+    }
+
+    this.canvas.width = bitmap.width;
+    this.canvas.height = bitmap.height;
+    ctx.clearRect(0, 0, bitmap.width, bitmap.height);
+    ctx.drawImage(bitmap, 0, 0);
+
+    const placeholder = document.getElementById("imagePlaceholder");
+    if (placeholder) {
+      placeholder.classList.add("hidden");
+      placeholder.style.display = "none";
+    }
+
+    this.canvas.classList.remove("hidden");
+    this.canvas.style.display = "block";
+    this.canvas.style.visibility = "visible";
+    this.canvas.style.opacity = "1";
   }
 }
