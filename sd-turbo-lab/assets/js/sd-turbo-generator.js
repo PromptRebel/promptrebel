@@ -85,79 +85,97 @@ export class SDTurboGenerator {
   }
 
   async loadModel() {
-    if (this.loading) return;
-    if (this.ready && this.loadedModelId === "sd-turbo") return;
+  if (this.loading) return;
+  if (this.ready && this.loadedModelId === "sd-turbo") return;
 
-    this.loading = true;
-    this.ready = false;
-    this.setStatus("Initialisiere SD Turbo ...");
-    this.setInfo("sd-turbo");
-    this.setProgress(0);
+  this.loading = true;
+  this.ready = false;
+  this.setStatus("Initialisiere SD Turbo ...");
+  this.setInfo("sd-turbo");
+  this.setProgress(0);
 
-    try {
-      const client = await this.ensureClient();
-      const caps = await client.detect();
+  try {
+    const client = await this.ensureClient();
+    const caps = await client.detect();
 
-      if (!caps?.webgpu) {
-        throw new Error("WebGPU ist für SD Turbo in diesem Setup erforderlich.");
-      }
+    if (!caps?.webgpu) {
+      throw new Error("WebGPU ist für SD Turbo in diesem Setup erforderlich.");
+    }
 
-      this.setGPUStatus("Verfügbar", true);
+    this.setGPUStatus("Verfügbar", true);
 
-      const loadRes = await client.load(
-        "sd-turbo",
-        {
-          backendPreference: ["webgpu"],
-        },
-        (p) => {
-          const pct =
-            typeof p?.pct === "number"
-              ? p.pct
-              : (typeof p?.bytesDownloaded === "number" &&
-                 typeof p?.totalBytesExpected === "number" &&
-                 p.totalBytesExpected > 0)
-              ? Math.round((p.bytesDownloaded / p.totalBytesExpected) * 100)
-              : null;
+    const loadRes = await client.load(
+      "sd-turbo",
+      {
+        backendPreference: ["webgpu"],
 
-          if (pct != null) {
-            this.setProgress(pct);
+        // CLIP-Tokenizer explizit injizieren
+        tokenizerProvider: async () => {
+          const g = globalThis.transformers;
+          if (!g?.AutoTokenizer) {
+            throw new Error("Transformers.js wurde nicht gefunden.");
           }
 
-          const sizeText =
-            typeof p?.bytesDownloaded === "number" &&
-            typeof p?.totalBytesExpected === "number"
-              ? ` ${(p.bytesDownloaded / 1024 / 1024).toFixed(1)}/${(p.totalBytesExpected / 1024 / 1024).toFixed(1)} MB`
-              : "";
+          const tok = await g.AutoTokenizer.from_pretrained(
+            "Xenova/clip-vit-base-patch16"
+          );
 
-          this.setStatus(`${p?.message ?? "Lade SD Turbo ..."}${pct != null ? ` ${pct}%` : ""}${sizeText}`);
+          tok.pad_token_id = 0;
+
+          return (text, opts) => tok(text, opts);
+        },
+      },
+      (p) => {
+        const pct =
+          typeof p?.pct === "number"
+            ? p.pct
+            : (typeof p?.bytesDownloaded === "number" &&
+               typeof p?.totalBytesExpected === "number" &&
+               p.totalBytesExpected > 0)
+            ? Math.round((p.bytesDownloaded / p.totalBytesExpected) * 100)
+            : null;
+
+        if (pct != null) {
+          this.setProgress(pct);
         }
-      );
 
-      if (!loadRes?.ok) {
-        throw new Error(loadRes?.message ?? "SD Turbo konnte nicht geladen werden.");
+        const sizeText =
+          typeof p?.bytesDownloaded === "number" &&
+          typeof p?.totalBytesExpected === "number"
+            ? ` ${(p.bytesDownloaded / 1024 / 1024).toFixed(1)}/${(p.totalBytesExpected / 1024 / 1024).toFixed(1)} MB`
+            : "";
+
+        this.setStatus(
+          `${p?.message ?? "Lade SD Turbo ..."}${pct != null ? ` ${pct}%` : ""}${sizeText}`
+        );
       }
+    );
 
-      this.loadedModelId = "sd-turbo";
-      this.ready = true;
-      this.setProgress(100);
-      this.setInfo(`sd-turbo (${loadRes.backendUsed ?? "webgpu"})`);
-      this.setStatus("SD Turbo bereit.");
-
-      setTimeout(() => {
-        if (!this.generating) this.stopProgress();
-      }, 600);
-    } catch (error) {
-      console.error("SD Turbo load failed:", error);
-      this.ready = false;
-      this.loadedModelId = null;
-      this.stopProgress();
-      this.setStatus(`Fehler: ${error?.message || error}`);
-      this.setInfo("SD Turbo konnte nicht geladen werden");
-      throw error;
-    } finally {
-      this.loading = false;
+    if (!loadRes?.ok) {
+      throw new Error(loadRes?.message ?? "SD Turbo konnte nicht geladen werden.");
     }
+
+    this.loadedModelId = "sd-turbo";
+    this.ready = true;
+    this.setProgress(100);
+    this.setInfo(`sd-turbo (${loadRes.backendUsed ?? "webgpu"})`);
+    this.setStatus("SD Turbo bereit.");
+
+    setTimeout(() => {
+      if (!this.generating) this.stopProgress();
+    }, 600);
+  } catch (error) {
+    console.error("SD Turbo load failed:", error);
+    this.ready = false;
+    this.loadedModelId = null;
+    this.stopProgress();
+    this.setStatus(`Fehler: ${error?.message || error}`);
+    this.setInfo("SD Turbo konnte nicht geladen werden");
+    throw error;
+  } finally {
+    this.loading = false;
   }
+}
 
   async generate(prompt, options = {}) {
     if (!this.ready || this.loadedModelId !== "sd-turbo") {
