@@ -15,7 +15,6 @@ function getCoords(e) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     
-    // Skalierung berechnen (Interne 800px vs. tatsächliche CSS-Breite)
     const scaleX = Renderer.canvas.width / rect.width;
     const scaleY = Renderer.canvas.height / rect.height;
 
@@ -28,7 +27,7 @@ function getCoords(e) {
 }
 
 function handleStart(e) {
-    if (e.type === 'touchstart') e.preventDefault();
+    // KEIN preventDefault hier, sonst blockiert es den Klick-Fokus
     const coords = getCoords(e);
     lastX = coords.screenX;
     lastY = coords.screenY;
@@ -49,12 +48,12 @@ function handleMove(e) {
 
         if (Math.abs(clientX - startX) > 10 || Math.abs(clientY - startY) > 10) {
             hasMoved = true;
+            if (e.cancelable) e.preventDefault(); // Nur beim echten Scrollem blockieren
         }
 
         GameState.camera.x -= dx;
         GameState.camera.y -= dy;
 
-        // Weltgrenzen (2000x2000)
         GameState.camera.x = Math.max(0, Math.min(GameState.camera.x, GameState.world.width - Renderer.canvas.width));
         GameState.camera.y = Math.max(0, Math.min(GameState.camera.y, GameState.world.height - Renderer.canvas.height));
 
@@ -62,7 +61,7 @@ function handleMove(e) {
         lastY = clientY;
     }
 
-    if (GameState.placementMode.active) {
+    if (GameState.placementMode.active && e.touches) {
         const coords = getCoords(e);
         GameState.placementMode.x = coords.mx;
         GameState.placementMode.y = coords.my;
@@ -88,7 +87,10 @@ function processClick(e) {
     }
 
     const tc = GameState.entities.townCenter;
-    if (Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2) < 50) {
+    const distToTC = Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2);
+    
+    // HQ Klick-Radius großzügiger machen
+    if (distToTC < 50) {
         spawnVillager();
         return;
     }
@@ -110,7 +112,7 @@ function processClick(e) {
     }
 }
 
-// Listener
+// Listener sauber binden
 Renderer.canvas.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove);
 window.addEventListener('mouseup', handleEnd);
@@ -121,37 +123,35 @@ window.addEventListener('touchend', handleEnd, {passive: false});
 
 Renderer.canvas.oncontextmenu = (e) => e.preventDefault();
 
-// BUTTON LOGIK
 btnWood.onclick = (e) => {
-    e.preventDefault(); e.stopPropagation();
+    e.stopPropagation();
     if(GameState.selection) {
         GameState.selection.isQueuedForIdle = false;
-        GameState.selection.targetBuilding = null; // Bau-Ziel löschen!
+        GameState.selection.targetBuilding = null;
         GameState.selection.findNextTree();
     }
 };
 
 btnStop.onclick = (e) => {
-    e.preventDefault(); e.stopPropagation();
+    e.stopPropagation();
     if(GameState.selection) {
         GameState.selection.isQueuedForIdle = true;
         if(GameState.selection.inventory === 0) GameState.selection.state = VillagerState.IDLE;
     }
 };
 
-btnHouse.onclick = (e) => { e.preventDefault(); startPlacement('house', GameState.config.costs.house); };
-btnLodge.onclick = (e) => { e.preventDefault(); startPlacement('lodge', GameState.config.costs.lodge); };
+btnHouse.onclick = (e) => { startPlacement('house', GameState.config.costs.house); };
+btnLodge.onclick = (e) => { startPlacement('lodge', GameState.config.costs.lodge); };
 
 function startPlacement(type, cost) {
     if (GameState.selection && GameState.resources.wood >= cost) {
-        GameState.placementMode = { active: true, type, cost, x: GameState.camera.x + 400, y: GameState.camera.y + 300 };
+        GameState.placementMode = { active: true, type: type, cost: cost, x: GameState.camera.x + 400, y: GameState.camera.y + 300 };
         placementControls.style.display = 'block';
         actionMenu.style.display = 'none';
     }
 }
 
-document.getElementById('btn-confirm-build').onclick = (e) => {
-    e.preventDefault();
+document.getElementById('btn-confirm-build').onclick = () => {
     const p = GameState.placementMode;
     GameState.resources.wood -= p.cost;
     const b = { x: p.x, y: p.y, type: p.type, progress: 0, isFinished: false };
@@ -161,12 +161,8 @@ document.getElementById('btn-confirm-build').onclick = (e) => {
     cancelPlacement();
 };
 
-document.getElementById('btn-cancel-build').onclick = (e) => { e.preventDefault(); cancelPlacement(); };
-
-function cancelPlacement() {
-    GameState.placementMode.active = false;
-    placementControls.style.display = 'none';
-}
+document.getElementById('btn-cancel-build').onclick = cancelPlacement;
+function cancelPlacement() { GameState.placementMode.active = false; placementControls.style.display = 'none'; }
 
 function spawnVillager() {
     if (GameState.entities.villagers.length < GameState.getMaxPop()) {
