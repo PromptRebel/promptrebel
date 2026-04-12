@@ -1,4 +1,3 @@
-// villager.js
 const VillagerState = {
     IDLE: 'IDLE',
     MOVING_TO_TREE: 'MOVING_TO_TREE',
@@ -39,7 +38,6 @@ class Villager {
                     if (this.targetTree && this.targetTree.woodAmount > 0) {
                         this.targetTree.woodAmount--;
                         this.inventory++;
-                        
                         if (this.targetTree.woodAmount <= 0) {
                             const idx = GameState.entities.trees.indexOf(this.targetTree);
                             if (idx > -1) GameState.entities.trees.splice(idx, 1);
@@ -61,8 +59,6 @@ class Villager {
                     if (this.isQueuedForIdle) {
                         this.state = VillagerState.IDLE;
                         this.isQueuedForIdle = false;
-                    } else if (this.targetTree) {
-                        this.state = VillagerState.MOVING_TO_TREE;
                     } else {
                         this.findNextTree();
                     }
@@ -108,12 +104,12 @@ class Villager {
     }
 
     findNextTree() {
-        let closest = null;
-        let minDist = Infinity;
-        if (GameState.entities.trees.length === 0) {
+        if (!GameState.entities.trees || GameState.entities.trees.length === 0) {
             this.state = VillagerState.IDLE;
             return;
         }
+        let closest = null;
+        let minDist = Infinity;
         GameState.entities.trees.forEach(t => {
             const d = Math.sqrt((t.x - this.x)**2 + (t.y - this.y)**2);
             if (d < minDist) {
@@ -133,7 +129,7 @@ class Villager {
         const dx = tx - this.x;
         const dy = ty - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 5) {
+        if (dist > 4) {
             this.x += (dx / dist) * GameState.config.villagerSpeed;
             this.y += (dy / dist) * GameState.config.villagerSpeed;
         } else {
