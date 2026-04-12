@@ -11,7 +11,7 @@ async function loadImage(url) {
 export async function loadAssets() {
     const manifest = {
         props: {
-            tree: "assets/tree.png", // Hier liegt dein Baum-Bild
+            tree: "assets/IMG_1715.png", // Hier liegt dein Baum-Bild
         },
         buildings: {
             hq: "assets/hq.png",
