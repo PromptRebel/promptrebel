@@ -58,6 +58,7 @@ class Villager {
                     this.work(() => {
                         this.targetBuilding.progress += 10;
                         if (this.targetBuilding.progress >= 100) {
+                            this.targetBuilding.progress = 100;
                             this.targetBuilding.isFinished = true;
                             this.state = VillagerState.IDLE;
                         }
@@ -66,20 +67,15 @@ class Villager {
                 break;
 
             case VillagerState.PLANTING:
-                // Logik für Förster: Gehe zum Forsthaus, dann pflanze im Radius
                 if (!this.targetBuilding || !this.targetBuilding.isFinished) { this.state = VillagerState.IDLE; return; }
                 this.moveTo(this.targetBuilding.x, this.targetBuilding.y, () => {
                     this.work(() => {
                         const angle = Math.random() * Math.PI * 2;
-                        const dist = 30 + Math.random() * 60;
+                        const dist = 35 + Math.random() * 55;
                         const px = this.targetBuilding.x + Math.cos(angle) * dist;
                         const py = this.targetBuilding.y + Math.sin(angle) * dist;
-                        
-                        // Prüfen ob Platz frei ist (Abstand zu anderen Bäumen > 25)
                         const tooClose = GameState.entities.trees.some(t => Math.sqrt((t.x-px)**2 + (t.y-py)**2) < 25);
-                        if (!tooClose) {
-                            GameState.entities.trees.push({ x: px, y: py, woodAmount: GameState.config.treeWoodAmount });
-                        }
+                        if (!tooClose) GameState.entities.trees.push({ x: px, y: py, woodAmount: GameState.config.treeWoodAmount });
                     });
                 });
                 break;
