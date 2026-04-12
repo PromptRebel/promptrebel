@@ -7,11 +7,10 @@ const GameState = {
         villagers: [],
         trees: []
     },
-    selection: null, // Welcher Villager ist gerade angeklickt?
+    selection: null,
     config: {
         maxVillagers: 10,
-        villagerSpeed: 1.5,
-        collectRange: 15,
-        interactionRange: 30
+        villagerSpeed: 2,
+        treeWoodAmount: 50 // Wie viel Holz hat ein Baum, bevor er verschwindet?
     }
 };
