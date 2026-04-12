@@ -9,12 +9,15 @@ Renderer.canvas.addEventListener('mousedown', (e) => {
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
 
-    // A. Klick auf Dorfzentrum (HQ)?
+        // A. Klick auf Dorfzentrum (HQ)?
     const tc = GameState.entities.townCenter;
-    if (Math.abs(mx - tc.x) < 40 && Math.abs(my - tc.y) < 40) {
+    const distToHQ = Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2);
+    
+    if (distToHQ < 50) { // Großzügiger Radius von 50 Pixeln
         spawnVillager();
-        return;
+        return; // Beendet die Funktion hier, damit nicht gleichzeitig ein Villager ausgewählt wird
     }
+
 
     // B. Klick auf Villager? (Größerer Radius für Handy: 30 Pixel)
     let foundVillager = null;
