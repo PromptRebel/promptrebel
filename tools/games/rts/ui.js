@@ -41,7 +41,6 @@ function handleMove(e) {
         const dx = clientX - lastX;
         const dy = clientY - lastY;
 
-        // Toleranz erhöhen: Erst ab 5 Pixel Bewegung gilt es als Scrollen
         if (Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
             hasMoved = true;
             if (e.cancelable) e.preventDefault();
@@ -66,7 +65,6 @@ function handleEnd(e) {
 }
 
 function processClick(e) {
-    // Falls das Event von touchend kommt, nutzen wir die Start-Koordinaten
     const rect = Renderer.canvas.getBoundingClientRect();
     const clientX = startX;
     const clientY = startY;
@@ -77,17 +75,23 @@ function processClick(e) {
     const mx = (clientX - rect.left) * scaleX + GameState.camera.x;
     const my = (clientY - rect.top) * scaleY + GameState.camera.y;
 
+    // DEBUG
+    const tc = GameState.entities.townCenter;
+    const dist = Math.round(Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2));
+    document.getElementById('debug').innerHTML = 
+        `Klick: ${Math.round(mx)} / ${Math.round(my)}<br>
+         HQ: ${tc.x} / ${tc.y}<br>
+         Dist: ${dist}<br>
+         Pop: ${GameState.entities.villagers.length} / ${GameState.getMaxPop()}`;
+
     if (GameState.placementMode.active) {
         GameState.placementMode.x = mx;
         GameState.placementMode.y = my;
         return;
     }
 
-    const tc = GameState.entities.townCenter;
-    const distToTC = Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2);
-    
-    // HQ Klick-Radius (Wir prüfen, ob du das braune Quadrat triffst)
-    if (distToTC < 60) {
+    // Rechteck-Check statt Kreis
+    if (mx >= tc.x - 25 && mx <= tc.x + 25 && my >= tc.y - 25 && my <= tc.y + 25) {
         spawnVillager();
         return;
     }
@@ -102,7 +106,6 @@ function processClick(e) {
     }
 }
 
-// Event-Listener sauber trennen
 Renderer.canvas.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove);
 window.addEventListener('mouseup', handleEnd);
@@ -111,7 +114,6 @@ Renderer.canvas.addEventListener('touchstart', (e) => { handleStart(e); }, {pass
 window.addEventListener('touchmove', (e) => { handleMove(e); }, {passive: false});
 window.addEventListener('touchend', (e) => { handleEnd(e); }, {passive: false});
 
-// Buttons (Wichtig: Hier nutzen wir onclick für maximale Kompatibilität)
 document.getElementById('btn-wood').onclick = function(e) {
     if(GameState.selection) {
         GameState.selection.isQueuedForIdle = false;
@@ -154,7 +156,6 @@ function cancelPlacement() { GameState.placementMode.active = false; placementCo
 function spawnVillager() {
     if (GameState.entities.villagers.length < GameState.getMaxPop()) {
         const tc = GameState.entities.townCenter;
-        // Erstellen am HQ mit kleinem Versatz
         const v = new Villager(tc.x + 50, tc.y + 50, Date.now());
         GameState.entities.villagers.push(v);
     }
