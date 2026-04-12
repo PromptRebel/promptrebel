@@ -9,71 +9,77 @@ Renderer.canvas.addEventListener('mousedown', (e) => {
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
 
-        // A. Klick auf Dorfzentrum (HQ)?
+    console.log("Klick auf Position:", mx, my); // Debug-Info
+
+    // A. Klick auf Dorfzentrum (HQ)?
     const tc = GameState.entities.townCenter;
+    // Wir berechnen den Abstand vom Klick zum Zentrum des HQ
     const distToHQ = Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2);
     
-    if (distToHQ < 50) { // Großzügiger Radius von 50 Pixeln
+    console.log("Abstand zum HQ:", distToHQ); // Debug-Info
+
+    if (distToHQ < 60) { // Wir machen den Bereich richtig groß (60 Pixel Radius)
+        console.log("HQ getroffen! Spawne Villager...");
         spawnVillager();
-        return; // Beendet die Funktion hier, damit nicht gleichzeitig ein Villager ausgewählt wird
+        return; 
     }
 
-
-    // B. Klick auf Villager? (Größerer Radius für Handy: 30 Pixel)
+    // B. Klick auf Villager?
     let foundVillager = null;
     GameState.entities.villagers.forEach(v => {
         const dist = Math.sqrt((mx - v.x)**2 + (my - v.y)**2);
-        if (dist < 30) { 
+        if (dist < 40) { 
             foundVillager = v;
         }
     });
 
     if (foundVillager) {
+        console.log("Villager ausgewählt:", foundVillager.id);
         GameState.selection = foundVillager;
-        actionMenu.style.display = 'block'; // Menü zeigen
+        actionMenu.style.display = 'block'; 
     } else {
-        // Wenn man ins Leere klickt, Auswahl aufheben
         GameState.selection = null;
-        actionMenu.style.display = 'none'; // Menü verstecken
+        actionMenu.style.display = 'none'; 
     }
 });
 
 // 2. Button-Logik: Holz fällen
-btnWood.addEventListener('click', () => {
-    if (GameState.selection) {
-        const v = GameState.selection;
-        
-        // Nächsten Baum suchen
-        let closestTree = null;
-        let minDist = Infinity;
+if(btnWood) {
+    btnWood.addEventListener('click', (e) => {
+        e.stopPropagation(); // Verhindert, dass der Klick durch den Button auf die Map geht
+        if (GameState.selection) {
+            const v = GameState.selection;
+            
+            let closestTree = null;
+            let minDist = Infinity;
 
-        GameState.entities.trees.forEach(t => {
-            const d = Math.sqrt((t.x - v.x)**2 + (t.y - v.y)**2);
-            if (d < minDist) {
-                minDist = d;
-                closestTree = t;
+            GameState.entities.trees.forEach(t => {
+                const d = Math.sqrt((t.x - v.x)**2 + (t.y - v.y)**2);
+                if (d < minDist) {
+                    minDist = d;
+                    closestTree = t;
+                }
+            });
+
+            if (closestTree) {
+                v.targetTree = closestTree;
+                v.state = VillagerState.IDLE; // Reset falls er gerade was anderes tut
+                setTimeout(() => { v.state = VillagerState.MOVING_TO_TREE; }, 50);
+                console.log("Befehl: Holz fällen!");
             }
-        });
-
-        if (closestTree) {
-            v.targetTree = closestTree;
-            v.state = VillagerState.MOVING_TO_TREE;
-            console.log("Villager schickt sich an Holz zu fällen!");
         }
-        
-        // Menü nach Befehl optional wieder schließen oder offen lassen
-        // actionMenu.style.display = 'none'; 
-    }
-});
+    });
+}
 
 function spawnVillager() {
+    // Sicherstellen, dass das Limit nicht überschritten wird
     if (GameState.entities.villagers.length < GameState.config.maxVillagers) {
         const tc = GameState.entities.townCenter;
-        // Spawnt den Villager leicht unterhalb des HQ
+        // Wir nutzen den Konstruktor aus villager.js
         const v = new Villager(tc.x, tc.y + 60, Date.now());
         GameState.entities.villagers.push(v);
-        console.log("Neuer Dorfbewohner bereit!");
+        console.log("Villager Liste aktuell:", GameState.entities.villagers.length);
     } else {
-        alert("Bevölkerungslimit erreicht!");
+        console.warn("Limit erreicht!");
     }
 }
