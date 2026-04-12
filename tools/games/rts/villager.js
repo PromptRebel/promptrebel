@@ -134,16 +134,21 @@ class Villager {
     }
 
     moveTo(tx, ty, onArrived) {
-        const dx = tx - this.x;
-        const dy = ty - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 5) {
-            this.x += (dx / dist) * GameState.config.villagerSpeed;
-            this.y += (dy / dist) * GameState.config.villagerSpeed;
-        } else {
-            onArrived();
-        }
+    const dx = tx - this.x;
+    const dy = ty - this.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    // Wenn weiter als 3 Pixel weg, dann bewegen
+    if (dist > 3) {
+        const vx = (dx / dist) * GameState.config.villagerSpeed;
+        const vy = (dy / dist) * GameState.config.villagerSpeed;
+        this.x += vx;
+        this.y += vy;
+    } else {
+        onArrived(); 
     }
+}
+
 
     work(onAction) {
         const now = Date.now();
