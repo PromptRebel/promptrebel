@@ -1,4 +1,3 @@
-// ui.js
 let isMovingCamera = false;
 let hasMoved = false; 
 let lastX, lastY;
@@ -16,6 +15,7 @@ function getCoords(e) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     
+    // Skalierung berechnen (Interne 800px vs. tatsächliche CSS-Breite)
     const scaleX = Renderer.canvas.width / rect.width;
     const scaleY = Renderer.canvas.height / rect.height;
 
@@ -28,9 +28,7 @@ function getCoords(e) {
 }
 
 function handleStart(e) {
-    // Falls es ein Touch-Event ist, verhindern wir das nachfolgende Mouse-Event
     if (e.type === 'touchstart') e.preventDefault();
-
     const coords = getCoords(e);
     lastX = coords.screenX;
     lastY = coords.screenY;
@@ -56,6 +54,7 @@ function handleMove(e) {
         GameState.camera.x -= dx;
         GameState.camera.y -= dy;
 
+        // Weltgrenzen (2000x2000)
         GameState.camera.x = Math.max(0, Math.min(GameState.camera.x, GameState.world.width - Renderer.canvas.width));
         GameState.camera.y = Math.max(0, Math.min(GameState.camera.y, GameState.world.height - Renderer.canvas.height));
 
@@ -63,7 +62,7 @@ function handleMove(e) {
         lastY = clientY;
     }
 
-    if (GameState.placementMode.active && e.touches) {
+    if (GameState.placementMode.active) {
         const coords = getCoords(e);
         GameState.placementMode.x = coords.mx;
         GameState.placementMode.y = coords.my;
@@ -78,15 +77,9 @@ function handleEnd(e) {
 }
 
 function processClick(e) {
-    const rect = Renderer.canvas.getBoundingClientRect();
-    const clientX = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) || startX;
-    const clientY = (e.changedTouches ? e.changedTouches[0].clientY : e.clientY) || startY;
-    
-    const scaleX = Renderer.canvas.width / rect.width;
-    const scaleY = Renderer.canvas.height / rect.height;
-    
-    const mx = (clientX - rect.left) * scaleX + GameState.camera.x;
-    const my = (clientY - rect.top) * scaleY + GameState.camera.y;
+    const coords = getCoords(e);
+    const mx = coords.mx;
+    const my = coords.my;
 
     if (GameState.placementMode.active) {
         GameState.placementMode.x = mx;
@@ -117,7 +110,7 @@ function processClick(e) {
     }
 }
 
-// Event-Listener
+// Listener
 Renderer.canvas.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove);
 window.addEventListener('mouseup', handleEnd);
@@ -128,17 +121,18 @@ window.addEventListener('touchend', handleEnd, {passive: false});
 
 Renderer.canvas.oncontextmenu = (e) => e.preventDefault();
 
-// Button-Funktionen
+// BUTTON LOGIK
 btnWood.onclick = (e) => {
-    e.preventDefault();
+    e.preventDefault(); e.stopPropagation();
     if(GameState.selection) {
         GameState.selection.isQueuedForIdle = false;
+        GameState.selection.targetBuilding = null; // Bau-Ziel löschen!
         GameState.selection.findNextTree();
     }
 };
 
 btnStop.onclick = (e) => {
-    e.preventDefault();
+    e.preventDefault(); e.stopPropagation();
     if(GameState.selection) {
         GameState.selection.isQueuedForIdle = true;
         if(GameState.selection.inventory === 0) GameState.selection.state = VillagerState.IDLE;
@@ -150,7 +144,7 @@ btnLodge.onclick = (e) => { e.preventDefault(); startPlacement('lodge', GameStat
 
 function startPlacement(type, cost) {
     if (GameState.selection && GameState.resources.wood >= cost) {
-        GameState.placementMode = { active: true, type: type, cost: cost, x: GameState.camera.x + 400, y: GameState.camera.y + 300 };
+        GameState.placementMode = { active: true, type, cost, x: GameState.camera.x + 400, y: GameState.camera.y + 300 };
         placementControls.style.display = 'block';
         actionMenu.style.display = 'none';
     }
@@ -177,8 +171,7 @@ function cancelPlacement() {
 function spawnVillager() {
     if (GameState.entities.villagers.length < GameState.getMaxPop()) {
         const tc = GameState.entities.townCenter;
-        const angle = Math.random() * Math.PI * 2;
-        const v = new Villager(tc.x + Math.cos(angle)*60, tc.y + Math.sin(angle)*60, Date.now());
+        const v = new Villager(tc.x + 60, tc.y + 60, Date.now());
         GameState.entities.villagers.push(v);
     }
 }
