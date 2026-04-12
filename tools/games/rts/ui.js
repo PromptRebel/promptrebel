@@ -1,28 +1,25 @@
-const btnWood = document.getElementById('btn-wood');
 const actionMenu = document.getElementById('action-menu');
 
 Renderer.canvas.addEventListener('mousedown', (e) => {
     const rect = Renderer.canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
 
-    // HQ Klick (Radius 40)
+    // 1. Klick auf Gebäude (HQ oder andere)
     const tc = GameState.entities.townCenter;
-    if (Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2) < 40) {
-        spawnVillager();
+    if (Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2) < 40) { spawnVillager(); return; }
+
+    let clickedBuilding = GameState.entities.buildings.find(b => Math.abs(mx - b.x) < 25 && Math.abs(my - b.y) < 25);
+    if (clickedBuilding && clickedBuilding.type === 'lodge' && clickedBuilding.isFinished && GameState.selection) {
+        // Zuweisen als Förster
+        GameState.selection.targetBuilding = clickedBuilding;
+        GameState.selection.state = VillagerState.PLANTING;
         return;
     }
 
-    // Villager Klick (Radius 30)
-    let found = false;
-    GameState.entities.villagers.forEach(v => {
-        if (Math.sqrt((mx - v.x)**2 + (my - v.y)**2) < 30) {
-            GameState.selection = v;
-            found = true;
-        }
-    });
-
-    if (found) {
+    // 2. Klick auf Villager
+    let foundV = GameState.entities.villagers.find(v => Math.sqrt((mx - v.x)**2 + (my - v.y)**2) < 30);
+    if (foundV) {
+        GameState.selection = foundV;
         actionMenu.style.display = 'block';
     } else {
         GameState.selection = null;
@@ -30,24 +27,27 @@ Renderer.canvas.addEventListener('mousedown', (e) => {
     }
 });
 
-btnWood.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (GameState.selection) {
-        GameState.selection.findNextTree();
+// Button Events
+document.getElementById('btn-wood').onclick = () => { if(GameState.selection) { GameState.selection.isQueuedForIdle = false; GameState.selection.findNextTree(); }};
+document.getElementById('btn-stop').onclick = () => { if(GameState.selection) { GameState.selection.isQueuedForIdle = true; if(GameState.selection.inventory === 0) GameState.selection.state = VillagerState.IDLE; }};
+document.getElementById('btn-house').onclick = () => { startBuild('house', GameState.config.costs.house); };
+document.getElementById('btn-lodge').onclick = () => { startBuild('lodge', GameState.config.costs.lodge); };
+
+function startBuild(type, cost) {
+    if (GameState.selection && GameState.resources.wood >= cost) {
+        GameState.resources.wood -= cost;
+        const b = { x: GameState.selection.x + 40, y: GameState.selection.y, type: type, progress: 0, isFinished: false };
+        GameState.entities.buildings.push(b);
+        GameState.selection.targetBuilding = b;
+        GameState.selection.state = VillagerState.BUILDING;
     }
-});
+}
 
 function spawnVillager() {
-    if (GameState.entities.villagers.length < GameState.config.maxVillagers) {
+    if (GameState.entities.villagers.length < GameState.getMaxPop()) {
         const tc = GameState.entities.townCenter;
-        
-        // Random Position im Kreis um das HQ
         const angle = Math.random() * Math.PI * 2;
-        const radius = 50 + Math.random() * 30;
-        const sx = tc.x + Math.cos(angle) * radius;
-        const sy = tc.y + Math.sin(angle) * radius;
-
-        const v = new Villager(sx, sy, Date.now());
+        const v = new Villager(tc.x + Math.cos(angle)*60, tc.y + Math.sin(angle)*60, Date.now());
         GameState.entities.villagers.push(v);
     }
 }
