@@ -1,48 +1,110 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>RTS World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>RTS World Pro</title>
     <style>
-        body { margin: 0; background: #111; color: white; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; 
+            padding: 0;
+            background: #111; 
+            color: white; 
+            font-family: sans-serif; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; /* Volle Bildschirmhöhe */
+        }
+
+        /* HEADER */
+        #header {
+            height: 60px;
+            background: rgba(0, 0, 0, 0.9);
+            border-bottom: 2px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 10px;
+            z-index: 10;
+        }
+
+        /* GAME AREA */
+        #game-container {
+            flex-grow: 1; /* Nimmt den gesamten mittleren Platz ein */
+            position: relative;
+            overflow: hidden;
+            background: #2e7d32;
+        }
         canvas { 
-            border: 2px solid #333; 
-            background: #2e7d32; 
+            display: block;
+            width: 100%; 
+            height: 100%; 
             touch-action: none; 
             cursor: grab;
-            width: 100vw; 
-            height: auto; 
         }
-        canvas:active { cursor: grabbing; }
-        #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; }
-        .stat { background: rgba(0,0,0,0.8); padding: 8px 12px; margin-bottom: 5px; border-radius: 4px; pointer-events: all; font-weight: bold; border: 1px solid #555; }
-        #action-menu, #placement-controls { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 2px solid gold; display: none; pointer-events: all; }
-        #placement-controls { border-color: lime; left: 20px; bottom: 150px; }
-        button { padding: 12px; margin: 5px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #999; }
+
+        /* FOOTER / BUTTONS */
+        #footer {
+            height: 120px;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid gold;
+            display: none; /* Wird nur eingeblendet wenn Villager gewählt */
+            padding: 10px;
+            z-index: 10;
+        }
+        #footer.visible { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+
+        .stat-item { font-size: 18px; font-weight: bold; }
+        
+        button { 
+            padding: 12px 16px; 
+            background: #eee;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 100px;
+        }
+        button:active { background: #ccc; }
+
+        #placement-controls {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
         .btn-confirm { background: #2e7d32; color: white; }
         .btn-cancel { background: #c62828; color: white; }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <div class="stat">🪵 Holz: <span id="wood-count">0</span></div>
-        <div class="stat">👨 Pop: <span id="pop-count">0/10</span></div>
+
+    <div id="header">
+        <div class="stat-item">🪵 <span id="wood-count">0</span></div>
+        <div class="stat-item">👨 <span id="pop-count">0/10</span></div>
     </div>
 
-    <!-- Debug Overlay -->
-    <div id="debug" style="position:absolute; top:80px; left:10px; background:rgba(0,0,0,0.8); color:lime; padding:8px; border-radius:5px; font-size:12px; pointer-events:none;"></div>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="placement-controls">
+            <button id="btn-confirm-build" class="btn-confirm">✅ BAUEN</button>
+            <button id="btn-cancel-build" class="btn-cancel">❌ STOP</button>
+        </div>
+    </div>
 
-    <div id="action-menu">
+    <div id="footer" id="action-menu">
         <button id="btn-wood">🪓 HOLZ</button>
-        <button id="btn-stop">✋ STOP</button><br>
+        <button id="btn-stop">✋ STOP</button>
         <button id="btn-house">🏠 HAUS (50)</button>
         <button id="btn-lodge">🌲 FORST (100)</button>
     </div>
-    <div id="placement-controls">
-        <button id="btn-confirm-build" class="btn-confirm">✅ BAUEN</button>
-        <button id="btn-cancel-build" class="btn-cancel">❌ ABBRUCH</button>
-    </div>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
     <script src="gamestate.js"></script>
     <script src="villager.js"></script>
     <script src="renderer.js"></script>
