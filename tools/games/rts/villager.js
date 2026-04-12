@@ -1,24 +1,10 @@
-const VillagerState = {
-    IDLE: 'IDLE',
-    MOVING_TO_TREE: 'MOVING_TO_TREE',
-    CHOPPING: 'CHOPPING',
-    RETURNING: 'RETURNING',
-    BUILDING: 'BUILDING',
-    PLANTING: 'PLANTING'
-};
-
 class Villager {
     constructor(x, y, id) {
-        this.id = id;
-        this.x = x;
-        this.y = y;
+        this.id = id; this.x = x; this.y = y;
         this.state = VillagerState.IDLE;
-        this.inventory = 0;
-        this.capacity = 5;
-        this.targetTree = null;
-        this.targetBuilding = null;
-        this.lastActionTime = 0;
-        this.isQueuedForIdle = false;
+        this.inventory = 0; this.capacity = 5;
+        this.targetTree = null; this.targetBuilding = null;
+        this.lastActionTime = 0; this.isQueuedForIdle = false;
     }
 
     update() {
@@ -59,8 +45,14 @@ class Villager {
                     if (this.isQueuedForIdle) {
                         this.state = VillagerState.IDLE;
                         this.isQueuedForIdle = false;
+                        this.targetTree = null;
                     } else {
-                        this.findNextTree();
+                        // Nach dem Abladen: Wenn Baum noch da, zurück. Sonst neuen suchen.
+                        if (this.targetTree && GameState.entities.trees.includes(this.targetTree)) {
+                            this.state = VillagerState.MOVING_TO_TREE;
+                        } else {
+                            this.findNextTree();
+                        }
                     }
                 });
                 break;
@@ -129,7 +121,7 @@ class Villager {
         const dx = tx - this.x;
         const dy = ty - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 4) {
+        if (dist > 5) {
             this.x += (dx / dist) * GameState.config.villagerSpeed;
             this.y += (dy / dist) * GameState.config.villagerSpeed;
         } else {
