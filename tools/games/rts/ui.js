@@ -41,7 +41,7 @@ function handleMove(e) {
         const dx = clientX - lastX;
         const dy = clientY - lastY;
 
-        if (Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) {
+        if (Math.abs(clientX - startX) > 15 || Math.abs(clientY - startY) > 15) {
             hasMoved = true;
             if (e.cancelable) e.preventDefault();
         }
