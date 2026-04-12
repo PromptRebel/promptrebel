@@ -5,7 +5,16 @@
     <title>RTS World</title>
     <style>
         body { margin: 0; background: #111; color: white; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
-        canvas { border: 2px solid #333; background: #2e7d32; touch-action: none; cursor: grab; }
+        canvas { 
+    border: 2px solid #333; 
+    background: #2e7d32; 
+    touch-action: none; 
+    cursor: grab;
+    /* Diese zwei Zeilen sind wichtig: */
+    width: 100vw; 
+    height: auto; 
+}
+
         canvas:active { cursor: grabbing; }
         #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; }
         .stat { background: rgba(0,0,0,0.8); padding: 8px 12px; margin-bottom: 5px; border-radius: 4px; pointer-events: all; font-weight: bold; border: 1px solid #555; }
