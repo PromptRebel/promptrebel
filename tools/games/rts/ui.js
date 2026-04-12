@@ -102,6 +102,17 @@ function processClick(e) {
         actionMenu.style.display = 'none';
     }
 }
+// In der ui.js processClick Funktion:
+const footer = document.getElementById('footer');
+
+if (foundV) {
+    GameState.selection = foundV;
+    footer.classList.add('visible'); // Anzeigen
+} else {
+    GameState.selection = null;
+    footer.classList.remove('visible'); // Verstecken
+}
+
 
 // Event Listener mit Doppel-Spawn Schutz
 Renderer.canvas.addEventListener('mousedown', handleStart);
