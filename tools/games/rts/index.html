@@ -2,16 +2,18 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>RTS World</title>
     <style>
-        body { margin: 0; background: #222; color: white; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
-        canvas { border: 2px solid #555; background: #348c31; touch-action: none; }
+        body { margin: 0; background: #111; color: white; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        canvas { border: 2px solid #333; background: #2e7d32; touch-action: none; cursor: grab; }
+        canvas:active { cursor: grabbing; }
         #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; }
-        .stat { background: rgba(0,0,0,0.8); padding: 5px 10px; margin-bottom: 5px; border-radius: 4px; pointer-events: all; }
-        #action-menu, #placement-controls { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.9); padding: 10px; border-radius: 8px; border: 2px solid gold; display: none; pointer-events: all; }
-        #placement-controls { border-color: lime; left: auto; right: 20px; }
-        button { padding: 12px; margin: 2px; cursor: pointer; font-weight: bold; }
-        .btn-confirm { background: green; color: white; }
-        .btn-cancel { background: red; color: white; }
+        .stat { background: rgba(0,0,0,0.8); padding: 8px 12px; margin-bottom: 5px; border-radius: 4px; pointer-events: all; font-weight: bold; border: 1px solid #555; }
+        #action-menu, #placement-controls { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 2px solid gold; display: none; pointer-events: all; }
+        #placement-controls { border-color: lime; left: 20px; bottom: 150px; } /* Platz für Minimap lassen */
+        button { padding: 12px; margin: 5px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #999; }
+        .btn-confirm { background: #2e7d32; color: white; }
+        .btn-cancel { background: #c62828; color: white; }
     </style>
 </head>
 <body>
@@ -20,14 +22,14 @@
         <div class="stat">👨 Pop: <span id="pop-count">0/10</span></div>
     </div>
     <div id="action-menu">
-        <button id="btn-wood">🪓 Holz</button>
-        <button id="btn-stop">✋ Stop</button><br>
-        <button id="btn-house">🏠 Haus (50)</button>
-        <button id="btn-lodge">🌲 Forsthaus (100)</button>
+        <button id="btn-wood">🪓 HOLZ</button>
+        <button id="btn-stop">✋ STOP</button><br>
+        <button id="btn-house">🏠 HAUS (50)</button>
+        <button id="btn-lodge">🌲 FORST (100)</button>
     </div>
     <div id="placement-controls">
-        <button id="btn-confirm-build" class="btn-confirm">✅ OK</button>
-        <button id="btn-cancel-build" class="btn-cancel">❌ Abbruch</button>
+        <button id="btn-confirm-build" class="btn-confirm">✅ BAUEN</button>
+        <button id="btn-cancel-build" class="btn-cancel">❌ ABBRUCH</button>
     </div>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <script src="gamestate.js"></script>
