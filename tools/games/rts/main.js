@@ -12,7 +12,7 @@ async function init() {
     console.log("Lade Assets...");
     try {
         // Pfad zu deinem Baum-Bild (z.B. im selben Ordner)
-        const treeImg = await loadImage('tree.png');
+        const treeImg = await loadImage('IMG_1715.png');
         Renderer.assets.tree = treeImg;
         console.log("Baum geladen!");
     } catch (e) {
