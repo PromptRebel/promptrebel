@@ -1,11 +1,4 @@
-const VillagerState = {
-    IDLE: 'IDLE',
-    MOVING_TO_TREE: 'MOVING_TO_TREE',
-    CHOPPING: 'CHOPPING',
-    RETURNING: 'RETURNING',
-    BUILDING: 'BUILDING',
-    PLANTING: 'PLANTING'
-};
+const VillagerState = { IDLE: 'IDLE', MOVING_TO_TREE: 'MOVING_TO_TREE', CHOPPING: 'CHOPPING', RETURNING: 'RETURNING', BUILDING: 'BUILDING', PLANTING: 'PLANTING' };
 
 class Villager {
     constructor(x, y, id) {
@@ -13,19 +6,15 @@ class Villager {
         this.state = VillagerState.IDLE;
         this.inventory = 0; this.capacity = 5;
         this.targetTree = null; this.targetBuilding = null;
-        this.lastActionTime = 0;
-        this.isQueuedForIdle = false;
+        this.lastActionTime = 0; this.isQueuedForIdle = false;
     }
 
     update() {
         switch (this.state) {
             case VillagerState.MOVING_TO_TREE:
-                if (!this.targetTree || !GameState.entities.trees.includes(this.targetTree)) {
-                    this.findNextTree(); return;
-                }
+                if (!this.targetTree || !GameState.entities.trees.includes(this.targetTree)) { this.findNextTree(); return; }
                 this.moveTo(this.targetTree.x, this.targetTree.y, () => { this.state = VillagerState.CHOPPING; });
                 break;
-
             case VillagerState.CHOPPING:
                 this.work(() => {
                     if (this.targetTree && this.targetTree.woodAmount > 0) {
@@ -38,44 +27,33 @@ class Villager {
                     } else { this.state = VillagerState.RETURNING; }
                 });
                 break;
-
             case VillagerState.RETURNING:
                 this.moveTo(GameState.entities.townCenter.x, GameState.entities.townCenter.y, () => {
-                    GameState.resources.wood += this.inventory;
-                    this.inventory = 0;
-                    if (this.isQueuedForIdle) {
-                        this.state = VillagerState.IDLE; this.isQueuedForIdle = false;
-                    } else if (this.targetTree) { this.state = VillagerState.MOVING_TO_TREE;
-                    } else { this.findNextTree(); }
+                    GameState.resources.wood += this.inventory; this.inventory = 0;
+                    if (this.isQueuedForIdle) { this.state = VillagerState.IDLE; this.isQueuedForIdle = false; }
+                    else if (this.targetTree) { this.state = VillagerState.MOVING_TO_TREE; }
+                    else { this.findNextTree(); }
                 });
                 break;
-
             case VillagerState.BUILDING:
-                if (!this.targetBuilding || this.targetBuilding.isFinished) {
-                    this.state = VillagerState.IDLE; return;
-                }
+                if (!this.targetBuilding || this.targetBuilding.isFinished) { this.state = VillagerState.IDLE; return; }
                 this.moveTo(this.targetBuilding.x, this.targetBuilding.y + 25, () => {
                     this.work(() => {
                         this.targetBuilding.progress += 10;
-                        if (this.targetBuilding.progress >= 100) {
-                            this.targetBuilding.progress = 100;
-                            this.targetBuilding.isFinished = true;
-                            this.state = VillagerState.IDLE;
-                        }
+                        if (this.targetBuilding.progress >= 100) { this.targetBuilding.progress = 100; this.targetBuilding.isFinished = true; this.state = VillagerState.IDLE; }
                     });
                 });
                 break;
-
             case VillagerState.PLANTING:
                 if (!this.targetBuilding || !this.targetBuilding.isFinished) { this.state = VillagerState.IDLE; return; }
                 this.moveTo(this.targetBuilding.x, this.targetBuilding.y, () => {
                     this.work(() => {
-                        const angle = Math.random() * Math.PI * 2;
-                        const dist = 35 + Math.random() * 55;
-                        const px = this.targetBuilding.x + Math.cos(angle) * dist;
-                        const py = this.targetBuilding.y + Math.sin(angle) * dist;
+                        const angle = Math.random() * Math.PI * 2; const dist = 40 + Math.random() * 60;
+                        const px = this.targetBuilding.x + Math.cos(angle) * dist; const py = this.targetBuilding.y + Math.sin(angle) * dist;
                         const tooClose = GameState.entities.trees.some(t => Math.sqrt((t.x-px)**2 + (t.y-py)**2) < 25);
-                        if (!tooClose) GameState.entities.trees.push({ x: px, y: py, woodAmount: GameState.config.treeWoodAmount });
+                        if (!tooClose && px > 0 && px < GameState.world.width && py > 0 && py < GameState.world.height) {
+                            GameState.entities.trees.push({ x: px, y: py, woodAmount: GameState.config.treeWoodAmount });
+                        }
                     });
                 });
                 break;
@@ -98,8 +76,5 @@ class Villager {
         else { onArrived(); }
     }
 
-    work(onAction) {
-        const now = Date.now();
-        if (now - this.lastActionTime > 1000) { onAction(); this.lastActionTime = now; }
-    }
+    work(onAction) { const now = Date.now(); if (now - this.lastActionTime > 1000) { onAction(); this.lastActionTime = now; } }
 }
