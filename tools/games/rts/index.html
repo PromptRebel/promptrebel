@@ -3,73 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Retro RTS Prototyp - Mobile</title>
+    <title>Mein RTS Prototyp</title>
     <style>
-        body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; color: white; font-family: sans-serif; touch-action: none; }
-        canvas { border: 2px solid #555; background-color: #348c31; cursor: default; max-width: 100%; max-height: 100%; }
-        
-        #ui-layer { position: absolute; top: 10px; left: 10px; pointer-events: none; width: 100%; }
-        
-        .stat { 
-            background: rgba(0,0,0,0.8); 
-            padding: 10px 15px; 
-            margin-bottom: 5px; 
-            border-radius: 8px; 
-            pointer-events: all; 
-            border: 1px solid #777;
-            display: inline-block;
-            min-width: 120px;
+        /* Verhindert Scrollen und graue Klicks auf Mobilgeräten */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+            user-select: none;
         }
 
-        #action-menu { 
-            position: absolute;
-            bottom: 20px;
-            left: 10px;
-            background: rgba(40, 40, 40, 0.9);
-            padding: 15px;
-            border-radius: 12px;
-            border: 2px solid gold;
-            display: none; /* Wird per JS eingeblendet */
+        body { 
+            margin: 0; 
+            background: #222; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            color: white; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        canvas { 
+            border: 2px solid #555; 
+            background-color: #348c31; 
+            display: block;
+            cursor: crosshair;
+        }
+
+        #ui-layer { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            pointer-events: none; 
+            width: 100%;
+        }
+
+        .stat-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .stat { 
+            background: rgba(0,0,0,0.8); 
+            padding: 8px 12px; 
+            border-radius: 5px; 
+            border: 1px solid #777;
+            font-size: 14px;
             pointer-events: all;
+        }
+
+        /* Das Aktions-Menü für die Villager */
+        #action-menu { 
+            position: absolute; 
+            bottom: 20px; 
+            left: 20px; 
+            background: rgba(0,0,0,0.85); 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 2px solid gold; 
+            display: none; 
+            pointer-events: all;
+            animation: fadeIn 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         button {
             background: #444;
             color: white;
             border: 1px solid #aaa;
-            padding: 12px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            border-radius: 6px;
             font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
-            active { background: #666; }
+            transition: background 0.2s;
         }
 
-        #instructions { position: absolute; top: 10px; right: 10px; font-size: 0.7em; color: #ccc; text-align: right; pointer-events: none; }
+        button:active {
+            background: #666;
+            transform: scale(0.95);
+        }
+
+        #debug-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #888;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer">
-        <div class="stat">🪵 Holz: <span id="wood-count">0</span></div><br>
-        <div class="stat">👨 Pop: <span id="pop-count">0</span>/10</div>
-    </div>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
 
-    <div id="action-menu">
-        <div style="margin-bottom: 10px; font-weight: bold; color: gold;">Villager bereit</div>
-        <button id="btn-wood">🪓 Holz fällen</button>
-    </div>
+        <div id="ui-layer">
+            <div class="stat-container">
+                <div class="stat">🪵 Holz: <span id="wood-count">0</span></div>
+                <div class="stat">👨 Pop: <span id="pop-count">0</span>/10</div>
+            </div>
+        </div>
 
-    <div id="instructions">
-        Tippe HQ: Villager erstellen<br>
-        Tippe Villager: Auswählen
-    </div>
+        <div id="action-menu">
+            <div style="margin-bottom: 10px; font-size: 12px; color: gold; text-transform: uppercase;">Einheit ausgewählt</div>
+            <button id="btn-wood">🪓 HOLZ FÄLLEN</button>
+        </div>
 
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="debug-info">Tippe HQ zum Spawnen | Tippe Villager für Befehle</div>
+    </div>
 
     <script src="gamestate.js"></script>
     <script src="villager.js"></script>
     <script src="renderer.js"></script>
     <script src="ui.js"></script>
     <script src="main.js"></script>
+
 </body>
 </html>
