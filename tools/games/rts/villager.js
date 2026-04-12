@@ -1,3 +1,6 @@
+// villager.js
+
+// DIE FEHLENDE DEFINITION:
 const VillagerState = {
     IDLE: 'idle',
     MOVING_TO_TREE: 'moving_to_tree',
@@ -9,11 +12,16 @@ const VillagerState = {
 
 class Villager {
     constructor(x, y, id) {
-        this.id = id; this.x = x; this.y = y;
-        this.state = VillagerState.IDLE;
-        this.inventory = 0; this.capacity = 5;
-        this.targetTree = null; this.targetBuilding = null;
-        this.lastActionTime = 0; this.isQueuedForIdle = false;
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.state = VillagerState.IDLE; // Jetzt existiert VillagerState!
+        this.inventory = 0;
+        this.capacity = 5;
+        this.targetTree = null;
+        this.targetBuilding = null;
+        this.lastActionTime = 0;
+        this.isQueuedForIdle = false;
     }
 
     update() {
@@ -56,7 +64,6 @@ class Villager {
                         this.isQueuedForIdle = false;
                         this.targetTree = null;
                     } else {
-                        // Nach dem Abladen: Wenn Baum noch da, zurück. Sonst neuen suchen.
                         if (this.targetTree && GameState.entities.trees.includes(this.targetTree)) {
                             this.state = VillagerState.MOVING_TO_TREE;
                         } else {
