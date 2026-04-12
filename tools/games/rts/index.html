@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Retro RTS Prototyp</title>
+    <style>
+        body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; color: white; font-family: sans-serif; }
+        canvas { border: 2px solid #555; background-color: #348c31; cursor: default; }
+        #ui-layer { position: absolute; top: 10px; left: 10px; pointer-events: none; }
+        .stat { background: rgba(0,0,0,0.7); padding: 8px 15px; margin-bottom: 5px; border-radius: 4px; pointer-events: all; border: 1px solid #555; }
+        #instructions { position: absolute; bottom: 10px; left: 10px; font-size: 0.8em; color: #ccc; }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="stat">🪵 Holz: <span id="wood-count">0</span></div>
+        <div class="stat">👨 Einwohner: <span id="pop-count">0</span>/10</div>
+    </div>
+
+    <div id="instructions">
+        Klick auf Dorfzentrum (Mitte): Villager erstellen <br>
+        Klick auf Villager: Auswählen | Taste "H": Holz fällen
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script src="gamestate.js"></script>
+    <script src="villager.js"></script>
+    <script src="renderer.js"></script>
+    <script src="ui.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
