@@ -1,8 +1,13 @@
+// ui.js
 let isMovingCamera = false;
 let hasMoved = false; 
 let lastX, lastY;
 let startX, startY;
 
+const btnWood = document.getElementById('btn-wood');
+const btnStop = document.getElementById('btn-stop');
+const btnHouse = document.getElementById('btn-house');
+const btnLodge = document.getElementById('btn-lodge');
 const actionMenu = document.getElementById('action-menu');
 const placementControls = document.getElementById('placement-controls');
 
@@ -28,7 +33,6 @@ function handleStart(e) {
     lastY = coords.screenY;
     startX = coords.screenX;
     startY = coords.screenY;
-    
     isMovingCamera = true; 
     hasMoved = false; 
 }
@@ -37,30 +41,24 @@ function handleMove(e) {
     if (isMovingCamera) {
         const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
         const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
-
         const dx = clientX - lastX;
         const dy = clientY - lastY;
 
-        if (Math.abs(clientX - startX) > 15 || Math.abs(clientY - startY) > 15) {
+        if (Math.abs(clientX - startX) > 8 || Math.abs(clientY - startY) > 8) {
             hasMoved = true;
             if (e.cancelable) e.preventDefault();
         }
-
         GameState.camera.x -= dx;
         GameState.camera.y -= dy;
-
         GameState.camera.x = Math.max(0, Math.min(GameState.camera.x, GameState.world.width - Renderer.canvas.width));
         GameState.camera.y = Math.max(0, Math.min(GameState.camera.y, GameState.world.height - Renderer.canvas.height));
-
         lastX = clientX;
         lastY = clientY;
     }
 }
 
 function handleEnd(e) {
-    if (!hasMoved) {
-        processClick(e);
-    }
+    if (!hasMoved) processClick(e);
     isMovingCamera = false;
 }
 
@@ -68,21 +66,10 @@ function processClick(e) {
     const rect = Renderer.canvas.getBoundingClientRect();
     const clientX = startX;
     const clientY = startY;
-    
     const scaleX = Renderer.canvas.width / rect.width;
     const scaleY = Renderer.canvas.height / rect.height;
-    
     const mx = (clientX - rect.left) * scaleX + GameState.camera.x;
     const my = (clientY - rect.top) * scaleY + GameState.camera.y;
-
-    // DEBUG
-    const tc = GameState.entities.townCenter;
-    const dist = Math.round(Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2));
-    document.getElementById('debug').innerHTML = 
-        `Klick: ${Math.round(mx)} / ${Math.round(my)}<br>
-         HQ: ${tc.x} / ${tc.y}<br>
-         Dist: ${dist}<br>
-         Pop: ${GameState.entities.villagers.length} / ${GameState.getMaxPop()}`;
 
     if (GameState.placementMode.active) {
         GameState.placementMode.x = mx;
@@ -90,8 +77,9 @@ function processClick(e) {
         return;
     }
 
-    // Rechteck-Check statt Kreis
-    if (mx >= tc.x - 25 && mx <= tc.x + 25 && my >= tc.y - 25 && my <= tc.y + 25) {
+    const tc = GameState.entities.townCenter;
+    const distToTC = Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2);
+    if (distToTC < 60) {
         spawnVillager();
         return;
     }
@@ -109,12 +97,11 @@ function processClick(e) {
 Renderer.canvas.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove);
 window.addEventListener('mouseup', handleEnd);
+Renderer.canvas.addEventListener('touchstart', handleStart, {passive: false});
+window.addEventListener('touchmove', handleMove, {passive: false});
+window.addEventListener('touchend', handleEnd, {passive: false});
 
-Renderer.canvas.addEventListener('touchstart', (e) => { handleStart(e); }, {passive: false});
-window.addEventListener('touchmove', (e) => { handleMove(e); }, {passive: false});
-window.addEventListener('touchend', (e) => { handleEnd(e); }, {passive: false});
-
-document.getElementById('btn-wood').onclick = function(e) {
+btnWood.onclick = (e) => {
     if(GameState.selection) {
         GameState.selection.isQueuedForIdle = false;
         GameState.selection.targetBuilding = null;
@@ -122,15 +109,15 @@ document.getElementById('btn-wood').onclick = function(e) {
     }
 };
 
-document.getElementById('btn-stop').onclick = function() {
+btnStop.onclick = () => {
     if(GameState.selection) {
         GameState.selection.isQueuedForIdle = true;
         if(GameState.selection.inventory === 0) GameState.selection.state = VillagerState.IDLE;
     }
 };
 
-document.getElementById('btn-house').onclick = function() { startPlacement('house', GameState.config.costs.house); };
-document.getElementById('btn-lodge').onclick = function() { startPlacement('lodge', GameState.config.costs.lodge); };
+btnHouse.onclick = () => startPlacement('house', GameState.config.costs.house);
+btnLodge.onclick = () => startPlacement('lodge', GameState.config.costs.lodge);
 
 function startPlacement(type, cost) {
     if (GameState.selection && GameState.resources.wood >= cost) {
@@ -140,7 +127,7 @@ function startPlacement(type, cost) {
     }
 }
 
-document.getElementById('btn-confirm-build').onclick = function() {
+document.getElementById('btn-confirm-build').onclick = () => {
     const p = GameState.placementMode;
     GameState.resources.wood -= p.cost;
     const b = { x: p.x, y: p.y, type: p.type, progress: 0, isFinished: false };
