@@ -1,8 +1,7 @@
 // ui.js
 let isMovingCamera = false;
 let hasMoved = false; 
-let lastX, lastY;
-let startX, startY;
+let lastX, lastY, startX, startY;
 
 const btnWood = document.getElementById('btn-wood');
 const btnStop = document.getElementById('btn-stop');
@@ -64,7 +63,7 @@ function handleEnd(e) {
 
 function processClick(e) {
     const rect = Renderer.canvas.getBoundingClientRect();
-    const clientX = startX;
+    const clientX = startX; 
     const clientY = startY;
     const scaleX = Renderer.canvas.width / rect.width;
     const scaleY = Renderer.canvas.height / rect.height;
@@ -77,13 +76,23 @@ function processClick(e) {
         return;
     }
 
+    // 1. Klick auf HQ
     const tc = GameState.entities.townCenter;
-    const distToTC = Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2);
-    if (distToTC < 60) {
+    if (Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2) < 60) {
         spawnVillager();
         return;
     }
 
+    // 2. Klick auf Gebäude (z.B. Forsthaus zuweisen)
+    let clickedB = GameState.entities.buildings.find(b => Math.abs(mx - b.x) < 40 && Math.abs(my - b.y) < 40);
+    if (clickedB && clickedB.type === 'lodge' && clickedB.isFinished && GameState.selection) {
+        GameState.selection.targetBuilding = clickedB; 
+        GameState.selection.state = VillagerState.PLANTING; 
+        actionMenu.style.display = 'none'; // Menü schließen nach Zuweisung
+        return;
+    }
+
+    // 3. Klick auf Villager (Auswahl)
     let foundV = GameState.entities.villagers.find(v => Math.sqrt((mx - v.x)**2 + (my - v.y)**2) < 35);
     if (foundV) {
         GameState.selection = foundV;
@@ -94,14 +103,25 @@ function processClick(e) {
     }
 }
 
+// Event Listener mit Doppel-Spawn Schutz
 Renderer.canvas.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove);
 window.addEventListener('mouseup', handleEnd);
-Renderer.canvas.addEventListener('touchstart', handleStart, {passive: false});
-window.addEventListener('touchmove', handleMove, {passive: false});
-window.addEventListener('touchend', handleEnd, {passive: false});
 
-btnWood.onclick = (e) => {
+Renderer.canvas.addEventListener('touchstart', (e) => {
+    if (e.cancelable) e.preventDefault();
+    handleStart(e);
+}, {passive: false});
+
+window.addEventListener('touchmove', handleMove, {passive: false});
+
+window.addEventListener('touchend', (e) => {
+    if (e.cancelable) e.preventDefault();
+    handleEnd(e);
+}, {passive: false});
+
+// Buttons
+btnWood.onclick = () => {
     if(GameState.selection) {
         GameState.selection.isQueuedForIdle = false;
         GameState.selection.targetBuilding = null;
@@ -120,7 +140,7 @@ btnHouse.onclick = () => startPlacement('house', GameState.config.costs.house);
 btnLodge.onclick = () => startPlacement('lodge', GameState.config.costs.lodge);
 
 function startPlacement(type, cost) {
-    if (GameState.selection && GameState.resources.wood >= cost) {
+    if (GameState.resources.wood >= cost) {
         GameState.placementMode = { active: true, type, cost, x: GameState.camera.x + 400, y: GameState.camera.y + 300 };
         placementControls.style.display = 'block';
         actionMenu.style.display = 'none';
@@ -132,8 +152,10 @@ document.getElementById('btn-confirm-build').onclick = () => {
     GameState.resources.wood -= p.cost;
     const b = { x: p.x, y: p.y, type: p.type, progress: 0, isFinished: false };
     GameState.entities.buildings.push(b);
-    GameState.selection.targetBuilding = b;
-    GameState.selection.state = VillagerState.BUILDING;
+    if(GameState.selection) {
+        GameState.selection.targetBuilding = b;
+        GameState.selection.state = VillagerState.BUILDING;
+    }
     cancelPlacement();
 };
 
