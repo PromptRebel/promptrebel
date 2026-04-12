@@ -1,27 +1,37 @@
 let isMovingCamera = false;
 let lastX, lastY;
 
-Renderer.canvas.addEventListener('mousedown', (e) => {
+// Hilfsfunktion für die Koordinaten-Berechnung (wichtig für Touch!)
+function getCoords(e) {
     const rect = Renderer.canvas.getBoundingClientRect();
-    // WICHTIG: Welt-Koordinaten (Screen + Kamera)
-    const mx = e.clientX - rect.left + GameState.camera.x;
-    const my = e.clientY - rect.top + GameState.camera.y;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+        mx: clientX - rect.left + GameState.camera.x,
+        my: clientY - rect.top + GameState.camera.y,
+        screenX: clientX,
+        screenY: clientY
+    };
+}
 
-    lastX = e.clientX;
-    lastY = e.clientY;
+// START: Klick oder Touch
+function handleStart(e) {
+    const coords = getCoords(e);
+    lastX = coords.screenX;
+    lastY = coords.screenY;
 
-    // 1. Prüfen, ob wir ein Objekt treffen (Villager, Gebäude, Bäume)
-    let foundV = GameState.entities.villagers.find(v => Math.sqrt((mx - v.x)**2 + (my - v.y)**2) < 30);
+    // Objekte prüfen
+    let foundV = GameState.entities.villagers.find(v => Math.sqrt((coords.mx - v.x)**2 + (coords.my - v.y)**2) < 30);
     const tc = GameState.entities.townCenter;
-    let clickedB = GameState.entities.buildings.find(b => Math.abs(mx - b.x) < 25 && Math.abs(my - b.y) < 25);
-    let isHQ = Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2) < 40;
+    let clickedB = GameState.entities.buildings.find(b => Math.abs(coords.mx - b.x) < 25 && Math.abs(coords.my - b.y) < 25);
+    let isHQ = Math.sqrt((coords.mx - tc.x)**2 + (coords.my - tc.y)**2) < 40;
 
-    // 2. Wenn wir NICHTS anklicken (Boden), dann Kamera bewegen aktivieren
+    // Wenn Boden -> Kamera-Modus an
     if (!foundV && !clickedB && !isHQ && !GameState.placementMode.active) {
         isMovingCamera = true;
     }
 
-    // --- Logik für Aktionen (bleibt gleich) ---
+    // Aktionen
     if (isHQ) { spawnVillager(); return; }
     
     if (clickedB && clickedB.type === 'lodge' && clickedB.isFinished && GameState.selection) {
@@ -33,38 +43,62 @@ Renderer.canvas.addEventListener('mousedown', (e) => {
     if (foundV) { 
         GameState.selection = foundV; 
         document.getElementById('action-menu').style.display = 'block'; 
-    } else { 
-        // Nur abwählen, wenn wir nicht gerade die Kamera starten
-        if (!isMovingCamera) {
-            GameState.selection = null; 
-            document.getElementById('action-menu').style.display = 'none'; 
-        }
+    } else if (!isMovingCamera) {
+        GameState.selection = null; 
+        document.getElementById('action-menu').style.display = 'none'; 
     }
-});
+}
 
-// Die Bewegung muss auf dem ganzen Fenster (window) gehört werden, damit sie nicht abreißt
-window.addEventListener('mousemove', (e) => {
+// BEWEGUNG: Maus schieben oder Finger wischen
+function handleMove(e) {
     if (isMovingCamera) {
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const dx = clientX - lastX;
+        const dy = clientY - lastY;
 
         GameState.camera.x -= dx;
         GameState.camera.y -= dy;
 
-        // Grenzen der Welt (2000x2000) einhalten
+        // Grenzen
         GameState.camera.x = Math.max(0, Math.min(GameState.camera.x, GameState.world.width - Renderer.canvas.width));
         GameState.camera.y = Math.max(0, Math.min(GameState.camera.y, GameState.world.height - Renderer.canvas.height));
 
-        lastX = e.clientX;
-        lastY = e.clientY;
+        lastX = clientX;
+        lastY = clientY;
+        
+        // Verhindert das Scrollen der ganzen Webseite am Handy während man im Spiel wischt
+        if(e.cancelable) e.preventDefault();
     }
-});
+    
+    // Placement-Vorschau verschieben
+    if (GameState.placementMode.active && e.touches) {
+        const coords = getCoords(e);
+        GameState.placementMode.x = coords.mx;
+        GameState.placementMode.y = coords.my;
+    }
+}
 
-window.addEventListener('mouseup', () => {
+// ENDE
+function handleEnd() {
     isMovingCamera = false;
-});
+}
 
-// --- Button Logik & Hilfsfunktionen (bleiben gleich) ---
+// Event Listener für Maus
+Renderer.canvas.addEventListener('mousedown', handleStart);
+window.addEventListener('mousemove', handleMove);
+window.addEventListener('mouseup', handleEnd);
+
+// Event Listener für Touch (Handy)
+Renderer.canvas.addEventListener('touchstart', (e) => { handleStart(e); }, {passive: false});
+window.addEventListener('touchmove', (e) => { handleMove(e); }, {passive: false});
+window.addEventListener('touchend', handleEnd);
+
+// Rechtsklick verhindern
+Renderer.canvas.oncontextmenu = (e) => e.preventDefault();
+
+// --- BUTTONS ---
 document.getElementById('btn-wood').onclick = () => { if(GameState.selection) { GameState.selection.isQueuedForIdle = false; GameState.selection.findNextTree(); }};
 document.getElementById('btn-stop').onclick = () => { if(GameState.selection) { GameState.selection.isQueuedForIdle = true; if(GameState.selection.inventory === 0) GameState.selection.state = VillagerState.IDLE; }};
 document.getElementById('btn-house').onclick = () => startPlacement('house', GameState.config.costs.house);
