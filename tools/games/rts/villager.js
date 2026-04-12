@@ -1,3 +1,12 @@
+const VillagerState = {
+    IDLE: 'idle',
+    MOVING_TO_TREE: 'moving_to_tree',
+    CHOPPING: 'chopping',
+    RETURNING: 'returning',
+    BUILDING: 'building',
+    PLANTING: 'planting'
+};
+
 class Villager {
     constructor(x, y, id) {
         this.id = id; this.x = x; this.y = y;
