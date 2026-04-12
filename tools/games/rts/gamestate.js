@@ -1,16 +1,26 @@
 const GameState = {
-    resources: {
-        wood: 0
-    },
+    resources: { wood: 0 },
     entities: {
         townCenter: { x: 400, y: 300 },
         villagers: [],
-        trees: []
+        trees: [],
+        buildings: [] 
     },
     selection: null,
     config: {
-        maxVillagers: 10,
+        baseMaxPop: 10,
         villagerSpeed: 2,
-        treeWoodAmount: 50 // Wie viel Holz hat ein Baum, bevor er verschwindet?
+        treeWoodAmount: 50,
+        costs: { 
+            house: 50, 
+            lodge: 100 
+        }
+    },
+    getMaxPop: function() {
+        let bonus = 0;
+        this.entities.buildings.forEach(b => {
+            if (b.type === 'house' && b.isFinished) bonus += 5;
+        });
+        return this.config.baseMaxPop + bonus;
     }
 };
