@@ -2,25 +2,66 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Retro RTS Prototyp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Retro RTS Prototyp - Mobile</title>
     <style>
-        body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; color: white; font-family: sans-serif; }
-        canvas { border: 2px solid #555; background-color: #348c31; cursor: default; }
-        #ui-layer { position: absolute; top: 10px; left: 10px; pointer-events: none; }
-        .stat { background: rgba(0,0,0,0.7); padding: 8px 15px; margin-bottom: 5px; border-radius: 4px; pointer-events: all; border: 1px solid #555; }
-        #instructions { position: absolute; bottom: 10px; left: 10px; font-size: 0.8em; color: #ccc; }
+        body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; color: white; font-family: sans-serif; touch-action: none; }
+        canvas { border: 2px solid #555; background-color: #348c31; cursor: default; max-width: 100%; max-height: 100%; }
+        
+        #ui-layer { position: absolute; top: 10px; left: 10px; pointer-events: none; width: 100%; }
+        
+        .stat { 
+            background: rgba(0,0,0,0.8); 
+            padding: 10px 15px; 
+            margin-bottom: 5px; 
+            border-radius: 8px; 
+            pointer-events: all; 
+            border: 1px solid #777;
+            display: inline-block;
+            min-width: 120px;
+        }
+
+        #action-menu { 
+            position: absolute;
+            bottom: 20px;
+            left: 10px;
+            background: rgba(40, 40, 40, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid gold;
+            display: none; /* Wird per JS eingeblendet */
+            pointer-events: all;
+        }
+
+        button {
+            background: #444;
+            color: white;
+            border: 1px solid #aaa;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            active { background: #666; }
+        }
+
+        #instructions { position: absolute; top: 10px; right: 10px; font-size: 0.7em; color: #ccc; text-align: right; pointer-events: none; }
     </style>
 </head>
 <body>
 
     <div id="ui-layer">
-        <div class="stat">🪵 Holz: <span id="wood-count">0</span></div>
-        <div class="stat">👨 Einwohner: <span id="pop-count">0</span>/10</div>
+        <div class="stat">🪵 Holz: <span id="wood-count">0</span></div><br>
+        <div class="stat">👨 Pop: <span id="pop-count">0</span>/10</div>
+    </div>
+
+    <div id="action-menu">
+        <div style="margin-bottom: 10px; font-weight: bold; color: gold;">Villager bereit</div>
+        <button id="btn-wood">🪓 Holz fällen</button>
     </div>
 
     <div id="instructions">
-        Klick auf Dorfzentrum (Mitte): Villager erstellen <br>
-        Klick auf Villager: Auswählen | Taste "H": Holz fällen
+        Tippe HQ: Villager erstellen<br>
+        Tippe Villager: Auswählen
     </div>
 
     <canvas id="gameCanvas" width="800" height="600"></canvas>
