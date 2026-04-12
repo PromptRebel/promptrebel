@@ -2,51 +2,40 @@ const VillagerState = {
     IDLE: 'IDLE',
     MOVING_TO_TREE: 'MOVING_TO_TREE',
     CHOPPING: 'CHOPPING',
-    RETURNING: 'RETURNING'
+    RETURNING: 'RETURNING',
+    BUILDING: 'BUILDING',
+    PLANTING: 'PLANTING'
 };
 
 class Villager {
     constructor(x, y, id) {
-        this.id = id;
-        this.x = x;
-        this.y = y;
+        this.id = id; this.x = x; this.y = y;
         this.state = VillagerState.IDLE;
-        this.inventory = 0;
-        this.capacity = 5;
-        this.targetTree = null;
+        this.inventory = 0; this.capacity = 5;
+        this.targetTree = null; this.targetBuilding = null;
         this.lastActionTime = 0;
+        this.isQueuedForIdle = false;
     }
 
     update() {
         switch (this.state) {
             case VillagerState.MOVING_TO_TREE:
                 if (!this.targetTree || !GameState.entities.trees.includes(this.targetTree)) {
-                    this.state = VillagerState.RETURNING; // Baum weg? Erstmal heim.
-                    return;
+                    this.findNextTree(); return;
                 }
-                this.moveTo(this.targetTree.x, this.targetTree.y, () => {
-                    this.state = VillagerState.CHOPPING;
-                });
+                this.moveTo(this.targetTree.x, this.targetTree.y, () => { this.state = VillagerState.CHOPPING; });
                 break;
 
             case VillagerState.CHOPPING:
                 this.work(() => {
                     if (this.targetTree && this.targetTree.woodAmount > 0) {
-                        this.targetTree.woodAmount--;
-                        this.inventory++;
-                        
-                        // Wenn Baum leer, entfernen
+                        this.targetTree.woodAmount--; this.inventory++;
                         if (this.targetTree.woodAmount <= 0) {
-                            const index = GameState.entities.trees.indexOf(this.targetTree);
-                            if (index > -1) GameState.entities.trees.splice(index, 1);
-                            this.targetTree = null;
-                            this.state = VillagerState.RETURNING;
-                        } else if (this.inventory >= this.capacity) {
-                            this.state = VillagerState.RETURNING;
-                        }
-                    } else {
-                        this.state = VillagerState.RETURNING;
-                    }
+                            const idx = GameState.entities.trees.indexOf(this.targetTree);
+                            if (idx > -1) GameState.entities.trees.splice(idx, 1);
+                            this.targetTree = null; this.state = VillagerState.RETURNING;
+                        } else if (this.inventory >= this.capacity) { this.state = VillagerState.RETURNING; }
+                    } else { this.state = VillagerState.RETURNING; }
                 });
                 break;
 
@@ -54,53 +43,67 @@ class Villager {
                 this.moveTo(GameState.entities.townCenter.x, GameState.entities.townCenter.y, () => {
                     GameState.resources.wood += this.inventory;
                     this.inventory = 0;
+                    if (this.isQueuedForIdle) {
+                        this.state = VillagerState.IDLE; this.isQueuedForIdle = false;
+                    } else if (this.targetTree) { this.state = VillagerState.MOVING_TO_TREE;
+                    } else { this.findNextTree(); }
+                });
+                break;
 
-                    // Automatische Suche nach neuem Baum
-                    if (!this.targetTree || !GameState.entities.trees.includes(this.targetTree)) {
-                        this.findNextTree();
-                    } else {
-                        this.state = VillagerState.MOVING_TO_TREE;
-                    }
+            case VillagerState.BUILDING:
+                if (!this.targetBuilding || this.targetBuilding.isFinished) {
+                    this.state = VillagerState.IDLE; return;
+                }
+                this.moveTo(this.targetBuilding.x, this.targetBuilding.y + 25, () => {
+                    this.work(() => {
+                        this.targetBuilding.progress += 10;
+                        if (this.targetBuilding.progress >= 100) {
+                            this.targetBuilding.isFinished = true;
+                            this.state = VillagerState.IDLE;
+                        }
+                    });
+                });
+                break;
+
+            case VillagerState.PLANTING:
+                // Logik für Förster: Gehe zum Forsthaus, dann pflanze im Radius
+                if (!this.targetBuilding || !this.targetBuilding.isFinished) { this.state = VillagerState.IDLE; return; }
+                this.moveTo(this.targetBuilding.x, this.targetBuilding.y, () => {
+                    this.work(() => {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = 30 + Math.random() * 60;
+                        const px = this.targetBuilding.x + Math.cos(angle) * dist;
+                        const py = this.targetBuilding.y + Math.sin(angle) * dist;
+                        
+                        // Prüfen ob Platz frei ist (Abstand zu anderen Bäumen > 25)
+                        const tooClose = GameState.entities.trees.some(t => Math.sqrt((t.x-px)**2 + (t.y-py)**2) < 25);
+                        if (!tooClose) {
+                            GameState.entities.trees.push({ x: px, y: py, woodAmount: GameState.config.treeWoodAmount });
+                        }
+                    });
                 });
                 break;
         }
     }
 
     findNextTree() {
-        let closest = null;
-        let minDist = Infinity;
+        let closest = null; let minDist = Infinity;
         GameState.entities.trees.forEach(t => {
             const d = Math.sqrt((t.x - this.x)**2 + (t.y - this.y)**2);
-            if (d < minDist) {
-                minDist = d;
-                closest = t;
-            }
+            if (d < minDist) { minDist = d; closest = t; }
         });
-        if (closest) {
-            this.targetTree = closest;
-            this.state = VillagerState.MOVING_TO_TREE;
-        } else {
-            this.state = VillagerState.IDLE;
-        }
+        if (closest) { this.targetTree = closest; this.state = VillagerState.MOVING_TO_TREE; }
+        else { this.state = VillagerState.IDLE; }
     }
 
     moveTo(tx, ty, onArrived) {
-        const dx = tx - this.x;
-        const dy = ty - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 5) {
-            this.x += (dx / dist) * GameState.config.villagerSpeed;
-            this.y += (dy / dist) * GameState.config.villagerSpeed;
-        } else {
-            onArrived();
-        }
+        const dx = tx - this.x; const dy = ty - this.y; const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 5) { this.x += (dx / dist) * GameState.config.villagerSpeed; this.y += (dy / dist) * GameState.config.villagerSpeed; }
+        else { onArrived(); }
     }
 
     work(onAction) {
         const now = Date.now();
-        if (now - this.lastActionTime > 1000) {
-            onAction();
-            this.lastActionTime = now;
-        }
+        if (now - this.lastActionTime > 1000) { onAction(); this.lastActionTime = now; }
     }
 }
