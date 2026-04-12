@@ -1,8 +1,9 @@
 function init() {
-    for (let i = 0; i < 15; i++) {
+    // 100 Bäume zufällig in der 2000x2000 Welt verteilen
+    for (let i = 0; i < 100; i++) {
         GameState.entities.trees.push({
-            x: Math.random() * 700 + 50,
-            y: Math.random() * 500 + 50,
+            x: Math.random() * (GameState.world.width - 100) + 50,
+            y: Math.random() * (GameState.world.height - 100) + 50,
             woodAmount: GameState.config.treeWoodAmount
         });
     }
