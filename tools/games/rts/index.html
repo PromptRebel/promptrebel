@@ -7,8 +7,11 @@
         canvas { border: 2px solid #555; background: #348c31; touch-action: none; }
         #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; }
         .stat { background: rgba(0,0,0,0.8); padding: 5px 10px; margin-bottom: 5px; border-radius: 4px; pointer-events: all; }
-        #action-menu { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.9); padding: 10px; border-radius: 8px; border: 2px solid gold; display: none; pointer-events: all; }
-        button { padding: 10px; margin: 2px; cursor: pointer; }
+        #action-menu, #placement-controls { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.9); padding: 10px; border-radius: 8px; border: 2px solid gold; display: none; pointer-events: all; }
+        #placement-controls { border-color: lime; left: auto; right: 20px; }
+        button { padding: 12px; margin: 2px; cursor: pointer; font-weight: bold; }
+        .btn-confirm { background: green; color: white; }
+        .btn-cancel { background: red; color: white; }
     </style>
 </head>
 <body>
@@ -21,6 +24,10 @@
         <button id="btn-stop">✋ Stop</button><br>
         <button id="btn-house">🏠 Haus (50)</button>
         <button id="btn-lodge">🌲 Forsthaus (100)</button>
+    </div>
+    <div id="placement-controls">
+        <button id="btn-confirm-build" class="btn-confirm">✅ OK</button>
+        <button id="btn-cancel-build" class="btn-cancel">❌ Abbruch</button>
     </div>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <script src="gamestate.js"></script>
