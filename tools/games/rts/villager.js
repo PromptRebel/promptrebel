@@ -1,6 +1,4 @@
 // villager.js
-
-// DIE FEHLENDE DEFINITION:
 const VillagerState = {
     IDLE: 'idle',
     MOVING_TO_TREE: 'moving_to_tree',
@@ -15,13 +13,14 @@ class Villager {
         this.id = id;
         this.x = x;
         this.y = y;
-        this.state = VillagerState.IDLE; // Jetzt existiert VillagerState!
+        this.state = VillagerState.IDLE;
         this.inventory = 0;
         this.capacity = 5;
         this.targetTree = null;
         this.targetBuilding = null;
         this.lastActionTime = 0;
         this.isQueuedForIdle = false;
+        this.autoBecomeForester = false; // Neu: Merkt sich den Job nach dem Bauen
     }
 
     update() {
@@ -62,7 +61,6 @@ class Villager {
                     if (this.isQueuedForIdle) {
                         this.state = VillagerState.IDLE;
                         this.isQueuedForIdle = false;
-                        this.targetTree = null;
                     } else {
                         if (this.targetTree && GameState.entities.trees.includes(this.targetTree)) {
                             this.state = VillagerState.MOVING_TO_TREE;
@@ -74,7 +72,7 @@ class Villager {
                 break;
 
             case VillagerState.BUILDING:
-                if (!this.targetBuilding || this.targetBuilding.isFinished) {
+                if (!this.targetBuilding) {
                     this.state = VillagerState.IDLE;
                     return;
                 }
@@ -84,7 +82,15 @@ class Villager {
                         if (this.targetBuilding.progress >= 100) {
                             this.targetBuilding.progress = 100;
                             this.targetBuilding.isFinished = true;
-                            this.state = VillagerState.IDLE;
+                            
+                            // Automatischer Förster-Check
+                            if (this.autoBecomeForester && this.targetBuilding.type === 'lodge') {
+                                this.autoBecomeForester = false;
+                                this.findNextTree(); // Startet direkt mit Pflanzen/Suchen
+                            } else {
+                                this.state = VillagerState.IDLE;
+                            }
+                            this.targetBuilding = null;
                         }
                     });
                 });
@@ -134,21 +140,16 @@ class Villager {
     }
 
     moveTo(tx, ty, onArrived) {
-    const dx = tx - this.x;
-    const dy = ty - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    
-    // Wenn weiter als 3 Pixel weg, dann bewegen
-    if (dist > 3) {
-        const vx = (dx / dist) * GameState.config.villagerSpeed;
-        const vy = (dy / dist) * GameState.config.villagerSpeed;
-        this.x += vx;
-        this.y += vy;
-    } else {
-        onArrived(); 
+        const dx = tx - this.x;
+        const dy = ty - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 5) {
+            this.x += (dx / dist) * GameState.config.villagerSpeed;
+            this.y += (dy / dist) * GameState.config.villagerSpeed;
+        } else {
+            onArrived();
+        }
     }
-}
-
 
     work(onAction) {
         const now = Date.now();
