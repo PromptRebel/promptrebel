@@ -31,10 +31,10 @@ export const Renderer = {
         mine_right: { row: 19, frames: 6 },
 
         // Pflanzen / Gießen (Förster)
-        plant_up:    { row: 20, frames: 6 },
-        plant_left:  { row: 21, frames: 6 },
-        plant_down:  { row: 22, frames: 6 },
-        plant_right: { row: 23, frames: 6 },
+        plant_up:    { row: 20, frames: 5 },
+        plant_left:  { row: 20, frames: 5 },
+        plant_down:  { row: 20, frames: 5 },
+        plant_right: { row: 20, frames: 5 },
 
         idle:       { row: 10, frames: 1 }, 
     },
