@@ -2,7 +2,7 @@ import { loadAssets } from './assets.js';
 
 /**
  * Die zentrale Initialisierungs-Funktion.
- * Da loadAssets asynchron ist, muss init ebenfalls async sein.
+ * Erweitert um das Stein-Vorkommen.
  */
 async function init() {
     console.log("Initialisiere Spiel...");
@@ -19,6 +19,9 @@ async function init() {
         if (!assets.props || !assets.props.tree) {
             console.warn("Baum-Grafik wurde nicht im Assets-Objekt gefunden.");
         }
+        if (!assets.props || !assets.props.stone) {
+            console.warn("Stein-Grafik wurde nicht im Assets-Objekt gefunden.");
+        }
 
     } catch (error) {
         // Wenn ein Bild fehlt (404), wird das hier auf dem Handy ausgegeben
@@ -26,14 +29,23 @@ async function init() {
         alert("Ladefehler: " + error.message + "\nPrüfe die Pfade im assets-Ordner!");
     }
 
-    // 2. Welt generieren: 100 Bäume zufällig verteilen
-    // Wir stellen sicher, dass die Liste leer ist, bevor wir füllen
+    // 2a. Welt generieren: 80 Bäume zufällig verteilen
     GameState.entities.trees = []; 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 80; i++) {
         GameState.entities.trees.push({
             x: Math.random() * (GameState.world.width - 100) + 50,
             y: Math.random() * (GameState.world.height - 100) + 50,
             woodAmount: GameState.config.treeWoodAmount
+        });
+    }
+
+    // 2b. Welt generieren: 15 Steine zufällig verteilen (Neu)
+    GameState.entities.stones = [];
+    for (let i = 0; i < 15; i++) {
+        GameState.entities.stones.push({
+            x: Math.random() * (GameState.world.width - 200) + 100,
+            y: Math.random() * (GameState.world.height - 200) + 100,
+            stoneAmount: GameState.config.stoneAmount
         });
     }
 
