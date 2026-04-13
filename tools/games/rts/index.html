@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>RTS World Mobile</title>
+    <title>RTS World Mobile - Stone Update</title>
     <style>
         * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; outline: none; }
         html, body { 
@@ -37,11 +38,13 @@
             padding-bottom: env(safe-area-inset-bottom); /* Fix für iPhone Notch/Balken */
         }
 
-        .stat-item { font-size: 18px; font-weight: bold; }
+        .stat-item { display: flex; align-items: center; gap: 5px; font-size: 16px; font-weight: bold; }
+        
         button { 
             padding: 8px 12px; background: #f0f0f0; border: none; border-radius: 4px;
-            font-weight: bold; font-size: 13px; color: #000; active { background: #bbb; }
+            font-weight: bold; font-size: 13px; color: #000; 
         }
+        button:active { background: #bbb; }
 
         #placement-controls {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -53,7 +56,7 @@
 
     <div id="header">
         <div class="stat-item">🪵 <span id="wood-count">0</span></div>
-        <div class="stat-item">👨 <span id="pop-count">0/10</span></div>
+        <div class="stat-item">🪨 <span id="stone-count">0</span></div> <div class="stat-item">👨 <span id="pop-count">0/10</span></div>
     </div>
 
     <div id="game-container">
@@ -66,7 +69,7 @@
 
     <div id="action-menu">
         <button id="btn-wood">🪓 HOLZ</button>
-        <button id="btn-stop">✋ STOP</button>
+        <button id="btn-stone">⛏️ STEIN</button> <button id="btn-stop">✋ STOP</button>
         <button id="btn-house">🏠 HAUS</button>
         <button id="btn-lodge">🌲 FORST</button>
     </div>
