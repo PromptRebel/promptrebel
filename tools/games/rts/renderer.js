@@ -1,3 +1,6 @@
+import { GameState } from './gamestate.js'; // Der Renderer braucht den State!
+
+
 export const Renderer = {
     canvas: document.getElementById('gameCanvas'),
     ctx: document.getElementById('gameCanvas').getContext('2d'),
