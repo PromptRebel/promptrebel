@@ -1,22 +1,41 @@
+/**
+ * Lädt alle benötigten Bilder asynchron.
+ * Gibt ein Objekt mit den geladenen Image-Instanzen zurück.
+ */
 export async function loadAssets() {
-    const assets = {
+    // Definition der Pfade zu deinen Bildern
+    const assetManifest = {
         props: {
             tree: "assets/IMG_1715.png",
-            stone: "assets/IMG_1735.png" // Neu
+            stone: "assets/IMG_1735.png"
         }
     };
 
-    const loadImg = (src) => new Promise((res, rej) => {
+    const assets = {
+        props: {}
+    };
+
+    // Hilfsfunktion zum Laden eines einzelnen Bildes via Promise
+    const loadImg = (src) => new Promise((resolve, reject) => {
         const img = new Image();
-        img.onload = () => res(img);
-        img.onerror = () => rej(new Error("Bild nicht gefunden: " + src));
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Bild konnte nicht geladen werden: ${src}`));
         img.src = src;
     });
 
-    // Lade alle Bilder im Loop
-    for (let key in assets.props) {
-        assets.props[key] = await loadImg(assets.props[key]);
-    }
+    try {
+        // Wir gehen das Manifest durch und laden die Bilder
+        const loadPromises = Object.keys(assetManifest.props).map(async (key) => {
+            const img = await loadImg(assetManifest.props[key]);
+            assets.props[key] = img;
+        });
 
-    return assets;
+        // Warten, bis alle Bilder fertig geladen sind
+        await Promise.all(loadPromises);
+        
+        return assets;
+    } catch (error) {
+        // Fehler an die main.js weiterreichen
+        throw error;
+    }
 }
