@@ -20,7 +20,7 @@ class Villager {
         this.targetBuilding = null;
         this.lastActionTime = 0;
         this.isQueuedForIdle = false;
-        this.autoBecomeForester = false; // Neu: Merkt sich den Job nach dem Bauen
+        this.autoBecomeForester = false; 
     }
 
     update() {
@@ -83,33 +83,42 @@ class Villager {
                             this.targetBuilding.progress = 100;
                             this.targetBuilding.isFinished = true;
                             
-                            // Automatischer Förster-Check
+                            // Automatischer Wechsel zum Förster (Pflanzen)
                             if (this.autoBecomeForester && this.targetBuilding.type === 'lodge') {
                                 this.autoBecomeForester = false;
-                                this.findNextTree(); // Startet direkt mit Pflanzen/Suchen
+                                this.state = VillagerState.PLANTING;
+                                // targetBuilding bleibt gesetzt, damit er weiß, wo er pflanzt
                             } else {
                                 this.state = VillagerState.IDLE;
+                                this.targetBuilding = null;
                             }
-                            this.targetBuilding = null;
                         }
                     });
                 });
                 break;
 
             case VillagerState.PLANTING:
-                if (!this.targetBuilding || !this.targetBuilding.isFinished) {
+                // Braucht eine Lodge zum Arbeiten
+                if (!this.targetBuilding || this.targetBuilding.type !== 'lodge') {
                     this.state = VillagerState.IDLE;
                     return;
                 }
+                // Läuft zur Lodge und pflanzt dort
                 this.moveTo(this.targetBuilding.x, this.targetBuilding.y, () => {
                     this.work(() => {
                         const angle = Math.random() * Math.PI * 2;
-                        const dist = 40 + Math.random() * 60;
+                        const dist = 40 + Math.random() * 70;
                         const px = this.targetBuilding.x + Math.cos(angle) * dist;
                         const py = this.targetBuilding.y + Math.sin(angle) * dist;
-                        const tooClose = GameState.entities.trees.some(t => Math.sqrt((t.x-px)**2 + (t.y-py)**2) < 25);
+                        
+                        const tooClose = GameState.entities.trees.some(t => Math.sqrt((t.x-px)**2 + (t.y-py)**2) < 30);
+                        
                         if (!tooClose && px > 0 && px < GameState.world.width && py > 0 && py < GameState.world.height) {
-                            GameState.entities.trees.push({ x: px, y: py, woodAmount: GameState.config.treeWoodAmount });
+                            GameState.entities.trees.push({ 
+                                x: px, 
+                                y: py, 
+                                woodAmount: GameState.config.treeWoodAmount 
+                            });
                         }
                     });
                 });
