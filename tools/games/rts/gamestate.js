@@ -1,24 +1,31 @@
-const GameState = {
-    resources: { wood: 0 },
+export const GameState = {
+    world: { width: 2000, height: 2000 },
+    camera: { x: 0, y: 0 },
+    resources: {
+        wood: 100,
+        stone: 0 // Neu
+    },
+    config: {
+        villagerSpeed: 2.5,
+        treeWoodAmount: 100,
+        stoneAmount: 500, // Neu: 500 Leben pro Stein
+        maxPopulation: 10
+    },
     entities: {
-        townCenter: { x: 1000, y: 1000 }, // HQ in der Mitte der großen Welt
+        townCenter: { x: 1000, y: 1000 },
         villagers: [],
         trees: [],
-        buildings: [] 
+        stones: [], // Neu
+        buildings: []
     },
     selection: null,
-    placementMode: { active: false, type: null, x: 0, y: 0, cost: 0 },
-    camera: { x: 600, y: 700 }, // Start-Ausschnitt
-    world: { width: 2000, height: 2000 },
-    config: {
-        baseMaxPop: 10,
-        villagerSpeed: 2,
-        treeWoodAmount: 50,
-        costs: { house: 50, lodge: 100 }
-    },
+    placementMode: { active: false, type: null, cost: 0, x: 0, y: 0 },
+    
     getMaxPop: function() {
-        let bonus = 0;
-        this.entities.buildings.forEach(b => { if (b.type === 'house' && b.isFinished) bonus += 5; });
-        return this.config.baseMaxPop + bonus;
+        let pop = this.config.maxPopulation;
+        this.entities.buildings.forEach(b => {
+            if(b.type === 'house' && b.isFinished) pop += 5;
+        });
+        return pop;
     }
 };
