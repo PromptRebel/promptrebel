@@ -11,9 +11,9 @@ export const Renderer = {
     animTick: 0,
     ANIM: {
         walk_up:    { row: 8,  frames: 9 },
-        walk_left:  { row: 10, frames: 9 },
+        walk_left:  { row: 9, frames: 9 },
         walk_down:  { row: 12, frames: 9 },
-        walk_right: { row: 14, frames: 9 },
+        walk_right: { row: 11, frames: 9 },
         idle:       { row: 12, frames: 1 },
     },
 
