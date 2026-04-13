@@ -11,10 +11,10 @@ export const Renderer = {
     animTick: 0,
     ANIM: {
         walk_up:    { row: 8,  frames: 9 },
-        walk_left:  { row: 9, frames: 9 },
-        walk_down:  { row: 12, frames: 9 },
+        walk_left:  { row: 9,  frames: 9 },
+        walk_down:  { row: 10, frames: 9 }, // Row 10 ist meist Standard für Down (LPC)
         walk_right: { row: 11, frames: 9 },
-        idle:       { row: 12, frames: 1 },
+        idle:       { row: 10, frames: 1 }, 
     },
 
     draw: function() {
@@ -47,13 +47,6 @@ export const Renderer = {
             const img = this.assets.props?.tree;
             if (img) {
                 this.ctx.drawImage(img, t.x - 30, t.y - 50, 60, 60);
-            } else {
-                this.ctx.fillStyle = '#228B22';
-                this.ctx.beginPath();
-                this.ctx.arc(t.x, t.y - 20, 20, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.fillStyle = '#8B4513';
-                this.ctx.fillRect(t.x - 4, t.y, 8, 20);
             }
         });
 
@@ -68,7 +61,6 @@ export const Renderer = {
                 this.ctx.globalAlpha = 1.0;
             }
             
-            // Fortschrittsbalken über Baustellen
             if (!b.isFinished) {
                 this.ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
                 this.ctx.fillRect(b.x - 20, b.y - 50, 40, 5);
@@ -87,7 +79,7 @@ export const Renderer = {
             this.ctx.fillRect(tc.x - 40, tc.y - 40, 80, 80);
         }
 
-        // 5. VILLAGER mit Spritesheet-Animation
+        // 5. VILLAGER (Zuletzt zeichnen, damit sie ÜBER den Gebäuden sind)
         this.animTick++;
 
         GameState.entities.villagers.forEach(v => {
@@ -98,61 +90,43 @@ export const Renderer = {
                 this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
                 this.ctx.lineWidth = 2;
                 this.ctx.beginPath();
-                this.ctx.ellipse(v.x, v.y + 20, 18, 7, 0, 0, Math.PI * 2);
+                this.ctx.ellipse(v.x, v.y + 15, 15, 5, 0, 0, Math.PI * 2);
                 this.ctx.stroke();
             }
 
-            if (!img) {
-                // Fallback gelbes Quadrat
+            if (img) {
+                const isMoving = [
+                    'moving_to_tree', 'moving_to_stone',
+                    'returning', 'building', 'planting'
+                ].includes(v.state);
+
+                // NUTZT JETZT v.lastDir AUS DER villager.js
+                let animKey = isMoving ? 'walk_' + v.lastDir : 'idle';
+                
+                // Falls v.lastDir noch nicht gesetzt wurde (beim ersten Frame)
+                if (!v.lastDir) animKey = 'idle';
+
+                const anim = this.ANIM[animKey] || this.ANIM.idle;
+
+                const frame = isMoving
+                    ? Math.floor(this.animTick / 6) % anim.frames
+                    : 0;
+
+                this.ctx.drawImage(
+                    img,
+                    frame * this.FRAME_W,
+                    anim.row * this.FRAME_H,
+                    this.FRAME_W,
+                    this.FRAME_H,
+                    v.x - 32,
+                    v.y - 48,
+                    64,
+                    64
+                );
+            } else {
                 this.ctx.fillStyle = 'yellow';
                 this.ctx.fillRect(v.x - 6, v.y - 6, 12, 12);
-                return;
             }
-
-            // Bewegungszustand bestimmen
-            const isMoving = [
-                'moving_to_tree', 'moving_to_stone',
-                'returning', 'building', 'planting'
-            ].includes(v.state);
-
-            // Richtung berechnen
-            let anim = this.ANIM.idle;
-
-            if (isMoving) {
-                // Zielkoordinaten je nach State
-                let tx = GameState.entities.townCenter.x;
-                let ty = GameState.entities.townCenter.y;
-
-                if (v.targetTree)     { tx = v.targetTree.x;     ty = v.targetTree.y; }
-                if (v.targetStone)    { tx = v.targetStone.x;    ty = v.targetStone.y; }
-                if (v.targetBuilding) { tx = v.targetBuilding.x; ty = v.targetBuilding.y; }
-
-                const dx = tx - v.x;
-                const dy = ty - v.y;
-
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    anim = dx > 0 ? this.ANIM.walk_right : this.ANIM.walk_left;
-                } else {
-                    anim = dy > 0 ? this.ANIM.walk_down : this.ANIM.walk_up;
-                }
-            }
-
-            // Animations-Frame berechnen
-            const frame = isMoving
-                ? Math.floor(this.animTick / 6) % anim.frames
-                : 0;
-
-            this.ctx.drawImage(
-                img,
-                frame * this.FRAME_W,       // X im Spritesheet
-                anim.row * this.FRAME_H,    // Y im Spritesheet
-                this.FRAME_W,               // Ausschnitt Breite
-                this.FRAME_H,               // Ausschnitt Höhe
-                v.x - 32,                   // Ziel X (zentriert)
-                v.y - 48,                   // Ziel Y (Füße bei v.y)
-                64,                         // Render Breite
-                64                          // Render Höhe
-            );
         });
 
         this.ctx.restore();
