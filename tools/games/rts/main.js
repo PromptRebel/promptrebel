@@ -4,6 +4,9 @@ import { Renderer } from './renderer.js';
 import { loadAssets } from './assets.js';
 import { Villager } from './villager.js';
 import './ui.js'; // Importiert die UI-Logik und führt sie aus
+// Kamera auf Town Center zentrieren
+GameState.camera.x = GameState.entities.townCenter.x - (window.innerWidth / 2);
+GameState.camera.y = GameState.entities.townCenter.y - (window.innerHeight / 2);
 
 /**
  * Die zentrale Initialisierungs-Funktion.
