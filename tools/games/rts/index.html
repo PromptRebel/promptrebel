@@ -47,7 +47,7 @@
 <body>
 
     <!-- DEBUG: direkt nach <body> -->
-    <div id="debug" style="position:fixed;top:0;left:0;background:red;color:white;font-size:12px;z-index:9999;padding:5px;max-height:200px;overflow:auto;"></div>
+   <!-- <div id="debug" style="position:fixed;top:0;left:0;background:red;color:white;font-size:12px;z-index:9999;padding:5px;max-height:200px;overflow:auto;"></div>
     <script>
     window.onerror = (msg, src, line) => {
         document.getElementById('debug').innerHTML += `❌ ${msg} (${src}:${line})<br>`;
@@ -55,7 +55,7 @@
     console.log = (...args) => {
         document.getElementById('debug').innerHTML += `📋 ${args.join(' ')}<br>`;
     };
-    </script>
+    </script>-->
 
     <div id="header">
         <div class="stat-item">🪵 <span id="wood-count">0</span></div>
