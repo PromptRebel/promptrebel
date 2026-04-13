@@ -8,8 +8,8 @@ export async function loadAssets() {
         props: {
             tree: "assets/IMG_1715.png",
             stone: "assets/IMG_1735.png",
-            house: "assets/IMG_1744.png",
-            lodge: "assets/IMG_1745.png",
+            house: "assets/IMG_1752.png",
+            lodge: "assets/IMG_1753.png",
             hq: "assets/IMG_1751.png"
         }
     };
