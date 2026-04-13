@@ -1,3 +1,8 @@
+// main.js ganz oben hinzufügen
+import { GameState } from './gamestate.js';
+import { Renderer } from './renderer.js';
+
+
 import { loadAssets } from './assets.js';
 
 /**
