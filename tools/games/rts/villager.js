@@ -1,6 +1,8 @@
 // villager.js
 
-// Diese Zustände werden nur intern in dieser Datei benötigt
+/**
+ * Definiert die möglichen Zustände eines Villagers.
+ */
 const VillagerState = {
     IDLE: 'idle',
     MOVING_TO_TREE: 'moving_to_tree',
@@ -12,23 +14,33 @@ const VillagerState = {
     PLANTING: 'planting'
 };
 
-// Export der Klasse für die Nutzung in main.js
 export class Villager {
     constructor(x, y, id) {
         this.id = id;
         this.x = x;
         this.y = y;
         this.state = VillagerState.IDLE;
+        
+        // Ressourcen-Logik
         this.inventory = 0;
         this.inventoryType = null; // 'wood' oder 'stone'
         this.capacity = 5;
+        
+        // Ziele
         this.targetTree = null;
         this.targetStone = null;
         this.targetBuilding = null;
+        
+        // Animation & Richtung
         this.lastActionTime = 0;
+        this.lastDir = 'down'; // Standard-Blickrichtung (down, up, left, right)
         this.autoBecomeForester = false;
     }
 
+    /**
+     * Haupt-Update-Loop des Villagers.
+     * @param {Object} GameState - Der aktuelle globale Spielzustand.
+     */
     update(GameState) {
         switch (this.state) {
             case VillagerState.MOVING_TO_TREE:
@@ -90,12 +102,14 @@ export class Villager {
                 break;
 
             case VillagerState.RETURNING:
-                this.moveTo(GameState.entities.townCenter.x, GameState.entities.townCenter.y, GameState, () => {
+                // Wir laufen zum HQ, aber versetzt (y + 50), damit wir nicht im Gebäude stecken bleiben
+                const tc = GameState.entities.townCenter;
+                this.moveTo(tc.x, tc.y + 50, GameState, () => {
                     if (this.inventoryType === 'wood') GameState.resources.wood += this.inventory;
                     else if (this.inventoryType === 'stone') GameState.resources.stone += this.inventory;
                     
                     this.inventory = 0;
-                    // Automatisch zurück zur Arbeit, wenn das Ziel noch existiert
+                    // Automatisch zurück zur Arbeit
                     if (this.targetTree) this.state = VillagerState.MOVING_TO_TREE;
                     else if (this.targetStone) this.state = VillagerState.MOVING_TO_STONE;
                     else this.state = VillagerState.IDLE;
@@ -176,11 +190,22 @@ export class Villager {
         }
     }
 
+    /**
+     * Bewegt den Villager und speichert die Richtung für die Animation.
+     */
     moveTo(tx, ty, GameState, onArrived) {
         const dx = tx - this.x;
         const dy = ty - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
+
         if (dist > 5) {
+            // Richtung für Animation bestimmen
+            if (Math.abs(dx) > Math.abs(dy)) {
+                this.lastDir = dx > 0 ? 'right' : 'left';
+            } else {
+                this.lastDir = dy > 0 ? 'down' : 'up';
+            }
+
             this.x += (dx / dist) * GameState.config.villagerSpeed;
             this.y += (dy / dist) * GameState.config.villagerSpeed;
         } else {
@@ -188,6 +213,9 @@ export class Villager {
         }
     }
 
+    /**
+     * Verzögert Aktionen (Arbeitstakt).
+     */
     work(onAction) {
         const now = Date.now();
         if (now - this.lastActionTime > 1000) {
