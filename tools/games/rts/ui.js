@@ -1,9 +1,8 @@
 // ui.js
 let isMovingCamera = false;
 let hasMoved = false; 
-let lastX, lastY;
-let startX, startY;
-let lastSpawnTime = 0; // Gegen Doppel-Spawn
+let lastX, lastY, startX, startY;
+let lastSpawnTime = 0; 
 
 const btnWood = document.getElementById('btn-wood');
 const btnStop = document.getElementById('btn-stop');
@@ -16,59 +15,40 @@ function getCoords(e) {
     const rect = Renderer.canvas.getBoundingClientRect();
     const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
     const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
-    
     const scaleX = Renderer.canvas.width / rect.width;
     const scaleY = Renderer.canvas.height / rect.height;
-
     return {
         mx: (clientX - rect.left) * scaleX + GameState.camera.x,
         my: (clientY - rect.top) * scaleY + GameState.camera.y,
-        screenX: clientX,
-        screenY: clientY
+        screenX: clientX, screenY: clientY
     };
 }
 
 function handleStart(e) {
     if (e.target.tagName === 'BUTTON' || e.target.closest('#action-menu')) return;
-
     const coords = getCoords(e);
-    lastX = coords.screenX;
-    lastY = coords.screenY;
-    startX = coords.screenX;
-    startY = coords.screenY;
-    
-    isMovingCamera = true; 
-    hasMoved = false; 
+    lastX = coords.screenX; lastY = coords.screenY;
+    startX = coords.screenX; startY = coords.screenY;
+    isMovingCamera = true; hasMoved = false; 
 }
 
 function handleMove(e) {
     if (!isMovingCamera) return;
-
     const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
     const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
-
-    const dx = clientX - lastX;
-    const dy = clientY - lastY;
-
+    const dx = clientX - lastX; const dy = clientY - lastY;
     if (Math.abs(clientX - startX) > 10 || Math.abs(clientY - startY) > 10) {
         hasMoved = true;
         if (e.cancelable) e.preventDefault();
     }
-
-    GameState.camera.x -= dx;
-    GameState.camera.y -= dy;
-
+    GameState.camera.x -= dx; GameState.camera.y -= dy;
     GameState.camera.x = Math.max(0, Math.min(GameState.camera.x, GameState.world.width - Renderer.canvas.width));
     GameState.camera.y = Math.max(0, Math.min(GameState.camera.y, GameState.world.height - Renderer.canvas.height));
-
-    lastX = clientX;
-    lastY = clientY;
+    lastX = clientX; lastY = clientY;
 }
 
 function handleEnd(e) {
-    if (isMovingCamera && !hasMoved) {
-        processClick(e);
-    }
+    if (isMovingCamera && !hasMoved) processClick(e);
     isMovingCamera = false;
 }
 
@@ -76,20 +56,24 @@ function processClick(e) {
     const rect = Renderer.canvas.getBoundingClientRect();
     const scaleX = Renderer.canvas.width / rect.width;
     const scaleY = Renderer.canvas.height / rect.height;
-    
     const mx = (startX - rect.left) * scaleX + GameState.camera.x;
     const my = (startY - rect.top) * scaleY + GameState.camera.y;
 
     if (GameState.placementMode.active) {
-        GameState.placementMode.x = mx;
-        GameState.placementMode.y = my;
+        GameState.placementMode.x = mx; GameState.placementMode.y = my;
         return;
     }
 
     const tc = GameState.entities.townCenter;
-    const distToTC = Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2);
-    if (distToTC < 60) {
-        spawnVillager();
+    if (Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2) < 60) {
+        spawnVillager(); return;
+    }
+
+    // Klick auf Gebäude (z.B. Zuweisung zum Forsthaus)
+    let clickedB = GameState.entities.buildings.find(b => Math.abs(mx - b.x) < 40 && Math.abs(my - b.y) < 40);
+    if (clickedB && clickedB.type === 'lodge' && clickedB.isFinished && GameState.selection) {
+        GameState.selection.targetBuilding = clickedB; 
+        GameState.selection.state = VillagerState.PLANTING; 
         return;
     }
 
@@ -103,7 +87,7 @@ function processClick(e) {
     }
 }
 
-// Event Listener
+// Event-Handling
 Renderer.canvas.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove);
 window.addEventListener('mouseup', handleEnd);
@@ -111,13 +95,8 @@ Renderer.canvas.addEventListener('touchstart', handleStart, {passive: false});
 window.addEventListener('touchmove', handleMove, {passive: false});
 window.addEventListener('touchend', handleEnd, {passive: false});
 
-// Hilfsfunktion für Buttons (Gegen Doppel-Klick und Ghost-Events)
 function setupButton(btn, callback) {
-    const handler = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        callback();
-    };
+    const handler = (e) => { e.preventDefault(); e.stopPropagation(); callback(); };
     btn.addEventListener('touchstart', handler, {passive: false});
     btn.addEventListener('click', handler);
 }
@@ -157,7 +136,6 @@ setupButton(document.getElementById('btn-confirm-build'), () => {
         if(GameState.selection) {
             GameState.selection.targetBuilding = b;
             GameState.selection.state = VillagerState.BUILDING;
-            // Automatische Zuweisung merken
             if (b.type === 'lodge') GameState.selection.autoBecomeForester = true;
         }
         cancelPlacement();
@@ -174,8 +152,7 @@ function cancelPlacement() {
 
 function spawnVillager() {
     const now = Date.now();
-    if (now - lastSpawnTime < 500) return; // SPAM SCHUTZ
-    
+    if (now - lastSpawnTime < 500) return; // COOLDOWN gegen Doppel-Spawn
     if (GameState.entities.villagers.length < GameState.getMaxPop()) {
         const tc = GameState.entities.townCenter;
         GameState.entities.villagers.push(new Villager(tc.x + 50, tc.y + 50, now));
