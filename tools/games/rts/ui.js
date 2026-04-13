@@ -3,6 +3,7 @@ let isMovingCamera = false;
 let hasMoved = false; 
 let lastX, lastY;
 let startX, startY;
+let lastSpawnTime = 0; // Gegen Doppel-Spawn
 
 const btnWood = document.getElementById('btn-wood');
 const btnStop = document.getElementById('btn-stop');
@@ -28,7 +29,6 @@ function getCoords(e) {
 }
 
 function handleStart(e) {
-    // Wenn wir auf ein UI-Element klicken, Kamera-Bewegung ignorieren
     if (e.target.tagName === 'BUTTON' || e.target.closest('#action-menu')) return;
 
     const coords = getCoords(e);
@@ -103,24 +103,19 @@ function processClick(e) {
     }
 }
 
-// Listener mit Stop-Propagation für Buttons
+// Event Listener
 Renderer.canvas.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove);
 window.addEventListener('mouseup', handleEnd);
-
-Renderer.canvas.addEventListener('touchstart', (e) => {
-    handleStart(e);
-}, {passive: false});
+Renderer.canvas.addEventListener('touchstart', handleStart, {passive: false});
 window.addEventListener('touchmove', handleMove, {passive: false});
-window.addEventListener('touchend', (e) => {
-    handleEnd(e);
-}, {passive: false});
+window.addEventListener('touchend', handleEnd, {passive: false});
 
-// BUTTON LOGIK - WICHTIG: preventDefault + stopPropagation
+// Hilfsfunktion für Buttons (Gegen Doppel-Klick und Ghost-Events)
 function setupButton(btn, callback) {
     const handler = (e) => {
         e.preventDefault();
-        e.stopPropagation(); // Verhindert Klick-Durchschlag aufs Spielfeld
+        e.stopPropagation();
         callback();
     };
     btn.addEventListener('touchstart', handler, {passive: false});
@@ -138,6 +133,7 @@ setupButton(btnWood, () => {
 setupButton(btnStop, () => {
     if(GameState.selection) {
         GameState.selection.state = VillagerState.IDLE;
+        GameState.selection.targetBuilding = null;
     }
 });
 
@@ -152,17 +148,20 @@ function startPlacement(type, cost) {
     }
 }
 
-// ... confirm/cancel build Buttons analog ...
 setupButton(document.getElementById('btn-confirm-build'), () => {
     const p = GameState.placementMode;
-    GameState.resources.wood -= p.cost;
-    const b = { x: p.x, y: p.y, type: p.type, progress: 0, isFinished: false };
-    GameState.entities.buildings.push(b);
-    if(GameState.selection) {
-        GameState.selection.targetBuilding = b;
-        GameState.selection.state = VillagerState.BUILDING;
+    if (GameState.resources.wood >= p.cost) {
+        GameState.resources.wood -= p.cost;
+        const b = { x: p.x, y: p.y, type: p.type, progress: 0, isFinished: false };
+        GameState.entities.buildings.push(b);
+        if(GameState.selection) {
+            GameState.selection.targetBuilding = b;
+            GameState.selection.state = VillagerState.BUILDING;
+            // Automatische Zuweisung merken
+            if (b.type === 'lodge') GameState.selection.autoBecomeForester = true;
+        }
+        cancelPlacement();
     }
-    cancelPlacement();
 });
 
 setupButton(document.getElementById('btn-cancel-build'), cancelPlacement);
@@ -170,11 +169,16 @@ setupButton(document.getElementById('btn-cancel-build'), cancelPlacement);
 function cancelPlacement() {
     GameState.placementMode.active = false;
     placementControls.style.display = 'none';
+    if(GameState.selection) actionMenu.style.display = 'flex';
 }
 
 function spawnVillager() {
+    const now = Date.now();
+    if (now - lastSpawnTime < 500) return; // SPAM SCHUTZ
+    
     if (GameState.entities.villagers.length < GameState.getMaxPop()) {
         const tc = GameState.entities.townCenter;
-        GameState.entities.villagers.push(new Villager(tc.x + 50, tc.y + 50, Date.now()));
+        GameState.entities.villagers.push(new Villager(tc.x + 50, tc.y + 50, now));
+        lastSpawnTime = now;
     }
 }
