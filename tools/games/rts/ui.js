@@ -1,21 +1,23 @@
-// ui.js
 import { GameState } from './gamestate.js';
 import { Renderer } from './renderer.js';
+import { Villager } from './villager.js';
 
 let isMovingCamera = false;
 let hasMoved = false; 
 let lastX, lastY;
 let startX, startY;
-let lastSpawnTime = 0; // Sperre gegen Doppel-Spawn am Handy
+let lastSpawnTime = 0; 
 
+// UI Elemente
 const btnWood = document.getElementById('btn-wood');
-const btnStone = document.getElementById('btn-stone'); // Neu
+const btnStone = document.getElementById('btn-stone');
 const btnStop = document.getElementById('btn-stop');
 const btnHouse = document.getElementById('btn-house');
 const btnLodge = document.getElementById('btn-lodge');
 const actionMenu = document.getElementById('action-menu');
 const placementControls = document.getElementById('placement-controls');
 
+// Rechnet Screen-Koordinaten in Welt-Koordinaten um
 function getCoords(e) {
     const rect = Renderer.canvas.getBoundingClientRect();
     const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
@@ -33,7 +35,7 @@ function getCoords(e) {
 }
 
 function handleStart(e) {
-    // UI-Elemente blockieren die Kamera-Bewegung
+    // Klick auf UI blockiert Welt-Interaktion
     if (e.target.tagName === 'BUTTON' || e.target.closest('#action-menu') || e.target.closest('#header')) return;
 
     const coords = getCoords(e);
@@ -55,7 +57,6 @@ function handleMove(e) {
     const dx = clientX - lastX;
     const dy = clientY - lastY;
 
-    // Schwellenwert für Bewegung (um versehentliches Ziehen beim Klicken zu vermeiden)
     if (Math.abs(clientX - startX) > 10 || Math.abs(clientY - startY) > 10) {
         hasMoved = true;
         if (e.cancelable) e.preventDefault();
@@ -64,7 +65,7 @@ function handleMove(e) {
     GameState.camera.x -= dx;
     GameState.camera.y -= dy;
 
-    // Kamera-Grenzen
+    // Grenzen einhalten
     GameState.camera.x = Math.max(0, Math.min(GameState.camera.x, GameState.world.width - Renderer.canvas.width));
     GameState.camera.y = Math.max(0, Math.min(GameState.camera.y, GameState.world.height - Renderer.canvas.height));
 
@@ -87,14 +88,13 @@ function processClick(e) {
     const mx = (startX - rect.left) * scaleX + GameState.camera.x;
     const my = (startY - rect.top) * scaleY + GameState.camera.y;
 
-    // Baumodus
     if (GameState.placementMode.active) {
         GameState.placementMode.x = mx;
         GameState.placementMode.y = my;
         return;
     }
 
-    // TownCenter Klick -> Spawn Villager
+    // TownCenter Klick -> Spawn
     const tc = GameState.entities.townCenter;
     const distToTC = Math.sqrt((mx - tc.x)**2 + (my - tc.y)**2);
     if (distToTC < 60) {
@@ -102,7 +102,7 @@ function processClick(e) {
         return;
     }
 
-    // Gebäude Klick (z.B. Zuweisung zu Lodge)
+    // Gebäude Klick (Lodge Zuweisung)
     let clickedB = GameState.entities.buildings.find(b => Math.abs(mx - b.x) < 40 && Math.abs(my - b.y) < 40);
     if (clickedB && clickedB.type === 'lodge' && clickedB.isFinished && GameState.selection) {
         GameState.selection.targetBuilding = clickedB;
@@ -110,7 +110,7 @@ function processClick(e) {
         return;
     }
 
-    // Villager Klick (Auswahl)
+    // Villager Auswahl
     let foundV = GameState.entities.villagers.find(v => Math.sqrt((mx - v.x)**2 + (my - v.y)**2) < 40);
     if (foundV) {
         GameState.selection = foundV;
@@ -121,7 +121,7 @@ function processClick(e) {
     }
 }
 
-// Event-Listener für Maus und Touch
+// Event-Listener Registrierung
 Renderer.canvas.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove);
 window.addEventListener('mouseup', handleEnd);
@@ -130,7 +130,7 @@ Renderer.canvas.addEventListener('touchstart', handleStart, {passive: false});
 window.addEventListener('touchmove', handleMove, {passive: false});
 window.addEventListener('touchend', handleEnd, {passive: false});
 
-// Hilfsfunktion für Button-Events (verhindert Ghost-Clicks)
+// Mobile-optimierte Button-Logik
 function setupButton(btn, callback) {
     if (!btn) return;
     const handler = (e) => {
@@ -142,7 +142,6 @@ function setupButton(btn, callback) {
     btn.addEventListener('click', handler);
 }
 
-// Button-Aktionen
 setupButton(btnWood, () => {
     if(GameState.selection) {
         GameState.selection.targetStone = null;
@@ -173,7 +172,7 @@ setupButton(btnLodge, () => startPlacement('lodge', 100));
 
 function startPlacement(type, cost) {
     if (GameState.resources.wood >= cost) {
-        GameState.placementMode = { active: true, type, cost, x: GameState.camera.x + 400, y: GameState.camera.y + 300 };
+        GameState.placementMode = { active: true, type, cost, x: GameState.camera.x + Renderer.canvas.width/2, y: GameState.camera.y + Renderer.canvas.height/2 };
         placementControls.style.display = 'flex';
         actionMenu.style.display = 'none';
     }
@@ -204,16 +203,13 @@ function cancelPlacement() {
 
 function spawnVillager() {
     const now = Date.now();
-    if (now - lastSpawnTime < 500) return; // Cooldown gegen Doppel-Klick am Handy
+    if (now - lastSpawnTime < 500) return;
 
     if (GameState.entities.villagers.length < GameState.getMaxPop()) {
         const tc = GameState.entities.townCenter;
-        // Da Villager jetzt eine exportierte Klasse ist, wird sie in main.js geladen.
-        // Die Logik zum Hinzufügen bleibt gleich:
-        import('./villager.js').then(mod => {
-            const v = new mod.Villager(tc.x + 50, tc.y + 50, now);
-            GameState.entities.villagers.push(v);
-            lastSpawnTime = now;
-        });
+        // Nutzt die importierte Klasse direkt
+        const v = new Villager(tc.x + 50, tc.y + 50, now);
+        GameState.entities.villagers.push(v);
+        lastSpawnTime = now;
     }
 }
