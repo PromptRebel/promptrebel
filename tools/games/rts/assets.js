@@ -7,7 +7,10 @@ export async function loadAssets() {
     const assetManifest = {
         props: {
             tree: "assets/IMG_1715.png",
-            stone: "assets/IMG_1735.png"
+            stone: "assets/IMG_1735.png",
+            house: "assets/IMG_1740.png",
+            lodge: "assets/IMG_1741.png",
+            hq: "assets/IMG_1742.png"
         }
     };
 
@@ -15,17 +18,24 @@ export async function loadAssets() {
         props: {}
     };
 
-    // Hilfsfunktion zum Laden eines einzelnen Bildes via Promise
+    /**
+     * Hilfsfunktion zum Laden eines einzelnen Bildes via Promise.
+     * @param {string} src - Der Pfad zum Bild.
+     */
     const loadImg = (src) => new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`Bild konnte nicht geladen werden: ${src}`));
+        img.onerror = () => {
+            console.error("Fehler beim Laden von Asset:", src);
+            reject(new Error(`Bild konnte nicht geladen werden: ${src}`));
+        };
         img.src = src;
     });
 
     try {
-        // Wir gehen das Manifest durch und laden die Bilder
-        const loadPromises = Object.keys(assetManifest.props).map(async (key) => {
+        // Wir erstellen eine Liste von Lade-Aufgaben (Promises)
+        const keys = Object.keys(assetManifest.props);
+        const loadPromises = keys.map(async (key) => {
             const img = await loadImg(assetManifest.props[key]);
             assets.props[key] = img;
         });
@@ -33,9 +43,10 @@ export async function loadAssets() {
         // Warten, bis alle Bilder fertig geladen sind
         await Promise.all(loadPromises);
         
+        console.log("Alle Assets erfolgreich geladen:", Object.keys(assets.props));
         return assets;
     } catch (error) {
-        // Fehler an die main.js weiterreichen
+        // Fehler an die aufrufende main.js weiterreichen
         throw error;
     }
 }
