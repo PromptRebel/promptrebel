@@ -10,7 +10,7 @@ export async function loadAssets() {
             stone: "assets/IMG_1735.png",
             house: "assets/IMG_1744.png",
             lodge: "assets/IMG_1745.png",
-            hq: "assets/IMG_1746.png"
+            hq: "assets/IMG_1751.png"
         }
     };
 
