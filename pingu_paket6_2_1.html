@@ -1841,7 +1841,7 @@ function pinguV586Paket621(q){
   var p=processById('P-BEH-001');
   if(p){
    var notes=[],seen={};
-   (p.safetyNotes||[]).concat(processSteps(p.id).map(function(s){return s.safety||'';})).forEach(function(note){
+   (Array.isArray(p.safetyNotes)?p.safetyNotes:[]).concat(processSteps(p.id).map(function(s){return s.safety||'';})).forEach(function(note){
     note=String(note||'').trim();if(note&&!seen[note]){seen[note]=true;notes.push(note);}
    });
    ctx.pending=null;setContext(p,null);
